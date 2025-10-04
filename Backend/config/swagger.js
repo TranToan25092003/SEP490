@@ -1,5 +1,6 @@
 // swagger.js
 const swaggerJSDoc = require("swagger-jsdoc");
+const SERVER_URL = process.env.SERVER_URL;
 
 const options = {
   definition: {
@@ -11,7 +12,7 @@ const options = {
     },
     servers: [
       {
-        url: "http://localhost:3000", // URL của server
+        url: SERVER_URL, // URL của server
       },
     ],
     components: {
