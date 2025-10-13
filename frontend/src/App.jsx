@@ -5,8 +5,9 @@ import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
+import { ThemeProvider } from "./components/global/ThemeProvider";
+import ComponentsDemo from "./pages/ComponentsDemo";
 
-// IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
@@ -20,6 +21,10 @@ const router = createBrowserRouter([
         path: "/",
         element: <Home />,
       },
+      {
+        path: "/demo",
+        element: <ComponentsDemo />
+      }
     ],
   },
 
@@ -32,11 +37,12 @@ function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Toaster></Toaster>
-
-      <RouterProvider router={router} />
-    </ClerkProvider>
+    <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <Toaster></Toaster>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 

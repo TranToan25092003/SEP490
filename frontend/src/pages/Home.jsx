@@ -1,8 +1,12 @@
 import React from 'react'
+import { Button } from '@/components/ui/button'
 
 function Home() {
   return (
-    <div>Home</div>
+    <div>
+      <h1 className="text-3xl bg-primary underline">Hello world!</h1>
+      <Button>Click me</Button>
+    </div>
   )
 }
 

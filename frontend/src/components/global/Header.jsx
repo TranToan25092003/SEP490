@@ -12,27 +12,27 @@ const Header = () => {
       {/* Constrain to 1920px wide while responsive */}
       <div className="max-w-[1920px] mx-auto">
         {/* Top section */}
-        <div className="flex items-center gap-[10px] h-[80px] md:h-[90px] xl:h-[100px] px-[10px] pl-[24px] md:pl-[40px] xl:pl-[80px]">
-          <p className="text-[#E82917] text-[24px] md:text-[30px] xl:text-[34px] font-extrabold leading-none select-none">MotorMate</p>
+        <div className="flex items-center gap-[8px] h-[70px] md:h-[80px] xl:h-[88px] px-[8px] pl-[20px] md:pl-[36px] xl:pl-[70px]">
+          <p className="text-[#E82917] text-[22px] md:text-[28px] xl:text-[32px] font-extrabold leading-none select-none">MotorMate</p>
           <div className="hidden md:flex items-center justify-center">
-            <div className="mx-2 h-[22px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
+            <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
-          <div className="hidden sm:flex flex-col items-center justify-center p-[6px] md:p-[10px] text-[#1D1E23]">
-            <p className="text-[16px] md:text-[20px] xl:text-[24px] leading-[1.2] font-extrabold">How we move you</p>
-            <p className="text-[12px] md:text-[16px] xl:text-[18px] leading-[1.2] font-medium">MotorMate</p>
+          <div className="hidden sm:flex flex-col items-center justify-center p-[5px] md:p-[8px] text-foreground/70 select-none">
+            <p className="text-[15px] md:text-[18px] xl:text-[22px] leading-[1.2] font-extrabold">How we move you</p>
+            <p className="text-[11px] md:text-[14px] xl:text-[16px] leading-[1.2] font-medium">MotorMate</p>
           </div>
-          <div className="ml-auto flex items-center justify-center gap-[16px] md:gap-[20px] p-[8px]">
-            <button aria-label="Search" className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80" onClick={() => navigate("/")}>
+          <div className="ml-auto flex items-center justify-center gap-[14px] md:gap-[18px] p-[6px]">
+            <button aria-label="Search" className="size-[24px] md:size-[28px] text-foreground hover:opacity-80" onClick={() => navigate("/")}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             </button>
-            <button aria-label="Cart" className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80" onClick={() => navigate("/cart")}>
+            <button aria-label="Cart" className="size-[24px] md:size-[28px] text-foreground hover:opacity-80" onClick={() => navigate("/cart")}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6l-1-3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
             </button>
             <button
               onClick={() => openSignIn?.({})}
-              className="bg-[#DF1D01] text-white rounded-[8px] px-3 md:px-4 py-2 text-[14px] md:text-[16px] xl:text-[18px] font-bold flex items-center gap-2 hover:brightness-110"
+              className="bg-[#DF1D01] text-white rounded-[7px] px-3 md:px-3.5 py-1.5 text-[13px] md:text-[15px] xl:text-[17px] font-bold flex items-center gap-2 hover:brightness-110"
             >
-              <svg width="18" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="hidden md:block">
+              <svg width="16" height="12" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="hidden md:block">
                 <path d="M10 0C7 0 5 2 5 5v1H3l-3 3v1h3v1c0 2 2 3 4 3h6c2 0 4-1 4-3V5c0-3-2-5-5-5h-2z" fill="currentColor"/>
               </svg>
               Đăng Nhập
@@ -43,7 +43,7 @@ const Header = () => {
         {/* Lower section: image 2x height of nav, bottoms aligned */}
         <div className="flex items-end gap-0">
           {/* Decorative image with red overlay */}
-          <div className="hidden lg:block relative w-[380px] xl:w-[557px] h-[140px] rounded-tr-[40px] xl:rounded-tr-[75px] overflow-hidden">
+          <div className="hidden lg:block relative w-[340px] xl:w-[500px] h-[124px] rounded-tr-[36px] xl:rounded-tr-[68px] overflow-hidden">
             <img
               src={headerImg}
               alt="decorative"
@@ -53,12 +53,12 @@ const Header = () => {
           </div>
 
           {/* Nav strip */}
-          <nav className="flex-1 flex items-stretch overflow-x-auto h-[70px]">
+          <nav className="flex-1 flex items-stretch overflow-x-auto h-[62px]">
             <ul className="flex items-stretch gap-0 w-full">
               <li className="shrink-0">
                 <button
                   onClick={() => navigate("/")}
-                  className="bg-[#323B44] text-white text-[14px] md:text-[16px] xl:text-[18px] font-bold h-[70px] w-[140px] md:w-[160px] xl:w-[171px] hover:bg-[#3a454f] transition-colors cursor-pointer"
+                  className="bg-[#323B44] text-white text-[13px] md:text-[15px] xl:text-[17px] font-bold h-[62px] w-[128px] md:w-[148px] xl:w-[158px] hover:bg-[#3a454f] transition-colors cursor-pointer"
                 >
                   Trang Chủ
                 </button>
@@ -66,7 +66,7 @@ const Header = () => {
               <li className="shrink-0">
                 <button
                   onClick={() => navigate("/booking")}
-                  className="bg-[#323B44] text-white text-[14px] md:text-[16px] xl:text-[18px] font-bold h-[70px] w-[140px] md:w-[160px] xl:w-[171px] hover:bg-[#3a454f] transition-colors cursor-pointer"
+                  className="bg-[#323B44] text-white text-[13px] md:text-[15px] xl:text-[17px] font-bold h-[62px] w-[128px] md:w-[148px] xl:w-[158px] hover:bg-[#3a454f] transition-colors cursor-pointer"
                 >
                   Đặt Lịch
                 </button>
@@ -74,7 +74,7 @@ const Header = () => {
               <li className="shrink-0">
                 <button
                   onClick={() => navigate("/parts")}
-                  className="bg-[#323B44] text-white text-[14px] md:text-[16px] xl:text-[18px] font-bold h-[70px] w-[140px] md:w-[160px] xl:w-[171px] hover:bg-[#3a454f] transition-colors cursor-pointer"
+                  className="bg-[#323B44] text-white text-[13px] md:text-[15px] xl:text-[17px] font-bold h-[62px] w-[128px] md:w-[148px] xl:w-[158px] hover:bg-[#3a454f] transition-colors cursor-pointer"
                 >
                   Phụ Tùng
                 </button>
@@ -82,13 +82,13 @@ const Header = () => {
               <li className="shrink-0">
                 <button
                   onClick={() => navigate("/about")}
-                  className="bg-[#323B44] text-white text-[14px] md:text-[16px] xl:text-[18px] font-bold h-[70px] w-[140px] md:w-[160px] xl:w-[171px] hover:bg-[#3a454f] transition-colors cursor-pointer"
+                  className="bg-[#323B44] text-white text-[13px] md:text-[15px] xl:text-[17px] font-bold h-[62px] w-[128px] md:w-[148px] xl:w-[158px] hover:bg-[#3a454f] transition-colors cursor-pointer"
                 >
                   Giới Thiệu
                 </button>
               </li>
               <li className="flex-1">
-                <div className="bg-[#323B44] h-[70px] w-full" />
+                <div className="bg-[#323B44] h-[62px] w-full" />
               </li>
             </ul>
           </nav>
