@@ -1,9 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
 import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
+import { Button } from "antd";
+import Login from "./pages/auth/Login";
 
 // IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -15,6 +17,11 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     loader: homeLayoutLoader,
     children: [],
+  },
+
+  {
+    path: "/login",
+    element: <Login></Login>,
   },
 
   testRouter,
