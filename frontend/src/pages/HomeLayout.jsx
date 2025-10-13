@@ -1,11 +1,12 @@
 import React from "react";
 import Providers from "./Providers";
 import Navbar from "@/components/navbar/Navbar";
+import Header from "@/components/global/Header";
 import Container from "@/components/global/Container";
 import { Outlet, useNavigation } from "react-router-dom";
 import Loading from "@/components/global/Loading";
 import { Toaster } from "sonner";
-import AppFooter from "@/components/global/Footer";
+import Footer from "@/components/global/Footer";
 
 import { useClerk } from "@clerk/clerk-react";
 import { useEffect } from "react";
@@ -35,7 +36,7 @@ const HomeLayout = () => {
       <Toaster position="bottom-right" richColors expand closeButton />
       <div className={` antialiased`}>
         <Providers>
-          <Navbar></Navbar>
+          <Header />
           <Container className={"mt-4"}>
             {state === "loading" ? (
               <>
@@ -45,7 +46,7 @@ const HomeLayout = () => {
               <Outlet></Outlet>
             )}
           </Container>
-          {/* <AppFooter /> */}
+          <Footer />
         </Providers>
       </div>
     </>
