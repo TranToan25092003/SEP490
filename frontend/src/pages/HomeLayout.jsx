@@ -34,7 +34,7 @@ const HomeLayout = () => {
     <>
       <div className={`flex flex-col min-h-screen`}>
         <Header />
-        <Container className={"flex-1"}>
+        <div className={"flex-1 px-3 lg:mx-auto"}>
           {state === "loading" ? (
             <>
               <Loading></Loading>
@@ -42,7 +42,7 @@ const HomeLayout = () => {
           ) : (
             <Outlet></Outlet>
           )}
-        </Container>
+        </div>
         <Footer />
       </div>
     </>

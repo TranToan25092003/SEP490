@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import ServiceSelectionStep from "./ServiceSelectionStep";
 import TimeSlotSelectionStep from "./TimeSlotSelectionStep";
 import ConfirmationStep from "./ConfirmationStep";
 import { Spinner } from "@/components/ui/spinner";
+import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 
 /**
  * @typedef {object} CarInfo
@@ -89,6 +91,13 @@ const BookingForm = ({
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const content = useRef(null);
+
+  useLayoutEffect(() => {
+    if (content.current) {
+      content.current.scrollIntoView();
+    }
+  }, [currentStep]);
 
   const methods = useForm({
     defaultValues: {
@@ -130,7 +139,7 @@ const BookingForm = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleFormSubmit)}>
-        <Card className="bg-gray-50 dark:bg-gray-800 space-y-4">
+        <Card className="bg-gray-50 dark:bg-gray-800 space-y-4" ref={content}>
           <CardHeader className="sticky top-0 py-3 bg-linear-to-b from-gray-50/50 from-70% to-transparent backdrop-blur-md z-10">
             <Stepper currentStep={currentStep}>
               {steps.map((step, index) => (
@@ -146,7 +155,7 @@ const BookingForm = ({
             </Stepper>
           </CardHeader>
 
-          <CardContent className="px-8 py-6">
+          <CardContent className="px-2 md:px-8 py-6">
             <div className={currentStep !== 0 ? "hidden" : ""}>
               <ServiceSelectionStep services={services} />
             </div>
@@ -158,7 +167,7 @@ const BookingForm = ({
             </div>
           </CardContent>
 
-          <CardFooter className="border-t flex justify-between">
+          <CardFooter className="border-t flex justify-between sticky bottom-0 bg-gray-50/50 backdrop-blur-md z-10 px-8 py-4">
             <Button
               type="button"
               onClick={handlePrevious}

@@ -38,6 +38,9 @@ const ServiceSelectionStep = ({ services }) => {
   return (
     <div className="space-y-4">
       <div className="text-center mb-6">
+        <h1>
+          <span className="text-2xl font-bold">Chọn dịch vụ</span>
+        </h1>
         <p className="text-gray-600 dark:text-gray-400">
           Chọn một hoặc nhiều dịch vụ cho xe của bạn
         </p>

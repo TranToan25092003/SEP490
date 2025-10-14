@@ -48,7 +48,9 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
 
   const handleTimeSlotSelect = (slot) => {
     if (!slot.isAvailable) return;
-    setValue('timeslot', slot);
+    const clone = { ...slot };
+    delete clone.isAvailable;
+    setValue('timeslot', clone);
   };
 
   const formatTimeSlot = (slot) => {
@@ -91,13 +93,13 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
         )}
       </div>
 
-      <div className="flex flex-row gap-6">
+      <div className="flex flex-col md:flex-row gap-6">
         {/* Calendar */}
         <Card className={'flex-1'}>
           <CardHeader>
             <CardTitle className="font-semibold">Chọn ngày</CardTitle>
           </CardHeader>
-          <CardContent className="h-[400px]">
+          <CardContent className="min-h-[400px]">
             <Calendar
               mode="single"
               selected={date}

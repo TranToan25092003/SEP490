@@ -46,7 +46,7 @@ Stepper.displayName = "Stepper";
 
 const StepperSeparator = ({ completed }) => {
   return (
-    <div className="flex-1 mx-2 h-[2px] bg-gray-200 dark:bg-gray-700 relative bottom-6">
+    <div className="flex-1 mx-1 h-[2px] bg-gray-200 dark:bg-gray-700 relative bottom-6">
       <div
         className={cn(
           "h-full transition-all duration-300",
