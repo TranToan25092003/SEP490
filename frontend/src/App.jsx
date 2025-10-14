@@ -6,7 +6,7 @@ import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
-import ComponentsDemo from "./pages/ComponentsDemo";
+import Booking from "./pages/Booking";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -22,8 +22,8 @@ const router = createBrowserRouter([
         element: <Home />,
       },
       {
-        path: "/demo",
-        element: <ComponentsDemo />
+        path: "/booking",
+        element: <Booking />
       }
     ],
   },
