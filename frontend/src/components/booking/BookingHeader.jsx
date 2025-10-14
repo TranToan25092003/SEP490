@@ -1,6 +1,10 @@
 import { memo } from "react";
 import bookingBikePng from "@/assets/booking-bike.png";
 
+/**
+ * BookingHeader component displays the header section for the booking page.
+ * It includes a title, a call-to-action button, and an illustrative image.
+ */
 const BookingHeader = memo(() => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">

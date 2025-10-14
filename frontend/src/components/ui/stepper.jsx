@@ -46,11 +46,11 @@ Stepper.displayName = "Stepper";
 
 const StepperSeparator = ({ completed }) => {
   return (
-    <div className="flex-1 mx-2 h-[2px] bg-gray-200 dark:bg-gray-700">
+    <div className="flex-1 mx-2 h-[2px] bg-gray-200 dark:bg-gray-700 relative bottom-6">
       <div
         className={cn(
           "h-full transition-all duration-300",
-          completed ? "bg-red-600 w-full" : "bg-gray-200 w-0"
+          completed ? "bg-primary w-full" : "w-0"
         )}
       />
     </div>
@@ -73,10 +73,10 @@ const StepperItem = React.forwardRef(
           className={cn(
             "flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all duration-300",
             isCompleted
-              ? "bg-red-600 border-red-600 text-white"
+              ? "bg-primary border-primary text-primary-foreground"
               : isCurrent
-              ? "border-red-600 text-red-600 bg-white"
-              : "border-gray-300 text-gray-400 bg-white dark:border-gray-700 dark:bg-gray-900"
+              ? "border-primary text-primary bg-background"
+              : "border-muted-foreground/30 text-muted-foreground bg-background"
           )}
         >
           {isCompleted ? (
@@ -91,14 +91,14 @@ const StepperItem = React.forwardRef(
               className={cn(
                 "text-sm font-medium",
                 isCurrent || isCompleted
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-500 dark:text-gray-400"
+                  ? "text-foreground"
+                  : "text-muted-foreground"
               )}
             >
               {title}
             </p>
             {description && (
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <p className="text-xs text-muted-foreground mt-1">
                 {description}
               </p>
             )}
