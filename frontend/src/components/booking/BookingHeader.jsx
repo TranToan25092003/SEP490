@@ -21,7 +21,11 @@ const BookingHeader = memo(() => {
       </div>
 
       <div className="bg-gradient-to-r from-white via-red-50 to-red-600 rounded-xl">
-        <img src={bookingBikePng} alt="Booking Bike" className="relative top-10 left-10" />
+        <img
+          src={bookingBikePng}
+          alt="Booking Bike"
+          className="relative top-10 left-10"
+        />
       </div>
     </div>
   );

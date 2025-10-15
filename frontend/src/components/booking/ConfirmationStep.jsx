@@ -1,7 +1,8 @@
-import { useFormContext } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Car, Wrench, DollarSign } from 'lucide-react';
+import { useFormContext } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, Car, Wrench, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * ConfirmationStep component for reviewing booking details before submission.
@@ -9,13 +10,13 @@ import { Calendar, Clock, Car, Wrench, DollarSign } from 'lucide-react';
  */
 const ConfirmationStep = ({ myCar }) => {
   const { watch } = useFormContext();
-  const services = watch('services') || [];
-  const timeslot = watch('timeslot');
+  const services = watch("services") || [];
+  const timeslot = watch("timeslot");
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
     }).format(price);
   };
 
@@ -34,21 +35,21 @@ const ConfirmationStep = ({ myCar }) => {
   };
 
   const formatDateTime = () => {
-    if (!timeslot) return 'Chưa chọn';
-    
+    if (!timeslot) return "Chưa chọn";
+
     return new Date(
       timeslot.year,
       timeslot.month,
       timeslot.day,
       timeslot.hours,
       timeslot.minutes
-    ).toLocaleString('vi-VN', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    ).toLocaleString("vi-VN", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -63,7 +64,7 @@ const ConfirmationStep = ({ myCar }) => {
         </p>
       </div>
 
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -79,7 +80,7 @@ const ConfirmationStep = ({ myCar }) => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -115,16 +116,19 @@ const ConfirmationStep = ({ myCar }) => {
               {services.map((service) => (
                 <div
                   key={service.sid}
-                  className="flex justify-between items-start p-3 bg-gray-50 dark:bg-gray-800 rounded"
+                  className={cn(
+                    "flex justify-between items-start p-3 rounded",
+                    "bg-gray-50 dark:bg-gray-800"
+                  )}
                 >
                   <div className="flex-1">
                     <p className="font-semibold">{service.name}</p>
                     {service.desc && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      <p className={cn("text-sm mt-1", "text-gray-600 dark:text-gray-400") }>
                         {service.desc}
                       </p>
                     )}
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className={cn("text-sm mt-1 text-gray-500") }>
                       Thời gian: {formatTime(service.estimatedTime)}
                     </p>
                   </div>
@@ -133,7 +137,7 @@ const ConfirmationStep = ({ myCar }) => {
                   </span>
                 </div>
               ))}
-              
+
               <div className="flex justify-between items-center pt-3 border-t">
                 <div>
                   <p className="font-semibold">Tổng cộng:</p>
@@ -150,8 +154,6 @@ const ConfirmationStep = ({ myCar }) => {
         </CardContent>
       </Card>
 
-      
-
       <div className="text-center text-sm text-gray-500 mt-4">
         <p>Nhấn "Hoàn thành" để xác nhận đặt lịch</p>
       </div>
@@ -159,6 +161,6 @@ const ConfirmationStep = ({ myCar }) => {
   );
 };
 
-ConfirmationStep.displayName = 'ConfirmationStep';
+ConfirmationStep.displayName = "ConfirmationStep";
 
 export default ConfirmationStep;

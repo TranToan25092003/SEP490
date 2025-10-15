@@ -1,38 +1,43 @@
-import {  useFieldArray } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check } from 'lucide-react';
+import { useFieldArray } from "react-hook-form";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const formatPrice = (price) => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(price);
+};
+
+const formatTime = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+};
 
 /**
  * ServiceSelectionStep component for selecting services in the booking form.
  * Uses useFormContext to access form methods and state.
  */
 const ServiceSelectionStep = ({ services }) => {
-  const { fields: selectedServices, remove, append } = useFieldArray({
-    name: 'services'
+  const {
+    fields: selectedServices,
+    remove,
+    append,
+  } = useFieldArray({
+    name: "services",
   });
 
   const handleServiceToggle = (service) => {
     const idx = selectedServices.findIndex((s) => s.sid === service.sid);
     const isSelected = idx !== -1;
-    
+
     if (isSelected) {
       remove(idx);
     } else {
       append(service);
     }
-  };
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
-
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
   return (
@@ -48,30 +53,25 @@ const ServiceSelectionStep = ({ services }) => {
 
       <div className="grid gap-4 md:grid-cols-2">
         {services.map((service) => {
-          const isSelected = selectedServices.some((s) => s.sid === service.sid);
-          
+          const isSelected = selectedServices.some(
+            (s) => s.sid === service.sid
+          );
+
           return (
             <Card
               key={service.sid}
-              className={`cursor-pointer transition-all hover:shadow-md ${
-                isSelected ? 'border-primary border-2' : ''
-              }`}
+              className={cn(
+                "cursor-pointer transition-all hover:shadow-md",
+                isSelected && "border-primary border-2"
+              )}
               onClick={() => handleServiceToggle(service)}
             >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <CardTitle className="text-lg">{service.name}</CardTitle>
-                  {
-                    isSelected ? (
-                      <div className="p-1 bg-primary/10 rounded">
-                        <Check className="h-4 w-4 text-primary" />
-                      </div>
-                    ) : (
-                      <div className="p-1 bg-gray-200 rounded">
-                        <Check className="h-4 w-4 text-gray-400 invisible" />
-                      </div>
-                    )
-                  }
+                  <div className={cn("p-1 rounded", isSelected ? "bg-primary/10" : "bg-gray-200")}>
+                    <Check className={cn("h-4 w-4", isSelected ? "text-primary" : "text-gray-400 invisible")} />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
@@ -97,6 +97,6 @@ const ServiceSelectionStep = ({ services }) => {
   );
 };
 
-ServiceSelectionStep.displayName = 'ServiceSelectionStep';
+ServiceSelectionStep.displayName = "ServiceSelectionStep";
 
 export default ServiceSelectionStep;

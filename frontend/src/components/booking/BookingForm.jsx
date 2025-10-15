@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,7 @@ import ServiceSelectionStep from "./ServiceSelectionStep";
 import TimeSlotSelectionStep from "./TimeSlotSelectionStep";
 import ConfirmationStep from "./ConfirmationStep";
 import { Spinner } from "@/components/ui/spinner";
-import { useEffect } from "react";
-import { useLayoutEffect } from "react";
+import { cn } from "@/lib/utils";
 
 /**
  * @typedef {object} CarInfo
@@ -77,6 +76,48 @@ const steps = [
 ];
 
 /**
+ * @typedef {object} FlashMessageHandle
+ * @property {(message: string, duration?: number) => void} showMessage - Function to show a message for a specified duration.
+ */
+
+/**
+ * This component contains an imperative handle that accepts a
+ * string and display that string for sepecified amount of milliseconds then
+ * fade out.
+ * @type {React.ForwardRefRenderFunction<FlashMessageHandle, React.ComponentPropsWithoutRef<"p">>}
+ */
+const FlashMessage = forwardRef((props, ref) => {
+  const [message, setMessage] = useState("");
+  const [visible, setVisible] = useState(false);
+  const timeoutRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    showMessage: (msg, duration = 3000) => {
+      setMessage(msg);
+      setVisible(true);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        setVisible(false);
+      }, duration);
+    }
+  }));
+
+  const className = cn(props.className, "transition-opacity duration-500", visible ? "opacity-100" : "opacity-0");
+  delete props.className;
+
+  return (
+    <p
+      className={className}
+      {...props}
+    >
+      {message}
+    </p>
+  );
+});
+
+/**
  * BookingForm component includes a multi-step form for booking services.
  * It manages form state and handles user input.
  * It outputs the collected data upon submission.
@@ -87,26 +128,55 @@ const BookingForm = ({
   onSubmit,
   myCar,
   services,
-  fetchAvailableTimeSlots,
+  fetchAvailableTimeSlots
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const content = useRef(null);
+  const mounted = useRef(false);
+
+  /** @type {React.RefObject<FlashMessageHandle>} handle */
+  const flashMessageRef = useRef(null);
 
   useLayoutEffect(() => {
-    if (content.current) {
+    if (content.current && mounted.current) {
       content.current.scrollIntoView();
     }
+
+    mounted.current = true;
   }, [currentStep]);
 
   const methods = useForm({
     defaultValues: {
       services: [],
       timeslot: null,
-    }
+    },
   });
+  
+  const selectedServices = methods.watch("services", []);
+  const selectedTimeslot = methods.watch("timeslot", null);
+
+  const validateStep = (step) => {
+    switch (step) {
+      case 0:
+        return selectedServices.length > 0 ? [true, null] : [false, "Vui lòng chọn ít nhất một dịch vụ."];
+      case 1:
+        return selectedTimeslot ? [true, null] : [false, "Vui lòng chọn thời gian hẹn."];
+      default:
+        return [false, "Không thể xác thực bước hiện tại."];
+    }
+  };
 
   const handleNext = (e) => {
+    const [isValid, message] = validateStep(currentStep);
+    if (!isValid) {
+      if (message) {
+        setCurrentStep(currentStep);
+        flashMessageRef.current?.showMessage(message);
+      }
+      return;
+    }
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -119,6 +189,17 @@ const BookingForm = ({
   };
 
   const handleStepClick = (stepIndex) => {
+    for (let step = 0; step < stepIndex; step++) {
+      const [isValid, message] = validateStep(step);
+      if (!isValid) {
+        if (message) {
+          setCurrentStep(step);
+          flashMessageRef.current?.showMessage(message);
+          return;
+        }
+      }
+    }
+
     setCurrentStep(stepIndex);
   };
 
@@ -138,7 +219,7 @@ const BookingForm = ({
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(handleFormSubmit)}>
-        <Card className="bg-gray-50 dark:bg-gray-800 space-y-4" ref={content}>
+        <Card className="bg-gray-50 dark:bg-gray-800 gap-2" ref={content}>
           <CardHeader className="sticky top-0 py-3 bg-linear-to-b from-gray-50/50 from-70% to-transparent backdrop-blur-md z-10">
             <Stepper currentStep={currentStep}>
               {steps.map((step, index) => (
@@ -154,14 +235,16 @@ const BookingForm = ({
             </Stepper>
           </CardHeader>
 
-          <CardContent className="px-2 md:px-8 py-6">
-            <div className={currentStep !== 0 ? "hidden" : ""}>
+          <CardContent className="px-2 md:px-8 pb-2">
+            <div className={cn(currentStep !== 0 && "hidden") }>
               <ServiceSelectionStep services={services} />
             </div>
-            <div className={currentStep !== 1 ? "hidden" : ""}>
-              <TimeSlotSelectionStep fetchAvailableTimeSlots={fetchAvailableTimeSlots} />
+            <div className={cn(currentStep !== 1 && "hidden") }>
+              <TimeSlotSelectionStep
+                fetchAvailableTimeSlots={fetchAvailableTimeSlots}
+              />
             </div>
-            <div className={currentStep !== 2 ? "hidden" : ""}>
+            <div className={cn(currentStep !== 2 && "hidden") }>
               <ConfirmationStep myCar={myCar} />
             </div>
           </CardContent>
@@ -176,12 +259,22 @@ const BookingForm = ({
               Quay lại
             </Button>
 
+            <FlashMessage
+              className="text-red-500"
+              ref={flashMessageRef}
+            />
+
             {currentStep === steps.length - 1 ? (
-              <Button key="submit" type="submit" size="lg" disabled={isSubmitting}>
+              <Button
+                key="submit"
+                type="submit"
+                size="lg"
+                disabled={isSubmitting}
+              >
                 {isSubmitting ? <Spinner /> : "Hoàn thành"}
               </Button>
             ) : (
-              <Button key="next" onClick={handleNext} size="lg">
+              <Button key="next" onClick={handleNext} disabled={!validateStep(currentStep)[0]} size="lg">
                 Tiếp theo
               </Button>
             )}

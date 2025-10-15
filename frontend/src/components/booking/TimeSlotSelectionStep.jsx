@@ -1,11 +1,23 @@
-import { useFormContext } from 'react-hook-form';
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Clock } from 'lucide-react';
-import { Spinner } from '@/components/ui/spinner';
+import { cn } from "@/lib/utils";
+import { useFormContext } from "react-hook-form";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Clock } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+
+const formatTime = (minutes) => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours} giờ ${mins} phút` : `${mins} phút`;
+};
+
+const formatTimeSlot = (slot) => {
+  const hours = String(slot.hours).padStart(2, "0");
+  const minutes = String(slot.minutes).padStart(2, "0");
+  return `${hours}:${minutes}`;
+};
 
 /**
  * TimeSlotSelectionStep component for selecting date and time in the booking form.
@@ -16,10 +28,10 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
   const [date, setDate] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [comment, setComment] = useState('');
+  const [comment, setComment] = useState("");
 
-  const selectedTimeSlot = watch('timeslot');
-  const services = watch('services', []);
+  const selectedTimeSlot = watch("timeslot");
+  const services = watch("services", []);
 
   useEffect(() => {
     if (date) {
@@ -35,12 +47,12 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
       const day = date.getDate();
       const month = date.getMonth();
       const year = date.getFullYear();
-      
+
       const data = await fetchAvailableTimeSlots(day, month, year);
       setAvailableSlots(data.timeSlots || []);
-      setComment(data.comment || '');
+      setComment(data.comment || "");
     } catch (error) {
-      console.error('Error fetching time slots:', error);
+      console.error("Error fetching time slots:", error);
     } finally {
       setLoading(false);
     }
@@ -50,13 +62,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
     if (!slot.isAvailable) return;
     const clone = { ...slot };
     delete clone.isAvailable;
-    setValue('timeslot', clone);
-  };
-
-  const formatTimeSlot = (slot) => {
-    const hours = String(slot.hours).padStart(2, '0');
-    const minutes = String(slot.minutes).padStart(2, '0');
-    return `${hours}:${minutes}`;
+    setValue("timeslot", clone);
   };
 
   const isSlotSelected = (slot) => {
@@ -74,11 +80,6 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
     return services.reduce((sum, service) => sum + service.estimatedTime, 0);
   };
 
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours} giờ ${mins} phút` : `${mins} phút`;
-  };
 
   return (
     <div className="space-y-6">
@@ -94,7 +95,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
-        <Card className={'flex-1'}>
+        <Card className="flex-1">
           <CardHeader>
             <CardTitle className="font-semibold">Chọn ngày</CardTitle>
           </CardHeader>
@@ -109,7 +110,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
           </CardContent>
         </Card>
 
-        <Card className={'flex-1'}>
+        <Card className="flex-1">
           <CardHeader>
             <CardTitle className="font-semibold">Chọn giờ</CardTitle>
           </CardHeader>
@@ -133,25 +134,27 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
               </div>
             )}
 
-            {date && !loading && availableSlots.length > 0 && (
-                availableSlots.map((slot, index) => (
-                  <Button
-                    key={index}
-                    variant={isSlotSelected(slot) ? 'default' : 'outline'}
-                    className={`w-full ${
-                      !slot.isAvailable ? 'opacity-50 cursor-not-allowed' : ''
-                    } flex justify-start`}
-                    onClick={() => handleTimeSlotSelect(slot)}
-                    disabled={!slot.isAvailable}
-                  >
-                    <Clock className="w-4 h-4" />
-                    {formatTimeSlot(slot)}
-                    {!slot.isAvailable && (
-                      <span className="ml-auto text-xs">(Đã đầy)</span>
-                    )}
-                  </Button>
-                ))
-            )}
+            {date &&
+              !loading &&
+              availableSlots.length > 0 &&
+              availableSlots.map((slot, index) => (
+                <Button
+                  key={index}
+                  variant={isSlotSelected(slot) ? "default" : "outline"}
+                  className={cn(
+                    "w-full flex justify-start",
+                    !slot.isAvailable && "opacity-50 cursor-not-allowed"
+                  )}
+                  onClick={() => handleTimeSlotSelect(slot)}
+                  disabled={!slot.isAvailable}
+                >
+                  <Clock className="w-4 h-4" />
+                  {formatTimeSlot(slot)}
+                  {!slot.isAvailable && (
+                    <span className="ml-auto text-xs">(Đã đầy)</span>
+                  )}
+                </Button>
+              ))}
           </CardContent>
         </Card>
       </div>
@@ -159,6 +162,6 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
   );
 };
 
-TimeSlotSelectionStep.displayName = 'TimeSlotSelectionStep';
+TimeSlotSelectionStep.displayName = "TimeSlotSelectionStep";
 
 export default TimeSlotSelectionStep;
