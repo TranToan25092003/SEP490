@@ -114,7 +114,7 @@ const ConfirmationStep = ({ myCar }) => {
             <div className="space-y-3">
               {services.map((service) => (
                 <div
-                  key={service.id}
+                  key={service.sid}
                   className="flex justify-between items-start p-3 bg-gray-50 dark:bg-gray-800 rounded"
                 >
                   <div className="flex-1">

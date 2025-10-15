@@ -94,7 +94,6 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Calendar */}
         <Card className={'flex-1'}>
           <CardHeader>
             <CardTitle className="font-semibold">Chọn ngày</CardTitle>
@@ -110,7 +109,6 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
           </CardContent>
         </Card>
 
-        {/* Time Slots */}
         <Card className={'flex-1'}>
           <CardHeader>
             <CardTitle className="font-semibold">Chọn giờ</CardTitle>
@@ -144,7 +142,6 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
                       !slot.isAvailable ? 'opacity-50 cursor-not-allowed' : ''
                     } flex justify-start`}
                     onClick={() => handleTimeSlotSelect(slot)}
-                    type="button"
                     disabled={!slot.isAvailable}
                   >
                     <Clock className="w-4 h-4" />

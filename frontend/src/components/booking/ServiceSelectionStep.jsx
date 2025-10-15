@@ -52,7 +52,7 @@ const ServiceSelectionStep = ({ services }) => {
           
           return (
             <Card
-              key={service.id}
+              key={service.sid}
               className={`cursor-pointer transition-all hover:shadow-md ${
                 isSelected ? 'border-primary border-2' : ''
               }`}

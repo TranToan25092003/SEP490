@@ -107,7 +107,6 @@ const BookingForm = ({
   });
 
   const handleNext = (e) => {
-    e.preventDefault();
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -169,7 +168,6 @@ const BookingForm = ({
 
           <CardFooter className="border-t flex justify-between sticky bottom-0 bg-gray-50/50 backdrop-blur-md z-10 px-8 py-4">
             <Button
-              type="button"
               onClick={handlePrevious}
               disabled={currentStep === 0}
               variant="outline"
@@ -179,11 +177,11 @@ const BookingForm = ({
             </Button>
 
             {currentStep === steps.length - 1 ? (
-              <Button type="submit" size="lg" disabled={isSubmitting}>
+              <Button key="submit" type="submit" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? <Spinner /> : "Hoàn thành"}
               </Button>
             ) : (
-              <Button type="button" onClick={handleNext} size="lg">
+              <Button key="next" onClick={handleNext} size="lg">
                 Tiếp theo
               </Button>
             )}
