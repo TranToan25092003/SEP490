@@ -34,7 +34,7 @@ const HomeLayout = () => {
     <>
       <div className={`flex flex-col min-h-screen`}>
         <Header />
-        <div className={"flex-1 px-3 lg:mx-auto"}>
+        <div className={"flex-1"}>
           {state === "loading" ? (
             <>
               <Loading></Loading>

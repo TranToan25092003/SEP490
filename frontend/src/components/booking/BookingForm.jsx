@@ -52,12 +52,12 @@ import { cn } from "@/lib/utils";
  */
 
 /**
- * @typedef {import("react").FC<{
+ * @typedef {import("react").ComponentPropsWithRef<"form"> & {
  *   onSubmit: (data: BookingFormData) => Promise<any>;
  *   myCar: CarInfo;
  *   services: ServiceInfo[];
  *   fetchAvailableTimeSlots: (day: number, month: number, year: number) => Promise<AvailableTimeSlotInfo>;
- * }>} BookingFormProps
+ * }} BookingFormProps
  */
 
 const steps = [
@@ -104,13 +104,13 @@ const FlashMessage = forwardRef((props, ref) => {
     }
   }));
 
-  const className = cn(props.className, "transition-opacity duration-500", visible ? "opacity-100" : "opacity-0");
-  delete props.className;
+  const { className, ...rest } = props;
+  const clazzName = cn(className, "transition-opacity duration-500", visible ? "opacity-100" : "opacity-0");
 
   return (
     <p
-      className={className}
-      {...props}
+      className={clazzName}
+      {...rest}
     >
       {message}
     </p>
@@ -122,13 +122,15 @@ const FlashMessage = forwardRef((props, ref) => {
  * It manages form state and handles user input.
  * It outputs the collected data upon submission.
  * The component accepts async functions as props for handling form submission and data fetching (services and available time slots).
- * @type {BookingFormProps}
+ * @param {BookingFormProps} props
  */
 const BookingForm = ({
   onSubmit,
   myCar,
   services,
-  fetchAvailableTimeSlots
+  fetchAvailableTimeSlots,
+  className,
+  ...props
 }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -171,7 +173,6 @@ const BookingForm = ({
     const [isValid, message] = validateStep(currentStep);
     if (!isValid) {
       if (message) {
-        setCurrentStep(currentStep);
         flashMessageRef.current?.showMessage(message);
       }
       return;
@@ -218,7 +219,7 @@ const BookingForm = ({
 
   return (
     <FormProvider {...methods}>
-      <form onSubmit={methods.handleSubmit(handleFormSubmit)}>
+      <form onSubmit={methods.handleSubmit(handleFormSubmit)} className={cn(className)} {...props}>
         <Card className="bg-gray-50 dark:bg-gray-800 gap-2" ref={content}>
           <CardHeader className="sticky top-0 py-3 bg-linear-to-b from-gray-50/50 from-70% to-transparent backdrop-blur-md z-10">
             <Stepper currentStep={currentStep}>

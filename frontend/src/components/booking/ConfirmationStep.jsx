@@ -5,10 +5,19 @@ import { Calendar, Clock, Car, Wrench, DollarSign } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
+ * @typedef {import("react").ComponentPropsWithRef<"div"> & {
+ *   myCar: {
+ *     licensePlate: string;
+ *   };
+ * }} ConfirmationStepProps
+ */
+
+/**
  * ConfirmationStep component for reviewing booking details before submission.
  * Uses useFormContext to access form data.
+ * @param {ConfirmationStepProps} props
  */
-const ConfirmationStep = ({ myCar }) => {
+const ConfirmationStep = ({ myCar, className, ...props }) => {
   const { watch } = useFormContext();
   const services = watch("services") || [];
   const timeslot = watch("timeslot");
@@ -54,7 +63,7 @@ const ConfirmationStep = ({ myCar }) => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", className)} {...props}>
       <div className="text-center">
         <h1>
           <span className="text-2xl font-bold">Xác nhận đặt lịch</span>

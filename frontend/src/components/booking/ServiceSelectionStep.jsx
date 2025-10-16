@@ -17,10 +17,23 @@ const formatTime = (minutes) => {
 };
 
 /**
+ * @typedef {import("react").ComponentPropsWithRef<"div"> & {
+ *   services: Array<{
+ *     sid: string;
+ *     name: string;
+ *     basePrice: number;
+ *     desc?: string;
+ *     estimatedTime: number;
+ *   }>;
+ * }} ServiceSelectionStepProps
+ */
+
+/**
  * ServiceSelectionStep component for selecting services in the booking form.
  * Uses useFormContext to access form methods and state.
+ * @param {ServiceSelectionStepProps} props
  */
-const ServiceSelectionStep = ({ services }) => {
+const ServiceSelectionStep = ({ services, className, ...props }) => {
   const {
     fields: selectedServices,
     remove,
@@ -41,7 +54,7 @@ const ServiceSelectionStep = ({ services }) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn("space-y-4", className)} {...props}>
       <div className="text-center mb-6">
         <h1>
           <span className="text-2xl font-bold">Chọn dịch vụ</span>

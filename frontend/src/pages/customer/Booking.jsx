@@ -1,6 +1,7 @@
 import BookingHeader from "@/components/booking/BookingHeader";
 import BookingForm from "@/components/booking/BookingForm";
 import { toast } from "sonner";
+import Container from "@/components/global/Container";
 
 const services = [
   {
@@ -80,18 +81,17 @@ const Booking = () => {
   };
 
   return (
-    <div className="space-y-14 py-4">
+    <Container className="space-y-14 my-8">
       <BookingHeader />
 
-      <div className="min-h-[300px] mb-8">
-        <BookingForm
-          onSubmit={handleSubmit}
-          myCar={myCar}
-          services={services}
-          fetchAvailableTimeSlots={fetchAvailableTimeSlots}
-        />
-      </div>
-    </div>
+      <BookingForm
+        className="max-w-6xl mx-auto"
+        onSubmit={handleSubmit}
+        myCar={myCar}
+        services={services}
+        fetchAvailableTimeSlots={fetchAvailableTimeSlots}
+      />
+    </Container>
   );
 };
 

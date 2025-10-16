@@ -20,10 +20,20 @@ const formatTimeSlot = (slot) => {
 };
 
 /**
+ * @typedef {import("react").ComponentPropsWithRef<"div"> & {
+ *   fetchAvailableTimeSlots: (day: number, month: number, year: number) => Promise<{
+ *     timeSlots: Array<{hours: number, minutes: number, day: number, month: number, year: number, isAvailable: boolean}>;
+ *     comment: string;
+ *   }>;
+ * }} TimeSlotSelectionStepProps
+ */
+
+/**
  * TimeSlotSelectionStep component for selecting date and time in the booking form.
  * Uses useFormContext to access form methods and state.
+ * @param {TimeSlotSelectionStepProps} props
  */
-const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
+const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props }) => {
   const { setValue, watch } = useFormContext();
   const [date, setDate] = useState(null);
   const [availableSlots, setAvailableSlots] = useState([]);
@@ -82,7 +92,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots }) => {
 
 
   return (
-    <div className="space-y-6">
+    <div className={cn("space-y-6", className)} {...props}>
       <div className="text-center mb-6">
         <h1>
           <span className="text-2xl font-bold">Chọn ngày phục vụ</span>

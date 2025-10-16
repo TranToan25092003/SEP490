@@ -1,13 +1,19 @@
 import { memo } from "react";
 import bookingBikePng from "@/assets/booking-bike.png";
+import { cn } from "@/lib/utils";
+
+/**
+ * @typedef {import("react").ComponentPropsWithRef<"div">} BookingHeaderProps
+ */
 
 /**
  * BookingHeader component displays the header section for the booking page.
  * It includes a title, a call-to-action button, and an illustrative image.
+ * @param {BookingHeaderProps} props
  */
-const BookingHeader = memo(() => {
+const BookingHeader = ({ className, ...props }) => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div className={cn("grid grid-cols-1 lg:grid-cols-2 gap-8 items-center", className)} {...props}>
       <div className="space-y-6">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
           <span className="text-gray-800">Đăng ký dịch vụ</span>
@@ -29,8 +35,9 @@ const BookingHeader = memo(() => {
       </div>
     </div>
   );
-});
+};
 
-BookingHeader.displayName = "BookingHeader";
+const BookingHeaderMemo = memo(BookingHeader);
+BookingHeaderMemo.displayName = "BookingHeader";
 
-export default BookingHeader;
+export default BookingHeaderMemo;
