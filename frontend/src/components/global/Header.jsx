@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useClerk } from "@clerk/clerk-react";
 import headerImg from "@/assets/header-img.jpg";
+import MotorcycleIcon from "../icons/MotorcycleIcon";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -32,9 +33,7 @@ const Header = () => {
               onClick={() => openSignIn?.({})}
               className="bg-[#DF1D01] text-white rounded-[8px] px-3 md:px-4 py-2 text-[14px] md:text-[16px] xl:text-[18px] font-bold flex items-center gap-2 hover:brightness-110 cursor-pointer"
             >
-              <svg width="18" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="hidden md:block">
-                <path d="M10 0C7 0 5 2 5 5v1H3l-3 3v1h3v1c0 2 2 3 4 3h6c2 0 4-1 4-3V5c0-3-2-5-5-5h-2z" fill="currentColor"/>
-              </svg>
+              <MotorcycleIcon />
               Đăng Nhập
             </button>
           </div>

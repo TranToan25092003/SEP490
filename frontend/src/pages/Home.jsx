@@ -20,6 +20,7 @@ import service2 from '@/assets/service-thaynhot.jpg'
 import service3 from '@/assets/service-atvs.jpg'
 import service4 from '@/assets/service-ruaxe.png'
 import ctaBg from '@/assets/cta-bg.jpg'
+import MotorcycleIcon from '@/components/icons/MotorcycleIcon'
 
 function Home() {
   const slides = [hero1, g1, g2, g3]
@@ -110,14 +111,7 @@ function Home() {
                                        active:scale-95
                                        cursor-pointer"
                             >
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="h-5 w-5"
-                              >
-                                <path d="M19 5h-2l-1 2h-2l-.72-1.44A2 2 0 0 0 11.46 4H9v2h2.46l1 2H9.5a5.5 5.5 0 1 0 5.37 6.66l1.22-3.66H18a3 3 0 1 0 0-6zm-9.5 12A3.5 3.5 0 1 1 13 13.5 3.5 3.5 0 0 1 9.5 17z" />
-                              </svg>
+                              <MotorcycleIcon />
                               Tìm hiểu
                             </button>
                           </div>
