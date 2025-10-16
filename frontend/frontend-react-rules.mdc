@@ -1,0 +1,125 @@
+---
+alwaysApply: true
+---
+
+Phải đúng như thiết kế của FIGMA
+Trong FIGMA đang là 1440width nên nó sẽ bị to chỉnh sửa lại cho nó phù hợp với màn hình desktop có size là 1920x1080
+
+- Chủ động sử dụng shadcn nếu có thể, hạn chế sử dụng html thuần
+
+# 1) Ngăn xếp kỹ thuật & Kiến trúc
+
+- Framework: **React 19 + Vite** (SPA; dùng `react-router-dom` cho routing client-side).
+- UI/UX:
+
+  - **TailwindCSS v4** là nền tảng bắt buộc cho styling tiện lợi, nhất quán.
+  - **shadcn/ui + Radix UI** cho primitive components, form controls, overlay, v.v.
+  - **Tuyệt đối KHÔNG sử dụng Ant Design/antd** và các gói liên quan (bao gồm cả `@ant-design/icons`, `antd-img-crop`). Nếu đang tồn tại trong `package.json`, phải gỡ bỏ.
+
+- Biểu tượng & Hình ảnh:
+  - Icon: **lucide-react** (ưu tiên) hoặc biểu tượng nội bộ trong `src/assets`.
+  - Ảnh: Ưu tiên **WebP**, lazy load (native `loading="lazy"`), khai báo kích thước rõ ràng để giảm CLS.
+- Cấu hình build: **Vite** với alias `@ -> src` (đã cấu hình trong `vite.config.js`).
+
+# 2) Quy trình làm việc (Workflow)
+
+- Trước khi bắt đầu task: tạo TODO, tiêu chí hoàn thành rõ ràng.
+- Khi code: commit nhỏ, mạch lạc, theo từng đơn vị thay đổi; mô tả ý nghĩa thay vì mô tả thao tác.
+- Mọi màn hình/flow mới: có skeleton/loading, empty-state, error-state.
+
+# 3) Cấu trúc thư mục (theo repo này)
+
+- `src/`
+  - `assets/`: ảnh, biểu tượng tĩnh. Không đặt logic trong đây.
+  - `components/`
+    - `ui/`: các building blocks từ shadcn/ui (đã tách file theo component: `button.jsx`, `dialog.jsx`, ...). Chỉ chứa phần primitive có thể tái sử dụng cao.
+    - `global/`: component chia sẻ ở nhiều trang (header, footer, pagination, modal xác thực, ...). Không chứa logic đặc thù route cụ thể.
+    - `navbar/`: cụm điều hướng, user icon, dropdown, search.
+    - `Layout/` → `adminLayout/`: layout cấp cao, khung admin.
+  - `pages/`: trang và layout cấp trang (`Home.jsx`, `HomeLayout.jsx`, `ThemeProvider.jsx`, `Providers.jsx`, nhóm `stripe/`, ...). Logic đặc thù trang đặt ở đây.
+  - `routers/`: định nghĩa routers theo vai trò (`admin/`, `client/`, ...). Chỉ chứa cấu hình route, lazy import nơi phù hợp.
+  - `lib/`: helper không phụ thuộc UI (`utils.js`, mock data tạm thời khi dev). Không gọi API thật ở đây.
+  - `utils/`: tiện ích dùng chung (axios instance, schema zod, socket, upload).
+  - `index.css`: entry Tailwind; chỉ đặt CSS layer/tokens tối thiểu; tránh style cục bộ ở đây.
+  - `main.jsx`, `App.jsx`: bootstrap ứng dụng, khai báo provider (theme, router, Clerk, v.v.).
+
+# 4) Quy ước đặt tên
+
+- Thư mục: **kebab-case** (`navbar`, `global`, `admin-layout`).
+- File component React: **PascalCase.jsx** (`UserIcon.jsx`, `NotificationBell.jsx`).
+- Biến/hàm: **camelCase** (`isLoading`, `fetchUserProfile`).
+- Hằng số: **UPPER_SNAKE_CASE**.
+
+# 5) Styling & Theming
+
+- Dùng **Tailwind utility-first** + **class-variance-authority (CVA)** + `tailwind-merge` để tạo variant API cho components trong `ui/`.
+- Theme switching: dùng `ThemeProvider` (đã có trong `pages/ThemeProvider.jsx`) + data-theme class/attributes nếu cần.
+- Không hardcode màu; dùng token Tailwind (vd: `text-muted-foreground`) hoặc biến CSS cấp theme.
+- Layout an toàn: khai báo kích thước ảnh/container để tránh CLS.
+
+# 6) shadcn/ui & Radix
+
+- Import primitives từ `src/components/ui/*`. Không import trực tiếp từ Radix trừ khi `ui/*` chưa bọc.
+- Khi cần component mới:
+  1. Tạo primitive trong `components/ui` (áp dụng Tailwind + CVA, nhận `className` để mở rộng).
+  2. Nếu có logic domain, tạo component composition ở `components/global` hoặc tại trang.
+- Form: **react-hook-form + @hookform/resolvers + zod**. Input/Select/Dialog… dùng bản trong `ui/` để đồng bộ focus ring, spacing, màu.
+
+# 7) Tránh dùng Ant Design (bắt buộc)
+
+- Không sử dụng `antd`, `@ant-design/icons`, `antd-img-crop` trong code.
+- Nếu còn phụ thuộc trong `package.json`, thực hiện:
+  - Gỡ cài đặt và thay thế UI bằng components ở `components/ui/`.
+  - Clean code: loại bỏ import/JSX liên quan antd.
+
+# 8) Routing, State, Data Fetching
+
+- Routing: `react-router-dom`. Tách route theo vai trò ở `src/routers/*`. Dùng lazy `React.lazy`/`Suspense` cho trang nặng.
+- State cục bộ: React state. State chia sẻ nhỏ: context cục bộ trang/layout. Tránh global store khi chưa cần.
+- API: `axios` instance ở `utils/customAxios.js`. Mọi call phải có loading, error, retry phù hợp UI.
+- Validation: **zod** schemas ở `utils/schema.js`.
+
+# 9) Trải nghiệm người dùng
+
+- Luôn có: loading skeleton (`components/ui/skeleton.jsx`), empty state, error (`components/global/Error.jsx`).
+- Thông báo: dùng `sonner` hoặc `react-hot-toast`, thống nhất một thư viện cho toàn app.
+- Trạng thái đăng nhập: dùng Clerk (`utils/clerk.js`), hiển thị `AuthRequiredModal` khi cần.
+
+# 10) Hiệu năng & Chất lượng
+
+- Tối ưu ảnh (WebP, `loading="lazy"`, kích thước tường minh).
+- Code-splitting ở mức route/lazy component; tránh import không cần thiết.
+- ESLint: dùng cấu hình tại `eslint.config.js`. **Sửa toàn bộ linter errors trước khi PR**.
+- Không để `console.log`/`debugger` trong production paths.
+
+# 11) Quy tắc sử dụng thư viện
+
+- Icons: ưu tiên `lucide-react`/`react-icons` theo thống nhất.
+- Animation: `framer-motion` khi cần, tránh lạm dụng.
+- Carousel: `embla-carousel-react` đã cài; wrap thành component trong `components/ui/carousel.jsx`.
+- Thanh toán: dùng `@stripe/react-stripe-js` trong `pages/stripe/*`.
+
+# 12) Mẫu component chuẩn
+
+- Component trong `ui/` phải có:
+  - API props tối giản, mô tả rõ ràng.
+  - `className` để mở rộng; dùng `cn()` helper (Tailwind merge) nếu cần.
+  - Variants bằng CVA khi có nhiều trạng thái.
+
+# 13) Kiểm thử thủ công & QA nhanh
+
+- Smoke test các luồng chính: điều hướng navbar, đăng nhập, tạo/lấy dữ liệu giả (mock trong `lib/mock-data.jsx`), thanh toán thử (Stripe test keys).
+- Kiểm tra theme light/dark, responsive breakpoints, focus states (a11y).
+
+# 14) Lộ trình dọn dẹp (nếu còn dấu vết antd)
+
+- Gỡ `antd`, `@ant-design/icons`, `antd-img-crop` khỏi `package.json` và code.
+- Thay thế từng màn hình sang shadcn/ui primitives tương đương.
+- Chuẩn hóa token Tailwind, bỏ class antd còn sót.
+
+# 15) Nguyên tắc chung
+
+- **Nhất quán** > cầu kỳ. Ưu tiên sử dụng primitives đã có trong `components/ui`.
+- **Tái sử dụng**: đừng tạo component mới nếu `ui/*` hoặc `global/*` đã đáp ứng.
+- **Tối giản**: props rõ ràng, tránh state thừa; tách logic ngoài JSX khi phức tạp.
+- **A11y**: luôn gắn nhãn, role, aria-\* đúng ngữ cảnh; Radix đã hỗ trợ, đừng xóa.

@@ -1,0 +1,6 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Chat">
+<path id="Vector" d="M30 4V16C30 17.1 29.1 18 28 18H27V9C27 6.79 25.21 5 23 5H6V4C6 2.9 6.9 2 8 2H28C29.1 2 30 2.9 30 4Z" fill="var(--fill-0, #D1D1D1)"/>
+<path id="Vector_2" d="M23 7H4C2.897 7 2 7.897 2 9V20C2 21.103 2.897 22 4 22H9.382L13.106 29.447C13.275 29.786 13.621 30 14 30C14.379 30 14.725 29.786 14.895 29.447L18.618 22H23C24.103 22 25 21.103 25 20V9C25 7.897 24.103 7 23 7Z" fill="var(--fill-0, #D1D1D1)"/>
+</g>
+</svg>

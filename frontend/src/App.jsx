@@ -8,6 +8,9 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import AdminLayout from "./components/Layout/adminLayout";
+import Manager from "./pages/manager/Manager";
+import ManagerItems from "./pages/manager/Items";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -33,6 +36,14 @@ const router = createBrowserRouter([
   },
 
   testRouter,
+  {
+    path: "/manager",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Manager /> },
+      { path: "items", element: <ManagerItems /> },
+    ],
+  },
 ]);
 
 function App() {
