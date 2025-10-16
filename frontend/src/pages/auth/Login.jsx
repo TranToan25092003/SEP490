@@ -1,10 +1,21 @@
 import React from "react";
 import photo from "../../assets/image.png";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
+
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
+  const { isSignedIn } = useUser();
+  const navigate = useNavigate();
+
+  if (isSignedIn) {
+    navigate("/");
+    return;
+  }
+  const [hide, setHide] = useState(false);
 
   const handleFacebookSignin = async () => {
     try {
@@ -158,10 +169,92 @@ const Login = () => {
               </svg>
               <p>Continue with Facebook</p>
             </div>
+            <div className="flex items-center mt-5">
+              <div className="flex-grow border-t border-gray-400"></div>
+              <span className="mx-4 text-gray-600">Hoặc</span>
+              <div className="flex-grow border-t border-gray-400"></div>
+            </div>
+
+            <div className="flex flex-col  w-full mt-5">
+              <p>Tài khoản</p>
+              <input
+                type="text"
+                placeholder=""
+                className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div className="flex items-center justify-between">
+                <p className="mt-5">Mật khẩu</p>
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="19"
+                  height="16"
+                  viewBox="0 0 19 16"
+                  className="mt-5 cursor-pointer"
+                  onClick={() => {
+                    setHide(!hide);
+                  }}
+                  fill="none"
+                >
+                  <path
+                    d="M17.0189 0.881275L16.283 0.145332C16.075 -0.0626585 15.691 -0.0306494 15.451 0.257296L12.8908 2.80126C11.7388 2.30532 10.4749 2.06532 9.14682 2.06532C5.1947 2.08126 1.77092 4.38523 0.122802 7.69743C0.0267743 7.90542 0.0267743 8.16135 0.122802 8.33734C0.890735 9.90536 2.04281 11.2014 3.48281 12.1773L1.38682 14.3053C1.14682 14.5453 1.11481 14.9293 1.27485 15.1373L2.0108 15.8732C2.21879 16.0812 2.60277 16.0492 2.84277 15.7613L16.8907 1.71339C17.1947 1.47352 17.2267 1.08956 17.0187 0.88155L17.0189 0.881275ZM9.99481 5.71316C9.7228 5.64914 9.43485 5.56919 9.16283 5.56919C7.80278 5.56919 6.71489 6.65721 6.71489 8.01712C6.71489 8.28913 6.77891 8.57708 6.85887 8.8491L5.78675 9.90513C5.4668 9.34518 5.29081 8.72108 5.29081 8.01715C5.29081 5.88918 7.00283 4.17715 9.13081 4.17715C9.83487 4.17715 10.4588 4.35314 11.0188 4.6731L9.99481 5.71316Z"
+                    fill={hide ? "#000000" : "#666666"}
+                    fill-opacity="0.8"
+                  />
+                  <path
+                    d="M18.1709 7.69737C17.6109 6.57732 16.8749 5.56939 15.963 4.75336L12.9869 7.69737V8.01732C12.9869 10.1453 11.2749 11.8573 9.1469 11.8573H8.82695L6.93896 13.7453C7.64302 13.8893 8.37897 13.9853 9.09897 13.9853C13.0511 13.9853 16.4749 11.6813 18.123 8.35319C18.267 8.12912 18.267 7.90521 18.1709 7.6972L18.1709 7.69737Z"
+                    fill={hide ? "#000000" : "#666666"}
+                    fill-opacity="0.8"
+                  />
+                </svg>
+              </div>
+
+              <input
+                type={hide ? "text" : "password"}
+                placeholder="Mật khẩu"
+                className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+
+              <div className="flex justify-end">
+                <p className="uppercase underline cursor-pointer hover:text-gray-500">
+                  QUÊN MẬT KHẨU ?
+                </p>
+              </div>
+
+              <div className="w-full">
+                <button className="uppercase mt-3 bg-[#DF1D01] rounded-4xl h-full flex items-center justify-center gap-1 cursor-pointer hover:bg-red-400">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="25"
+                    height="24"
+                    viewBox="0 0 25 24"
+                    className="ml-5 my-1"
+                    fill="none"
+                  >
+                    <path
+                      d="M20.9 3.42857C20.9 1.54286 19.82 0 18.5 0H14.9V3.42857H18.5V7.97143L14.324 15.4286H10.1V6.85714H5.3C2.648 6.85714 0.5 9.92571 0.5 13.7143V18.8571H2.9C2.9 21.7029 4.508 24 6.5 24C8.492 24 10.1 21.7029 10.1 18.8571H15.476L20.9 9.17143V3.42857ZM2.9 15.4286V13.7143C2.9 11.8286 3.98 10.2857 5.3 10.2857H7.7V15.4286H2.9ZM6.5 20.5714C5.84 20.5714 5.3 19.8 5.3 18.8571H7.7C7.7 19.8 7.16 20.5714 6.5 20.5714Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M10.1001 1.71429H4.1001V5.14287H10.1001V1.71429Z"
+                      fill="white"
+                    />
+                    <path
+                      d="M20.9 13.7143C18.908 13.7143 17.3 16.0114 17.3 18.8572C17.3 21.7029 18.908 24 20.9 24C22.892 24 24.5 21.7029 24.5 18.8572C24.5 16.0114 22.892 13.7143 20.9 13.7143ZM20.9 20.5714C20.24 20.5714 19.7 19.8 19.7 18.8572C19.7 17.9143 20.24 17.1429 20.9 17.1429C21.56 17.1429 22.1 17.9143 22.1 18.8572C22.1 19.8 21.56 20.5714 20.9 20.5714Z"
+                      fill="white"
+                    />
+                  </svg>
+                  <p className="text-white text-xl font-bold mx-2 my-1 mr-5">
+                    {" "}
+                    Đăng Nhập
+                  </p>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div id="clerk-captcha"></div>
     </div>
   );
 };
