@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,12 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
-
-const formatTime = (minutes) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return hours > 0 ? `${hours} giờ ${mins} phút` : `${mins} phút`;
-};
 
 const formatTimeSlot = (slot) => {
   const hours = String(slot.hours).padStart(2, "0");
@@ -99,7 +93,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
         </h1>
         {services.length > 0 && (
           <p className="text-sm text-gray-500 mt-2">
-            Thời gian dự kiến: {formatTime(getTotalEstimatedTime())}
+            Thời gian dự kiến: {formatTimeXGioYPhut(getTotalEstimatedTime())}
           </p>
         )}
       </div>

@@ -1,20 +1,7 @@
 import { useFieldArray } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
-
-const formatPrice = (price) => {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(price);
-};
-
-const formatTime = (minutes) => {
-  const hours = Math.floor(minutes / 60);
-  const mins = minutes % 60;
-  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
-};
+import { cn, formatPrice, formatTimeXGioYPhut } from "@/lib/utils";
 
 /**
  * @typedef {import("react").ComponentPropsWithRef<"div"> & {
@@ -95,7 +82,7 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
                 )}
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-sm text-gray-500">
-                    Thời gian: {formatTime(service.estimatedTime)}
+                    Thời gian: {formatTimeXGioYPhut(service.estimatedTime)}
                   </span>
                   <span className="font-semibold text-primary">
                     {formatPrice(service.basePrice)}

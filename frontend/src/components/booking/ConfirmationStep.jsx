@@ -1,8 +1,8 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Car, Wrench, DollarSign } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Calendar, Clock, Car, Wrench } from "lucide-react";
+import { cn, formatPrice, formatTimeXGioYPhut } from "@/lib/utils";
 
 /**
  * @typedef {import("react").ComponentPropsWithRef<"div"> & {
@@ -22,18 +22,6 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
   const services = watch("services") || [];
   const timeslot = watch("timeslot");
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(price);
-  };
-
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours} giờ ${mins} phút` : `${mins} phút`;
-  };
 
   const getTotalPrice = () => {
     return services.reduce((sum, service) => sum + service.basePrice, 0);
@@ -138,7 +126,7 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
                       </p>
                     )}
                     <p className={cn("text-sm mt-1 text-gray-500") }>
-                      Thời gian: {formatTime(service.estimatedTime)}
+                      Thời gian: {formatTimeXGioYPhut(service.estimatedTime)}
                     </p>
                   </div>
                   <span className="font-semibold text-primary ml-4">
@@ -151,7 +139,7 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
                 <div>
                   <p className="font-semibold">Tổng cộng:</p>
                   <p className="text-sm text-gray-500">
-                    Tổng thời gian: {formatTime(getTotalTime())}
+                    Tổng thời gian: {formatTimeXGioYPhut(getTotalTime())}
                   </p>
                 </div>
                 <span className="text-xl font-bold text-primary">
