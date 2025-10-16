@@ -23,7 +23,6 @@ import { cn } from "@/lib/utils";
  * @typedef {object} ServiceInfo
  * @property {string} sid - The unique identifier of the service.
  * @property {string} name - The name of the service.
- * @property {number} basePrice - The base price of the service (in VND).
  * @property {string | undefined} desc - The description of the service (optional).
  * @property {number} estimatedTime - The estimated time for the service in minutes.
  */
