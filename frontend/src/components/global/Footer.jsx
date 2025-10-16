@@ -12,9 +12,11 @@ import g2 from "@/assets/gallery-2.jpg";
 import g3 from "@/assets/gallery-3.jpg";
 import g4 from "@/assets/gallery-4.jpg";
 import { useLoaderData } from "react-router-dom";
+import ArrowIcon from "../icons/ArrowIcon";
 
 const PartnerLogos = () => {
   const logos = [ducati, honda, kawasaki, semdo, star, suzuki, yamaha];
+
   return (
     <div className="w-full bg-zinc-900">
       <div className="max-w-[1920px] mx-auto px-4 py-6">
@@ -36,6 +38,16 @@ const PartnerLogos = () => {
 
 const MainFooterContent = ({ footerInfo }) => {
   const { address, email, facebook, iframe, phone, zalo } = footerInfo || {};
+
+  const links = [
+    'Trang Chủ',
+    'Sắp Ra Mắt',
+    'Phụ Tùng',
+    'Dịch Vụ',
+    'Giới Thiệu',
+    'Liên Hệ',
+  ]
+
   return (
     <div className="w-full bg-zinc-900 text-white">
       {/* Constrain inner content to match Figma container width */}
@@ -67,16 +79,25 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Quick Links */}
-          <div className="lg:max-w-[220px] xl:max-w-[240px]">
-            <div className="text-white text-sm uppercase mb-4">Quick Links</div>
-            <ul className="space-y-3 text-white/70 text-xs">
-              <li className="border-b border-white/50 pb-2">Trang Chủ</li>
-              <li className="border-b border-white/50 pb-2">Sắp Ra Mắt</li>
-              <li className="border-b border-white/50 pb-2">Phụ Tùng</li>
-              <li className="border-b border-white/50 pb-2">Dịch Vụ</li>
-              <li className="border-b border-white/50 pb-2">Giới Thiệu</li>
-              <li className="border-b border-white/50 pb-2">Liên Hệ</li>
-            </ul>
+          <div className="w-full bg-black p-8">
+            <div className="lg:max-w-[220px] xl:max-w-[240px]">
+              <div className="mb-4 font-['Poppins'] text-sm uppercase text-white">
+                Quick Links
+              </div>
+              <ul className="space-y-3 font-['Poppins'] text-xs">
+                {links.map((link) => (
+                  <li key={link}>
+                    <a
+                      href="#"
+                      className="group flex items-center gap-x-3 text-white/70 underline transition-colors duration-200 hover:text-white"
+                    >
+                      <ArrowIcon />
+                      <span>{link}</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
 
           {/* Contact / Subscribe */}
