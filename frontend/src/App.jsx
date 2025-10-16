@@ -16,7 +16,18 @@ const router = createBrowserRouter([
     element: <HomeLayout />,
     errorElement: <ErrorPage />,
     loader: homeLayoutLoader,
-    children: [],
+    children: [
+      {
+        path: "/history",
+        lazy: async () => {
+          const { default: HistoryRepair } = await import(
+            "./pages/history-repair/HistoryRepair"
+          );
+          return { Component: HistoryRepair };
+        },
+        errorElement: <ErrorPage></ErrorPage>,
+      },
+    ],
   },
 
   {

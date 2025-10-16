@@ -1,10 +1,13 @@
 import React from "react";
 import photo from "../../assets/image.png";
-import { useSignIn, useSignUp } from "@clerk/clerk-react";
+import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
+  const navigate = useNavigate();
+  const { isSignedIn } = useUser();
 
   const handleFacebookSignin = async () => {
     try {
@@ -43,6 +46,11 @@ const Login = () => {
       });
     } catch (error) {}
   };
+
+  if (isSignedIn) {
+    navigate("/");
+    return;
+  }
   return (
     <div className="flex items-center justify-center bg-black min-h-screen">
       <div className="flex flex-col md:flex-row w-[90%] md:w-3/4 relative">
