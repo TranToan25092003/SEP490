@@ -5,6 +5,9 @@ import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
+import AdminLayout from "./components/Layout/adminLayout";
+import Manager from "./pages/manager/Manager";
+import ManagerItems from "./pages/manager/Items";
 
 // IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -24,6 +27,14 @@ const router = createBrowserRouter([
   },
 
   testRouter,
+  {
+    path: "/manager",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Manager /> },
+      { path: "items", element: <ManagerItems /> },
+    ],
+  },
 ]);
 
 function App() {
