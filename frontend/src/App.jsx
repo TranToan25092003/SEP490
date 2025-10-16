@@ -5,21 +5,30 @@ import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
+import { ThemeProvider } from "./components/global/ThemeProvider";
+import Booking from "./pages/customer/Booking";
+import BookingProgress from "./pages/customer/BookingProgress";
 
-// IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <HomeLayout />,
-    errorElement: <ErrorPage />,
     loader: homeLayoutLoader,
     children: [
       {
         path: "/",
         element: <Home />,
       },
+      {
+        path: "/booking",
+        element: <Booking />
+      },
+      {
+        path: "/booking/:id",
+        element: <BookingProgress />
+      }
     ],
   },
 
@@ -32,11 +41,12 @@ function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Toaster></Toaster>
-
-      <RouterProvider router={router} />
-    </ClerkProvider>
+    <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <Toaster></Toaster>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 

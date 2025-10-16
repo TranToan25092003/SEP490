@@ -55,11 +55,11 @@ const MainFooterContent = ({ footerInfo }) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About / Address */}
           <div>
-            <div className="text-red-600 text-sm uppercase font-['Poppins'] mb-3">MotorMATE</div>
-            <div className="text-neutral-400 text-xs font-['Poppins'] leading-tight mb-3">
+            <div className="text-red-600 text-sm uppercase mb-3">MotorMATE</div>
+            <div className="text-neutral-400 text-xs leading-tight mb-3">
               {address || "Lorem Ipsum is simply dummy text of the printing and typesetting industry."}
             </div>
-            <div className="text-neutral-400 text-xs font-['Poppins'] leading-tight">
+            <div className="text-neutral-400 text-xs leading-tight">
               {phone || "(000) 000-0000"}
             </div>
             {iframe && (
@@ -69,7 +69,7 @@ const MainFooterContent = ({ footerInfo }) => {
 
           {/* Photo Gallery */}
           <div>
-            <div className="text-white text-sm uppercase font-['Exo'] mb-4">Photo Gallery</div>
+            <div className="text-white text-sm uppercase mb-4">Photo Gallery</div>
             <div className="grid grid-cols-2 gap-2">
               <img className="w-30 h-12 object-cover" src={g1} alt="gallery-1" />
               <img className="w-30 h-12 object-cover" src={g2} alt="gallery-2" />
@@ -102,7 +102,7 @@ const MainFooterContent = ({ footerInfo }) => {
 
           {/* Contact / Subscribe */}
           <div className="lg:max-w-[240px] xl:max-w-[260px]">
-            <div className="text-white text-sm uppercase font-['Poppins'] mb-4">Để lại lời nhắn</div>
+            <div className="text-white text-sm uppercase mb-4">Để lại lời nhắn</div>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
@@ -118,7 +118,7 @@ const MainFooterContent = ({ footerInfo }) => {
                   className="bg-white/80 text-neutral-600 placeholder-neutral-600 text-xs px-3 py-2  w-full"
                 />
               </div>
-              <div className="text-zinc-500 text-sm font-['Poppins']">Nhận thông tin mới nhất</div>
+              <div className="text-zinc-500 text-sm">Nhận thông tin mới nhất</div>
               <button className="bg-red-600/75 text-white text-sm font-bold tracking-tight uppercase px-4 py-2 rounded shadow-[0px_2px_0px_0px_rgba(223,29,1,0.75)]">
                 Gửi
               </button>
@@ -161,8 +161,8 @@ const BottomBar = () => {
     <div className="w-full bg-zinc-900 text-zinc-500">
       <div className="max-w-[1350px] mx-auto px-4 py-4">
         <div className="h-px bg-neutral-700 mb-3" />
-        <div className="text-xs font-['Poppins'] text-left">
-          Copyright © {year}. MotorMate – Design by WinnerTech
+        <div className="text-xs text-left">
+          Copyright © {year}. MotorMate
         </div>
       </div>
     </div>
