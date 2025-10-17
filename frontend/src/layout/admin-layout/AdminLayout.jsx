@@ -3,7 +3,7 @@ import TopMenu from "./TopMenu";
 import Sidebar from "./AdminSidebar";
 
 export default function AdminLayout() {
-  const HEADER_HEIGHT = 120;
+  const HEADER_HEIGHT = 80;
   const SIDEBAR_WIDTH = 130;
   return (
     <div className="relative min-h-screen bg-white">

@@ -15,10 +15,11 @@ import statusTick from "@/assets/admin/figma_selection/ce384d644dd0363c728f1fb1d
 import iconEdit from "@/assets/admin/figma_selection/30d22df015a0acce3dd7984d089bd037853622d7.svg";
 import iconDelete from "@/assets/admin/figma_selection/77d1c5cb4524f3bd944adaeee5f86d34af0a071e.svg";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AdminPagination } from "@/components/global/AdminPagination";
 
 export default function ManagerItems() {
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-[520px]">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px]">
@@ -43,7 +44,6 @@ export default function ManagerItems() {
         </div>
       </div>
 
-      <div className="mt-6 rounded-[6px] overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -142,7 +142,12 @@ export default function ManagerItems() {
             ))}
           </TableBody>
         </Table>
-      </div>
+
+        <AdminPagination pagination={{
+          totalPages: 10,
+          itemsPerPage: 5,
+          totalItems: 100
+        }} />
     </div>
   );
 }

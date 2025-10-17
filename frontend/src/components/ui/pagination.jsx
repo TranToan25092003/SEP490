@@ -17,7 +17,7 @@ function Pagination({
       role="navigation"
       aria-label="pagination"
       data-slot="pagination"
-      className={cn("mx-auto flex w-full justify-center", className)}
+      className={cn(className, "select-none")}
       {...props} />
   );
 }
@@ -35,15 +35,17 @@ function PaginationContent({
 }
 
 function PaginationItem({
+  disabled,
   ...props
 }) {
-  return <li data-slot="pagination-item" {...props} />;
+  return <li data-slot="pagination-item" className={cn({ "opacity-50 pointer-events-none": disabled })} {...props} />;
 }
 
 function PaginationLink({
   className,
   isActive,
   size = "icon",
+  variant,
   ...props
 }) {
   return (
@@ -52,7 +54,7 @@ function PaginationLink({
       data-slot="pagination-link"
       data-active={isActive}
       className={cn(buttonVariants({
-        variant: isActive ? "outline" : "ghost",
+        variant: variant ? variant : isActive ? "paginationLink" : "paginationLinkInactive",
         size,
       }), className)}
       {...props} />
@@ -67,10 +69,10 @@ function PaginationPrevious({
     <PaginationLink
       aria-label="Go to previous page"
       size="default"
+      variant="ghost"
       className={cn("gap-1 px-2.5 sm:pl-2.5", className)}
       {...props}>
       <ChevronLeftIcon />
-      <span className="hidden sm:block">Previous</span>
     </PaginationLink>
   );
 }
@@ -83,9 +85,9 @@ function PaginationNext({
     <PaginationLink
       aria-label="Go to next page"
       size="default"
+      variant="ghost"
       className={cn("gap-1 px-2.5 sm:pr-2.5", className)}
       {...props}>
-      <span className="hidden sm:block">Next</span>
       <ChevronRightIcon />
     </PaginationLink>
   );
