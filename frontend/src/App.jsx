@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import AdminLayout from "./components/Layout/adminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
+import AddItem from "./pages/manager/AddItem";
 
 // IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -33,6 +34,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Manager /> },
       { path: "items", element: <ManagerItems /> },
+      { path: "items/add", element: <AddItem /> },
     ],
   },
 ]);

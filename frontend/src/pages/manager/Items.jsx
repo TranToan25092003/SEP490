@@ -14,6 +14,14 @@ import statusTick from "@/assets/admin/figma_selection/ce384d644dd0363c728f1fb1d
 import iconEdit from "@/assets/admin/figma_selection/30d22df015a0acce3dd7984d089bd037853622d7.svg";
 import iconDelete from "@/assets/admin/figma_selection/77d1c5cb4524f3bd944adaeee5f86d34af0a071e.svg";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 export default function ManagerItems() {
   return (
@@ -33,7 +41,10 @@ export default function ManagerItems() {
           />
         </div>
         <div className="flex items-center gap-3">
-          <Button className="rounded-full h-10 px-6 text-[16px] font-bold bg-[#df1d01] hover:bg-[#d01b01] text-white">
+          <Button
+            className="rounded-full h-10 px-6 text-[16px] font-bold bg-[#df1d01] hover:bg-[#d01b01] text-white"
+            onClick={() => (window.location.href = "/manager/items/add")}
+          >
             + Thêm sản phẩm
           </Button>
           <Button className="rounded-full h-10 px-6 text-[16px] font-bold bg-[#fe7e07] hover:bg-[#e67106] text-white">
@@ -145,6 +156,38 @@ export default function ManagerItems() {
           </TableBody>
         </Table>
       </div>
+
+      <Pagination className="mt-6">
+        <PaginationContent className="gap-2 justify-center">
+          <PaginationItem>
+            <PaginationPrevious
+              className="rounded-full h-9 px-4 bg-white border text-[#2e2e3a] shadow-[0_1px_2px_rgba(16,24,40,0.05)] aria-disabled:opacity-50 aria-disabled:pointer-events-none"
+              aria-disabled
+            />
+          </PaginationItem>
+          {[1, 2, 3, 4].map((p) => (
+            <PaginationItem key={p}>
+              <PaginationLink
+                isActive={p === 1}
+                className={
+                  p === 1
+                    ? "rounded-full h-9 w-9 bg-[#0163FF] text-white"
+                    : "rounded-full h-9 w-9 bg-white border text-[#2e2e3a] shadow-[0_1px_2px_rgba(16,24,40,0.05)]"
+                }
+                href="#"
+              >
+                {p}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              className="rounded-full h-9 px-4 bg-white border text-[#2e2e3a] shadow-[0_1px_2px_rgba(16,24,40,0.05)] aria-disabled:opacity-50 aria-disabled:pointer-events-none"
+              aria-disabled
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
     </div>
   );
 }

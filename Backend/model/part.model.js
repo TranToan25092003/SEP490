@@ -12,6 +12,18 @@ const PartSchema = new Schema(
       { type: Schema.Types.ObjectId, ref: "Model", required: false },
     ], // Array of compatible vehicle models (optional)
     quantity: { type: Number, required: true, min: 0, default: 0 }, // Quantity in stock (non-negative, default 0)
+
+    // Cloudinary-backed media references
+    // Main display image for this part
+    mainImage: {
+      type: Schema.Types.ObjectId,
+      ref: "MediaAsset",
+      required: true,
+    },
+    // Additional images (gallery)
+    gallery: [{ type: Schema.Types.ObjectId, ref: "MediaAsset" }],
+    // Related documents like PDFs, manuals, certificates, etc.
+    attachments: [{ type: Schema.Types.ObjectId, ref: "MediaAsset" }],
   },
   { timestamps: true }
 );
