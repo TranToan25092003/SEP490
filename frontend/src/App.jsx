@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import About from "./pages/AboutUs";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: "/booking/:id",
         element: <BookingProgress />
+      },
+      {
+        path: "/about",
+        element: <About />,
       }
     ],
   },
