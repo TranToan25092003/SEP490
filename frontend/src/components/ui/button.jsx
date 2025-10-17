@@ -20,6 +20,8 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
+        paginationLink: "border-2 rounded-xl border-primary text-primary",
+        paginationLinkInactive: "border-3 rounded-xl border-secondary text-foreground/50 hover:bg-secondary"
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -47,6 +49,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
+      type="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props} />
   );

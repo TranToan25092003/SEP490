@@ -12,9 +12,11 @@ import g2 from "@/assets/gallery-2.jpg";
 import g3 from "@/assets/gallery-3.jpg";
 import g4 from "@/assets/gallery-4.jpg";
 import { useLoaderData } from "react-router-dom";
+import ArrowIcon from "../icons/ArrowIcon";
 
 const PartnerLogos = () => {
   const logos = [ducati, honda, kawasaki, semdo, star, suzuki, yamaha];
+
   return (
     <div className="w-full bg-zinc-900">
       <div className="max-w-[1920px] mx-auto px-4 py-6">
@@ -39,6 +41,16 @@ const PartnerLogos = () => {
 
 const MainFooterContent = ({ footerInfo }) => {
   const { address, email, facebook, iframe, phone, zalo } = footerInfo || {};
+
+  const links = [
+    'Trang Chủ',
+    'Sắp Ra Mắt',
+    'Phụ Tùng',
+    'Dịch Vụ',
+    'Giới Thiệu',
+    'Liên Hệ',
+  ]
+
   return (
     <div className="w-full bg-zinc-900 text-white">
       {/* Constrain inner content to match Figma container width */}
@@ -53,7 +65,7 @@ const MainFooterContent = ({ footerInfo }) => {
               {address ||
                 "Lorem Ipsum is simply dummy text of the printing and typesetting industry."}
             </div>
-            <div className="text-neutral-400 text-xs font-['Poppins'] leading-tight">
+            <div className="text-neutral-400 text-xs leading-tight">
               {phone || "(000) 000-0000"}
             </div>
             {iframe && (

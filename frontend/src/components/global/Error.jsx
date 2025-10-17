@@ -35,13 +35,12 @@ const ErrorPage = ({ errorCode = 404, message = "Page Not Found" }) => {
             <Button
               variant="outline"
               onClick={handleGoBack}
-              className="border-gray-300 dark:border-gray-600 text-gray-800 dark:text-gray-200"
             >
               Go Back
             </Button>
             <Button
+              variant="default"
               onClick={handleGoHome}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               Go to Home
             </Button>

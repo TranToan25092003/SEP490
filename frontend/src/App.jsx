@@ -1,28 +1,42 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider } from "@clerk/clerk-react";
-import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
+import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import Home from "./pages/Home";
-import AdminLayout from "./components/Layout/adminLayout";
+import { ThemeProvider } from "./components/global/ThemeProvider";
+import Booking from "./pages/customer/Booking";
+import BookingProgress from "./pages/customer/BookingProgress";
+import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
+import About from "./pages/AboutUs";
 
-// IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <HomeLayout />,
-    errorElement: <ErrorPage />,
     loader: homeLayoutLoader,
     children: [
       {
         path: "/",
         element: <Home />,
+      },
+      {
+        path: "/booking",
+        element: <Booking />,
+      },
+      {
+        path: "/booking/:id",
+        element: <BookingProgress />,
+      },
+      {
+        path: "/about",
+        element: <About />,
       },
     ],
   },
@@ -45,11 +59,12 @@ function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Toaster></Toaster>
-
-      <RouterProvider router={router} />
-    </ClerkProvider>
+    <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <Toaster></Toaster>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 
