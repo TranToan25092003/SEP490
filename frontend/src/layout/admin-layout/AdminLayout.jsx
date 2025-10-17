@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import TopMenu from "./topmenu";
-import Sidebar from "./sidebar";
+import TopMenu from "./TopMenu";
+import Sidebar from "./AdminSidebar";
 
 export default function AdminLayout() {
   const HEADER_HEIGHT = 120;
