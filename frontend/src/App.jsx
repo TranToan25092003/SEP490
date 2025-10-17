@@ -11,6 +11,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
+import About from "./pages/AboutUs";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
       {
         path: "/booking/:id",
         element: <BookingProgress />
+      },
+      {
+        path: "/about",
+        element: <About />,
       }
     ],
   },
