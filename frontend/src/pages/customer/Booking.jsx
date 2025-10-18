@@ -1,5 +1,5 @@
-import BookingHeader from "@/components/booking/BookingHeader";
-import BookingForm from "@/components/booking/BookingForm";
+import BookingHeader from "@/components/customer/booking/BookingHeader";
+import BookingForm from "@/components/customer/booking/BookingForm";
 import { toast } from "sonner";
 import Container from "@/components/global/Container";
 

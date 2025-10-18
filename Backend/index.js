@@ -49,10 +49,10 @@ const clientRouter = require("./API/client/index.router");
 clientRouter(app);
 // admin router
 
-// admin router
-// const adminRouter = require("./API/admin/index.router");
-// adminRouter(app);
-// admin router
+// manager router
+const managerRouter = require("./API/manager/index.router");
+managerRouter(app);
+// manager router
 
 // Swagger
 const swaggerUi = require("swagger-ui-express");

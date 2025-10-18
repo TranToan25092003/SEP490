@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Car, Wrench } from "lucide-react";
-import { cn, formatPrice, formatTimeXGioYPhut } from "@/lib/utils";
+import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 
 /**
  * @typedef {import("react").ComponentPropsWithRef<"div"> & {
@@ -21,11 +21,6 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
   const { watch } = useFormContext();
   const services = watch("services") || [];
   const timeslot = watch("timeslot");
-
-
-  const getTotalPrice = () => {
-    return services.reduce((sum, service) => sum + service.basePrice, 0);
-  };
 
   const getTotalTime = () => {
     return services.reduce((sum, service) => sum + service.estimatedTime, 0);
@@ -129,22 +124,15 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
                       Thời gian: {formatTimeXGioYPhut(service.estimatedTime)}
                     </p>
                   </div>
-                  <span className="font-semibold text-primary ml-4">
-                    {formatPrice(service.basePrice)}
-                  </span>
                 </div>
               ))}
 
               <div className="flex justify-between items-center pt-3 border-t">
                 <div>
-                  <p className="font-semibold">Tổng cộng:</p>
                   <p className="text-sm text-gray-500">
                     Tổng thời gian: {formatTimeXGioYPhut(getTotalTime())}
                   </p>
                 </div>
-                <span className="text-xl font-bold text-primary">
-                  {formatPrice(getTotalPrice())}
-                </span>
               </div>
             </div>
           )}
