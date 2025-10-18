@@ -13,7 +13,7 @@ function ItemCard({ product }) {
 
   return (
     <div className="w-full h-auto p-6 bg-white rounded-3xl shadow-[0px_4px_10px_0px_rgba(0,0,0,0.10)] flex flex-col gap-7 overflow-hidden">
-      <div className="self-stretch h-60 relative rounded-[10px] bg-gray-100 flex items-center justify-center">
+      <div className="self-stretch h-60 relative rounded-[10px] flex items-center justify-center">
         <img src={image || partImage} alt={name || "Product Image"} className="h-full w-full object-contain p-4" />
       </div>
       
