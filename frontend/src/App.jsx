@@ -13,6 +13,8 @@ import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
 import About from "./pages/AboutUs";
+import NotFoundPage from "./pages/404";
+import { partsPageLoader, partFormLoader } from "./utils/loaders";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -38,6 +40,11 @@ const router = createBrowserRouter([
         path: "/about",
         element: <About />,
       },
+      // 404 within HomeLayout
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
 
@@ -47,8 +54,16 @@ const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { index: true, element: <Manager /> },
-      { path: "items", element: <ManagerItems /> },
-      { path: "items/add", element: <AddItem /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+      {
+        path: "items/add",
+        element: <AddItem />,
+        loader: partFormLoader,
+      },
     ],
   },
 ]);

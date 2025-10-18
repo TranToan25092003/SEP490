@@ -38,6 +38,19 @@ export default function TopMenu({ height = 40, sidebarWidth = 80 }) {
               2
             </span>
           </div>
+          <p
+            className="font-bold"
+            style={{
+              color: "#DF1D01",
+              fontFamily: "revert",
+              fontSize: 18,
+              fontStyle: "normal",
+              lineHeight: "normal",
+              textTransform: "uppercase",
+            }}
+          >
+            motormate
+          </p>
         </div>
       </div>
     </header>

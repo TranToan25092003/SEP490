@@ -47,9 +47,11 @@ customFetch.interceptors.response.use(
       }
       // Xử lý các loại lỗi khác
       else if (status === 401) {
-        toast.error(
-          data.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
-        );
+        // Temporarily disable 401 toast for testing
+        console.warn("401 Unauthorized - Authentication disabled for testing");
+        // toast.error(
+        //   data.message || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
+        // );
         // Có thể redirect đến trang đăng nhập
       } else {
         toast.error(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
