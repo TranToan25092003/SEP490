@@ -10,6 +10,7 @@ import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -38,7 +39,12 @@ const router = createBrowserRouter([
       {
         path: "/items",
         element: <ItemListPage />,
-      }
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
+      
     ],
   },
 
