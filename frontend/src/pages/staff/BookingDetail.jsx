@@ -3,8 +3,8 @@ import Container from "@/components/global/Container";
 import {
   BookingForm
 } from "@/components/staff/booking-detail";
-import { Label } from "@/components/ui/label";
 import BackButton from "@/components/global/BackButton";
+import { H3 } from "@/components/ui/headings";
 
 const BookingDetail = () => {
   const [booking, setBooking] = useState({
@@ -32,7 +32,7 @@ const BookingDetail = () => {
   return (
     <Container pageContext="admin">
       <BackButton to="/staff/booking" label="Quay lại trang quản lý lệnh" />
-      <Label variant="heading">Chi Tiết Lệnh Sửa Chữa</Label>
+      <H3>Chi Tiết Lệnh Sửa Chữa</H3>
 
       <BookingForm
         booking={booking}

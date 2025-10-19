@@ -5,8 +5,8 @@ import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
 import { Plus } from "lucide-react";
-import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
+import { H3 } from "@/components/ui/headings";
 
 const stringToHue = (value) => {
   let hash = 0;
@@ -28,12 +28,12 @@ const StatusBadge = ({ status, colorKey }) => {
   const { background, foreground } = getStatusColors(colorKey ?? "");
 
   return (
-    <Label
+    <p
       className={"inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"}
       style={{ backgroundColor: background, color: foreground }}
     >
       {status}
-    </Label>
+    </p>
   );
 };
 
@@ -93,7 +93,7 @@ const BookingList = () => {
   return (
     <Container pageContext="admin">
       <div className="flex justify-between items-center">
-        <Label variant="heading">Quản lý lệnh</Label>
+        <H3>Quản lý lệnh</H3>
         <Button>
           <Plus />
           Thêm lệnh mới
