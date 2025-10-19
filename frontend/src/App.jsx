@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
-import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
+import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import { Button } from "antd";
