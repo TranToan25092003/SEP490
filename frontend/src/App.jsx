@@ -12,6 +12,7 @@ import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
+import GoodsReceipt from "./pages/manager/GoodsReceipt";
 import About from "./pages/AboutUs";
 import NotFoundPage from "./pages/404";
 import { partsPageLoader, partFormLoader } from "./utils/loaders";
@@ -63,6 +64,10 @@ const router = createBrowserRouter([
         path: "items/add",
         element: <AddItem />,
         loader: partFormLoader,
+      },
+      {
+        path: "goods-receipt",
+        element: <GoodsReceipt />,
       },
     ],
   },

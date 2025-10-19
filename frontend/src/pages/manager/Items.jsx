@@ -166,7 +166,9 @@ export default function ManagerItems() {
           <Button asChild>
             <Link to="/manager/items/add">+ Thêm sản phẩm</Link>
           </Button>
-          <Button>+ Phiếu nhập kho</Button>
+          <Button asChild>
+            <Link to="/manager/goods-receipt">+ Phiếu nhập kho</Link>
+          </Button>
           {selectedItems.length > 0 && (
             <Button
               variant="destructive"
