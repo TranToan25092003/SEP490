@@ -11,6 +11,8 @@ import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import About from "./pages/AboutUs";
+import ItemListPage from "./pages/ItemListPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -35,7 +37,16 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
-      }
+      },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
+      
     ],
   },
   {

@@ -96,16 +96,16 @@ function Home() {
                       {/* 3. Content (top layer, with z-index) */}
                       <div className="relative z-10 flex h-full w-full items-start md:items-center">
                         <div className="mx-auto mt-24 space-y-4 p-4 text-center md:mt-0 md:ml-28 md:space-y-6 md:p-0 lg:ml-40 xl:ml-44 2xl:ml-48">
-                          <div className="font-['Poppins'] justify-start text-4xl font-semibold text-white/95 md:text-5xl md:text-white xl:text-6xl">
+                          <div className=" justify-start text-4xl font-semibold text-white/95 md:text-5xl md:text-white xl:text-6xl">
                             MotorMate
                           </div>
-                          <div className="font-['Poppins'] text-center text-xl font-extrabold text-white/95 md:text-2xl md:text-white">
+                          <div className=" text-center text-xl font-extrabold text-white/95 md:text-2xl md:text-white">
                             Phụ tùng tốt nhất cho{" "}
                             <br className="hidden md:block" /> mọi nhà
                           </div>
                           <button
                             className="mx-auto inline-flex w-40 items-center justify-center gap-2.5 rounded-lg bg-red-600 p-2.5
-                                       font-['Poppins'] text-lg font-bold text-white
+                                        text-lg font-bold text-white
                                        transition-all duration-150 ease-in-out
                                        hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg
                                        active:scale-95
@@ -216,10 +216,10 @@ function Home() {
             <div className="mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2">
               {/* Left side: Text content */}
               <div className="text-center md:text-left">
-                <h3 className="font-['Poppins'] text-lg font-bold uppercase tracking-[0.2em] text-red-600">
+                <h3 className=" text-lg font-bold uppercase tracking-[0.2em] text-red-600">
                   MotorMate
                 </h3>
-                <p className="font-['Poppins'] mt-6 text-3xl font-semibold leading-tight text-white md:text-4xl">
+                <p className=" mt-6 text-3xl font-semibold leading-tight text-white md:text-4xl">
                   “ Cung cấp dịch vụ trải dài khắp cả{" "}
                   <span className="text-red-500">Việt Nam</span>. Mang đến phụ
                   tùng xe tốt nhất cho mọi nhà. ”

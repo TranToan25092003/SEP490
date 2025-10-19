@@ -72,7 +72,7 @@ const Header = () => {
               </li>
               <li className="shrink-0">
                 <button
-                  onClick={() => navigate("/parts")}
+                  onClick={() => navigate("/items")}
                   className="bg-[#323B44] text-white text-[13px] md:text-[15px] xl:text-[17px] font-bold h-[62px] w-[128px] md:w-[148px] xl:w-[158px] hover:bg-[#3a454f] transition-colors cursor-pointer"
                 >
                   Phụ Tùng
