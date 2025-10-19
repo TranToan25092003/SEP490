@@ -4,19 +4,53 @@ import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
 import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
+<<<<<<< HEAD
 import { Button } from "antd";
 import Login from "./pages/auth/Login";
+=======
+import Home from "./pages/Home";
+import { ThemeProvider } from "./components/global/ThemeProvider";
+import Booking from "./pages/customer/Booking";
+import BookingProgress from "./pages/customer/BookingProgress";
+import About from "./pages/AboutUs";
+import ItemListPage from "./pages/ItemListPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
+>>>>>>> main
 
-// IMPORT COMPONENT VÀ LOADER MỚI CHO THỐNG KÊ
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <HomeLayout />,
-    errorElement: <ErrorPage />,
     loader: homeLayoutLoader,
-    children: [],
+    children: [
+      {
+        path: "/",
+        element: <Home />,
+      },
+      {
+        path: "/booking",
+        element: <Booking />
+      },
+      {
+        path: "/booking/:id",
+        element: <BookingProgress />
+      },
+      {
+        path: "/about",
+        element: <About />,
+      },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
+      
+    ],
   },
 
   {
@@ -33,11 +67,12 @@ function App() {
   }
 
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <Toaster></Toaster>
-
-      <RouterProvider router={router} />
-    </ClerkProvider>
+    <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
+      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+        <Toaster></Toaster>
+        <RouterProvider router={router} />
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
 

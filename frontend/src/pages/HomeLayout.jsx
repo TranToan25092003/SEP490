@@ -1,11 +1,9 @@
 import React from "react";
-import Providers from "./Providers";
-import Navbar from "@/components/navbar/Navbar";
+import Header from "@/components/global/Header";
 import Container from "@/components/global/Container";
 import { Outlet, useNavigation } from "react-router-dom";
 import Loading from "@/components/global/Loading";
-import { Toaster } from "sonner";
-import AppFooter from "@/components/global/Footer";
+import Footer from "@/components/global/Footer";
 
 import { useClerk } from "@clerk/clerk-react";
 import { useEffect } from "react";
@@ -20,33 +18,32 @@ export const homeLayoutLoader = async () => {
 };
 
 const HomeLayout = () => {
-  const { setActive } = useClerk();
+  const { setActive, isSignedIn } = useClerk();
 
   useEffect(() => {
-    setActive({
-      organization: "org_32tzUd7dUcFW7Te5gxEO4VcgkX1",
-    });
-  }, []);
+    if (isSignedIn) {
+      setActive({
+        organization: "org_32tzUd7dUcFW7Te5gxEO4VcgkX1",
+      });
+    }
+  }, [isSignedIn]);
 
   const { state } = useNavigation();
 
   return (
     <>
-      <Toaster position="bottom-right" richColors expand closeButton />
-      <div className={` antialiased`}>
-        <Providers>
-          <Navbar></Navbar>
-          <Container className={"mt-4"}>
-            {state === "loading" ? (
-              <>
-                <Loading></Loading>
-              </>
-            ) : (
-              <Outlet></Outlet>
-            )}
-          </Container>
-          {/* <AppFooter /> */}
-        </Providers>
+      <div className={`flex flex-col min-h-screen`}>
+        <Header />
+        <div className={"flex-1"}>
+          {state === "loading" ? (
+            <>
+              <Loading></Loading>
+            </>
+          ) : (
+            <Outlet></Outlet>
+          )}
+        </div>
+        <Footer />
       </div>
     </>
   );

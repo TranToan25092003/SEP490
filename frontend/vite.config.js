@@ -12,12 +12,11 @@ export default defineConfig({
     },
   },
   server: {
-    // Thêm cấu hình này
     watch: {
       usePolling: true,
     },
   },
   build: {
-    target: "esnext", // 👈 thêm dòng này để hỗ trợ top-level await
+    target: "esnext", //top level await
   },
 });
