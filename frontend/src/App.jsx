@@ -1,9 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
-import { ClerkProvider } from "@clerk/clerk-react";
-import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
+import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
+import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
+import { Button } from "antd";
+import Login from "./pages/auth/Login";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
@@ -16,6 +18,9 @@ import GoodsReceipt from "./pages/manager/GoodsReceipt";
 import About from "./pages/AboutUs";
 import NotFoundPage from "./pages/404";
 import { partsPageLoader, partFormLoader } from "./utils/loaders";
+import ItemListPage from "./pages/ItemListPage";
+import ItemDetailPage from "./pages/ItemDetailPage";
+import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -46,7 +51,27 @@ const router = createBrowserRouter([
         path: "*",
         element: <NotFoundPage />,
       },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
     ],
+  },
+
+  {
+    path: "/login",
+    element: <Login></Login>,
+  },
+
+  {
+    path: "/sso-callback",
+    element: (
+      <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
+    ),
   },
 
   testRouter,
