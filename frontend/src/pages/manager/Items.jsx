@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { searchIcon as searchSvg } from "@/assets/admin/topmenu_new";
@@ -16,8 +18,132 @@ import iconEdit from "@/assets/admin/figma_selection/30d22df015a0acce3dd7984d089
 import iconDelete from "@/assets/admin/figma_selection/77d1c5cb4524f3bd944adaeee5f86d34af0a071e.svg";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPagination } from "@/components/global/AdminPagination";
+import { Link } from "react-router-dom";
+import { customFetch } from "@/utils/customAxios";
+import { toast } from "sonner";
 
 export default function ManagerItems() {
+  const loaderData = useLoaderData();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const [searchTerm, setSearchTerm] = useState(
+    searchParams.get("search") || ""
+  );
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { parts = [], pagination = {} } = loaderData || {};
+
+  // Handle search
+  const handleSearch = (value) => {
+    setSearchTerm(value);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (value) {
+      newSearchParams.set("search", value);
+    } else {
+      newSearchParams.delete("search");
+    }
+    newSearchParams.delete("page"); // Reset to first page
+    setSearchParams(newSearchParams);
+  };
+
+  // Handle select all
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedItems(parts.map((part) => part._id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  // Handle select item
+  const handleSelectItem = (partId, checked) => {
+    if (checked) {
+      setSelectedItems((prev) => [...prev, partId]);
+    } else {
+      setSelectedItems((prev) => prev.filter((id) => id !== partId));
+    }
+  };
+
+  // Handle delete single item
+  const handleDeleteItem = async (partId) => {
+    if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+
+    try {
+      const response = await customFetch(`/manager/parts/${partId}`, {
+        method: "DELETE",
+      });
+
+      if (response.data.success) {
+        toast.success("Thành công", {
+          description: "Sản phẩm đã được xóa",
+        });
+        // Refresh the page
+        window.location.reload();
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      toast.error("Lỗi", {
+        description: error.message || "Không thể xóa sản phẩm",
+      });
+    }
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0) {
+      toast.error("Vui lòng chọn ít nhất một sản phẩm để xóa");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Bạn có chắc chắn muốn xóa ${selectedItems.length} sản phẩm đã chọn?`
+      )
+    )
+      return;
+
+    setIsDeleting(true);
+    try {
+      const response = await customFetch("/manager/parts/bulk-delete", {
+        method: "POST",
+        body: JSON.stringify({ ids: selectedItems }),
+      });
+
+      if (response.data.success) {
+        toast.success("Thành công", {
+          description: `${selectedItems.length} sản phẩm đã được xóa`,
+        });
+        setSelectedItems([]);
+        // Refresh the page
+        window.location.reload();
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      toast.error("Lỗi", {
+        description: error.message || "Không thể xóa sản phẩm",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Format price
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(price);
+  };
+
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("vi-VN");
+  };
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -32,81 +158,97 @@ export default function ManagerItems() {
           <Input
             placeholder="Tìm kiếm..."
             className="pl-9 h-10 rounded-full text-[16px] placeholder:text-[#656575]"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-3">
-          <Button>
-            + Thêm sản phẩm
+          <Button asChild>
+            <Link to="/manager/items/add">+ Thêm sản phẩm</Link>
           </Button>
-          <Button>
-            + Phiếu nhập kho
-          </Button>
+          <Button>+ Phiếu nhập kho</Button>
+          {selectedItems.length > 0 && (
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Đang xóa..." : `Xóa (${selectedItems.length})`}
+            </Button>
+          )}
         </div>
       </div>
 
-        <Table>
-          <TableHeader>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>
+              <Checkbox
+                aria-label="Select all"
+                checked={
+                  selectedItems.length === parts.length && parts.length > 0
+                }
+                onCheckedChange={handleSelectAll}
+              />
+            </TableHead>
+            <TableHead>Tên sản phẩm/ Mã sản phẩm</TableHead>
+            <TableHead>Ngày tạo</TableHead>
+            <TableHead>Thương hiệu</TableHead>
+            <TableHead>Số lượng tồn kho</TableHead>
+            <TableHead>Trạng thái</TableHead>
+            <TableHead>Giá Bán</TableHead>
+            <TableHead>Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {parts.length === 0 ? (
             <TableRow>
-              <TableHead>
-                <Checkbox aria-label="Select all" />
-              </TableHead>
-              <TableHead>
-                Tên sản phẩm/ Mã sản phẩm
-              </TableHead>
-              <TableHead>
-                Ngày tạo
-              </TableHead>
-              <TableHead>Hãng</TableHead>
-              <TableHead>Loại</TableHead>
-              <TableHead>
-                Số lượng tồn kho
-              </TableHead>
-              <TableHead>
-                Trạng thái
-              </TableHead>
-              <TableHead>Giá Bán</TableHead>
-              <TableHead>
-                Action
-              </TableHead>
+              <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                Không có sản phẩm nào
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {[1, 2, 3, 4, 5].map((i) => (
-              <TableRow key={i}>
+          ) : (
+            parts.map((part) => (
+              <TableRow key={part._id}>
                 <TableCell>
-                  <Checkbox aria-label={`Select row ${i}`} />
+                  <Checkbox
+                    aria-label={`Select row ${part._id}`}
+                    checked={selectedItems.includes(part._id)}
+                    onCheckedChange={(checked) =>
+                      handleSelectItem(part._id, checked)
+                    }
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <div className="relative w-9 h-9">
-                      <img
-                        src={imgBg}
-                        alt="bg"
-                        className="absolute left-[2px] top-[2px] w-8 h-8"
-                      />
+                      {part.media && part.media.length > 0 ? (
+                        <img
+                          src={part.media[0].url}
+                          alt={part.name}
+                          className="absolute left-[2px] top-[2px] w-8 h-8 rounded object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={imgBg}
+                          alt="default"
+                          className="absolute left-[2px] top-[2px] w-8 h-8"
+                        />
+                      )}
                     </div>
                     <div className="leading-4">
                       <div className="text-[#2e2e3a] text-[14px] font-bold tracking-[-0.126px]">
-                        Product {i}
+                        {part.name}
                       </div>
                       <div className="text-[#9a9aaf] text-[12px]">
-                        #SP000{i}
+                        #{part._id.slice(-6).toUpperCase()}
                       </div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>
-                  02/10/2025
-                </TableCell>
-                <TableCell>
-                  YAMAHA
-                </TableCell>
-                <TableCell>
-                  Phụ Tùng
-                </TableCell>
-                <TableCell>
-                  1234 cái
-                </TableCell>
+                <TableCell>{formatDate(part.createdAt)}</TableCell>
+                <TableCell>{part.brand || "Chưa phân loại"}</TableCell>
+                <TableCell>{part.quantity} cái</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     <img
@@ -114,22 +256,30 @@ export default function ManagerItems() {
                       alt="ok"
                       className="w-[18px] h-[18px]"
                     />
-                    <span className="text-[12px] text-[#24ca49]">Có sẵn</span>
+                    <span className="text-[12px] text-[#24ca49]">
+                      {part.quantity > 0 ? "Có sẵn" : "Hết hàng"}
+                    </span>
                   </div>
                 </TableCell>
-                <TableCell>
-                  120.000
-                </TableCell>
+                <TableCell>{formatPrice(part.sellingPrice)}</TableCell>
                 <TableCellMinContent>
                   <div className="flex items-center gap-2 justify-end">
-                    <button className="bg-white rounded-[5px] shadow-[0_100px_80px_rgba(5,37,135,0.06),0_41.778px_33.422px_rgba(5,37,135,0.04),0_22.336px_17.869px_rgba(5,37,135,0.04),0_12.522px_10.017px_rgba(5,37,135,0.03),0_6.65px_5.32px_rgba(5,37,135,0.02),0_2.767px_2.214px_rgba(5,37,135,0.02)] w-[34px] h-[34px] grid place-items-center">
+                    <button
+                      className="bg-white rounded-[5px] shadow-[0_100px_80px_rgba(5,37,135,0.06),0_41.778px_33.422px_rgba(5,37,135,0.04),0_22.336px_17.869px_rgba(5,37,135,0.04),0_12.522px_10.017px_rgba(5,37,135,0.03),0_6.65px_5.32px_rgba(5,37,135,0.02),0_2.767px_2.214px_rgba(5,37,135,0.02)] w-[34px] h-[34px] grid place-items-center"
+                      onClick={() =>
+                        navigate(`/manager/items/edit/${part._id}`)
+                      }
+                    >
                       <img
                         src={iconEdit}
                         alt="edit"
                         className="w-[14px] h-[14px]"
                       />
                     </button>
-                    <button className="bg-white rounded-[5px] shadow-[0_100px_80px_rgba(5,37,135,0.06),0_41.778px_33.422px_rgba(5,37,135,0.04),0_22.336px_17.869px_rgba(5,37,135,0.04),0_12.522px_10.017px_rgba(5,37,135,0.03),0_6.65px_5.32px_rgba(5,37,135,0.02),0_2.767px_2.214px_rgba(5,37,135,0.02)] w-[34px] h-[34px] grid place-items-center">
+                    <button
+                      className="bg-white rounded-[5px] shadow-[0_100px_80px_rgba(5,37,135,0.06),0_41.778px_33.422px_rgba(5,37,135,0.04),0_22.336px_17.869px_rgba(5,37,135,0.04),0_12.522px_10.017px_rgba(5,37,135,0.03),0_6.65px_5.32px_rgba(5,37,135,0.02),0_2.767px_2.214px_rgba(5,37,135,0.02)] w-[34px] h-[34px] grid place-items-center"
+                      onClick={() => handleDeleteItem(part._id)}
+                    >
                       <img
                         src={iconDelete}
                         alt="delete"
@@ -139,15 +289,12 @@ export default function ManagerItems() {
                   </div>
                 </TableCellMinContent>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
-        <AdminPagination pagination={{
-          totalPages: 10,
-          itemsPerPage: 5,
-          totalItems: 100
-        }} />
+      {pagination.totalPages > 1 && <AdminPagination pagination={pagination} />}
     </div>
   );
 }

@@ -11,9 +11,12 @@ import BookingList from "./pages/staff/BookingList";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
+import AddItem from "./pages/manager/AddItem";
 import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
+import NotFoundPage from "./pages/404";
+import { partsPageLoader, partFormLoader } from "./utils/loaders";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -29,11 +32,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/booking",
-        element: <Booking />
+        element: <Booking />,
       },
       {
         path: "/booking/:id",
-        element: <BookingProgress />
+        element: <BookingProgress />,
       },
       {
         path: "/about",
@@ -47,7 +50,10 @@ const router = createBrowserRouter([
         path: "/items/1",
         element: <ItemDetailPage />,
       },
-      
+      {
+        path: "*",
+        element: <NotFoundPage />,
+      },
     ],
   },
   {
@@ -55,7 +61,16 @@ const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { index: true, element: <Manager /> },
-      { path: "items", element: <ManagerItems /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+      {
+        path: "items/add",
+        element: <AddItem />,
+        loader: partFormLoader,
+      },
     ],
   },
   {
