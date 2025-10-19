@@ -3,13 +3,17 @@ import photo from "../../assets/image.png";
 import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
 
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Route, Routes } from "react-router-dom";
+import { toast } from "sonner";
 
 const Login = () => {
   const { signIn } = useSignIn();
   const { signUp } = useSignUp();
   const { isSignedIn } = useUser();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   if (isSignedIn) {
     navigate("/");
@@ -17,20 +21,42 @@ const Login = () => {
   }
   const [hide, setHide] = useState(false);
 
+  const handleEmailSignin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    console.log(email, password);
+    if (!email || !password) {
+      toast.error("Vui lòng nhập email và mật khẩu.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: email,
+        password,
+      });
+
+      console.log(signInAttempt.status);
+
+      await signIn.attemptFirstFactor({
+        strategy: "password",
+      });
+
+      navigate("/");
+    } catch (error) {
+      setIsLoading(false);
+
+      toast.warning(error.message);
+    }
+  };
+
   const handleFacebookSignin = async () => {
     try {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_facebook",
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/",
-      });
-    } catch (error) {}
-  };
-
-  const handleRegister = async () => {
-    try {
-      await signIn.create({
-        strategy: "reset_password_email_code",
       });
     } catch (error) {}
   };
@@ -89,7 +115,7 @@ const Login = () => {
               Đăng Ký
             </button>
           </div>
-          {/* Nội dung form chính (nếu có) */}
+
           <div className="text-black mt-10 md:mt-0 w-3/4 flex flex-col ">
             <h1 className="uppercase  text-[#D31705]  text-2xl font-semibold">
               ĐĂNG NHẬP
@@ -179,7 +205,11 @@ const Login = () => {
               <p>Tài khoản</p>
               <input
                 type="text"
-                placeholder=""
+                placeholder="Tài khoản"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                }}
                 className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
@@ -213,6 +243,10 @@ const Login = () => {
               <input
                 type={hide ? "text" : "password"}
                 placeholder="Mật khẩu"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
                 className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
@@ -223,7 +257,13 @@ const Login = () => {
               </div>
 
               <div className="w-full">
-                <button className="uppercase mt-3 bg-[#DF1D01] rounded-4xl h-full flex items-center justify-center gap-1 cursor-pointer hover:bg-red-400">
+                <button
+                  className="uppercase mt-3 bg-[#DF1D01] rounded-4xl h-full flex items-center justify-center gap-1 cursor-pointer hover:bg-red-400"
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    handleEmailSignin(e);
+                  }}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="25"
@@ -246,7 +286,6 @@ const Login = () => {
                     />
                   </svg>
                   <p className="text-white text-xl font-bold mx-2 my-1 mr-5">
-                    {" "}
                     Đăng Nhập
                   </p>
                 </button>
