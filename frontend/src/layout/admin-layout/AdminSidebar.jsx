@@ -1,6 +1,5 @@
 import {
   sidebarLogo as imgLogo,
-  sidebarDividerLine as imgLine,
   iconHome as imgHome,
   iconEmail as imgEmail,
   iconContacts as imgContactBook,
@@ -39,12 +38,9 @@ export default function Sidebar({ width = 80, offsetTop = 100 }) {
   const location = useLocation();
   return (
     <aside
-      className="fixed left-0 z-40 bg-white"
+      className="fixed left-0 z-40 border-r"
       style={{ top: 0, width, bottom: 0 }}
     >
-      <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
-      </div>
       <div className="flex flex-col items-center">
         <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4 mb-2" />
         <TooltipProvider>

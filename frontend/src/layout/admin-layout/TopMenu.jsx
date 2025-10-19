@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 export default function TopMenu({ height = 40, sidebarWidth = 80 }) {
   return (
     <header
-      className="fixed left-0 top-0 w-full bg-white border-b z-30"
+      className="fixed left-0 top-0 w-full bg- border-b z-30"
       style={{ height, paddingLeft: sidebarWidth }}
     >
       <div className="flex items-center justify-between h-full px-6 w-full">

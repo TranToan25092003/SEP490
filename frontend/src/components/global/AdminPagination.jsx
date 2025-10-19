@@ -83,7 +83,7 @@ export function AdminPagination({ pagination, onPageChange }) {
 
   return (
     <div className="flex items-center justify-between">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-foreground">
         Hiện thị {startItem}-{endItem} từ {totalDisplayItems} dữ liệu
       </div>
 
