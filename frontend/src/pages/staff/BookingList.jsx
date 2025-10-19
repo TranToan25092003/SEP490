@@ -1,55 +1,39 @@
-import { cva } from "class-variance-authority";
-import { CheckCircle2, Clock3, XCircle, ShieldCheck } from "lucide-react";
 import CRUDTable from "@/components/global/CRUDTable";
 import Container from "@/components/global/Container";
 import { createColumnHelper } from "@tanstack/react-table";
 import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
+import { Plus } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Link } from "react-router-dom";
 
-const statusBadgeVariants = cva(
-  "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium",
-  {
-    variants: {
-      status: {
-        Pending: "bg-amber-100 text-amber-700",
-        Confirmed: "bg-emerald-100 text-emerald-700",
-        Cancelled: "bg-rose-100 text-rose-700",
-        Warranty: "bg-indigo-100 text-indigo-700",
-        Default: "bg-slate-100 text-slate-700",
-      },
-    },
-    defaultVariants: {
-      status: "Default",
-    },
-  },
-);
-
-const statusIcons = {
-  Pending: Clock3,
-  Confirmed: CheckCircle2,
-  Cancelled: XCircle,
-  Warranty: ShieldCheck,
-  Default: Clock3,
+const stringToHue = (value) => {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = value.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash) % 360;
 };
 
-const statusLabels = {
-  Pending: "Chờ xử lý",
-  Confirmed: "Đã xác nhận",
-  Cancelled: "Đã hủy",
-  Warranty: "Bảo hành",
-  Default: "Không xác định",
+const getStatusColors = (status) => {
+  const hue = stringToHue(status || "");
+  return {
+    background: `hsl(${hue}, 80%, 92%)`,
+    foreground: `hsl(${hue}, 45%, 32%)`,
+  };
 };
 
-const StatusBadge = ({ status }) => {
-  const Icon = statusIcons[status] ?? statusIcons.Default;
-  const label = statusLabels[status] ?? statusLabels.Default;
+const StatusBadge = ({ status, colorKey }) => {
+  const { background, foreground } = getStatusColors(colorKey ?? "");
 
   return (
-    <span className={statusBadgeVariants({ status })}>
-      <Icon className="h-3.5 w-3.5" />
-      {label}
-    </span>
+    <Label
+      className={"inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"}
+      style={{ backgroundColor: background, color: foreground }}
+    >
+      {status}
+    </Label>
   );
 };
 
@@ -60,13 +44,18 @@ const posts = [
     id: 1,
     customerName: "Nguyen Van A",
     date: "2024-10-01",
-    status: "Pending",
+    serviceTypes: [
+      "Sửa xe",
+      "Bảo dưỡng"
+    ]
   },
   {
     id: 2,
-    customerName: "Tran Thi B",
+    customerName: "Trankkkkn Thi B",
     date: "2024-10-02",
-    status: "Confirmed",
+    serviceTypes: [
+      "Thay nhớt"
+    ]
   }
 ]
 
@@ -85,14 +74,31 @@ const columnDefs = [
   }),
   helper.accessor("status", {
     header: "Loại lệnh",
-    cell: info => <StatusBadge status={info.getValue()} />,
-  }),
+    cell: info => {
+      const services = info.row.original.serviceTypes;
+      const badges = services.map((service, index) => (
+        <StatusBadge key={index} status={service} colorKey={service} />
+      ));
+
+      return (
+        <div className="flex flex-wrap gap-2">
+          {badges}
+        </div>
+      )
+    }
+  })
 ]
 
 const BookingList = () => {
   return (
-    <Container className="space-y-3 mt-4">
-      <h1 className="font-bold text-3xl">Quản lý lệnh</h1>
+    <Container pageContext="admin">
+      <div className="flex justify-between items-center">
+        <Label variant="heading">Quản lý lệnh</Label>
+        <Button>
+          <Plus />
+          Thêm lệnh mới
+        </Button>
+      </div>
 
       <CRUDTable
         data={posts}
@@ -100,10 +106,12 @@ const BookingList = () => {
         getRowId={(row) => row.id}
       >
         {(row) => (
-          <div className="flex">
-            <Button variant="outline" className="flex-1">
-              <EyeIcon />
-            </Button>
+          <div className="flex justify-center">
+            <Link to={`/staff/booking/${row.id}`}>
+              <Button variant="outline" className="flex-1 cursor-pointer">
+                <EyeIcon />
+              </Button>
+            </Link>
           </div>
         )}
       </CRUDTable>

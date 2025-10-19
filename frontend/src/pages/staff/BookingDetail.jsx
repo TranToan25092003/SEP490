@@ -4,6 +4,7 @@ import {
   BookingForm
 } from "@/components/staff/booking-detail";
 import { Label } from "@/components/ui/label";
+import BackButton from "@/components/global/BackButton";
 
 const BookingDetail = () => {
   const [booking, setBooking] = useState({
@@ -29,8 +30,10 @@ const BookingDetail = () => {
   };
 
   return (
-    <Container className="py-6">
-      <Label className="mb-4 text-2xl font-bold">Chi Tiết Lệnh Sửa Chữa</Label>
+    <Container pageContext="admin">
+      <BackButton to="/staff/booking" label="Quay lại trang quản lý lệnh" />
+      <Label variant="heading">Chi Tiết Lệnh Sửa Chữa</Label>
+
       <BookingForm
         booking={booking}
         getTotalPrice={(services) => {
