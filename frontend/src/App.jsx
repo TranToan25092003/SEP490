@@ -17,6 +17,8 @@ import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import NotFoundPage from "./pages/404";
 import { partsPageLoader, partFormLoader } from "./utils/loaders";
+import StaffLayout from "./layout/staff-layout/StaffLayout";
+import Staff from "./pages/staff/Staff";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -50,8 +52,7 @@ const router = createBrowserRouter([
         path: "/items/1",
         element: <ItemDetailPage />,
       },
-      
-      },
+
       // 404 within HomeLayout
       {
         path: "*",
@@ -78,6 +79,20 @@ const router = createBrowserRouter([
       },
     ],
   },
+
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      { index: true, element: <Staff /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+    ],
+  },
+
 ]);
 
 function App() {
