@@ -7,6 +7,7 @@ import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingDetail from "./pages/staff/BookingDetail";
+import BookingList from "./pages/staff/BookingList";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -62,6 +63,7 @@ const router = createBrowserRouter([
     element: <AdminLayout />,
     children: [
       { path: "booking/:id", element: <BookingDetail /> },
+      { path: "booking/", element: <BookingList /> },
     ],
   },
 ]);
