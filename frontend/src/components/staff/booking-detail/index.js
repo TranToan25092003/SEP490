@@ -29,7 +29,7 @@
  *   booking: Booking;
  *   onUpdateBooking: (updatedBooking: Booking) => Promise<any>;
  *   onConfirmBooking: (toBeConfirmed: Booking) => Promise<any>;
- *   getTotalPrice: (services: ServiceInfo[]) => number;
+ *   getTotalPrice: (services: ServiceInfo[]) => { price: number, tax: number, total: number };
  * }} BookingFormProps
  */
 
@@ -37,15 +37,20 @@
  * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card> & {
  *   booking: Booking;
  *   confirmBookingLoading?: boolean;
+ *   disabled?: boolean;
  * }} BookingHeaderProps
  */
 
 /**
- * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card>} BookingCommentProps
+ * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card> & {
+ *   disabled?: boolean;
+ * }} BookingCommentProps
  */
 
 /**
- * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card>} BookingServicesProps
+ * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card> & {
+ *   disabled?: boolean;
+ * }} BookingServicesProps
  */
 
 /**
@@ -53,6 +58,7 @@
  *   subtotal?: number;
  *   taxRate?: number;
  *   updateBookingLoading?: boolean;
+ *   disabled?: boolean;
  *   onUpdateServices: () => void | Promise<void>;
  * }} BookingTotalProps
  */

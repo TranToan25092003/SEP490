@@ -21,6 +21,7 @@ import { useFormContext } from "react-hook-form";
 const BookingHeader = ({
   booking,
   confirmBookingLoading = false,
+  disabled = false,
   className,
   ...props
 }) => {
@@ -37,8 +38,8 @@ const BookingHeader = ({
       <CardHeader className="flex justify-between items-center">
         <CardTitle>Thông Tin Chung (ID: {booking.id})</CardTitle>
         <Button
-          type="button"
-          disabled={confirmBookingLoading}
+          type="submit"
+          disabled={confirmBookingLoading || disabled}
           aria-busy={confirmBookingLoading}
         >
           Xác nhận & Tạo Lệnh

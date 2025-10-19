@@ -15,17 +15,19 @@ const BookingDetail = () => {
     fixTechnician: { id: "1", name: "Nguyễn Văn A" },
     bayTechnician: { id: "2", name: "Trần Văn B" },
     services: [
-      { sid: "1", name: "Thay dầu", price: 399000 },
-      { sid: "2", name: "Kiểm tra phanh", price: 250000 }
+      { sid: "1", name: "Thay dầu", basePrice: 399000 },
+      { sid: "2", name: "Kiểm tra phanh", basePrice: 250000 }
     ],
     comment: ""
   });
 
   const handleUpdateBooking = async (updatedData) => {
+    await new Promise((resolve, _) => setTimeout(resolve, 4000));
     console.log("Updating booking:", updatedData);
   };
 
   const handleConfirmBooking = async (bookingData) => {
+    await new Promise((resolve, _) => setTimeout(resolve, 4000));
     console.log("Confirming booking:", bookingData);
   };
 
@@ -36,8 +38,14 @@ const BookingDetail = () => {
 
       <BookingForm
         booking={booking}
-        getTotalPrice={(services) => {
-          return 100;
+        getTotalPrice={async (services) => {
+          await new Promise((resolve, _) => setTimeout(resolve, 500));
+          const sum = services.reduce((acc, x) => acc + x.basePrice, 0);
+          return {
+            price: sum,
+            tax: sum * 0.1,
+            total: 1.1 * sum
+          };
         }}
         onConfirmBooking={handleConfirmBooking}
         onUpdateBooking={handleUpdateBooking}
