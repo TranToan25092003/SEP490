@@ -3,38 +3,7 @@ import { useState } from "react";
 import { BookingHeader, BookingComment, BookingServices, BookingTotal } from ".";
 
 /**
- * @typedef {object} TechnicianInfo
- * @property {string} id
- * @property {string} name
- */
-
-/**
- * @typedef {object} ServiceInfo
- * @property {string} sid
- * @property {string} name
- * @property {number} basePrice
- */
-
-/**
- * @typedef {object} Booking
- * @property {string} id
- * @property {string} customerName
- * @property {string} licensePlate
- * @property {string} vehicleModel
- * @property {ServiceInfo[]} services
- * @property {TechnicianInfo} fixTechnician
- * @property {TechnicianInfo} bayTechnician
- * @property {string} comment
- * @property {string} appointmentTime
- */
-
-/**
- * @typedef {import("react").ComponentPropsWithRef<"form"> & {
- *   booking: Booking;
- *   onUpdateBooking: (updatedBooking: Booking) => Promise<any>;
- *   onConfirmBooking: (toBeConfirmed: Booking) => Promise<any>;
- *   getTotalPrice: (services: ServiceInfo[]) => number;
- * }} BookingFormProps
+ * @typedef {import("./index").BookingFormProps} BookingFormProps
  */
 
 /**

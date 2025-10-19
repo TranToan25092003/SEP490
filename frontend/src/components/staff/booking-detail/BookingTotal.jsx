@@ -2,9 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatPrice, cn } from "@/lib/utils";
 
+/** @typedef {import("./index").BookingTotalProps} BookingTotalProps */
+
+/**
+ * Summarises pricing details and triggers confirmation actions.
+ * @param {BookingTotalProps} props
+ */
 const BookingTotal = ({
   subtotal = 659000,
   taxRate = 0.1,
+  updateBookingLoading = false,
   onUpdateServices,
   className,
   ...props
@@ -34,12 +41,21 @@ const BookingTotal = ({
           </div>
         </div>
 
-        <Button onClick={onUpdateServices}>
+        <Button
+          type="button"
+          onClick={() => {
+            void onUpdateServices();
+          }}
+          disabled={updateBookingLoading}
+          aria-busy={updateBookingLoading}
+        >
           Cập nhật thông tin
         </Button>
       </CardContent>
     </Card>
   );
 };
+
+BookingTotal.displayName = "BookingTotal";
 
 export default BookingTotal;

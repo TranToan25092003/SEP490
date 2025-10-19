@@ -14,50 +14,8 @@ import ConfirmationStep from "./ConfirmationStep";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
-/**
- * @typedef {object} CarInfo
- * @property {string} licensePlate - The license plate of the car.
- */
-
-/**
- * @typedef {object} ServiceInfo
- * @property {string} sid - The unique identifier of the service.
- * @property {string} name - The name of the service.
- * @property {string | undefined} desc - The description of the service (optional).
- * @property {number} estimatedTime - The estimated time for the service in minutes.
- */
-
-/**
- * @typedef {object} TimeSlot
- * @property {number} hours - The hour of the time slot (0-23).
- * @property {number} minutes - The minutes of the time slot (0-59).
- * @property {number} day - The day of the month (1-31).
- * @property {number} month - The month (0-11).
- * @property {number} year - The full year (e.g., 2024).
- */
-
-/**
- * @typedef {object} AvailableTimeSlotInfo
- * @property {(TimeSlot | {
- *   isAvailable: boolean;
- * })[]} timeSlots - Array of time slots with availability status.
- * @property {string} comment - Additional comments regarding the time slots.
- */
-
-/**
- * @typedef {object} BookingFormData
- * @property {ServiceInfo[]} services - Array of selected services for the booking.
- * @property {TimeSlot} timeslot - The selected time slot for the booking.
- */
-
-/**
- * @typedef {import("react").ComponentPropsWithRef<"form"> & {
- *   onSubmit: (data: BookingFormData) => Promise<any>;
- *   myCar: CarInfo;
- *   services: ServiceInfo[];
- *   fetchAvailableTimeSlots: (day: number, month: number, year: number) => Promise<AvailableTimeSlotInfo>;
- * }} BookingFormProps
- */
+/** @typedef {import("./index").BookingFormData} BookingFormData */
+/** @typedef {import("./index").BookingFormProps} BookingFormProps */
 
 const steps = [
   {

@@ -3,6 +3,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+/** @typedef {import("./index").BookingCommentProps} BookingCommentProps */
+
+/**
+ * Displays the comment section tied to the booking form.
+ * @param {BookingCommentProps} props
+ */
 const BookingComment = ({ className, ...props }) => {
   return (
     <Card className={cn(className)} {...props}>
@@ -17,11 +23,14 @@ const BookingComment = ({ className, ...props }) => {
             placeholder="Nhập lời nhắn..."
             value={"Placeholder commentc"}
             className="min-h-[100px]"
+            readOnly
           />
         </div>
       </CardContent>
     </Card>
   );
 };
+
+BookingComment.displayName = "BookingComment";
 
 export default BookingComment;

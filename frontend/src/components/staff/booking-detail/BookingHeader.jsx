@@ -11,16 +11,36 @@ import {
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 
-const BookingHeader = ({ booking, className, ...props }) => {
+/** @typedef {import("./index").BookingHeaderProps} BookingHeaderProps */
+/** @typedef {import("./index").ServiceInfo} ServiceInfo */
+
+/**
+ * Displays the high-level booking metadata and technician assignments.
+ * @param {BookingHeaderProps} props
+ */
+const BookingHeader = ({
+  booking,
+  confirmBookingLoading = false,
+  className,
+  ...props
+}) => {
   const { watch } = useFormContext();
-  const services = watch("services");
-  const str = services ? services.map((s) => s.name).join(", ") : "Không có dịch vụ";
+
+  /** @type {ServiceInfo[]} */
+  const services = watch("services", []);
+  const serviceSummary = services.length
+    ? services.map((s) => s.name).join(", ")
+    : "Không có dịch vụ";
 
   return (
     <Card className={cn(className)} {...props}>
       <CardHeader className="flex justify-between items-center">
         <CardTitle>Thông Tin Chung (ID: {booking.id})</CardTitle>
-        <Button>
+        <Button
+          type="button"
+          disabled={confirmBookingLoading}
+          aria-busy={confirmBookingLoading}
+        >
           Xác nhận & Tạo Lệnh
         </Button>
       </CardHeader>
@@ -42,7 +62,7 @@ const BookingHeader = ({ booking, className, ...props }) => {
 
         <div className="space-y-2">
           <Label>Yêu Cầu Ban Đầu</Label>
-          <div className="font-semibold">{str}</div>
+          <div className="font-semibold">{serviceSummary}</div>
         </div>
 
         <div className="space-y-2">
@@ -76,5 +96,7 @@ const BookingHeader = ({ booking, className, ...props }) => {
     </Card>
   );
 };
+
+BookingHeader.displayName = "BookingHeader";
 
 export default BookingHeader;

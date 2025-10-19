@@ -1,18 +1,7 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { cn, formatDateTime } from "@/lib/utils";
 
-/**
- * @typedef {import("react").ComponentPropsWithRef<typeof Card> & {
- *   orderId: string;
- *   customerName: string;
- *   status: string;
- *   licensePlate: string;
- *   technicianName: string;
- *   creationDate: Date;
- *   estimatedTime?: Date;
- * }} BookingStatusHeaderProps
- * creationDate will be formatted to dd/MM/yyyy - HH:mm
- */
+/** @typedef {import("./index").BookingStatusHeaderProps} BookingStatusHeaderProps */
 
 /**
  * BookingStatusHeader component to display booking status information

@@ -11,41 +11,55 @@ import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import { useFieldArray } from "react-hook-form";
-import { SelectLabel } from "@radix-ui/react-select";
 
-const services = [
-  { sid: "1", name: "Thay dầu", price: 399000 },
-  { sid: "2", name: "Kiểm tra phanh", price: 250000 },
-  { sid: "3", name: "Bảo dưỡng", price: 799000 },
-  { sid: "4", name: "Sửa chữa", price: 1299000 }
+/** @typedef {import("./index").BookingServicesProps} BookingServicesProps */
+/** @typedef {import("./index").ServiceInfo} ServiceInfo */
+
+/** @type {ServiceInfo[]} */
+const serviceOptions = [
+  { sid: "1", name: "Thay dầu", basePrice: 399000 },
+  { sid: "2", name: "Kiểm tra phanh", basePrice: 250000 },
+  { sid: "3", name: "Bảo dưỡng", basePrice: 799000 },
+  { sid: "4", name: "Sửa chữa", basePrice: 1299000 },
 ];
 
+/**
+ * Manages the services field array within the booking detail form.
+ * @param {BookingServicesProps} props
+ */
 const BookingServices = ({ className, ...props }) => {
   const {
     fields: serviceItems,
     append,
     update,
-    remove
+    remove,
   } = useFieldArray({
     name: "services",
   });
 
   const handleAddService = () => {
-    append({
-      ...services[0]
-    });
-  }
+    if (!serviceOptions.length) return;
+    append({ ...serviceOptions[0] });
+  };
 
-  const handleUpdateService = (idx, sid) => {
-    const updatedService = services.find(s => s.sid === sid);
-    update(idx, {
-      ...updatedService
-    });
-  }
+  /**
+   * @param {number} index
+   * @param {string} sid
+   */
+  const handleUpdateService = (index, sid) => {
+    const updatedService = serviceOptions.find((s) => s.sid === sid);
+    if (!updatedService) return;
+    update(index, { ...updatedService });
+  };
 
-  const handleRemoveService = (sid) => {
-    const idx = serviceItems.findIndex((item) => item.sid === sid);
-    remove(idx);
+  /**
+   * @param {string} fieldId
+   */
+  const handleRemoveService = (fieldId) => {
+    const index = serviceItems.findIndex((item) => item.id === fieldId);
+    if (index !== -1) {
+      remove(index);
+    }
   };
 
   return (
@@ -60,17 +74,15 @@ const BookingServices = ({ className, ...props }) => {
               <label className="text-sm font-medium">Dịch vụ</label>
               <Select
                 value={service.sid}
-                onValueChange={(sid) => {
-                  handleUpdateService(idx, sid);
-                }}
+                onValueChange={(sid) => handleUpdateService(idx, sid)}
               >
                 <SelectTrigger className="m-0 w-full">
                   <SelectValue placeholder="Chọn dịch vụ" />
                 </SelectTrigger>
                 <SelectContent>
-                  {services.map((s) => (
-                    <SelectItem key={s.sid} value={s.sid}>
-                      {s.name}
+                  {serviceOptions.map((option) => (
+                    <SelectItem key={option.sid} value={option.sid}>
+                      {option.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -79,7 +91,7 @@ const BookingServices = ({ className, ...props }) => {
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Giá</label>
-              <Input value={formatPrice(service.price)} readOnly />
+              <Input value={formatPrice(service.basePrice ?? 0)} readOnly />
             </div>
 
             <Button
@@ -92,17 +104,15 @@ const BookingServices = ({ className, ...props }) => {
           </div>
         ))}
 
-        <Button
-          type="button"
-          onClick={handleAddService}
-          className="w-full mt-3"
-        >
+        <Button type="button" onClick={handleAddService} className="w-full mt-3">
           <Plus className="w-4 h-4 mr-2" />
-          Thêm dịch Vụ
+          Thêm dịch vụ
         </Button>
       </CardContent>
     </Card>
   );
 };
+
+BookingServices.displayName = "BookingServices";
 
 export default BookingServices;
