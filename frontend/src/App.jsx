@@ -1,9 +1,11 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
 import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
+import { Button } from "antd";
+import Login from "./pages/auth/Login";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
@@ -11,6 +13,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
+import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -26,11 +29,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/booking",
-        element: <Booking />
+        element: <Booking />,
       },
       {
         path: "/booking/:id",
-        element: <BookingProgress />
+        element: <BookingProgress />,
       },
       {
         path: "/about",
@@ -44,8 +47,19 @@ const router = createBrowserRouter([
         path: "/items/1",
         element: <ItemDetailPage />,
       },
-      
     ],
+  },
+
+  {
+    path: "/login",
+    element: <Login></Login>,
+  },
+
+  {
+    path: "/sso-callback",
+    element: (
+      <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
+    ),
   },
 
   testRouter,
