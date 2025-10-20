@@ -34,6 +34,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+        loader: partsClientLoader
       },
       {
         path: "/booking",

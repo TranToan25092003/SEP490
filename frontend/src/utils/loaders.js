@@ -137,21 +137,32 @@ export const partLoader = async ({ params }) => {
 // Load single part data by client
 export const partLoaderByClient = async ({ params }) => {
   try {
-    const response = await customFetch(`/parts/${params.id}`);
+    // Fetch the main product details
+    const mainProductResponse = await customFetch(`/parts/${params.id}`);
+    const mainProductApiResponse = mainProductResponse.data;
 
-    const apiResponse = response.data;
-    if (!apiResponse.success) {
-      throw new Error(apiResponse.message || "Failed to load part");
+    if (!mainProductApiResponse.success) {
+      throw new Error(mainProductApiResponse.message || "Failed to load part details");
     }
+    const product = mainProductApiResponse.data;
 
-    return apiResponse.data;
+    // Fetch related products based on the brand 
+    let relatedProducts = [];
+    if (product && product.brand) {
+      const relatedResponse = await customFetch(`/parts?brand=${product.brand}`);
+      const relatedApiResponse = relatedResponse.data;
+      if (relatedApiResponse.success) {
+        relatedProducts = relatedApiResponse.data.filter(p => p._id !== product._id);
+      }
+    }
+    return { product, relatedProducts };
+
   } catch (error) {
-    console.error("Part loader error:", error);
+    console.error("Part detail loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
-      description: error.message || "Không thể tải thông tin phụ tùng",
+      description: error.message || "Không thể tải thông tin chi tiết phụ tùng",
     });
-
-    return null;
+    return { product: null, relatedProducts: [] };
   }
 };
 

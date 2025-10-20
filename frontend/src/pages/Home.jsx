@@ -1,4 +1,5 @@
 import React from "react";
+import { useLoaderData } from 'react-router-dom'
 import {
   Carousel,
   CarouselContent,
@@ -21,8 +22,10 @@ import service3 from "@/assets/service-atvs.jpg";
 import service4 from "@/assets/service-ruaxe.png";
 import ctaBg from "@/assets/cta-bg.jpg";
 import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
+import ItemList from "@/components/customer/ItemList";
 
 function Home() {
+  const { parts } = useLoaderData();
   const slides = [hero1, g1, g2, g3];
   const [api, setApi] = React.useState(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -163,53 +166,9 @@ function Home() {
                 Một số phụ tùng nổi bật của MotorMate
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {featuredParts.map((part) => (
-                <div
-                  key={part.id}
-                  className="group relative overflow-hidden rounded-lg bg-white shadow-lg"
-                >
-                  <div className="p-6">
-                    <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
-                      <img
-                        src={part.image}
-                        alt={part.name}
-                        className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="mt-6 flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {part.name}
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {part.category}
-                        </p>
-                        <p className="mt-3 text-lg font-bold text-red-600">
-                          {part.price}
-                        </p>
-                      </div>
-                      <button className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-200 hover:bg-red-700 active:scale-90">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2.5}
-                          stroke="currentColor"
-                          className="h-5 w-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 4.5v15m7.5-7.5h-15"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            
+            <ItemList products={parts} size={3}/>
+
 
             {/* --- NEW MOTORMATE QUOTE SECTION --- */}
             <div className="mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2">

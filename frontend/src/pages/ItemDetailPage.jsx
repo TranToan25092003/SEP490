@@ -27,16 +27,17 @@ const mockProduct = {
 };
 
 function ItemDetailPage() {
-   const product = useLoaderData();
-
-  useEffect(() => {
-    setTimeout(() => {
-      setProduct(mockProduct);
-    }, 500);
-  }, []);
+  const { product, relatedProducts } = useLoaderData();
 
   if (!product) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">Không thể tải thông tin sản phẩm.</p>
+        <Link to="/items">
+          <Button>Quay lại danh sách</Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -75,7 +76,7 @@ function ItemDetailPage() {
             </div>
             {/* Item List */}
             <ItemList
-              filters={{ brand: product.brand }}
+              products={relatedProducts}
               size={3}
             />
           </div>

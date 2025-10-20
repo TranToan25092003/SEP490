@@ -21,7 +21,7 @@ function ItemCard({ product }) {
   return (
     <Link to={`/items/${_id}`} className="group block">
       <div className="w-full h-auto p-6 bg-white rounded-3xl shadow-[0px_4px_10px_0px_rgba(0,0,0,0.10)] flex flex-col gap-7 overflow-hidden transition-shadow duration-300 group-hover:shadow-xl">
-        <div className="self-stretch h-60 relative rounded-[10px] flex items-center justify-center bg-gray-50 overflow-hidden">
+        <div className="self-stretch h-60 relative rounded-[10px] flex items-center justify-center">
           <img 
             src={image || partImage} 
             alt={name || "Product Image"} 
@@ -31,7 +31,7 @@ function ItemCard({ product }) {
         
         <div className="self-stretch flex justify-between items-start">
           <div className="flex flex-col gap-2">
-            <h3 className="text-slate-800 text-base font-bold leading-normal tracking-tight">{name || 'Lốp sau MotorMate'}</h3>
+            <h3 className="text-slate-800 text-base font-bold leading-normal tracking-tight">{name || 'Unknown'}</h3>
             <p className="text-neutral-500 text-sm font-normal leading-tight tracking-tight">{description || 'Phụ Tùng và Phụ Kiện'}</p>
             <p className="text-red-600 text-base font-bold leading-tight tracking-tight">{sellingPrice ? formatPrice(sellingPrice) : '??? VND'}</p>
           </div>      
