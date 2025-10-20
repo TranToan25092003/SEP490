@@ -21,21 +21,21 @@ import { Link, useLocation } from "react-router-dom";
 const items = [
   { key: "home", label: "Dashboard", icon: imgHome, href: "/manager" },
   {
-    key: "email",
+    key: "parts",
     label: "Quản lý phụ tùng",
-    icon: imgEmail,
+    icon: imgMoney,
     href: "/manager/items",
   },
   {
-    key: "contact",
-    label: "Contacts",
-    icon: imgContactBook,
+    key: "goodReceipts",
+    label: "Quản lý phiếu nhập kho",
+    icon: imgInvoice,
     href: "/manager/goods-receipt-list",
   },
-  { key: "coin", label: "Crypto", icon: imgCoin },
+  { key: "coin", label: "Chat CSKH", icon: imgContactBook },
   { key: "kanban", label: "Kanban", icon: imgDashboard },
-  { key: "invoice", label: "Invoice", icon: imgInvoice },
-  { key: "bank", label: "Banking", icon: imgMoney },
+  { key: "invoice", label: "Invoice", icon: imgCoin },
+  { key: "bank", label: "Banking", icon: imgEmail },
   { key: "ticket", label: "Tickets", icon: imgTicket },
 ];
 
