@@ -46,4 +46,30 @@ const router = new express.Router();
  */
 router.get("/", partController.getAllPartsByClient);
 
+/**
+ * @swagger
+ * /manager/parts/{id}:
+ *   get:
+ *     summary: Get single part by ID
+ *     tags:
+ *        - Part
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Part ID
+ *     responses:
+ *       200:
+ *         description: Part retrieved successfully
+ *       404:
+ *         description: Part not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/:id", partController.getPartByIdByClient);
+
 module.exports = router;

@@ -131,9 +131,8 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                      selectedIndex === i ? "bg-white" : "bg-white/50"
-                    }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
+                      }`}
                   />
                 ))}
               </div>
@@ -290,22 +289,22 @@ function Home() {
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
             <div className="w-11/12 max-w-xl border-4 border-white  p-8 text-white md:mr-16 lg:mr-24">
               <h2 className="text-3xl font-bold uppercase tracking-wider md:text-4xl">
-                Welcome to the <span className="text-red-500">MotorMate</span>
+                Chào mừng bạn đến với <span className="text-red-500">MotorMate</span>
               </h2>
               <p className="mt-4 text-gray-300">
-                Praesent consequat pharetra commodo. Vestibulum nec lectus nibh.
-                Curabitur tellus leo, euismod sit amet gravida at, egestas sed
-                lectus.
+                MotorMate tự hào mang đến những giải pháp toàn diện cho chiếc xe của bạn,
+                từ phụ tùng chính hãng đến dịch vụ bảo dưỡng tận tâm.
               </p>
-              <button
-                className="mt-8 inline-flex items-center justify-center bg-red-600 px-8 py-3
-                                     text-base font-bold text-white
-                                     transition-all duration-150 ease-in-out
-                                     hover:bg-red-700 hover:-translate-y-0.5
-                                     active:scale-95"
+              <a
+                href="/about"
+                className="mt-8 inline-flex items-center justify-center rounded-lg bg-red-600 px-8 py-3
+             text-base font-bold text-white
+             transition-all duration-150 ease-in-out
+             hover:bg-red-700 hover:-translate-y-0.5
+             active:scale-95"
               >
-                READ MORE
-              </button>
+                TÌM HIỂU THÊM
+              </a>
             </div>
           </div>
         </div>

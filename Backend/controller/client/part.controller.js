@@ -19,6 +19,25 @@ class PartController {
             });
         }
     }
+
+    // Get part by id
+    async getPartByIdByClient(req, res) {
+        try {
+            const { id } = req.params;
+            const part = await partService.getPartByIdByClient(id);
+
+            res.status(200).json({
+                success: true,
+                data: part,
+            });
+        } catch (error) {
+            const statusCode = error.message.includes("not found") ? 404 : 500;
+            res.status(statusCode).json({
+                success: false,
+                message: error.message,
+            });
+        }
+    }
 }
 
 module.exports = new PartController();

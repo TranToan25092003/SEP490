@@ -134,6 +134,27 @@ export const partLoader = async ({ params }) => {
   }
 };
 
+// Load single part data by client
+export const partLoaderByClient = async ({ params }) => {
+  try {
+    const response = await customFetch(`/parts/${params.id}`);
+
+    const apiResponse = response.data;
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load part");
+    }
+
+    return apiResponse.data;
+  } catch (error) {
+    console.error("Part loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải thông tin phụ tùng",
+    });
+
+    return null;
+  }
+};
+
 // Load vehicle models data (replaces categories)
 export const vehicleModelsLoader = async () => {
   try {

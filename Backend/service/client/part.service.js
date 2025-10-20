@@ -57,6 +57,24 @@ class PartService {
             throw new Error(`Failed to fetch parts for client: ${error.message}`);
         }
     }
+
+    async getPartByIdByClient(id) {
+        try {
+           
+            const part = await Part.findOne({ _id: id, status: "active" })
+                .populate("compatible_model_ids", "name brand year")
+                .populate("media", "url kind publicId");
+
+            if (!part) {
+                throw new Error("Part not found or is not currently active");
+            }
+
+            return part;
+        } catch (error) {
+            throw new Error(`Failed to fetch part for client: ${error.message}`);
+        }
+    }
 }
+
 
 module.exports = new PartService();

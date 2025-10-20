@@ -1,7 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
-import { ClerkProvider } from "@clerk/clerk-react";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
@@ -20,7 +19,7 @@ import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import NotFoundPage from "./pages/404";
-import { partsPageLoader, partFormLoader, partsClientLoader } from "./utils/loaders";
+import { partsPageLoader, partFormLoader, partsClientLoader, partLoaderByClient } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
 
@@ -54,8 +53,9 @@ const router = createBrowserRouter([
         loader: partsClientLoader
       },
       {
-        path: "/items/1",
+        path: "/items/:id",
         element: <ItemDetailPage />,
+        loader: partLoaderByClient
       },
 
       // 404 within HomeLayout
@@ -64,18 +64,6 @@ const router = createBrowserRouter([
         element: <NotFoundPage />,
       },
     ],
-  },
-
-  {
-    path: "/login",
-    element: <Login></Login>,
-  },
-
-  {
-    path: "/sso-callback",
-    element: (
-      <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
-    ),
   },
 
   {

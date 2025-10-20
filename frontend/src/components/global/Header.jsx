@@ -21,6 +21,9 @@ import avatarImg from "../../assets/avatar.png";
 import { Button } from "../ui/button";
 import { LuAlignLeft } from "react-icons/lu";
 import SignOutLink from "../navbar/SignOutLink";
+import SearchIcon from "../icons/SearchIcon";
+import NotificationAlertIcon from "../icons/NotificationAlertIcon";
+import NotificationIcon from "../icons/NotificationIcon";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -49,40 +52,11 @@ const Header = () => {
             </p>
           </div>
           <div className="ml-auto flex items-center justify-center gap-[16px] md:gap-[20px] p-[8px]">
-            <button
-              aria-label="Search"
-              className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer"
-              onClick={() => navigate("/")}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-full h-full"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
-            </button>
-            <button
-              aria-label="Cart"
-              className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer"
-              onClick={() => navigate("/cart")}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                className="w-full h-full"
-              >
-                <path d="M6 6h15l-1.5 9h-12z" />
-                <path d="M6 6l-1-3H3" />
-                <circle cx="9" cy="20" r="1.5" />
-                <circle cx="18" cy="20" r="1.5" />
-              </svg>
-            </button>
+            <SearchIcon />
+
+            {/* Use NotificationAlertIcon if there are new notifications, else use NotificationIcon*/}
+            <NotificationAlertIcon />  
+
             {isSignedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

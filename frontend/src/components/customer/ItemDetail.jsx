@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star } from 'lucide-react';
+import productImagePlaceholder from '@/assets/part-lopsau.png';
 
 function ItemDetail({ product }) {
     const [activeImage, setActiveImage] = useState('');
 
     useEffect(() => {
         // Set the active image when the product data is available
-        if (product && product.images && product.images.length > 0) {
-            setActiveImage(product.images[0]);
+        if (product && product.media && product.media.length > 0) {
+            setActiveImage(product.media[0].url);
+        } else if (product) {
+            setActiveImage(productImagePlaceholder);
         }
     }, [product]);
 
-    // If there's no product data yet, don't render anything
     if (!product) {
         return null;
     }
+
+    const descriptionLines = product.description ? product.description.split('\n').filter(line => line.trim() !== '') : [];
+    const thumbnails = product.media && product.media.length > 0 ? product.media.map(m => m.url) : [productImagePlaceholder];
 
     return (
         <div className="grid grid-cols-1 gap-8 rounded-3xl bg-gray-50 p-6 shadow-2xl md:grid-cols-2 md:p-8 lg:p-12">
@@ -38,7 +43,7 @@ function ItemDetail({ product }) {
                 )}
                 <h2 className="text-3xl font-semibold text-black">{product.name}</h2>
                 <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium tracking-widest text-red-700">{product.category}</span>
+                    <span className="text-xs font-medium tracking-widest text-red-700">{product.brand}</span>
                     <div className="h-4 w-px bg-stone-300"></div>
                     <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
@@ -50,7 +55,7 @@ function ItemDetail({ product }) {
                 <div>
                     <h3 className="text-base font-semibold tracking-tight text-black">Mô Tả</h3>
                     <ul className="mt-2.5 list-disc pl-5 text-sm font-light leading-normal tracking-tight text-black">
-                        {product.description.map((line, index) => (
+                        {descriptionLines.map((line, index) => (
                             <li key={index}>{line}</li>
                         ))}
                     </ul>
@@ -58,7 +63,7 @@ function ItemDetail({ product }) {
 
                 {/* Thumbnail images are now here */}
                 <div className="flex justify-start gap-4">
-                    {product.images.map((img, index) => (
+                    {thumbnails.map((img, index) => (
                         <button
                             key={index}
                             onClick={() => setActiveImage(img)}
@@ -72,7 +77,7 @@ function ItemDetail({ product }) {
                 <div>
                     <h4 className="text-xs font-semibold tracking-tight text-black">Số Lượng Tồn Kho</h4>
                     <div className="mt-2.5 inline-block rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white">
-                        {product.stock} cái
+                        {product.quantity} cái
                     </div>
                 </div>
             </div>

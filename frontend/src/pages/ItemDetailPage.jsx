@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useLoaderData, Link } from 'react-router-dom'
 import detailBg from '@/assets/detail-bg.jpg'
 import productImage from '@/assets/part-lopsau.png'
-import ItemDetail from '@/components/customer/ItemDetail';
-import { Button } from '@/components/ui/button';
-import ItemList from '@/components/customer/ItemList';
+import ItemDetail from '@/components/customer/ItemDetail'
+import { Button } from '@/components/ui/button'
+import ItemList from '@/components/customer/ItemList'
 
 const mockProduct = {
   id: '123',
@@ -26,7 +27,7 @@ const mockProduct = {
 };
 
 function ItemDetailPage() {
-  const [product, setProduct] = useState(null);
+   const product = useLoaderData();
 
   useEffect(() => {
     setTimeout(() => {
@@ -74,7 +75,7 @@ function ItemDetailPage() {
             </div>
             {/* Item List */}
             <ItemList
-              filters={{ category: product.category }}
+              filters={{ brand: product.brand }}
               size={3}
             />
           </div>
