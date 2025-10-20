@@ -9,7 +9,7 @@ const formatPrice = (price) => {
 };
 
 function ItemCard({ product }) {
-  const { name, description, price, image } = product || {};
+  const { name, description, sellingPrice, image } = product || {};
 
   return (
     <div className="w-full h-auto p-6 bg-white rounded-3xl shadow-[0px_4px_10px_0px_rgba(0,0,0,0.10)] flex flex-col gap-7 overflow-hidden">
@@ -21,7 +21,7 @@ function ItemCard({ product }) {
         <div className="flex flex-col gap-2">
           <h3 className="text-slate-800 text-base font-bold leading-normal tracking-tight">{name || 'Lốp sau MotorMate'}</h3>
           <p className="text-neutral-500 text-sm font-normal leading-tight tracking-tight">{description || 'Phụ Tùng và Phụ Kiện'}</p>
-          <p className="text-red-600 text-base font-bold leading-tight tracking-tight">{price ? formatPrice(price) : '340.000 VND'}</p>
+          <p className="text-red-600 text-base font-bold leading-tight tracking-tight">{sellingPrice ? formatPrice(sellingPrice) : '??? VND'}</p>
         </div>
         <Button size="icon" className="w-10 h-10 bg-red-700 rounded-full shadow-[0px_1px_10px_0px_rgba(0,0,0,0.10)] flex-shrink-0 hover:bg-red-800">
           <Plus className="w-5 h-5 text-white" />

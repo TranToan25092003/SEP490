@@ -16,7 +16,7 @@ import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import NotFoundPage from "./pages/404";
-import { partsPageLoader, partFormLoader } from "./utils/loaders";
+import { partsPageLoader, partFormLoader, partsClientLoader } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
 
@@ -47,6 +47,7 @@ const router = createBrowserRouter([
       {
         path: "/items",
         element: <ItemListPage />,
+        loader: partsClientLoader
       },
       {
         path: "/items/1",
