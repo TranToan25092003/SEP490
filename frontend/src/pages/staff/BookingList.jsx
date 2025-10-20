@@ -94,17 +94,15 @@ const BookingList = () => {
     <Container pageContext="admin">
       <div className="flex justify-between items-center">
         <H3>Quản lý lệnh</H3>
-        <Button>
-          <Plus />
-          Thêm lệnh mới
-        </Button>
+        <Link to={"/staff/booking/add"}>
+          <Button>
+            <Plus />
+            Thêm lệnh mới
+          </Button>
+        </Link>
       </div>
 
-      <CRUDTable
-        data={posts}
-        columns={columnDefs}
-        getRowId={(row) => row.id}
-      >
+      <CRUDTable data={posts} columns={columnDefs} getRowId={(row) => row.id}>
         {(row) => (
           <div className="flex justify-center">
             <Link to={`/staff/booking/${row.id}`}>
@@ -120,7 +118,7 @@ const BookingList = () => {
         pagination={{
           totalPages: 10,
           itemsPerPage: 50,
-          totalItems: 1000
+          totalItems: 1000,
         }}
       />
     </Container>
