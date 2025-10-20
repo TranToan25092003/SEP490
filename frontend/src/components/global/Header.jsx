@@ -1,12 +1,32 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { useClerk } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  useClerk,
+  useUser,
+  SignInButton,
+  SignUpButton,
+} from "@clerk/clerk-react";
 import headerImg from "@/assets/header-img.jpg";
 import MotorcycleIcon from "../icons/MotorcycleIcon";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
+import avatarImg from "../../assets/avatar.png";
+import { Button } from "../ui/button";
+import { LuAlignLeft } from "react-icons/lu";
+import SignOutLink from "../navbar/SignOutLink";
 
 const Header = () => {
   const navigate = useNavigate();
-  const { openSignIn } = useClerk();
+  const { isSignedIn, user } = useUser();
+
+  const profileImage = user?.imageUrl || avatarImg;
 
   return (
     <header className="w-full">
@@ -14,28 +34,95 @@ const Header = () => {
       <div className="max-w-[1920px] mx-auto">
         {/* Top section */}
         <div className="flex items-center gap-[8px] h-[70px] md:h-[80px] xl:h-[88px] px-[8px] pl-[20px] md:pl-[36px] xl:pl-[70px]">
-          <p className="text-[#E82917] text-[22px] md:text-[28px] xl:text-[32px] font-extrabold leading-none select-none">MotorMate</p>
+          <p className="text-[#E82917] text-[22px] md:text-[28px] xl:text-[32px] font-extrabold leading-none select-none">
+            MotorMate
+          </p>
           <div className="hidden md:flex items-center justify-center">
             <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
           <div className="hidden sm:flex flex-col items-center justify-center p-[5px] md:p-[8px] text-foreground/70 select-none">
-            <p className="text-[15px] md:text-[18px] xl:text-[22px] leading-[1.2] font-extrabold">How we move you</p>
-            <p className="text-[11px] md:text-[14px] xl:text-[16px] leading-[1.2] font-medium">MotorMate</p>
+            <p className="text-[15px] md:text-[18px] xl:text-[22px] leading-[1.2] font-extrabold">
+              How we move you
+            </p>
+            <p className="text-[11px] md:text-[14px] xl:text-[16px] leading-[1.2] font-medium">
+              MotorMate
+            </p>
           </div>
           <div className="ml-auto flex items-center justify-center gap-[16px] md:gap-[20px] p-[8px]">
-            <button aria-label="Search" className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer" onClick={() => navigate("/")}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            </button>
-            <button aria-label="Cart" className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer" onClick={() => navigate("/cart")}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-full h-full"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6l-1-3H3"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/></svg>
+            <button
+              aria-label="Search"
+              className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer"
+              onClick={() => navigate("/")}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="w-full h-full"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.3-4.3" />
+              </svg>
             </button>
             <button
-              onClick={() => openSignIn?.({})}
-              className="bg-[#DF1D01] text-white rounded-[8px] px-3 md:px-4 py-2 text-[14px] md:text-[16px] xl:text-[18px] font-bold flex items-center gap-2 hover:brightness-110 cursor-pointer"
+              aria-label="Cart"
+              className="size-[26px] md:size-[30px] text-[#323232] hover:opacity-80 cursor-pointer"
+              onClick={() => navigate("/cart")}
             >
-              <MotorcycleIcon />
-              Đăng Nhập
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="w-full h-full"
+              >
+                <path d="M6 6h15l-1.5 9h-12z" />
+                <path d="M6 6l-1-3H3" />
+                <circle cx="9" cy="20" r="1.5" />
+                <circle cx="18" cy="20" r="1.5" />
+              </svg>
             </button>
+            {isSignedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className="flex gap-4 max-w-[100px]"
+                  >
+                    <LuAlignLeft className="w-6 h-6"></LuAlignLeft>
+
+                    <img
+                      src={profileImage}
+                      className="h-7 w-7 object-cover rounded"
+                    ></img>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-40"
+                  align="center"
+                  sideOffset={10}
+                >
+                  <SignedIn>
+                    <DropdownMenuSeparator></DropdownMenuSeparator>
+                    <DropdownMenuItem>
+                      <SignOutLink></SignOutLink>
+                    </DropdownMenuItem>
+                  </SignedIn>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <button
+                onClick={() => {
+                  navigate("/login");
+                }}
+                disabled={isSignedIn}
+                className="bg-[#DF1D01] text-white rounded-[8px] px-3 md:px-4 py-2 text-[14px] md:text-[16px] xl:text-[18px] font-bold flex items-center gap-2 hover:brightness-110 cursor-pointer"
+              >
+                <MotorcycleIcon />
+                Đăng Nhập
+              </button>
+            )}
           </div>
         </div>
 
@@ -98,5 +185,3 @@ const Header = () => {
 };
 
 export default Header;
-
-

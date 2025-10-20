@@ -9,14 +9,6 @@ const SignOutLink = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    try {
-      await customFetch.post("/activity-logs/logout");
-    } catch (error) {
-      console.error("❌ Ghi log logout thất bại:", error);
-    }
-
-    localStorage.removeItem("loginLogged"); // 🧹 Xóa dấu đã ghi log login
-
     toast.success("Đăng xuất thành công");
 
     await signOut(() => navigate("/"));

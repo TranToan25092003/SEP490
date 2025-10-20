@@ -20,9 +20,12 @@ import { LuAlignLeft } from "react-icons/lu";
 import UserIcon from "@/components/navbar/UserIcon";
 import { DropdownMenuSeparator } from "@radix-ui/react-dropdown-menu";
 import SignOutLink from "./SignOutLink";
+import { useNavigate } from "react-router-dom";
 
 const LinkDropdown = () => {
   const { orgRole } = useAuth();
+
+  const navigate = useNavigate();
 
   return (
     <DropdownMenu>
@@ -36,9 +39,14 @@ const LinkDropdown = () => {
       <DropdownMenuContent className="w-40" align="center" sideOffset={10}>
         <SignedOut>
           <DropdownMenuItem>
-            <SignInButton mode="modal">
-              <button className="w-full text-left">Login</button>
-            </SignInButton>
+            <button
+              className="w-full text-left"
+              onClick={() => {
+                navigate("/login");
+              }}
+            >
+              login
+            </button>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator></DropdownMenuSeparator>
