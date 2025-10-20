@@ -35,10 +35,9 @@ import {
 import { Check, ChevronsUpDown, Plus, Search, Trash2 } from "lucide-react";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
-import { generateGoodsReceiptPDF } from "@/utils/pdfGenerator";
 import DatePicker from "@/components/ui/date-picker";
 
-export default function GoodsReceipt() {
+export default function CreateGoodsReceipt() {
   const navigate = useNavigate();
 
   // Form state for goods receipt
@@ -168,79 +167,6 @@ export default function GoodsReceipt() {
     }).format(price);
   };
 
-  // Convert number to Vietnamese words
-  const numberToVietnameseWords = (num) => {
-    const ones = [
-      "",
-      "một",
-      "hai",
-      "ba",
-      "bốn",
-      "năm",
-      "sáu",
-      "bảy",
-      "tám",
-      "chín",
-    ];
-    const tens = [
-      "",
-      "",
-      "hai mươi",
-      "ba mươi",
-      "bốn mươi",
-      "năm mươi",
-      "sáu mươi",
-      "bảy mươi",
-      "tám mươi",
-      "chín mươi",
-    ];
-    const hundreds = [
-      "",
-      "một trăm",
-      "hai trăm",
-      "ba trăm",
-      "bốn trăm",
-      "năm trăm",
-      "sáu trăm",
-      "bảy trăm",
-      "tám trăm",
-      "chín trăm",
-    ];
-
-    if (num === 0) return "không";
-    if (num < 10) return ones[num];
-    if (num < 100) {
-      const ten = Math.floor(num / 10);
-      const one = num % 10;
-      if (one === 0) return tens[ten];
-      if (ten === 1) return `mười ${ones[one]}`;
-      return `${tens[ten]} ${ones[one]}`;
-    }
-    if (num < 1000) {
-      const hundred = Math.floor(num / 100);
-      const remainder = num % 100;
-      if (remainder === 0) return hundreds[hundred];
-      return `${hundreds[hundred]} ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000) {
-      const thousand = Math.floor(num / 1000);
-      const remainder = num % 1000;
-      if (remainder === 0) return `${numberToVietnameseWords(thousand)} nghìn`;
-      return `${numberToVietnameseWords(
-        thousand
-      )} nghìn ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000000) {
-      const million = Math.floor(num / 1000000);
-      const remainder = num % 1000000;
-      if (remainder === 0) return `${numberToVietnameseWords(million)} triệu`;
-      return `${numberToVietnameseWords(
-        million
-      )} triệu ${numberToVietnameseWords(remainder)}`;
-    }
-    return "số quá lớn";
-  };
-
   // Submit goods receipt
   const handleSubmit = async () => {
     if (items.length === 0) {
@@ -331,8 +257,6 @@ export default function GoodsReceipt() {
       });
 
       if (response.data.success) {
-        const receipt = response.data.receipt;
-
         // Update part quantities
         try {
           for (const item of receiptData.items) {
@@ -366,78 +290,14 @@ export default function GoodsReceipt() {
           });
         }
 
-        // Generate PDF
-        const pdfBlob = await generateGoodsReceiptPDF({
-          ...receipt,
-          totalAmountInWords: `${numberToVietnameseWords(
-            Math.floor(totalAmount / 1000)
-          )} nghìn đồng chẵn`,
-        });
-
-        // Upload PDF to Cloudinary
-        try {
-          const uploadFormData = new FormData();
-          uploadFormData.append(
-            "file",
-            pdfBlob,
-            `goods-receipt-${receipt.receiptNumber}.pdf`
-          );
-          uploadFormData.append("upload_preset", "huynt7104");
-          uploadFormData.append("folder", "motormate/pdf/receipts");
-          uploadFormData.append("resource_type", "raw");
-          uploadFormData.append("access_mode", "public");
-
-          console.log("Uploading PDF to Cloudinary...");
-          console.log("PDF Blob size:", pdfBlob.size);
-          console.log("Receipt number:", receipt.receiptNumber);
-
-          const uploadResponse = await fetch(
-            "https://api.cloudinary.com/v1_1/djo2yviru/raw/upload",
-            {
-              method: "POST",
-              body: uploadFormData,
-            }
-          );
-
-          console.log("Upload response status:", uploadResponse.status);
-          console.log("Upload response headers:", uploadResponse.headers);
-
-          if (!uploadResponse.ok) {
-            const errorText = await uploadResponse.text();
-            console.error("Cloudinary upload error:", errorText);
-            throw new Error(
-              `Upload failed: ${uploadResponse.statusText} - ${errorText}`
-            );
-          }
-
-          const uploadResult = await uploadResponse.json();
-          console.log("Upload result:", uploadResult);
-
-          // Update receipt with PDF URL
-          await customFetch(`/manager/goods-receipt/${receipt._id}`, {
-            method: "PATCH",
-            data: { pdfUrl: uploadResult.secure_url },
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          console.log("PDF uploaded successfully:", uploadResult.secure_url);
-        } catch (uploadError) {
-          console.error("PDF upload failed:", uploadError);
-          toast.error("Lỗi upload PDF", {
-            description:
-              "Không thể upload PDF lên Cloudinary. Vui lòng thử lại.",
-          });
-          // Continue without PDF upload
-        }
+        // PDF will be generated on-demand when viewing receipt details
 
         toast.success("Thành công", {
           description:
             "Phiếu nhập kho đã được tạo và cập nhật số lượng sản phẩm",
         });
 
-        navigate("/manager/items");
+        navigate("/manager/goods-receipt-list");
       } else {
         throw new Error(response.data.message);
       }
@@ -454,7 +314,10 @@ export default function GoodsReceipt() {
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Tạo phiếu nhập kho</h1>
-        <Button variant="outline" onClick={() => navigate("/manager/items")}>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/manager/goods-receipt-list")}
+        >
           Quay lại
         </Button>
       </div>
@@ -745,7 +608,10 @@ export default function GoodsReceipt() {
 
       {/* Submit Section */}
       <div className="flex justify-end space-x-4">
-        <Button variant="outline" onClick={() => navigate("/manager/items")}>
+        <Button
+          variant="outline"
+          onClick={() => navigate("/manager/goods-receipt-list")}
+        >
           Hủy
         </Button>
         <Button onClick={handleSubmit} disabled={isSubmitting}>

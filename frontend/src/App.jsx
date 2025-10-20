@@ -14,10 +14,16 @@ import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
-import GoodsReceipt from "./pages/manager/GoodsReceipt";
+import CreateGoodsReceipt from "./pages/manager/CreateGoodsReceipt";
+import GoodsReceiptList from "./pages/manager/GoodsReceiptList";
+import GoodsReceiptDetail from "./pages/manager/GoodsReceiptDetail";
 import About from "./pages/AboutUs";
 import NotFoundPage from "./pages/404";
-import { partsPageLoader, partFormLoader } from "./utils/loaders";
+import {
+  partsPageLoader,
+  partFormLoader,
+  goodsReceiptListLoader,
+} from "./utils/loaders";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
@@ -91,7 +97,16 @@ const router = createBrowserRouter([
       },
       {
         path: "goods-receipt",
-        element: <GoodsReceipt />,
+        element: <CreateGoodsReceipt />,
+      },
+      {
+        path: "goods-receipt-list",
+        element: <GoodsReceiptList />,
+        loader: goodsReceiptListLoader,
+      },
+      {
+        path: "goods-receipt/:id",
+        element: <GoodsReceiptDetail />,
       },
     ],
   },

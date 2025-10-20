@@ -243,3 +243,54 @@ export const partFormLoader = async ({ params }) => {
     };
   }
 };
+
+// Load goods receipts data with pagination and filtering
+export const goodsReceiptListLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("status"))
+      queryParams.append("status", searchParams.get("status"));
+
+    const response = await customFetch(
+      `/manager/goods-receipt?${queryParams.toString()}`
+    );
+
+    // customFetch returns axios response, so we need response.data
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load goods receipts");
+    }
+
+    return {
+      receipts: apiResponse.receipts,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Goods receipts loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải danh sách phiếu nhập kho",
+    });
+
+    return {
+      receipts: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};

@@ -146,6 +146,7 @@ export default function ManagerItems() {
 
   return (
     <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-semibold">Thêm phụ tùng</h1>
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-[520px]">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px]">
@@ -167,8 +168,11 @@ export default function ManagerItems() {
             <Link to="/manager/items/add">+ Thêm sản phẩm</Link>
           </Button>
           <Button asChild>
-            <Link to="/manager/goods-receipt">+ Phiếu nhập kho</Link>
+            <Link to="/manager/goods-receipt">+ Tạo phiếu nhập kho</Link>
           </Button>
+          {/* <Button asChild variant="outline">
+            <Link to="/manager/goods-receipt-list">Danh sách phiếu nhập</Link>
+          </Button> */}
           {selectedItems.length > 0 && (
             <Button
               variant="destructive"

@@ -26,7 +26,12 @@ const items = [
     icon: imgEmail,
     href: "/manager/items",
   },
-  { key: "contact", label: "Contacts", icon: imgContactBook },
+  {
+    key: "contact",
+    label: "Contacts",
+    icon: imgContactBook,
+    href: "/manager/goods-receipt-list",
+  },
   { key: "coin", label: "Crypto", icon: imgCoin },
   { key: "kanban", label: "Kanban", icon: imgDashboard },
   { key: "invoice", label: "Invoice", icon: imgInvoice },
