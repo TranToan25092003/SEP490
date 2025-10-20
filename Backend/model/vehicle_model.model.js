@@ -10,6 +10,7 @@ const ModelSchema = new Schema(
     year: { type: Number, required: false }, // Year of manufacture (optional)
     engine_type: { type: String, required: false }, // Engine type (e.g., gasoline, diesel, optional)
     description: { type: String, required: false }, // Additional description (optional)
+    images: [String],
   },
   { timestamps: true }
 );

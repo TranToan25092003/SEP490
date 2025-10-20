@@ -104,7 +104,10 @@ const Header = () => {
                   sideOffset={10}
                 >
                   <SignedIn>
-                    <DropdownMenuSeparator></DropdownMenuSeparator>
+                    <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
+                    <DropdownMenuItem>
+                      <a href="/profile">Profile</a>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>
                       <SignOutLink></SignOutLink>
                     </DropdownMenuItem>

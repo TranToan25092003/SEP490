@@ -1,47 +1,27 @@
 import { z, ZodSchema } from "zod";
 
-/**
- * ====================================
- * Item schema
- * ====================================
- */
-export const ItemSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  category: z.string().min(1, "Category is required"),
-  images: z.array(z.string()).default([]),
-  description: z.string().min(1, "Description is required"),
-  price: z.preprocess(
-    (val) =>
-      typeof val === "string" || typeof val === "number"
-        ? Number(val)
-        : undefined,
-    z.number().positive("Price must be positive")
-  ),
-  rate: z.enum(["hour", "day"], {
-    errorMap: () => ({ message: "Rate must be one of: hour, day, month" }),
-  }),
-  isFree: z.boolean(),
-  status: z.enum(["available", "notAvailable"], {
-    errorMap: () => ({
-      message: "Status must be one of: available or unavailable",
+export const vehicleSchema = z.object({
+  name: z.string().min(1, "Tên xe là bắt buộc").max(50, "Tên xe quá dài"),
+  brand: z.string().min(1, "Hãng xe là bắt buộc").max(50, "Hãng xe quá dài"),
+  license_plate: z
+    .string()
+    .min(1, "Biển số xe là bắt buộc")
+    .regex(/^[0-9]{2}[A-Z]{1,2}[-][0-9]{3,6}$/, {
+      message: "Định dạng biển số không hợp lệ (VD: 51A-12345)",
+    })
+    .max(12, "Biển số quá dài"),
+  year: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d{4}$/.test(val), {
+      message: "Năm phải là 4 chữ số (1900-2025)",
+    })
+    .transform((val) => (val ? parseInt(val) : null))
+    .refine((val) => !val || (val >= 1900 && val <= 2025), {
+      message: "Năm từ 1900-2030",
     }),
-  }),
-});
-
-/**
- * ====================================
- * Report schema
- * ====================================
- */
-export const ReportSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title cannot be empty")
-    .max(100, "Title cannot exceed 100 characters"),
-  description: z
-    .string()
-    .min(1, "Description cannot be empty")
-    .max(10000000, "Description cannot exceed 10000000 characters"),
+  engine_type: z.string().max(30, "Loại động cơ quá dài").optional(),
+  description: z.string().max(500, "Mô tả quá dài").optional(),
 });
 
 /**
@@ -61,17 +41,3 @@ export const validateWithZodSchema = (schema, data) => {
 
   return result.data;
 };
-
-/**
- * ====================================
- * contact schema
- * ====================================
- */
-export const contactSchema = z.object({
-  address: z.string().min(1, "Address is required"),
-  phone: z.string().regex(/^\+?\d{10,15}$/, "Invalid phone number"),
-  email: z.string().email("Invalid email address"),
-  facebook: z.string().url("Invalid Facebook URL").optional().or(z.literal("")),
-  zalo: z.string().url("Invalid Zalo URL").optional().or(z.literal("")),
-  iframe: z.string().optional().or(z.literal("")),
-});
