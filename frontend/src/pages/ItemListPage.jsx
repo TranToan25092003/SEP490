@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useLoaderData, useNavigate } from 'react-router-dom';
 import { Search, Package, Users, BarChart, ShieldCheck } from 'lucide-react'
 import CountUp from 'react-countup'
 import productHeroBg from '@/assets/product-hero-bg.jpg'
@@ -16,17 +17,17 @@ import ItemList from '@/components/customer/ItemList'
 
 
 const mockCategories = [
-  { id: 'lop-xe', name: 'Lốp Xe' },
-  { id: 'bugi', name: 'Bugi & IC' },
-  { id: 'phanh', name: 'Phanh' },
-  { id: 'nhot', name: 'Dầu nhớt' },
+    { id: 'lop-xe', name: 'Lốp Xe' },
+    { id: 'bugi', name: 'Bugi & IC' },
+    { id: 'phanh', name: 'Phanh' },
+    { id: 'nhot', name: 'Dầu nhớt' },
 ];
 
 const sortOptions = [
-  { value: 'price-asc', label: 'Giá Tăng dần' },
-  { value: 'price-desc', label: 'Giá Giảm dần' },
-  { value: 'name-asc', label: 'Tên A-Z' },
-  { value: 'name-desc', label: 'Tên Z-A' },
+    { value: 'sellingPrice,asc', label: 'Giá Tăng dần' },
+    { value: 'sellingPrice,desc', label: 'Giá Giảm dần' },
+    { value: 'name,asc', label: 'Tên A-Z' },
+    { value: 'name,desc', label: 'Tên Z-A' },
 ];
 
 const AnimatedCounter = ({ endValue }) => {
@@ -50,17 +51,18 @@ const stats = [
 ];
 
 function ItemListPage() {
-  // State for filter controls
+  // Get data from the React Router loader
+  const { parts, pagination } = useLoaderData();
+  const navigate = useNavigate();
+
+  // State for filter controls to manage their current values
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedSort, setSelectedSort] = useState('price-asc');
+  const [selectedSort, setSelectedSort] = useState('sellingPrice,asc');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [activeFilters, setActiveFilters] = useState({
-    sortBy: 'price-asc'
-  });
-
   useEffect(() => {
+    // This can still be used to fetch static filter options
     const fetchFilterData = () => {
       setTimeout(() => {
         setCategories(mockCategories);
@@ -70,17 +72,27 @@ function ItemListPage() {
     fetchFilterData();
   }, []);
 
+  // Update URL to trigger the loader to re-fetch data
   const handleSearch = () => {
-    setActiveFilters({
-      category: selectedCategory,
-      sortBy: selectedSort,
-      query: searchQuery,
-    });
+    const params = new URLSearchParams();
+    if (searchQuery) {
+        params.set('search', searchQuery);
+    }
+    if (selectedCategory) {
+        params.set('category', selectedCategory);
+    }
+    if(selectedSort) {
+        const [sortBy, sortOrder] = selectedSort.split(',');
+        params.set('sortBy', sortBy);
+        params.set('sortOrder', sortOrder);
+    }
+    // Navigate to the same page but with new query params, which triggers the loader
+    navigate(`?${params.toString()}`);
   };
 
   return (
     <main className="w-full bg-white">
-      {/* HERO & FILTER SECTION */}
+      {/* --- HERO & FILTER SECTION --- */}
       <section className="relative w-full mb-32 md:mb-24">
         <div className="h-[500px] w-full md:h-[600px]">
           <img src={productHeroBg} alt="Motorcycle" className="h-full w-full object-cover" />
@@ -144,11 +156,13 @@ function ItemListPage() {
         </div>
       </section>
 
-      {/* PRODUCT GRID SECTION */}
+      {/* --- PRODUCT GRID SECTION --- */}
       <section className="w-full px-8 pb-24 md:px-12 lg:px-16">
         <div className="mx-auto max-w-6xl">
-          <ItemList filters={activeFilters} />
+          {/* ItemList now receives the products directly from the loader */}
+          <ItemList products={parts} />
           <div className="mt-12 flex justify-center">
+            {/* TODO: Add pagination logic here using the 'pagination' object */}
             <Button className="h-11 w-44 rounded-sm bg-red-700 text-sm font-bold uppercase tracking-tight text-white shadow-lg transition-colors hover:bg-red-800">
               Xem tất cả
             </Button>

@@ -1,14 +1,13 @@
 import { useFieldArray } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
-import { cn, formatPrice, formatTimeXGioYPhut } from "@/lib/utils";
+import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 
 /**
  * @typedef {import("react").ComponentPropsWithRef<"div"> & {
  *   services: Array<{
  *     sid: string;
  *     name: string;
- *     basePrice: number;
  *     desc?: string;
  *     estimatedTime: number;
  *   }>;
@@ -83,9 +82,6 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-sm text-gray-500">
                     Thời gian: {formatTimeXGioYPhut(service.estimatedTime)}
-                  </span>
-                  <span className="font-semibold text-primary">
-                    {formatPrice(service.basePrice)}
                   </span>
                 </div>
               </CardContent>

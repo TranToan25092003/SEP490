@@ -40,13 +40,12 @@ const MainFooterContent = ({ footerInfo }) => {
   const { address, email, facebook, iframe, phone, zalo } = footerInfo || {};
 
   const links = [
-    'Trang Chủ',
-    'Sắp Ra Mắt',
-    'Phụ Tùng',
-    'Dịch Vụ',
-    'Giới Thiệu',
-    'Liên Hệ',
-  ]
+    { text: 'Trang Chủ', href: '/' },
+    { text: 'Phụ Tùng', href: '/items' },
+    { text: 'Dịch Vụ', href: '/' },
+    { text: 'Giới Thiệu', href: '/about' },
+    { text: 'Liên Hệ', href: '/' },
+  ];
 
   return (
     <div className="w-full bg-zinc-900 text-white">
@@ -60,7 +59,7 @@ const MainFooterContent = ({ footerInfo }) => {
               {address || "Lorem Ipsum is simply dummy text of the printing and typesetting industry."}
             </div>
             <div className="text-neutral-400 text-xs leading-tight">
-              {phone || "(000) 000-0000"}
+              {phone || "(+84) 0377-043-903"}
             </div>
             {iframe && (
               <div className="mt-3" dangerouslySetInnerHTML={{ __html: iframe }} />
@@ -79,20 +78,20 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Quick Links */}
-          <div className="w-full bg-black p-8">
+          <div className="w-full pl-16">
             <div className="lg:max-w-[220px] xl:max-w-[240px]">
               <div className="mb-4 font-['Poppins'] text-sm uppercase text-white">
                 Quick Links
               </div>
               <ul className="space-y-3 font-['Poppins'] text-xs">
                 {links.map((link) => (
-                  <li key={link}>
+                  <li key={link.text}>
                     <a
-                      href="#"
+                      href={link.href}
                       className="group flex items-center gap-x-3 text-white/70 underline transition-colors duration-200 hover:text-white"
                     >
                       <ArrowIcon />
-                      <span>{link}</span>
+                      <span>{link.text}</span>
                     </a>
                   </li>
                 ))}
@@ -162,7 +161,7 @@ const BottomBar = () => {
       <div className="max-w-[1350px] mx-auto px-4 py-4">
         <div className="h-px bg-neutral-700 mb-3" />
         <div className="text-xs text-left">
-          Copyright © {year}. MotorMate
+          Copyright © {year}. MotorMate - Design By TuongHuy
         </div>
       </div>
     </div>

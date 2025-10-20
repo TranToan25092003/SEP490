@@ -1,4 +1,5 @@
 import React from "react";
+import { useLoaderData } from 'react-router-dom'
 import {
   Carousel,
   CarouselContent,
@@ -21,8 +22,10 @@ import service3 from "@/assets/service-atvs.jpg";
 import service4 from "@/assets/service-ruaxe.png";
 import ctaBg from "@/assets/cta-bg.jpg";
 import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
+import ItemList from "@/components/customer/ItemList";
 
 function Home() {
+  const { parts } = useLoaderData();
   const slides = [hero1, g1, g2, g3];
   const [api, setApi] = React.useState(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -131,9 +134,8 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                      selectedIndex === i ? "bg-white" : "bg-white/50"
-                    }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
+                      }`}
                   />
                 ))}
               </div>
@@ -164,53 +166,9 @@ function Home() {
                 Một số phụ tùng nổi bật của MotorMate
               </p>
             </div>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {featuredParts.map((part) => (
-                <div
-                  key={part.id}
-                  className="group relative overflow-hidden rounded-lg bg-white shadow-lg"
-                >
-                  <div className="p-6">
-                    <div className="aspect-square w-full overflow-hidden rounded-md bg-gray-100">
-                      <img
-                        src={part.image}
-                        alt={part.name}
-                        className="h-full w-full object-contain object-center transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                    <div className="mt-6 flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-semibold text-gray-900">
-                          {part.name}
-                        </h3>
-                        <p className="mt-1 text-sm text-gray-500">
-                          {part.category}
-                        </p>
-                        <p className="mt-3 text-lg font-bold text-red-600">
-                          {part.price}
-                        </p>
-                      </div>
-                      <button className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-600 text-white transition-all duration-200 hover:bg-red-700 active:scale-90">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth={2.5}
-                          stroke="currentColor"
-                          className="h-5 w-5"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M12 4.5v15m7.5-7.5h-15"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            
+            <ItemList products={parts} size={3}/>
+
 
             {/* --- NEW MOTORMATE QUOTE SECTION --- */}
             <div className="mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2">
@@ -290,22 +248,22 @@ function Home() {
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
             <div className="w-11/12 max-w-xl border-4 border-white  p-8 text-white md:mr-16 lg:mr-24">
               <h2 className="text-3xl font-bold uppercase tracking-wider md:text-4xl">
-                Welcome to the <span className="text-red-500">MotorMate</span>
+                Chào mừng bạn đến với <span className="text-red-500">MotorMate</span>
               </h2>
               <p className="mt-4 text-gray-300">
-                Praesent consequat pharetra commodo. Vestibulum nec lectus nibh.
-                Curabitur tellus leo, euismod sit amet gravida at, egestas sed
-                lectus.
+                MotorMate tự hào mang đến những giải pháp toàn diện cho chiếc xe của bạn,
+                từ phụ tùng chính hãng đến dịch vụ bảo dưỡng tận tâm.
               </p>
-              <button
-                className="mt-8 inline-flex items-center justify-center bg-red-600 px-8 py-3
-                                     text-base font-bold text-white
-                                     transition-all duration-150 ease-in-out
-                                     hover:bg-red-700 hover:-translate-y-0.5
-                                     active:scale-95"
+              <a
+                href="/about"
+                className="mt-8 inline-flex items-center justify-center rounded-lg bg-red-600 px-8 py-3
+             text-base font-bold text-white
+             transition-all duration-150 ease-in-out
+             hover:bg-red-700 hover:-translate-y-0.5
+             active:scale-95"
               >
-                READ MORE
-              </button>
+                TÌM HIỂU THÊM
+              </a>
             </div>
           </div>
         </div>

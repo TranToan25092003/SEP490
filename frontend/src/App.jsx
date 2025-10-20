@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
-import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
+import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
 import { Button } from "antd";
@@ -10,10 +10,18 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import AdminLayout from "./layout/admin-layout/AdminLayout";
+import Manager from "./pages/manager/Manager";
+import ManagerItems from "./pages/manager/Items";
+import AddItem from "./pages/manager/AddItem";
 import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import NotFoundPage from "./pages/404";
+import { partsPageLoader, partFormLoader, partsClientLoader, partLoaderByClient } from "./utils/loaders";
+import StaffLayout from "./layout/staff-layout/StaffLayout";
+import Staff from "./pages/staff/Staff";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -26,10 +34,11 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+        loader: partsClientLoader
       },
       {
         path: "/booking",
-        element: <Booking />,
+        element: <Booking />,    
       },
       {
         path: "/booking/:id",
@@ -42,10 +51,18 @@ const router = createBrowserRouter([
       {
         path: "/items",
         element: <ItemListPage />,
+        loader: partsClientLoader
       },
       {
-        path: "/items/1",
+        path: "/items/:id",
         element: <ItemDetailPage />,
+        loader: partLoaderByClient
+      },
+
+      // 404 within HomeLayout
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
     ],
   },
@@ -63,6 +80,37 @@ const router = createBrowserRouter([
   },
 
   testRouter,
+  {
+    path: "/manager",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Manager /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+      {
+        path: "items/add",
+        element: <AddItem />,
+        loader: partFormLoader,
+      },
+    ],
+  },
+
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      { index: true, element: <Staff /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+    ],
+  },
+
 ]);
 
 function App() {

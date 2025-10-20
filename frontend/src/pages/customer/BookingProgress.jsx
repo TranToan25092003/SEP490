@@ -1,5 +1,5 @@
-import BookingStatusHeader from "@/components/booking-progress/BookingStatusHeader";
-import BookingStatusTimeline from "@/components/booking-progress/BookingStatusTimeline";
+import BookingStatusHeader from "@/components/customer/booking-progress/BookingStatusHeader";
+import BookingStatusTimeline from "@/components/customer/booking-progress/BookingStatusTimeline";
 import Container from "@/components/global/Container";
 
 const mockOrderData = {
