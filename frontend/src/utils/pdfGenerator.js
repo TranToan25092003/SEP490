@@ -6,9 +6,9 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
   const { width, height } = page.getSize();
 
-  // Load fonts
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  // Load fonts - use TimesRoman for better Unicode support
+  const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
   // Colors
   const black = rgb(0, 0, 0);
@@ -23,14 +23,51 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
       maxWidth = width - x - 20,
     } = options;
 
-    page.drawText(text, {
-      x,
-      y,
-      size,
-      font: textFont,
-      color,
-      maxWidth,
-    });
+    // Create a function to normalize Vietnamese text
+    const normalizeVietnamese = (str) => {
+      return str
+        .normalize("NFD") // Decompose characters
+        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D");
+    };
+
+    // Try to draw text with original Vietnamese characters first
+    try {
+      page.drawText(text, {
+        x,
+        y,
+        size,
+        font: textFont,
+        color,
+        maxWidth,
+      });
+    } catch {
+      // If Unicode fails, use normalized version
+      const normalizedText = normalizeVietnamese(text);
+
+      try {
+        page.drawText(normalizedText, {
+          x,
+          y,
+          size,
+          font: textFont,
+          color,
+          maxWidth,
+        });
+      } catch {
+        // Final fallback - remove all non-ASCII characters
+        const asciiText = text.replace(/[^\x20-\x7E]/g, "");
+        page.drawText(asciiText, {
+          x,
+          y,
+          size,
+          font: textFont,
+          color,
+          maxWidth,
+        });
+      }
+    }
   };
 
   // Helper function to draw rectangle
@@ -88,13 +125,18 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   });
 
   // Document info
-  const documentDate = new Date(receiptData.documentDate).toLocaleDateString(
-    "vi-VN"
-  );
+  const documentDate = new Date(
+    receiptData.documentDate || new Date()
+  ).toLocaleDateString("vi-VN");
   drawText(`Ngày ${documentDate}`, 50, height - 150, { size: 10 });
-  drawText(`Số: ${receiptData.receiptNumber}`, width - 150, height - 150, {
-    size: 10,
-  });
+  drawText(
+    `Số: ${receiptData.receiptNumber || "N/A"}`,
+    width - 150,
+    height - 150,
+    {
+      size: 10,
+    }
+  );
 
   // Debit/Credit accounts
   drawText("Nợ: 156", width - 100, height - 170, { size: 10 });
@@ -102,7 +144,7 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
 
   // Supplier information
   drawText("Họ và tên người giao:", 50, height - 200, { size: 10 });
-  drawText(receiptData.supplier.name, 200, height - 200, {
+  drawText(receiptData.supplier?.name || "N/A", 200, height - 200, {
     font: boldFont,
     size: 10,
   });
@@ -114,14 +156,14 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
     height - 220,
     { size: 10 }
   );
-  drawText(receiptData.supplier.name, 50, height - 235, {
+  drawText(receiptData.supplier?.name || "N/A", 50, height - 235, {
     font: boldFont,
     size: 10,
   });
 
   // Warehouse location
   drawText("Nhập tại kho:", 50, height - 260, { size: 10 });
-  drawText(receiptData.warehouseLocation, 150, height - 260, {
+  drawText(receiptData.warehouseLocation || "N/A", 150, height - 260, {
     font: boldFont,
     size: 10,
   });
@@ -165,7 +207,10 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   let currentY = tableStartY - 40;
   let totalAmount = 0;
 
-  receiptData.items.forEach((item, index) => {
+  // Validate items array
+  const items = receiptData.items || [];
+
+  items.forEach((item, index) => {
     if (currentY < 100) {
       // Add new page if needed
       const newPage = pdfDoc.addPage([595.28, 841.89]);

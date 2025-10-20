@@ -2,15 +2,14 @@
 export const uploadFile = async (file, options = {}) => {
   const {
     uploadPreset = "huynt7104",
-    cloudName = "db4tuojnn",
+    cloudName = "djo2yviru",
     folder = "motormate",
-    resourceType = "auto", // auto, image, video, raw
+    resourceType = "auto",
   } = options;
 
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
-  formData.append("cloud_name", cloudName);
   formData.append("folder", folder);
 
   try {
@@ -23,7 +22,9 @@ export const uploadFile = async (file, options = {}) => {
     );
 
     if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
+      const errorText = await response.text();
+      console.error("Cloudinary upload error:", errorText);
+      throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -60,6 +61,57 @@ export const uploadMultipleFiles = async (files, options = {}) => {
 export const uploadImage = async (file) => {
   const result = await uploadFile(file, { resourceType: "image" });
   return result.url;
+};
+
+// Upload image to specific folder
+export const uploadImageToFolder = async (file, subfolder = "general") => {
+  const result = await uploadFile(file, {
+    resourceType: "image",
+    folder: `motormate/img/${subfolder}`,
+    uploadPreset: "huynt7104",
+  });
+  return result;
+};
+
+// Upload video to specific folder
+export const uploadVideoToFolder = async (file, subfolder = "general") => {
+  const result = await uploadFile(file, {
+    resourceType: "video",
+    folder: `motormate/video/${subfolder}`,
+    uploadPreset: "huynt7104",
+  });
+  return result;
+};
+
+// Upload PDF to specific folder
+export const uploadPDFToFolder = async (file, subfolder = "general") => {
+  const result = await uploadFile(file, {
+    resourceType: "raw",
+    folder: `motormate/pdf/${subfolder}`,
+    uploadPreset: "huynt7104",
+  });
+  return result;
+};
+
+// Specific upload functions for different use cases
+export const uploadPartImage = async (file) => {
+  return await uploadImageToFolder(file, "part");
+};
+
+export const uploadUserImage = async (file) => {
+  return await uploadImageToFolder(file, "user");
+};
+
+export const uploadPartVideo = async (file) => {
+  return await uploadVideoToFolder(file, "part");
+};
+
+export const uploadReceiptPDF = async (file) => {
+  return await uploadPDFToFolder(file, "receipt");
+};
+
+export const uploadInvoicePDF = async (file) => {
+  return await uploadPDFToFolder(file, "invoice");
 };
 
 // Determine file kind based on resource type and MIME type

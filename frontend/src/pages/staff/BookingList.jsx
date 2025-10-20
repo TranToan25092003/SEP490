@@ -1,6 +1,5 @@
 import CRUDTable from "@/components/global/CRUDTable";
 import Container from "@/components/global/Container";
-import { createColumnHelper } from "@tanstack/react-table";
 import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
@@ -29,7 +28,9 @@ const StatusBadge = ({ status, colorKey }) => {
 
   return (
     <p
-      className={"inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"}
+      className={
+        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
+      }
       style={{ backgroundColor: background, color: foreground }}
     >
       {status}
@@ -37,57 +38,50 @@ const StatusBadge = ({ status, colorKey }) => {
   );
 };
 
-const helper = createColumnHelper();
-
 const posts = [
   {
     id: 1,
     customerName: "Nguyen Van A",
     date: "2024-10-01",
-    serviceTypes: [
-      "Sửa xe",
-      "Bảo dưỡng"
-    ]
+    serviceTypes: ["Sửa xe", "Bảo dưỡng"],
   },
   {
     id: 2,
     customerName: "Trankkkkn Thi B",
     date: "2024-10-02",
-    serviceTypes: [
-      "Thay nhớt"
-    ]
-  }
-]
+    serviceTypes: ["Thay nhớt"],
+  },
+];
 
 const columnDefs = [
-  helper.accessor("id", {
+  {
+    accessorKey: "id",
     header: "ID",
-    cell: info => info.getValue(),
-  }),
-  helper.accessor("customerName", {
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "customerName",
     header: "Họ tên khách hàng",
-    cell: info => info.getValue(),
-  }),
-  helper.accessor("date", {
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "date",
     header: "Ngày đặt",
-    cell: info => info.getValue(),
-  }),
-  helper.accessor("status", {
+    cell: (info) => info.getValue(),
+  },
+  {
+    id: "status",
     header: "Loại lệnh",
-    cell: info => {
+    cell: (info) => {
       const services = info.row.original.serviceTypes;
       const badges = services.map((service, index) => (
         <StatusBadge key={index} status={service} colorKey={service} />
       ));
 
-      return (
-        <div className="flex flex-wrap gap-2">
-          {badges}
-        </div>
-      )
-    }
-  })
-]
+      return <div className="flex flex-wrap gap-2">{badges}</div>;
+    },
+  },
+];
 
 const BookingList = () => {
   return (
@@ -100,11 +94,7 @@ const BookingList = () => {
         </Button>
       </div>
 
-      <CRUDTable
-        data={posts}
-        columns={columnDefs}
-        getRowId={(row) => row.id}
-      >
+      <CRUDTable data={posts} columns={columnDefs} getRowId={(row) => row.id}>
         {(row) => (
           <div className="flex justify-center">
             <Link to={`/staff/booking/${row.id}`}>
@@ -120,7 +110,7 @@ const BookingList = () => {
         pagination={{
           totalPages: 10,
           itemsPerPage: 50,
-          totalItems: 1000
+          totalItems: 1000,
         }}
       />
     </Container>

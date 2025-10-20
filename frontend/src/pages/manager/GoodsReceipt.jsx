@@ -36,6 +36,7 @@ import { Check, ChevronsUpDown, Plus, Search, Trash2 } from "lucide-react";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { generateGoodsReceiptPDF } from "@/utils/pdfGenerator";
+import DatePicker from "@/components/ui/date-picker";
 
 export default function GoodsReceipt() {
   const navigate = useNavigate();
@@ -52,7 +53,6 @@ export default function GoodsReceipt() {
     warehouseLocation: "Kho chính",
     notes: "",
     receivedDate: new Date().toISOString().split("T")[0],
-    documentDate: new Date().toISOString().split("T")[0],
   });
 
   // Items table state
@@ -136,6 +136,13 @@ export default function GoodsReceipt() {
         return item;
       })
     );
+  };
+
+  // Handle number input to remove leading zeros
+  const handleNumberInput = (id, field, value) => {
+    // Remove leading zeros and convert to number
+    const cleanValue = value === "" ? 0 : parseInt(value, 10) || 0;
+    updateItem(id, field, cleanValue);
   };
 
   // Remove item from table
@@ -251,6 +258,7 @@ export default function GoodsReceipt() {
       // Create goods receipt
       const receiptData = {
         ...formData,
+        documentDate: formData.receivedDate, // Use receivedDate as documentDate
         totalAmount,
         status: "completed",
         items: items.map((item) => ({
@@ -269,13 +277,94 @@ export default function GoodsReceipt() {
         })),
       };
 
+      // Debug: Log the data being sent
+      console.log("Receipt data being sent:", {
+        supplier: receiptData.supplier,
+        supplierName: receiptData.supplier?.name,
+        items: receiptData.items,
+        itemsLength: receiptData.items.length,
+        totalAmount: receiptData.totalAmount,
+        warehouseLocation: receiptData.warehouseLocation,
+        receivedDate: receiptData.receivedDate,
+        notes: receiptData.notes,
+      });
+
+      // Additional validation
+      if (!receiptData.supplier?.name) {
+        console.error("Missing supplier name");
+        toast.error("Thiếu tên nhà cung cấp");
+        return;
+      }
+
+      if (!receiptData.items || receiptData.items.length === 0) {
+        console.error("Missing items");
+        toast.error("Thiếu danh sách sản phẩm");
+        return;
+      }
+
+      // Check each item has required fields
+      for (let i = 0; i < receiptData.items.length; i++) {
+        const item = receiptData.items[i];
+        if (!item.partId) {
+          console.error(`Missing partId for item ${i}:`, item);
+          toast.error(`Thiếu ID sản phẩm ở dòng ${i + 1}`);
+          return;
+        }
+        if (!item.partName) {
+          console.error(`Missing partName for item ${i}:`, item);
+          toast.error(`Thiếu tên sản phẩm ở dòng ${i + 1}`);
+          return;
+        }
+        if (!item.partCode) {
+          console.error(`Missing partCode for item ${i}:`, item);
+          toast.error(`Thiếu mã sản phẩm ở dòng ${i + 1}`);
+          return;
+        }
+      }
+
       const response = await customFetch("/manager/goods-receipt", {
         method: "POST",
-        body: JSON.stringify(receiptData),
+        data: receiptData,
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.data.success) {
         const receipt = response.data.receipt;
+
+        // Update part quantities
+        try {
+          for (const item of receiptData.items) {
+            // Get current part data
+            const currentPartResponse = await customFetch(
+              `/manager/parts/${item.partId}`
+            );
+            const currentQuantity =
+              currentPartResponse.data.data.quantityInStock || 0;
+            const newQuantity = currentQuantity + item.quantityActuallyReceived;
+
+            // Update with new quantity
+            await customFetch(`/manager/parts/${item.partId}`, {
+              method: "PUT",
+              data: {
+                quantityInStock: newQuantity,
+              },
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+            console.log(
+              `Updated quantity for part ${item.partName}: ${currentQuantity} + ${item.quantityActuallyReceived} = ${newQuantity}`
+            );
+          }
+        } catch (updateError) {
+          console.error("Failed to update part quantities:", updateError);
+          toast.error("Lỗi cập nhật số lượng", {
+            description:
+              "Phiếu nhập đã tạo nhưng không thể cập nhật số lượng sản phẩm",
+          });
+        }
 
         // Generate PDF
         const pdfBlob = await generateGoodsReceiptPDF({
@@ -286,29 +375,62 @@ export default function GoodsReceipt() {
         });
 
         // Upload PDF to Cloudinary
-        const formData = new FormData();
-        formData.append(
-          "file",
-          pdfBlob,
-          `goods-receipt-${receipt.receiptNumber}.pdf`
-        );
-        formData.append("upload_preset", "your_upload_preset"); // Replace with your preset
+        try {
+          const uploadFormData = new FormData();
+          uploadFormData.append(
+            "file",
+            pdfBlob,
+            `goods-receipt-${receipt.receiptNumber}.pdf`
+          );
+          uploadFormData.append("upload_preset", "huynt7104");
+          uploadFormData.append("folder", "motormate/pdf/receipts");
+          uploadFormData.append("resource_type", "raw");
+          uploadFormData.append("access_mode", "public");
 
-        const uploadResponse = await fetch(
-          "https://api.cloudinary.com/v1_1/your_cloud_name/upload",
-          {
-            method: "POST",
-            body: formData,
+          console.log("Uploading PDF to Cloudinary...");
+          console.log("PDF Blob size:", pdfBlob.size);
+          console.log("Receipt number:", receipt.receiptNumber);
+
+          const uploadResponse = await fetch(
+            "https://api.cloudinary.com/v1_1/djo2yviru/raw/upload",
+            {
+              method: "POST",
+              body: uploadFormData,
+            }
+          );
+
+          console.log("Upload response status:", uploadResponse.status);
+          console.log("Upload response headers:", uploadResponse.headers);
+
+          if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error("Cloudinary upload error:", errorText);
+            throw new Error(
+              `Upload failed: ${uploadResponse.statusText} - ${errorText}`
+            );
           }
-        );
 
-        const uploadResult = await uploadResponse.json();
+          const uploadResult = await uploadResponse.json();
+          console.log("Upload result:", uploadResult);
 
-        // Update receipt with PDF URL
-        await customFetch(`/manager/goods-receipt/${receipt._id}`, {
-          method: "PATCH",
-          body: JSON.stringify({ pdfUrl: uploadResult.secure_url }),
-        });
+          // Update receipt with PDF URL
+          await customFetch(`/manager/goods-receipt/${receipt._id}`, {
+            method: "PATCH",
+            data: { pdfUrl: uploadResult.secure_url },
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          console.log("PDF uploaded successfully:", uploadResult.secure_url);
+        } catch (uploadError) {
+          console.error("PDF upload failed:", uploadError);
+          toast.error("Lỗi upload PDF", {
+            description:
+              "Không thể upload PDF lên Cloudinary. Vui lòng thử lại.",
+          });
+          // Continue without PDF upload
+        }
 
         toast.success("Thành công", {
           description:
@@ -400,27 +522,16 @@ export default function GoodsReceipt() {
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Thông tin phiếu nhập</h2>
           <div className="space-y-3">
-            <Input
-              type="date"
+            <DatePicker
               label="Ngày nhập hàng"
               value={formData.receivedDate}
-              onChange={(e) =>
+              onChange={(date) =>
                 setFormData({
                   ...formData,
-                  receivedDate: e.target.value,
+                  receivedDate: date,
                 })
               }
-            />
-            <Input
-              type="date"
-              label="Ngày tạo phiếu"
-              value={formData.documentDate}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  documentDate: e.target.value,
-                })
-              }
+              placeholder="Chọn ngày nhập hàng"
             />
             <Input
               placeholder="Địa điểm nhập kho"
@@ -563,12 +674,12 @@ export default function GoodsReceipt() {
                     <Input
                       type="number"
                       min="0"
-                      value={item.quantityOnDocument}
+                      value={item.quantityOnDocument || ""}
                       onChange={(e) =>
-                        updateItem(
+                        handleNumberInput(
                           item.id,
                           "quantityOnDocument",
-                          Number(e.target.value)
+                          e.target.value
                         )
                       }
                       className="w-[120px]"
@@ -578,12 +689,12 @@ export default function GoodsReceipt() {
                     <Input
                       type="number"
                       min="0"
-                      value={item.quantityActuallyReceived}
+                      value={item.quantityActuallyReceived || ""}
                       onChange={(e) =>
-                        updateItem(
+                        handleNumberInput(
                           item.id,
                           "quantityActuallyReceived",
-                          Number(e.target.value)
+                          e.target.value
                         )
                       }
                       className="w-[120px]"
@@ -593,9 +704,9 @@ export default function GoodsReceipt() {
                     <Input
                       type="number"
                       min="0"
-                      value={item.unitPrice}
+                      value={item.unitPrice || ""}
                       onChange={(e) =>
-                        updateItem(item.id, "unitPrice", Number(e.target.value))
+                        handleNumberInput(item.id, "unitPrice", e.target.value)
                       }
                       className="w-[120px]"
                     />

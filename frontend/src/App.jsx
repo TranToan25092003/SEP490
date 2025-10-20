@@ -1,5 +1,4 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import { Toaster } from "sonner";
@@ -75,7 +74,6 @@ const router = createBrowserRouter([
     ),
   },
 
-  testRouter,
   {
     path: "/manager",
     element: <AdminLayout />,

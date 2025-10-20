@@ -24,7 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { uploadFile, validateFile } from "@/utils/uploadCloudinary";
+import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 
@@ -178,9 +178,7 @@ export default function AddItem() {
       for (const preview of previews) {
         if (!preview.uploaded && preview.file) {
           try {
-            const uploadResult = await uploadFile(preview.file, {
-              folder: "motormate/parts",
-            });
+            const uploadResult = await uploadPartImage(preview.file);
             uploadedMedia.push({
               publicId: uploadResult.publicId,
               url: uploadResult.url,
