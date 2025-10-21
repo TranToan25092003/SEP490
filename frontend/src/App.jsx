@@ -20,8 +20,6 @@ import CreateGoodsReceipt from "./pages/manager/CreateGoodsReceipt";
 import GoodsReceiptList from "./pages/manager/GoodsReceiptList";
 import GoodsReceiptDetail from "./pages/manager/GoodsReceiptDetail";
 import About from "./pages/AboutUs";
-import NotFoundPage from "./pages/404";
-
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
