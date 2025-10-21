@@ -25,6 +25,7 @@ import Staff from "./pages/staff/Staff";
 import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
+import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -119,6 +120,10 @@ const router = createBrowserRouter([
       {
         path: "complaints",
         element: <StaffComplaintsPage />,
+      },
+      {
+        path: "complaints/:id",
+        element: <StaffComplaintDetail />,
       },
     ],
   },

@@ -48,7 +48,7 @@ router.get("/", partController.getAllPartsByClient);
 
 /**
  * @swagger
- * /manager/parts/{id}:
+ * /parts/{id}:
  *   get:
  *     summary: Get single part by ID
  *     tags:

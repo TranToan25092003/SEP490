@@ -11,26 +11,27 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wrench, MessageSquareWarning } from "lucide-react"; // Import icons from lucid-react
+import { LayoutDashboard, Wrench, MessageSquareWarning } from "lucide-react";
 
 const items = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/staff" },
   {
-    key: "parts", // Changed from "email"
+    key: "parts",
     label: "Quản lý phụ tùng",
-    icon: Wrench, // Replaced image with Wrench icon
+    icon: Wrench,
     href: "/staff/items",
   },
   {
     key: "complaint",
     label: "Complaints",
-    icon: MessageSquareWarning, // Added icon for complaints
+    icon: MessageSquareWarning,
     href: "/staff/complaints",
   },
 ];
 
 export default function StaffSideBar({ width = 80, offsetTop = 100 }) {
   const location = useLocation();
+
   return (
     <aside
       className="fixed left-0 z-40 bg-white"
@@ -47,22 +48,29 @@ export default function StaffSideBar({ width = 80, offsetTop = 100 }) {
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
           >
             {items.map((it) => {
-              const Icon = it.icon; // Alias the icon component
+              const Icon = it.icon;
+              // Kiểm tra xem mục này có đang hoạt động không
+              // Xử lý trường hợp đặc biệt cho trang chủ dashboard
+              const isActive = (it.href === "/staff")
+                ? location.pathname === it.href
+                : location.pathname.startsWith(it.href);
+
               return (
                 <Tooltip key={it.key}>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="rounded-xl size-11 shadow-sm"
+                      className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
+                          ? "bg-red-50 text-red-600 hover:bg-red-100" // Style khi active
+                          : "text-gray-500 hover:bg-gray-100"    // Style khi không active
+                        }`}
                       asChild={Boolean(it.href)}
                     >
                       {it.href ? (
                         <Link
                           to={it.href}
-                          aria-current={
-                            location.pathname === it.href ? "page" : undefined
-                          }
+                          aria-current={isActive ? "page" : undefined}
                         >
                           <Icon className="size-7" />
                         </Link>
