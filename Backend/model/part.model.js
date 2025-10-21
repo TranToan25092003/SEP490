@@ -32,7 +32,7 @@ const PartSchema = new Schema(
 
 // Indexes for better performance
 PartSchema.index({ name: "text", description: "text" }); // Text search
-PartSchema.index({ code: 1 }); // Unique code lookup
+// code index is automatically created by unique: true
 PartSchema.index({ brand: 1 }); // Brand lookup
 PartSchema.index({ compatible_model_ids: 1 }); // Vehicle model lookup
 PartSchema.index({ status: 1 }); // Status filter

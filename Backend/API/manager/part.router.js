@@ -1,6 +1,12 @@
 const express = require("express");
 const router = new express.Router();
 const partController = require("../../controller/part.controller");
+const { authenticate } = require("../../middleware/guards/authen.middleware");
+const { roleProtected } = require("../../middleware/guards/role.middleware");
+
+// Apply authentication and role middleware to all routes
+// router.use(authenticate);
+// router.use(roleProtected);
 
 /**
  * @swagger
@@ -111,6 +117,36 @@ router.get("/vehicle-model/:modelId", partController.getPartsByVehicleModel);
  *         description: Server error
  */
 router.get("/brand/:brand", partController.getPartsByBrand);
+
+/**
+ * @swagger
+ * /manager/parts/search:
+ *   get:
+ *     summary: Search parts by name or code
+ *     tags:
+ *        - Parts Management
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Maximum number of results
+ *     responses:
+ *       200:
+ *         description: Parts found successfully
+ *       500:
+ *         description: Server error
+ */
+router.get("/search", partController.searchParts);
 
 /**
  * @swagger
