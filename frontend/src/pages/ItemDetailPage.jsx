@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { useLoaderData, Link } from 'react-router-dom'
 import detailBg from '@/assets/detail-bg.jpg'
 import productImage from '@/assets/part-lopsau.png'
-import ItemDetail from '@/components/customer/ItemDetail';
-import { Button } from '@/components/ui/button';
-import ItemList from '@/components/customer/ItemList';
+import ItemDetail from '@/components/customer/ItemDetail'
+import { Button } from '@/components/ui/button'
+import ItemList from '@/components/customer/ItemList'
 
 const mockProduct = {
   id: '123',
@@ -26,16 +27,17 @@ const mockProduct = {
 };
 
 function ItemDetailPage() {
-  const [product, setProduct] = useState(null);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setProduct(mockProduct);
-    }, 500);
-  }, []);
+  const { product, relatedProducts } = useLoaderData();
 
   if (!product) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4">
+        <p className="text-xl">Không thể tải thông tin sản phẩm.</p>
+        <Link to="/items">
+          <Button>Quay lại danh sách</Button>
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -74,7 +76,7 @@ function ItemDetailPage() {
             </div>
             {/* Item List */}
             <ItemList
-              filters={{ category: product.category }}
+              products={relatedProducts}
               size={3}
             />
           </div>

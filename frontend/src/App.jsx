@@ -1,19 +1,40 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { testRouter } from "./routers/client/Test.router";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
-import HomeLayout, { homeLayoutLoader } from "./pages/HomeLayout";
-import ErrorPage from "./components/global/Error";
+// import { testRouter } from "./routers/client/Test.router";
+import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
+// import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
-import { Button } from "antd";
+// import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import BookingDetail from "./pages/staff/BookingDetail";
+import BookingList from "./pages/staff/BookingList";
+import AdminLayout from "./layout/admin-layout/AdminLayout";
+import Manager from "./pages/manager/Manager";
+import ManagerItems from "./pages/manager/Items";
+import AddItem from "./pages/manager/AddItem";
+import CreateGoodsReceipt from "./pages/manager/CreateGoodsReceipt";
+import GoodsReceiptList from "./pages/manager/GoodsReceiptList";
+import GoodsReceiptDetail from "./pages/manager/GoodsReceiptDetail";
 import About from "./pages/AboutUs";
+import NotFoundPage from "./pages/404";
+
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import {} from "@clerk/clerk-react";
+import {
+  partsPageLoader,
+  partFormLoader,
+  partsClientLoader,
+  partLoaderByClient,
+  goodsReceiptListLoader,
+} from "./utils/loaders";
+import StaffLayout from "./layout/staff-layout/StaffLayout";
+import Staff from "./pages/staff/Staff";
 import LayoutProfile, {
   layoutProfileLoader,
 } from "./pages/profile/LayoutProfile";
@@ -29,6 +50,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+        loader: partsClientLoader,
       },
       {
         path: "/booking",
@@ -41,6 +63,22 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
+      },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+        loader: partsClientLoader,
+      },
+      {
+        path: "/items/:id",
+        element: <ItemDetailPage />,
+        loader: partLoaderByClient,
+      },
+
+      // 404 within HomeLayout
+      {
+        path: "*",
+        element: <NotFoundPage />,
       },
       {
         path: "/items",
@@ -71,7 +109,57 @@ const router = createBrowserRouter([
     ),
   },
 
-  testRouter,
+  {
+    path: "/manager",
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Manager /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+      {
+        path: "items/add",
+        element: <AddItem />,
+        loader: partFormLoader,
+      },
+      {
+        path: "goods-receipt",
+        element: <CreateGoodsReceipt />,
+      },
+      {
+        path: "goods-receipt-list",
+        element: <GoodsReceiptList />,
+        loader: goodsReceiptListLoader,
+      },
+      {
+        path: "goods-receipt/:id",
+        element: <GoodsReceiptDetail />,
+      },
+    ],
+  },
+  {
+    path: "/staff",
+    element: <AdminLayout />,
+    children: [
+      { path: "booking/:id", element: <BookingDetail /> },
+      { path: "booking/", element: <BookingList /> },
+    ],
+  },
+
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      { index: true, element: <Staff /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
+    ],
+  },
 ]);
 
 function App() {
