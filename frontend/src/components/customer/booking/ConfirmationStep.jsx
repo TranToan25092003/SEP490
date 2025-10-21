@@ -4,13 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, Car, Wrench } from "lucide-react";
 import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 
-/**
- * @typedef {import("react").ComponentPropsWithRef<"div"> & {
- *   myCar: {
- *     licensePlate: string;
- *   };
- * }} ConfirmationStepProps
- */
+/** @typedef {import("./index").ConfirmationStepProps} ConfirmationStepProps */
 
 /**
  * ConfirmationStep component for reviewing booking details before submission.

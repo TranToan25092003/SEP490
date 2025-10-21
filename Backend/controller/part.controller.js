@@ -179,6 +179,32 @@ class PartController {
       });
     }
   }
+
+  // Search parts
+  async searchParts(req, res) {
+    try {
+      const { q, limit = 10 } = req.query;
+
+      if (!q || q.trim().length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Search query is required",
+        });
+      }
+
+      const parts = await partService.searchParts(q.trim(), parseInt(limit));
+
+      res.status(200).json({
+        success: true,
+        parts,
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
 }
 
 module.exports = new PartController();

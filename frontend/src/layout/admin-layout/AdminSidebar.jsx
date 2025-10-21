@@ -1,6 +1,5 @@
 import {
   sidebarLogo as imgLogo,
-  sidebarDividerLine as imgLine,
   iconHome as imgHome,
   iconEmail as imgEmail,
   iconContacts as imgContactBook,
@@ -22,16 +21,21 @@ import { Link, useLocation } from "react-router-dom";
 const items = [
   { key: "home", label: "Dashboard", icon: imgHome, href: "/manager" },
   {
-    key: "email",
+    key: "parts",
     label: "Quản lý phụ tùng",
-    icon: imgEmail,
+    icon: imgMoney,
     href: "/manager/items",
   },
-  { key: "contact", label: "Contacts", icon: imgContactBook },
-  { key: "coin", label: "Crypto", icon: imgCoin },
+  {
+    key: "goodReceipts",
+    label: "Quản lý phiếu nhập kho",
+    icon: imgInvoice,
+    href: "/manager/goods-receipt-list",
+  },
+  { key: "coin", label: "Chat CSKH", icon: imgContactBook },
   { key: "kanban", label: "Kanban", icon: imgDashboard },
-  { key: "invoice", label: "Invoice", icon: imgInvoice },
-  { key: "bank", label: "Banking", icon: imgMoney },
+  { key: "invoice", label: "Invoice", icon: imgCoin },
+  { key: "bank", label: "Banking", icon: imgEmail },
   { key: "ticket", label: "Tickets", icon: imgTicket },
 ];
 
@@ -39,12 +43,9 @@ export default function Sidebar({ width = 80, offsetTop = 100 }) {
   const location = useLocation();
   return (
     <aside
-      className="fixed left-0 z-40 bg-white"
+      className="fixed left-0 z-40 border-r"
       style={{ top: 0, width, bottom: 0 }}
     >
-      <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
-      </div>
       <div className="flex flex-col items-center">
         <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4 mb-2" />
         <TooltipProvider>

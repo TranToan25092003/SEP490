@@ -15,10 +15,10 @@ import {
 
 /**
  * AdminPagination Component
- * 
+ *
  * A pagination component with Vietnamese text display showing current page info
  * and navigation controls for admin interfaces.
- * 
+ *
  * @param {Object} props - Component props
  * @param {Object} props.pagination - Pagination configuration object
  * @param {number} props.pagination.currentPage - Current active page number (1-indexed)
@@ -26,9 +26,9 @@ import {
  * @param {number} [props.pagination.itemsPerPage=10] - Number of items displayed per page
  * @param {number} [props.pagination.totalItems] - Total number of items in the dataset
  * @param {function} [props.onPageChange] - Callback function called when page changes
- * 
+ *
  * @example
- * <AdminPagination 
+ * <AdminPagination
  *   pagination={{
  *     currentPage: 1,
  *     totalPages: 5,
@@ -42,10 +42,20 @@ export function AdminPagination({ pagination, onPageChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { currentPage = searchParams.get("page") ? parseInt(searchParams.get("page")) || 1 : 1, totalPages, itemsPerPage = 10, totalItems } = pagination;
+  const {
+    currentPage = searchParams.get("page")
+      ? parseInt(searchParams.get("page")) || 1
+      : 1,
+    totalPages,
+    itemsPerPage = 10,
+    totalItems,
+  } = pagination;
 
-  const startItem = ((currentPage - 1) * itemsPerPage) + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems || totalPages * itemsPerPage);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(
+    currentPage * itemsPerPage,
+    totalItems || totalPages * itemsPerPage
+  );
   const totalDisplayItems = totalItems || totalPages * itemsPerPage;
 
   const handlePageChange = (page) => {
@@ -73,15 +83,15 @@ export function AdminPagination({ pagination, onPageChange }) {
 
   return (
     <div className="flex items-center justify-between">
-      <div className="text-sm text-gray-600">
+      <div className="text-sm text-foreground">
         Hiện thị {startItem}-{endItem} từ {totalDisplayItems} dữ liệu
       </div>
 
       <Pagination>
         <PaginationContent>
           <PaginationItem disabled={currentPage <= 1}>
-            <PaginationPrevious 
-              href={firstPageUrl()} 
+            <PaginationPrevious
+              href={firstPageUrl()}
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange(currentPage - 1);
