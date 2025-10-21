@@ -22,6 +22,15 @@ import { Upload } from "lucide-react";
 import { Image } from "lucide-react";
 import UserProfile from "./UserProfile";
 
+export const layoutProfileLoader = () => {
+  try {
+    console.log("hello");
+    return null;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 const getFileKind = (resourceType, mimeType) => {
   if (resourceType === "image") return "image";
   if (resourceType === "video") return "video";

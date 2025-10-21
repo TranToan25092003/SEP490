@@ -14,7 +14,9 @@ import About from "./pages/AboutUs";
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
-import LayoutProfile from "./pages/profile/LayoutProfile";
+import LayoutProfile, {
+  layoutProfileLoader,
+} from "./pages/profile/LayoutProfile";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -50,6 +52,8 @@ const router = createBrowserRouter([
       },
       {
         path: "/profile",
+        loader: layoutProfileLoader,
+
         element: <LayoutProfile></LayoutProfile>,
       },
     ],

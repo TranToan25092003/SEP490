@@ -138,7 +138,9 @@ const VehicleProfile = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">xe của bạn</h1>
+          <h1 className="text-3xl font-bold tracking-tight capitalize">
+            xe của bạn
+          </h1>
         </div>
       </div>
 
