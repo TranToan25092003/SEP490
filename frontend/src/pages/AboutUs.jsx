@@ -1,21 +1,23 @@
-import React from 'react'
+import React, { useRef, useState, useEffect } from 'react'
+// --- Map Library Imports ---
+// Make sure to install these packages: npm install react-leaflet leaflet
 import { MapContainer, TileLayer, Marker } from 'react-leaflet'
-import 'leaflet/dist/leaflet.css'
+import 'leaflet/dist/leaflet.css' // Required for map styling
 import L from 'leaflet'
-import aboutMotorcycle from '@/assets/about-motorcycle.png'
-import storyImage from '@/assets/story-image.jpg'
-import ceoAvatar from '@/assets/ducati.png'
-import missionImage from '@/assets/mission-image.jpg'
-import coreValuesImage from '@/assets/core-image.png'
-import { Cog } from 'lucide-react'
-import { CalendarDays } from 'lucide-react'
-import { Car } from 'lucide-react'
-import { Target } from 'lucide-react'
-import { DollarSign } from 'lucide-react'
+// --- Icon Imports ---
+import { Cog, CalendarDays, Play } from 'lucide-react'
 import AboutCar from '@/components/icons/AboutCar'
 import AboutWheel from '@/components/icons/AboutWheel'
 import AboutCoin from '@/components/icons/AboutCoin'
 
+import aboutMotorcycle from '@/assets/about-motorcycle.png'
+// --- Placeholder images for new section ---
+import storyImage from '@/assets/story-image.jpg'
+import ceoAvatar from '@/assets/ducati.png'
+import missionImage from '@/assets/mission-image.jpg'
+import coreValuesImage from '@/assets/core-image.png'
+
+// --- Custom SVG Icon for map markers to match the design ---
 const createMapIcon = (color) => {
   return new L.divIcon({
     html: `<svg viewBox="0 0 100 125" fill="${color}"><path d="M50,0A39.4,39.4,0,0,0,10.6,39.4c0,21.8,25.9,55.4,35.8,69.5a2.9,2.9,0,0,0,3.6,0C60,94.8,89.4,61.2,89.4,39.4A39.4,39.4,0,0,0,50,0Zm0,58.8A19.4,19.4,0,1,1,69.4,39.4,19.4,19.4,0,0,1,50,58.8Z"/></svg>`,
@@ -30,16 +32,64 @@ const redPin = createMapIcon('#DB4437');
 
 
 function About() {
-  // Set position to Hanoi, Vietnam coordinates
   const position = [21.0285, 105.8542]
+
+  // Refs for each section to scroll to
+  const establishmentRef = useRef(null);
+  const missionRef = useRef(null);
+  const valuesRef = useRef(null);
+  const [activeSection, setActiveSection] = useState('establishment');
+
+  // Function to handle smooth scrolling
+  const scrollToSection = (ref) => {
+    if (ref.current) {
+      // Adjust for header height if you have a fixed header
+      const yOffset = -80;
+      const y = ref.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
+
+  useEffect(() => {
+    const sections = [
+      { id: 'establishment', ref: establishmentRef },
+      { id: 'mission', ref: missionRef },
+      { id: 'values', ref: valuesRef },
+    ];
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-50% 0px -50% 0px' } // Set active when section is in the middle of the viewport
+    );
+
+    sections.forEach(section => {
+      if (section.ref.current) {
+        observer.observe(section.ref.current);
+      }
+    });
+
+    return () => {
+      sections.forEach(section => {
+        if (section.ref.current) {
+          observer.unobserve(section.ref.current);
+        }
+      });
+    };
+  }, []);
 
   return (
     <main className="w-full overflow-x-hidden">
       {/* About MotorMate */}
-      <section className="relative z-10 w-full bg-white">
+      <section id="establishment" ref={establishmentRef} className="relative z-10 w-full bg-white">
         <div className="mx-auto max-w-[1440px] px-8 lg:px-16 xl:px-20">
           <div className="grid grid-cols-1 items-center gap-12 pt-16 md:grid-cols-2 md:pt-24">
-            <div className="text-center md:text-left">
+            <div className="pr-12 text-center md:text-left">
               <h1 className="text-4xl font-semibold text-neutral-700 md:text-5xl lg:text-6xl">
                 About <span className="text-red-600">MotorMate</span>
               </h1>
@@ -47,7 +97,8 @@ function About() {
                 Phụ tùng tốt nhất cho mọi nhà
               </p>
               <p className="mt-4 text-base text-zinc-900 md:text-lg">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis maximus nunc
+                Tìm hiểu về hành trình của MotorMate - nơi chúng tôi biến cam kết về chất lượng thành những sản phẩm đáng tin cậy, 
+                trở thành người bạn đồng hành cho mọi gia đình trên mỗi nẻo đường.
               </p>
               <button
                 className="mt-8 rounded-lg bg-zinc-700 px-6 py-3
@@ -73,8 +124,8 @@ function About() {
                 src={aboutMotorcycle}
                 alt="Red motorcycle"
                 className="absolute z-20 w-[90%] max-w-none h-auto drop-shadow-2xl pointer-events-none 
-                           bottom-[-80px] left-1/2 -translate-x-1/2 
-                           md:bottom-[-160px] md:left-[-160px] md:translate-x-0"
+                               bottom-[-80px] left-1/2 -translate-x-1/2 
+                               md:bottom-[-160px] md:left-[-160px] md:translate-x-0"
               />
             </div>
           </div>
@@ -89,10 +140,10 @@ function About() {
               <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-4">
                 <div className="flex items-center gap-6">
                   <h3 className="text-2xl font-medium leading-7 text-white">Thành Lập</h3>
-                  <div className="flex items-center gap-5 text-base font-medium leading-7 text-rose-300">
-                    <a href="#" className="border-b border-white pb-1 text-white">Thành Lập</a>
-                    <a href="#" className="transition-colors hover:text-white">Giá Trị</a>
-                    <a href="#" className="transition-colors hover:text-white">Sứ Mệnh</a>
+                  <div className="flex items-center gap-5 text-base font-medium leading-7">
+                    <button onClick={() => scrollToSection(establishmentRef)} className={`pb-1 transition-colors ${activeSection === 'establishment' ? 'border-b border-white text-white' : 'text-rose-300 hover:text-white'}`}>Thành Lập</button>
+                    <button onClick={() => scrollToSection(missionRef)} className={`pb-1 transition-colors ${activeSection === 'mission' ? 'border-b border-white text-white' : 'text-rose-300 hover:text-white'}`}>Sứ mệnh</button>
+                    <button onClick={() => scrollToSection(valuesRef)} className={`pb-1 transition-colors ${activeSection === 'values' ? 'border-b border-white text-white' : 'text-rose-300 hover:text-white'}`}>Giá trị</button>
                   </div>
                 </div>
               </div>
@@ -106,7 +157,7 @@ function About() {
                 <select className="h-10 w-32 rounded bg-white px-4 py-2 text-base font-medium leading-7 text-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-800">
                   <option>26</option>
                 </select>
-                <input type="text" defaultValue="Thành Phố Hồ Chí Minh, Việt Nam" className="h-10 flex-grow rounded bg-white px-4 py-2 text-base font-medium leading-7 text-zinc-600 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-800 md:w-[485px]" />
+                <input type="text" defaultValue="Thôn 1, Thạch Hòa, Thạch Thất, thành phố Hà Nội, Việt Nam" className="h-10 flex-grow rounded bg-white px-4 py-2 text-base font-medium leading-7 text-zinc-600 placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-zinc-800 md:w-[485px]" />
                 <button className="h-10 w-48 rounded bg-zinc-800 px-4 py-2 text-base font-medium leading-7 text-white transition-colors hover:bg-black">
                   Xem trên bản đồ
                 </button>
@@ -116,7 +167,7 @@ function About() {
         </div>
       </section>
 
-      {/*  Story  */}
+      {/* Story  */}
       <section className="w-full bg-white py-16 md:py-24">
         <div className="mx-auto grid max-w-[1440px] grid-cols-1 items-center gap-10 px-8 lg:grid-cols-2 lg:px-16 xl:px-20">
           <div className="relative h-[550px] w-full lg:h-[650px]">
@@ -130,7 +181,10 @@ function About() {
           <div className="flex flex-col gap-6 lg:pl-20">
             <div>
               <h2 className="text-4xl font-medium text-neutral-700">Câu chuyện và lý do lựa chọn kinh doanh</h2>
-              <p className="mt-1 text-lg text-stone-500">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis maximus nunc</p>
+              <p className="mt-1 text-lg text-stone-500">
+                MotorMate được thành lập từ niềm đam mê mãnh liệt với xe máy và mong muốn tạo ra một địa chỉ đáng tin cậy cho cộng đồng.
+                Chúng tôi nhận thấy nhu cầu về một nơi không chỉ cung cấp phụ tùng chất lượng mà còn mang đến dịch vụ tư vấn chuyên nghiệp.
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
@@ -149,7 +203,9 @@ function About() {
             </div>
 
             <p className="text-lg text-stone-500">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis maximus nunc Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi lobortis maximus nunc
+              Từ những ngày đầu khởi nghiệp, chúng tôi đã đặt chất lượng và sự hài lòng của khách hàng làm trọng tâm.
+              Qua nhiều năm phát triển, MotorMate đã không ngừng mở rộng danh mục sản phẩm và nâng cao tay nghề đội ngũ,
+              tự hào trở thành người bạn đồng hành đáng tin cậy trên mỗi chặng đường của bạn.
             </p>
 
             <div className="flex flex-wrap items-center gap-6">
@@ -169,7 +225,7 @@ function About() {
       </section>
 
       {/* MISSION  */}
-      <section className="w-full">
+      <section id="mission" ref={missionRef} className="w-full">
         <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <div className="relative mx-auto max-w-[1920px] pt-14">
             <div className="absolute top-14 left-1/2 z-20 w-full -translate-x-1/2 -translate-y-1/2 px-8 lg:px-16 xl:px-20">
@@ -183,7 +239,12 @@ function About() {
                 <div className="flex flex-col gap-6">
                   <div>
                     <h2 className="text-4xl font-medium">Sứ mệnh - Thúc đẩy thành công trong dự án.</h2>
-                    <p className="mt-2 text-base font-light leading-7">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,</p>
+                    <p className="mt-2 text-base font-light leading-7">
+                      Chúng tôi không chỉ bán phụ tùng, chúng tôi cung cấp giải pháp.
+                      Sứ mệnh của MotorMate là đơn giản hóa việc chăm sóc xe,
+                      giúp mọi người dễ dàng tiếp cận sản phẩm chính hãng và dịch vụ chuyên nghiệp,
+                      từ đó nâng cao trải nghiệm và hiệu suất cho chiếc xe của bạn.
+                    </p>
                   </div>
 
                   <div className="flex flex-col gap-4">
@@ -192,8 +253,8 @@ function About() {
                         <Cog className="h-8 w-8 text-white" />
                       </div>
                       <div className="flex flex-col gap-2.5">
-                        <h3 className="text-xl font-semibold">Lorem Ipsum</h3>
-                        <p className="text-base font-light leading-7">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                        <h3 className="text-xl font-semibold">Chất Lượng Tối Ưu</h3>
+                        <p className="text-base font-light leading-7">Chúng tôi áp dụng công nghệ và quy trình kiểm tra nghiêm ngặt để đảm bảo mỗi sản phẩm đều đạt chất lượng cao nhất.</p>
                       </div>
                     </div>
                     <hr className="my-2 border-slate-800" />
@@ -202,8 +263,8 @@ function About() {
                         <CalendarDays className="h-8 w-8 text-white" />
                       </div>
                       <div className="flex flex-col gap-2.5">
-                        <h3 className="text-xl font-semibold">Lorem Ipsum</h3>
-                        <p className="text-base font-light leading-7">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</p>
+                        <h3 className="text-xl font-semibold">Đối Tác Tin Cậy</h3>
+                        <p className="text-base font-light leading-7">MotorMate cam kết đồng hành lâu dài, trở thành đối tác tin cậy trong việc bảo dưỡng và chăm sóc xe của bạn.</p>
                       </div>
                     </div>
                   </div>
@@ -218,37 +279,40 @@ function About() {
         </div>
       </section>
 
-      <section className="w-full bg-gray-100">
+      <section id="values" ref={valuesRef} className="w-full bg-gray-100">
         <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <div className="mx-auto max-w-[1920px] px-12 py-16 md:py-24 lg:px-24 xl:px-32">
             <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-2">
               <div>
                 <h2 className="text-4xl font-medium text-red-600">Giá Trị Cốt Lõi</h2>
-                <p className="mt-4 text-base leading-7 text-stone-500">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,</p>
+                <p className="mt-4 text-base leading-7 text-stone-500">
+                  Giá trị của chúng tôi không chỉ nằm ở sản phẩm,
+                  mà còn ở niềm tin và sự hài lòng mà chúng tôi mang lại cho mỗi khách hàng.
+                </p>
               </div>
               <div className="flex justify-center lg:justify-end">
                 <img src={coreValuesImage} alt="Motorcycle parts" className="max-w-md" />
               </div>
             </div>
-      
+
             <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
               <div className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-sm">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
                   <AboutCar />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-700">Lorem Ipsum</h3>
-                  <p className="mt-2 text-base leading-7 text-zinc-600">Gallery simply dummy text lorem ipsum is of the printin k a of type and</p>
+                  <h3 className="text-xl font-semibold text-neutral-700">Chất Lượng Toàn Diện</h3>
+                  <p className="mt-2 text-base leading-7 text-zinc-600">Mỗi phụ tùng đều được kiểm định nghiêm ngặt, đảm bảo chất lượng và độ tương thích hoàn hảo cho chiếc xe của bạn.</p>
                 </div>
               </div>
-  
+
               <div className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-sm">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 text-red-600">
                   <AboutWheel />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-700">Lorem Ipsum</h3>
-                  <p className="mt-2 text-base leading-7 text-zinc-600">Gallery simply dummy text lorem ipsum is of the printin k a of type and</p>
+                  <h3 className="text-xl font-semibold text-neutral-700">Hiệu Suất Vượt Trội</h3>
+                  <p className="mt-2 text-base leading-7 text-zinc-600">Chúng tôi tập trung vào việc cung cấp các sản phẩm giúp tối ưu hóa hiệu suất, mang lại trải nghiệm lái an toàn và mạnh mẽ.</p>
                 </div>
               </div>
 
@@ -257,8 +321,8 @@ function About() {
                   <AboutCoin />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-neutral-700">Lorem Ipsum</h3>
-                  <p className="mt-2 text-base leading-7 text-zinc-600">Gallery simply dummy text lorem ipsum is of the printin k a of type and</p>
+                  <h3 className="text-xl font-semibold text-neutral-700">Giá Cả Cạnh Tranh</h3>
+                  <p className="mt-2 text-base leading-7 text-zinc-600">Cam kết mang đến những sản phẩm chất lượng cao với mức giá hợp lý nhất, đảm bảo giá trị tốt nhất cho khách hàng.</p>
                 </div>
               </div>
             </div>

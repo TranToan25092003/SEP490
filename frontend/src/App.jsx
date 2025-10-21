@@ -1,8 +1,10 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
+// import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
+// import ErrorPage from "./components/global/Error";
 import { Toaster } from "sonner";
-import { Button } from "antd";
+// import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
@@ -19,14 +21,20 @@ import GoodsReceiptList from "./pages/manager/GoodsReceiptList";
 import GoodsReceiptDetail from "./pages/manager/GoodsReceiptDetail";
 import About from "./pages/AboutUs";
 import NotFoundPage from "./pages/404";
-import {
-  partsPageLoader,
-  partFormLoader,
-  goodsReceiptListLoader,
-} from "./utils/loaders";
+
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
+import {} from "@clerk/clerk-react";
+import {
+  partsPageLoader,
+  partFormLoader,
+  partsClientLoader,
+  partLoaderByClient,
+  goodsReceiptListLoader,
+} from "./utils/loaders";
+import StaffLayout from "./layout/staff-layout/StaffLayout";
+import Staff from "./pages/staff/Staff";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -39,6 +47,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
+        loader: partsClientLoader,
       },
       {
         path: "/booking",
@@ -52,6 +61,17 @@ const router = createBrowserRouter([
         path: "/about",
         element: <About />,
       },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+        loader: partsClientLoader,
+      },
+      {
+        path: "/items/:id",
+        element: <ItemDetailPage />,
+        loader: partLoaderByClient,
+      },
+
       // 404 within HomeLayout
       {
         path: "*",
@@ -116,6 +136,19 @@ const router = createBrowserRouter([
     children: [
       { path: "booking/:id", element: <BookingDetail /> },
       { path: "booking/", element: <BookingList /> },
+    ],
+  },
+
+  {
+    path: "/staff",
+    element: <StaffLayout />,
+    children: [
+      { index: true, element: <Staff /> },
+      {
+        path: "items",
+        element: <ManagerItems />,
+        loader: partsPageLoader,
+      },
     ],
   },
 ]);
