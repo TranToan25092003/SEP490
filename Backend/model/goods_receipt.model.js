@@ -84,7 +84,7 @@ const GoodsReceiptSchema = new Schema(
 );
 
 // Indexes
-GoodsReceiptSchema.index({ receiptNumber: 1 });
+// receiptNumber index is automatically created by unique: true
 GoodsReceiptSchema.index({ status: 1 });
 GoodsReceiptSchema.index({ receivedDate: -1 });
 GoodsReceiptSchema.index({ "supplier.name": 1 });
