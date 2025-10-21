@@ -5,21 +5,6 @@ import { cn } from "@/lib/utils";
 import EmptyImageState from "./EmptyImageState";
 
 /**
- * @typedef {object} Step
- * @property {number} id - The id of the step.
- * @property {string} label - The label of the step.
- * @property {string} time - The time of the step.
- * @property {string[]} imageUrls - Array of image URLs associated with the step.
- */
-
-/**
- * @typedef {import("react").ComponentPropsWithRef<typeof Card> & {
- *  steps: Step[];
- *  currentStep?: number;
- * }} BookingStatusTimelineProps
- */
-
-/**
  * BookingStatusTimeline component to display progress timeline
  * with steps and image gallery
  * @param {BookingStatusTimelineProps} props 

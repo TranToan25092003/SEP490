@@ -3,16 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 
-/**
- * @typedef {import("react").ComponentPropsWithRef<"div"> & {
- *   services: Array<{
- *     sid: string;
- *     name: string;
- *     desc?: string;
- *     estimatedTime: number;
- *   }>;
- * }} ServiceSelectionStepProps
- */
+/** @typedef {import("./index").ServiceSelectionStepProps} ServiceSelectionStepProps */
 
 /**
  * ServiceSelectionStep component for selecting services in the booking form.

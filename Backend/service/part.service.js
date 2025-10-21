@@ -256,6 +256,26 @@ class PartService {
       throw new Error(`Failed to bulk delete parts: ${error.message}`);
     }
   }
+
+  // Search parts by name or code
+  async searchParts(query, limit = 10) {
+    try {
+      const parts = await Part.find({
+        $or: [
+          { name: { $regex: query, $options: "i" } },
+          { code: { $regex: query, $options: "i" } },
+        ],
+        status: "active", // Only search active parts
+      })
+        .select("_id name code brand quantity sellingPrice costPrice")
+        .limit(parseInt(limit))
+        .sort({ name: 1 });
+
+      return parts;
+    } catch (error) {
+      throw new Error(`Failed to search parts: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new PartService();

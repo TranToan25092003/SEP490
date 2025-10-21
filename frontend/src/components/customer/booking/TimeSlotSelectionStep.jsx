@@ -7,20 +7,14 @@ import { Calendar } from "@/components/ui/calendar";
 import { Clock } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
+/** @typedef {import("./index").TimeSlotSelectionStepProps} TimeSlotSelectionStepProps */
+/** @typedef {import("./index").AvailableTimeSlot} AvailableTimeSlot */
+
 const formatTimeSlot = (slot) => {
   const hours = String(slot.hours).padStart(2, "0");
   const minutes = String(slot.minutes).padStart(2, "0");
   return `${hours}:${minutes}`;
 };
-
-/**
- * @typedef {import("react").ComponentPropsWithRef<"div"> & {
- *   fetchAvailableTimeSlots: (day: number, month: number, year: number) => Promise<{
- *     timeSlots: Array<{hours: number, minutes: number, day: number, month: number, year: number, isAvailable: boolean}>;
- *     comment: string;
- *   }>;
- * }} TimeSlotSelectionStepProps
- */
 
 /**
  * TimeSlotSelectionStep component for selecting date and time in the booking form.
@@ -30,7 +24,9 @@ const formatTimeSlot = (slot) => {
 const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props }) => {
   const { setValue, watch } = useFormContext();
   const [date, setDate] = useState(null);
-  const [availableSlots, setAvailableSlots] = useState([]);
+  const [availableSlots, setAvailableSlots] = useState(
+    /** @type {AvailableTimeSlot[]} */ ([])
+  );
   const [loading, setLoading] = useState(false);
   const [comment, setComment] = useState("");
 
@@ -62,6 +58,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
     }
   };
 
+  /** @param {AvailableTimeSlot} slot */
   const handleTimeSlotSelect = (slot) => {
     if (!slot.isAvailable) return;
     const clone = { ...slot };
