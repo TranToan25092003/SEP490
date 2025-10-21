@@ -113,6 +113,63 @@ export const partsClientLoader = async ({ request }) => {
   }
 };
 
+// Get all parts by staff
+export const partsStaffLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("brand"))
+      queryParams.append("brand", searchParams.get("brand"));
+    if (searchParams.get("vehicleModel"))
+      queryParams.append("vehicleModel", searchParams.get("vehicleModel"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/staff/parts?${queryParams.toString()}`
+    );
+
+    // customFetch returns axios response, so we need response.data
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load parts");
+    }
+
+    return {
+      parts: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Parts loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải danh sách phụ tùng",
+    });
+
+    return {
+      parts: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
 // Load single part data
 export const partLoader = async ({ params }) => {
   try {
@@ -130,6 +187,26 @@ export const partLoader = async ({ params }) => {
       description: error.message || "Không thể tải thông tin phụ tùng",
     });
 
+    return null;
+  }
+};
+
+// Load single part by staff
+export const partDetailStaffLoader = async ({ params }) => {
+  try {
+    const response = await customFetch(`/staff/parts/${params.id}`);
+
+    const apiResponse = response.data;
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load part");
+    }
+
+    return apiResponse.data;
+  } catch (error) {
+    console.error("Part loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải thông tin phụ tùng",
+    });
     return null;
   }
 };
