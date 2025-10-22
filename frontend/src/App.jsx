@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
+import { ClerkProvider, GoogleOneTap, SignedIn, useUser } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
