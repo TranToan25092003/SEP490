@@ -8,6 +8,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
+import CarSelectionStep from "./CarSelectionStep";
 import ServiceSelectionStep from "./ServiceSelectionStep";
 import TimeSlotSelectionStep from "./TimeSlotSelectionStep";
 import ConfirmationStep from "./ConfirmationStep";
@@ -18,6 +19,10 @@ import { cn } from "@/lib/utils";
 /** @typedef {import("./index").BookingFormProps} BookingFormProps */
 
 const steps = [
+  {
+    title: "Chọn xe",
+    description: "Chọn xe cần bảo dưỡng",
+  },
   {
     title: "Chọn dịch vụ",
     description: "Chọn dịch vụ cần thiết",
@@ -83,7 +88,7 @@ const FlashMessage = forwardRef((props, ref) => {
  */
 const BookingForm = ({
   onSubmit,
-  myCar,
+  vehicles,
   services,
   fetchAvailableTimeSlots,
   className,
@@ -107,19 +112,23 @@ const BookingForm = ({
 
   const methods = useForm({
     defaultValues: {
+      vehicle: null,
       services: [],
       timeslot: null,
     },
   });
-  
+
+  const selectedVehicle = methods.watch("vehicle", null);
   const selectedServices = methods.watch("services", []);
   const selectedTimeslot = methods.watch("timeslot", null);
 
   const validateStep = (step) => {
     switch (step) {
       case 0:
-        return selectedServices.length > 0 ? [true, null] : [false, "Vui lòng chọn ít nhất một dịch vụ."];
+        return selectedVehicle ? [true, null] : [false, "Vui lòng chọn xe."];
       case 1:
+        return selectedServices.length > 0 ? [true, null] : [false, "Vui lòng chọn ít nhất một dịch vụ."];
+      case 2:
         return selectedTimeslot ? [true, null] : [false, "Vui lòng chọn thời gian hẹn."];
       default:
         return [false, "Không thể xác thực bước hiện tại."];
@@ -134,7 +143,7 @@ const BookingForm = ({
       }
       return;
     }
-    
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -195,14 +204,17 @@ const BookingForm = ({
 
           <CardContent className="px-2 md:px-8 pb-2">
             <div className={cn(currentStep !== 0 && "hidden") }>
-              <ServiceSelectionStep services={services} />
+              <CarSelectionStep vehicles={vehicles} />
             </div>
             <div className={cn(currentStep !== 1 && "hidden") }>
+              <ServiceSelectionStep services={services} />
+            </div>
+            <div className={cn(currentStep !== 2 && "hidden") }>
               <TimeSlotSelectionStep
                 fetchAvailableTimeSlots={fetchAvailableTimeSlots}
               />
             </div>
-            <div className={cn(currentStep !== 2 && "hidden") }>
+            <div className={cn(currentStep !== 3 && "hidden") }>
               <ConfirmationStep myCar={myCar} />
             </div>
           </CardContent>

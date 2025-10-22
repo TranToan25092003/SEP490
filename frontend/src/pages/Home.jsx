@@ -23,6 +23,7 @@ import service4 from "@/assets/service-ruaxe.png";
 import ctaBg from "@/assets/cta-bg.jpg";
 import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
 import ItemList from "@/components/customer/ItemList";
+import { useUser } from "@clerk/clerk-react";
 
 function Home() {
   const { parts } = useLoaderData();
@@ -166,7 +167,7 @@ function Home() {
                 Một số phụ tùng nổi bật của MotorMate
               </p>
             </div>
-            
+
             <ItemList products={parts} size={3}/>
 
 

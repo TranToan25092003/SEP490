@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+// UNUSED
+
 // Booking_Services Schema
 // Represents many-to-many relationship between Bookings and Services
 const BookingServiceSchema = new Schema(

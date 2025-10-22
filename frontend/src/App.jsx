@@ -52,6 +52,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/booking",
+        loader: Booking.loader,
         element: <Booking />,
       },
       {
