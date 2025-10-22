@@ -5,7 +5,7 @@ class PartService {
     async getAllPartsByClient(query = {}) {
         const {
             page = 1,
-            limit = 10,
+            limit = 9,
             search = "",
             brand = "",
             vehicleModel = "",

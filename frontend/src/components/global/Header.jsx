@@ -135,7 +135,7 @@ const Header = () => {
                           <ul className="space-y-2">
                             {group.models.map((model) => (
                               <li key={model._id}>
-                                <Link to={`/items?model=${model._id}`} className="text-sm text-slate-300 hover:text-white hover:underline">
+                                <Link to={`/items?vehicleModel=${model._id}&brand=${group.brand}`} className="text-sm text-slate-300 hover:text-white hover:underline">
                                   {model.name}
                                 </Link>
                               </li>

@@ -61,54 +61,38 @@ export const partsLoader = async ({ request }) => {
 export const partsClientLoader = async ({ request }) => {
   try {
     const url = new URL(request.url);
-    const searchParams = url.searchParams;
+    const queryParams = new URLSearchParams(url.search);
 
-    // Build query parameters
-    const queryParams = new URLSearchParams();
+    const [partsResponse, groupedModelsResponse] = await Promise.all([
+      customFetch(`/parts?${queryParams.toString()}`),
+      customFetch('/models/grouped-by-brand') 
+    ]);
 
-    if (searchParams.get("page"))
-      queryParams.append("page", searchParams.get("page"));
-    if (searchParams.get("limit"))
-      queryParams.append("limit", searchParams.get("limit"));
-    if (searchParams.get("search"))
-      queryParams.append("search", searchParams.get("search"));
-    if (searchParams.get("brand"))
-      queryParams.append("brand", searchParams.get("brand"));
-    if (searchParams.get("vehicleModel"))
-      queryParams.append("vehicleModel", searchParams.get("vehicleModel"));
-    if (searchParams.get("sortBy"))
-      queryParams.append("sortBy", searchParams.get("sortBy"));
-    if (searchParams.get("sortOrder"))
-      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+    const partsApiResponse = partsResponse.data;
+    if (!partsApiResponse.success) {
+      throw new Error(partsApiResponse.message || "Failed to load parts");
+    }
 
-    const response = await customFetch(
-      `/parts?${queryParams.toString()}`
-    );
-
-    const apiResponse = response.data;
-
-    if (!apiResponse.success) {
-      throw new Error(apiResponse.message || "Failed to load parts");
+    const groupedModelsApiResponse = groupedModelsResponse.data;
+    if (!groupedModelsApiResponse.success) {
+      throw new Error(groupedModelsApiResponse.message || "Failed to load filter data");
     }
 
     return {
-      parts: apiResponse.data,
-      pagination: apiResponse.pagination,
+      parts: partsApiResponse.data,
+      pagination: partsApiResponse.pagination,
+      groupedModels: groupedModelsApiResponse.data,
     };
+
   } catch (error) {
     console.error("Parts loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
       description: error.message || "Không thể tải danh sách phụ tùng",
     });
-
     return {
       parts: [],
-      pagination: {
-        currentPage: 1,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: 10,
-      },
+      pagination: {},
+      groupedModels: [],
     };
   }
 };
