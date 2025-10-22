@@ -37,6 +37,7 @@ import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
+import CreateComplaint from "./pages/customer/CreateComplaint";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -72,6 +73,10 @@ const router = createBrowserRouter([
         path: "/items/:id",
         element: <ItemDetailPage />,
         loader: partLoaderByClient,
+      },
+      {
+        path: "/complaint",
+        element: <CreateComplaint />,
       },
 
       // 404 within HomeLayout
