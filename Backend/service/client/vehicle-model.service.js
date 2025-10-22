@@ -15,6 +15,7 @@ class VehicleModelService {
                             $push: {
                                 _id: "$_id",
                                 name: "$name",
+                                brand: "$brand"
                             },
                         },
                     },

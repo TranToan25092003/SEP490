@@ -79,14 +79,6 @@ const router = createBrowserRouter([
         path: "*",
         element: <NotFoundPage />,
       },
-      {
-        path: "/items",
-        element: <ItemListPage />,
-      },
-      {
-        path: "/items/1",
-        element: <ItemDetailPage />,
-      },
     ],
   },
 
