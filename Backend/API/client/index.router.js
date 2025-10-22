@@ -2,6 +2,7 @@ const { authenticate } = require("../../middleware/guards/authen.middleware");
 const testRouter = require("./test.router");
 const partRouter = require("./part.router");
 const servicesRouter = require("./services.router");
+const vehiclesRouter = require("./vehicles.router");
 const bookingsRouter = require("./bookings.router");
 
 module.exports = (app) => {
@@ -11,4 +12,5 @@ module.exports = (app) => {
   app.use("/parts", partRouter);
   app.use("/client/services", servicesRouter);
   app.use("/client/bookings", bookingsRouter);
+  app.use("/client/vehicles", vehiclesRouter);
 };

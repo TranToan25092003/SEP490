@@ -1,6 +1,8 @@
+const { default: mongoose } = require("mongoose");
 const DomainError = require("../errors/domainError");
 const { Service, ServiceOrder } = require("../model");
 const ServicesService = require("./services.service");
+const vehiclesService = require("./vehicles.service");
 
 const ERROR_CODES = {
   BOOKINGS_SERVICE_NOT_FOUND: "BOOKINGS_SERVICE_NOT_FOUND",
@@ -91,9 +93,8 @@ class BookingsService {
       );
     }
 
-    // Stop the same user from booking multiple times for the same vehicle
-    const order = await ServiceOrder.findOne({ order_for_id: userIdToBookFor, vehicle_id: vehicleId }).exec();
-    if (order) {
+    const vehicleIdsInUse = await vehiclesService.getVehiclesInUse([vehicleId]);
+    if (vehicleIdsInUse.includes(vehicleId)) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
         ERROR_CODES.BOOKINGS_VEHICLE_ALREADY_BOOKED,
@@ -121,6 +122,8 @@ class BookingsService {
       photos: [],
       service_ids: serviceIds,
       status: "pending",
+      expected_start_time: bookingDate,
+      order_for_id: userIdToBookFor,
       started_at: null,
       completed_at: null,
       cancelled_at: null

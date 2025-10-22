@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 const ServiceOrderSchema = new Schema(
   {
     order_creator_id: { type: String, required: true }, // User ID of the order creator
-    order_for_id: { type: Schema.Types.ObjectId, ref: "User", required: true }, // User ID of the person the order is for
+    order_for_id: { type: String, required: true }, // User ID for whom the order is made
     vehicle_id: { type: Schema.Types.ObjectId, ref: "Vehicle", required: true }, // Reference to Vehicles
     service_ids: [{ type: Schema.Types.ObjectId, ref: "Service", required: true }], // Array of Service IDs
     bay_id: { type: Schema.Types.ObjectId, ref: "Bay", required: false }, // Reference to Bays (optional)

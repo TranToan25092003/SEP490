@@ -2,6 +2,7 @@ const express = require("express");
 const { body, param } = require("express-validator");
 const vehiclesController = require("../../controller/vehicles.controller");
 const { throwErrors } = require("../../middleware/validate-data/throwErrors.middleware");
+const authenticate = require("../../middleware/guards/authen.middleware").authenticate;
 const router = new express.Router();
 
 /**
@@ -21,6 +22,8 @@ const router = new express.Router();
  *           type: string
  *         year:
  *           type: number
+ *         isAvailable:
+ *           type: boolean
  */
 
 /**
@@ -40,6 +43,6 @@ const router = new express.Router();
  *               items:
  *                 $ref: '#/components/schemas/VehicleSummary'
  */
-router.get("/", vehiclesController.getUserVehicles);
+router.get("/summary", authenticate, vehiclesController.getUserVehicles);
 
 module.exports = router;

@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Car, Check } from "lucide-react";
+import { Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /** @typedef {import("./index").CarSelectionStepProps} CarSelectionStepProps */
@@ -16,7 +16,10 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
   const selectedVehicle = watch("vehicle");
 
   const handleVehicleSelect = (vehicle) => {
-    setValue("vehicle", vehicle);
+    // Only allow selection if vehicle is available
+    if (vehicle.isAvailable !== false) {
+      setValue("vehicle", vehicle);
+    }
   };
 
   const isVehicleSelected = (vehicle) => {
@@ -51,8 +54,9 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
           <Card
             key={vehicle.id}
             className={cn(
-              "cursor-pointer transition-all hover:shadow-lg",
-              isVehicleSelected(vehicle) && "ring-2 ring-primary"
+              "cursor-pointer transition-all hover:shadow-lg relative group",
+              isVehicleSelected(vehicle) && "ring-2 ring-primary",
+              vehicle.isAvailable === false && "opacity-50 cursor-not-allowed"
             )}
             onClick={() => handleVehicleSelect(vehicle)}
           >
@@ -92,6 +96,24 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
                 )}
               </div>
             </CardContent>
+
+            {/* Show "Order" button on hover for unavailable vehicles */}
+            {vehicle.isAvailable === false && (
+              <div className="absolute inset-0 bg-black/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Navigate to order/maintenance page
+                    window.location.href = "/order";
+                  }}
+                >
+                  Xem tình trạng
+                </Button>
+              </div>
+            )}
           </Card>
         ))}
       </div>

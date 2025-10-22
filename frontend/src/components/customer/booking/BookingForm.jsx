@@ -215,7 +215,7 @@ const BookingForm = ({
               />
             </div>
             <div className={cn(currentStep !== 3 && "hidden") }>
-              <ConfirmationStep myCar={myCar} />
+              <ConfirmationStep />
             </div>
           </CardContent>
 

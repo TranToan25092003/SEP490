@@ -2,6 +2,7 @@ const express = require("express");
 const { body, query, param } = require("express-validator");
 const bookingsController = require("../../controller/bookings.controller");
 const { throwErrors } = require("../../middleware/validate-data/throwErrors.middleware");
+const { authenticate } = require("../../middleware/guards/authen.middleware");
 const router = new express.Router();
 
 /**
@@ -101,6 +102,7 @@ router.post(
       .withMessage("Minutes must be between 0 and 59"),
   ],
   throwErrors,
+  authenticate,
   bookingsController.createBooking
 );
 

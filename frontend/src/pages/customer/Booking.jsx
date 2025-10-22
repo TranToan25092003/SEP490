@@ -1,17 +1,21 @@
 import BookingHeader from "@/components/customer/booking/BookingHeader";
 import BookingForm from "@/components/customer/booking/BookingForm";
 import { toast } from "sonner";
-import { useLoaderData, Await } from "react-router-dom";
+import { useLoaderData, Await, useRevalidator } from "react-router-dom";
 import Container from "@/components/global/Container";
 import { getServices } from "@/api/services";
+import { getUserVehicles } from "@/api/vehicles";
 import { createBooking, getAvailableTimeSlots } from "@/api/bookings";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
 export function loader() {
+  const services = getServices();
+  const vehicles = getUserVehicles();
+
+  const servicesAndVehicles = Promise.all([services, vehicles]);
   return {
-    services: getServices(),
-    vehicles: getVehicles(),
+    servicesAndVehicles
   }
 }
 
@@ -32,7 +36,8 @@ const BookingFormError = () => {
 }
 
 const Booking = () => {
-  const { services } = useLoaderData();
+  const { servicesAndVehicles } = useLoaderData();
+  const revalidator = useRevalidator();
 
   const handleSubmit = async (data) => {
     try {
@@ -51,6 +56,7 @@ const Booking = () => {
       const result = await createBooking(bookingRequest);
       console.log("Booking created:", result);
       toast.success("Đặt lịch thành công!");
+      revalidator.revalidate();
     } catch (error) {
       if (error.response?.errorCode) {
         toast.error(error.response.message);
@@ -70,22 +76,31 @@ const Booking = () => {
       <BookingHeader />
 
       <Suspense fallback={<BookingFormSkeleton />}>
-        <Await resolve={services} errorElement={<BookingFormError />}>
-          {(services) => (
-            <BookingForm
-              className="max-w-6xl mx-auto"
-              onSubmit={handleSubmit}
-              vehicles={mockVehicles}
-              services={services.map(s => ({
-                sid: s.id,
-                name: s.name,
-                estimatedTime: s.estimatedTimeInMinutes,
-                basePrice: s.basePrice,
-                desc: s.description,
-              }))}
-              fetchAvailableTimeSlots={fetchAvailableTimeSlots}
-            />
-          )}
+        <Await resolve={servicesAndVehicles} errorElement={<BookingFormError />}>
+          {(servicesAndVehicles) => {
+            const [services, vehicles] = servicesAndVehicles;
+            return (
+              <BookingForm
+                className="max-w-6xl mx-auto"
+                onSubmit={handleSubmit}
+                vehicles={vehicles.map(v => ({
+                  id: v.id,
+                  licensePlate: v.licensePlate,
+                  brand: v.brand,
+                  model: v.model,
+                  year: v.year,
+                  isAvailable: v.isAvailable,
+                }))}
+                services={services.map(s => ({
+                  sid: s.id,
+                  name: s.name,
+                  estimatedTime: s.estimatedTimeInMinutes,
+                  basePrice: s.basePrice,
+                  desc: s.description,
+                }))}
+                fetchAvailableTimeSlots={fetchAvailableTimeSlots}
+              />
+            )}}
         </Await>
       </Suspense>
     </Container>

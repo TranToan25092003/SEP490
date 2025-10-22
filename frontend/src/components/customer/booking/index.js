@@ -6,6 +6,7 @@
  * @property {string} [model] - Optional model name of the vehicle.
  * @property {number} [year] - Optional year of manufacture.
  * @property {string} [color] - Optional color of the vehicle.
+ * @property {boolean} [isAvailable] - Optional availability status of the vehicle.
  */
 
 

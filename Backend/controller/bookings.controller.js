@@ -5,7 +5,7 @@ class BookingsController {
   async createBooking(req, res, next) {
     try {
       const { vehicleId, serviceIds, timeSlot } = req.body;
-      const creatorId = req.auth.userId;
+      const creatorId = req.userId;
       const userIdToBookFor = req.body.userIdToBookFor || creatorId;
 
       const booking = await bookingsService.createBooking(
