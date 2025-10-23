@@ -24,15 +24,20 @@ import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import NotFoundPage from "./pages/404";
-import { partsPageLoader, 
-  partFormLoader, 
-  partsClientLoader, 
-  partLoaderByClient, 
-  goodsReceiptListLoader, 
-  partsStaffLoader, 
-  partDetailStaffLoader} from "./utils/loaders";
+import {
+  partsPageLoader,
+  partFormLoader,
+  partsClientLoader,
+  partLoaderByClient,
+  goodsReceiptListLoader,
+  partsStaffLoader,
+  partDetailStaffLoader,
+} from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
+import LayoutProfile, {
+  layoutProfileLoader,
+} from "./pages/profile/LayoutProfile";
 import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
@@ -83,6 +88,20 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFoundPage />,
+      },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
+      {
+        path: "/profile",
+        loader: layoutProfileLoader,
+
+        element: <LayoutProfile></LayoutProfile>,
       },
     ],
   },
@@ -151,7 +170,7 @@ const router = createBrowserRouter([
       {
         path: "items/:id",
         element: <StaffItemDetail />,
-        loader: partDetailStaffLoader
+        loader: partDetailStaffLoader,
       },
       {
         path: "complaints",
