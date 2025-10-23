@@ -3,8 +3,8 @@ import background from "../../assets/cool-motorcycle-indoors.png";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import avatarImg from "../../assets/avatar.png";
 import home from "../../assets/home.svg";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useNavigate, useLoaderData } from "react-router-dom";
+import { Controller, useForm } from "react-hook-form";
 import { useState } from "react";
 import VehicleProfile from "./VehicleProfile";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -21,70 +21,38 @@ import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
 import { Image } from "lucide-react";
 import UserProfile from "./UserProfile";
+import { customFetch } from "@/utils/customAxios";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { uploadImage } from "@/utils/uploadCloudinary";
+import { toast } from "sonner";
 
-export const layoutProfileLoader = () => {
+export const layoutProfileLoader = async () => {
   try {
-    console.log("hello");
-    return null;
+    const data = (await customFetch("/profile/models/get")).data;
+    const { name, brand } = data.data;
+
+    const res = await customFetch("/profile/vehicles/get");
+    const vehicles = res.data.data;
+
+    return { name, brand, vehicles };
   } catch (error) {
     console.log(error);
   }
 };
 
-const getFileKind = (resourceType, mimeType) => {
-  if (resourceType === "image") return "image";
-  if (resourceType === "video") return "video";
-  if (mimeType === "application/pdf") return "pdf";
-  return "other";
-};
-
-const uploadFile = async (file, options = {}) => {
-  const {
-    uploadPreset = "huynt7104",
-    cloudName = "djo2yviru",
-    folder = "motormate",
-    resourceType = "auto",
-  } = options;
-
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("upload_preset", uploadPreset);
-  formData.append("folder", folder);
-
-  try {
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Cloudinary upload error:", errorText);
-      throw new Error(`Upload failed: ${response.statusText} - ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    return {
-      publicId: data.public_id,
-      url: data.secure_url,
-      kind: getFileKind(data.resource_type, file.type),
-      originalName: file.name,
-      size: file.size,
-    };
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw new Error(`Upload failed: ${error.message}`);
-  }
-};
-
-const uploadImage = async (file) => {
-  const result = await uploadFile(file, { resourceType: "image" });
-  return result.url;
-};
+const engineTypes = [
+  { value: "gasoline", label: "Động cơ xăng" },
+  { value: "diesel", label: "Động cơ diesel" },
+  { value: "hybrid", label: "Động cơ hybrid (xăng + điện)" },
+  { value: "electric", label: "Động cơ điện" },
+];
 
 const LayoutProfile = () => {
   const { user, isLoaded: authLoaded } = useUser();
@@ -95,16 +63,18 @@ const LayoutProfile = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const { name, brand, vehicles } = useLoaderData();
 
   const form = useForm({
     resolver: zodResolver(vehicleSchema),
     defaultValues: {
       name: "",
       brand: "",
-      year: "",
-      engine_type: "",
+      year: 2024,
+      engine_type: "gasoline",
       description: "",
       license_plate: "",
+      odo_reading: "",
     },
   });
 
@@ -116,6 +86,7 @@ const LayoutProfile = () => {
     reset,
     formState: { errors },
     setValue,
+    control,
   } = form;
 
   const handleImageChange = async (e) => {
@@ -139,9 +110,20 @@ const LayoutProfile = () => {
       }
     }
   };
-  const onSubmit = (data) => {
-    console.log(data);
-    console.log(imagePreview);
+  const onSubmit = async (data) => {
+    try {
+      const res = await customFetch.post("/profile/models/create", {
+        ...data,
+        image: imagePreview,
+      });
+      toast.success("Thành công");
+      reset();
+      setImagePreview(null);
+      setImageFile(null);
+      navigate("/profile");
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
   };
 
   if (!authLoaded || !userLoaded) {
@@ -223,12 +205,25 @@ const LayoutProfile = () => {
                         <Label htmlFor="brand" className="w-1/3">
                           Hãng xe *
                         </Label>
-                        <Input
+                        <select
                           id="brand"
                           {...register("brand")}
                           placeholder="Ví dụ: Toyota"
-                          className="flex-1"
-                        />
+                          defaultValue=""
+                          className="flex-1 border p-1 opacity-60"
+                        >
+                          <option value="" disabled>
+                            -- Chọn brand --
+                          </option>
+
+                          {brand.map((brandName) => {
+                            return (
+                              <option id={brandName} value={brandName}>
+                                {brandName}
+                              </option>
+                            );
+                          })}
+                        </select>
                         {errors.brand && (
                           <p className="text-sm text-destructive mt-1 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />{" "}
@@ -256,6 +251,26 @@ const LayoutProfile = () => {
                         )}
                       </div>
 
+                      {/* odo reading */}
+                      <div className="flex items-center">
+                        <Label htmlFor="odo_reading" className="w-1/3">
+                          số km
+                        </Label>
+                        <Input
+                          id="odo_reading"
+                          {...register("odo_reading", { valueAsNumber: true })}
+                          type={"number"}
+                          placeholder="2000"
+                          className="flex-1"
+                        />
+                        {errors.odo_reading && (
+                          <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />{" "}
+                            {errors.odo_reading.message}
+                          </p>
+                        )}
+                      </div>
+
                       {/* year */}
                       <div className="flex items-center">
                         <Label htmlFor="year" className="w-1/3">
@@ -264,7 +279,7 @@ const LayoutProfile = () => {
                         <Input
                           id="year"
                           type="number"
-                          {...register("year")}
+                          {...register("year", { valueAsNumber: true })}
                           placeholder="2024"
                           className="flex-1"
                         />
@@ -281,11 +296,29 @@ const LayoutProfile = () => {
                         <Label htmlFor="engine_type " className={"w-1/3"}>
                           Loại động cơ
                         </Label>
-                        <Input
-                          id="engine_type"
-                          {...register("engine_type")}
-                          placeholder="Gasoline, Hybrid, Diesel..."
-                          className={"w-2/3"}
+                        <Controller
+                          name="engine_type"
+                          control={control}
+                          defaultValue="gasoline"
+                          render={({ field }) => (
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value}
+                            >
+                              <SelectTrigger className="w-2/3 opacity-60">
+                                <SelectValue placeholder="Chọn loại động cơ" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectGroup>
+                                  {engineTypes.map(({ label, value }) => (
+                                    <SelectItem key={value} value={value}>
+                                      {label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectGroup>
+                              </SelectContent>
+                            </Select>
+                          )}
                         />
                         {errors.engine_type && (
                           <p className="text-sm text-destructive mt-1 flex items-center gap-1">
@@ -434,8 +467,10 @@ const LayoutProfile = () => {
             Lịch sử sửa xe
           </p>
         </div>
-        <div className="h-3/5 border-2 mt-2 border-red-800 overflow-hidden">
-          {select === 2 && <VehicleProfile></VehicleProfile>}
+        <div className="h-3/5  mt-2 overflow-hidden">
+          {select === 2 && (
+            <VehicleProfile vehicles={vehicles}></VehicleProfile>
+          )}
           {select === 1 && <UserProfile></UserProfile>}
         </div>
       </div>

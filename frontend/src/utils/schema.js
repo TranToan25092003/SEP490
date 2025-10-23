@@ -11,7 +11,7 @@ export const vehicleSchema = z.object({
     })
     .max(12, "Biển số quá dài"),
   year: z
-    .string()
+    .number()
     .optional()
     .refine((val) => !val || /^\d{4}$/.test(val), {
       message: "Năm phải là 4 chữ số (1900-2025)",
@@ -22,22 +22,14 @@ export const vehicleSchema = z.object({
     }),
   engine_type: z.string().max(30, "Loại động cơ quá dài").optional(),
   description: z.string().max(500, "Mô tả quá dài").optional(),
+
+  // 👇 Thêm trường odo_reading
+  odo_reading: z
+    .number({
+      required_error: "Số km là bắt buộc",
+      invalid_type_error: "Số km phải là số hợp lệ",
+    })
+    .nonnegative("Số km không thể âm")
+    .max(1000000, "Số km không hợp lệ (quá lớn)")
+    .optional(),
 });
-
-/**
- * ====================================
- * generic validate
- * ====================================
- */
-export const validateWithZodSchema = (schema, data) => {
-  const result = schema.safeParse(data);
-
-  if (!result.success) {
-    const errors = result.error.errors.map((error) => {
-      return error.message;
-    });
-    throw new Error(errors.join(", "));
-  }
-
-  return result.data;
-};

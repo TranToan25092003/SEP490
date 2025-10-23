@@ -1,9 +1,10 @@
 // src/utils/customAxios.js
 import axios from "axios";
 import { toast } from "sonner";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const customFetch = axios.create({
-  baseURL: "http://localhost:3000",
+  baseURL: API_URL,
   withCredentials: true,
 });
 

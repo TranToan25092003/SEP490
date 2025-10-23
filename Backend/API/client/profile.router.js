@@ -4,7 +4,7 @@ const controller = require("../../controller/profile.controller");
 
 /**
  * @swagger
- * /create/vehicle:
+ * /profile/models/create:
  *   post:
  *     summary: Tạo mới thông tin phương tiện
  *     tags:
@@ -49,7 +49,54 @@ const controller = require("../../controller/profile.controller");
  *       500:
  *         description: Lỗi máy chủ
  */
+router.post("/models/create", controller.createVehicle);
 
+/**
+ * @swagger
+ * /profile/models/get:
+ *   get:
+ *     summary: Lấy danh sách tất cả các hãng xe
+ *     tags:
+ *       - Vehicle
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách hãng xe thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     example: 1
+ *                   name:
+ *                     type: string
+ *                     example: "Honda"
+ *                   country:
+ *                     type: string
+ *                     example: "Japan"
+ *       500:
+ *         description: Lỗi máy chủ
+ */
 router.get("/models/get", controller.getModels);
+
+/**
+ * @swagger
+ * /profile/vehicles/get:
+ *   get:
+ *     summary: Lấy danh sách tất cả các  xe
+ *     tags:
+ *       - Vehicle
+ *     responses:
+ *       200:
+ *         description: Lấy danh sách  xe thành công
+ *         content:
+ *           application/json:
+ *       500:
+ *         description: Lỗi máy chủ
+ */
+router.get("/vehicles/get", controller.getVehicles);
 
 module.exports = router;
