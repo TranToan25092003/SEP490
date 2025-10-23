@@ -2,6 +2,7 @@ const { authenticate } = require("../../middleware/guards/authen.middleware");
 const testRouter = require("./test.router");
 const partRouter = require("./part.router");
 const profileRouter = require("./profile.router");
+const vehicleModelRouter = require("./vehicle-model.router");
 
 module.exports = (app) => {
   // this router only for testing app do not use this router to write data ok
@@ -9,5 +10,6 @@ module.exports = (app) => {
   app.use("/parts", partRouter);
   app.use("/profile", authenticate, profileRouter);
 
+  app.use("/models", vehicleModelRouter);
   // ----------------------------------------------
 };
