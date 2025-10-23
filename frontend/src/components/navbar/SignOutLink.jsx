@@ -17,9 +17,9 @@ const SignOutLink = () => {
   return (
     <button
       onClick={handleLogout}
-      className="w-full text-left text-red-600 hover:text-red-800 transition"
+      className="w-full text-left text-red-600 hover:text-red-800 transition capitalize"
     >
-      Logout
+      đăng xuất
     </button>
   );
 };
