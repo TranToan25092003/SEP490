@@ -12,6 +12,7 @@ import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
+import ChatStaff from "./pages/staff/ChatStaff";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -148,6 +149,10 @@ const router = createBrowserRouter([
         path: "items",
         element: <ManagerItems />,
         loader: partsPageLoader,
+      },
+      {
+        path: "chat",
+        element: <ChatStaff />,
       },
     ],
   },

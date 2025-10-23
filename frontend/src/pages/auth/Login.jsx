@@ -82,7 +82,7 @@ const Login = () => {
   };
   return (
     <div className="flex items-center justify-center bg-black min-h-screen">
-      <div className="flex flex-col md:flex-row w-[90%] md:w-3/4 relative">
+      <div className="flex flex-col md:flex-row w-full relative">
         {/* Cột trái (ảnh + overlay text) */}
         <div className="relative w-full md:w-1/2 h-[300px] md:h-screen ">
           <img src={photo} className="h-full w-full object-cover" alt="" />
