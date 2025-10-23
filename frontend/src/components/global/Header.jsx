@@ -130,7 +130,10 @@ const Header = () => {
                       {groupedModels.map((group) => (
                         <div key={group.brand} className="break-inside-avoid mb-6">
                           <h3 className="mb-3 text-sm font-bold uppercase text-red-500">
-                            Phụ Tùng {group.brand}
+                            <Link to={`/items?brand=${group.brand}`}>
+                              Phụ Tùng {group.brand}
+                            </Link>
+
                           </h3>
                           <ul className="space-y-2">
                             {group.models.map((model) => (
