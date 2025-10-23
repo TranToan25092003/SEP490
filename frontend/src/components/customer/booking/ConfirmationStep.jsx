@@ -11,8 +11,9 @@ import { cn, formatTimeXGioYPhut } from "@/lib/utils";
  * Uses useFormContext to access form data.
  * @param {ConfirmationStepProps} props
  */
-const ConfirmationStep = ({ myCar, className, ...props }) => {
+const ConfirmationStep = ({ className, ...props }) => {
   const { watch } = useFormContext();
+  const vehicle = watch("vehicle");
   const services = watch("services") || [];
   const timeslot = watch("timeslot");
 
@@ -25,7 +26,7 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
 
     return new Date(
       timeslot.year,
-      timeslot.month,
+      timeslot.month - 1,
       timeslot.day,
       timeslot.hours,
       timeslot.minutes
@@ -59,11 +60,34 @@ const ConfirmationStep = ({ myCar, className, ...props }) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-4">
-              <Badge variant="outline" className="text-lg px-4 py-2">
-                {myCar.licensePlate}
-              </Badge>
-            </div>
+            {!vehicle ? (
+              <p className="text-gray-500">Chưa chọn xe</p>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="text-lg px-4 py-2">
+                    {vehicle.licensePlate}
+                  </Badge>
+                </div>
+                <div className="text-sm space-y-1">
+                  {vehicle.brand && (
+                    <p className="text-gray-600">
+                      <span className="font-medium">Hãng:</span> {vehicle.brand}
+                    </p>
+                  )}
+                  {vehicle.model && (
+                    <p className="text-gray-600">
+                      <span className="font-medium">Dòng xe:</span> {vehicle.model}
+                    </p>
+                  )}
+                  {vehicle.year && (
+                    <p className="text-gray-600">
+                      <span className="font-medium">Năm:</span> {vehicle.year}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

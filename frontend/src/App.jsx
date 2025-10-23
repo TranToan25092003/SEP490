@@ -1,5 +1,10 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
+import {
+  ClerkProvider,
+  GoogleOneTap,
+  SignedIn,
+  useUser,
+} from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
@@ -13,6 +18,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import ChatStaff from "./pages/staff/ChatStaff";
+import BookingAdd from "./pages/staff/BookingAdd";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -25,13 +31,15 @@ import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
 import NotFoundPage from "./pages/404";
-import { partsPageLoader, 
-  partFormLoader, 
-  partsClientLoader, 
-  partLoaderByClient, 
-  goodsReceiptListLoader, 
-  partsStaffLoader, 
-  partDetailStaffLoader} from "./utils/loaders";
+import {
+  partsPageLoader,
+  partFormLoader,
+  partsClientLoader,
+  partLoaderByClient,
+  goodsReceiptListLoader,
+  partsStaffLoader,
+  partDetailStaffLoader,
+} from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
 import StaffItemsPage from "./pages/staff/StaffItemsPage";
@@ -55,6 +63,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/booking",
+        loader: Booking.loader,
         element: <Booking />,
       },
       {
@@ -136,6 +145,7 @@ const router = createBrowserRouter([
     children: [
       { path: "booking/:id", element: <BookingDetail /> },
       { path: "booking/", element: <BookingList /> },
+      { path: "booking/add", element: <BookingAdd /> },
     ],
   },
 
@@ -152,7 +162,7 @@ const router = createBrowserRouter([
       {
         path: "items/:id",
         element: <StaffItemDetail />,
-        loader: partDetailStaffLoader
+        loader: partDetailStaffLoader,
       },
       {
         path: "complaints",

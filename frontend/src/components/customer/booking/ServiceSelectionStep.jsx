@@ -51,7 +51,7 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
             <Card
               key={service.sid}
               className={cn(
-                "cursor-pointer transition-all hover:shadow-md",
+                "cursor-pointer transition-all gap-2 hover:shadow-md",
                 isSelected && "border-primary border-2"
               )}
               onClick={() => handleServiceToggle(service)}
@@ -72,7 +72,7 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
                 )}
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-sm text-gray-500">
-                    Thời gian: {formatTimeXGioYPhut(service.estimatedTime)}
+                    Thời gian ước tính: {formatTimeXGioYPhut(service.estimatedTime)}
                   </span>
                 </div>
               </CardContent>

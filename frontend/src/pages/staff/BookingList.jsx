@@ -88,10 +88,12 @@ const BookingList = () => {
     <Container pageContext="admin">
       <div className="flex justify-between items-center">
         <H3>Quản lý lệnh</H3>
-        <Button>
-          <Plus />
-          Thêm lệnh mới
-        </Button>
+        <Link to={"/staff/booking/add"}>
+          <Button>
+            <Plus />
+            Thêm lệnh mới
+          </Button>
+        </Link>
       </div>
 
       <CRUDTable data={posts} columns={columnDefs} getRowId={(row) => row.id}>

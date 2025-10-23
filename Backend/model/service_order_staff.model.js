@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+// UNUSED
+
 // Service_Order_Staff Schema
 // Represents many-to-many relationship between Service_Orders and staff (via Clerk)
 const ServiceOrderStaffSchema = new Schema(

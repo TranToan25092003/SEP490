@@ -5,13 +5,10 @@ const Schema = mongoose.Schema;
 // Represents service orders created from bookings
 const ServiceOrderSchema = new Schema(
   {
-    booking_id: {
-      type: Schema.Types.ObjectId,
-      ref: "Booking",
-      required: true,
-      unique: true,
-    }, // 1:1 with Bookings
+    order_creator_id: { type: String, required: true }, // User ID of the order creator
+    order_for_id: { type: String, required: true }, // User ID for whom the order is made
     vehicle_id: { type: Schema.Types.ObjectId, ref: "Vehicle", required: true }, // Reference to Vehicles
+    service_ids: [{ type: Schema.Types.ObjectId, ref: "Service", required: true }], // Array of Service IDs
     bay_id: { type: Schema.Types.ObjectId, ref: "Bay", required: false }, // Reference to Bays (optional)
     staff_id: [{ type: String, required: false }], // Array of Clerk user IDs for staff (optional)
     timeline: [
@@ -21,14 +18,17 @@ const ServiceOrderSchema = new Schema(
       },
     ], // Timeline of service order events
     photos: [{ type: String, required: false }], // Array of photo URLs (optional)
-    estimated_completion_time: { type: Date, required: false }, // Estimated completion time (optional)
     status: {
       type: String,
-      enum: ["in_progress", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "in_progress", "completed", "cancelled"],
+      default: "pending",
       required: true,
-    }, // Order status
-    assigned_at: { type: Date, required: false }, // Time bay assigned (optional)
-    released_at: { type: Date, required: false }, // Time bay released (optional)
+    },
+    estimated_completion_time: { type: Date, required: false },
+    expected_start_time: { type: Date, required: true },
+    started_at: { type: Date, required: false },
+    completed_at: { type: Date, required: false },
+    cancelled_at: { type: Date, required: false }
   },
   { timestamps: true }
 );

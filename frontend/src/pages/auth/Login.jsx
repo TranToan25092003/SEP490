@@ -14,12 +14,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [hide, setHide] = useState(false);
 
   if (isSignedIn) {
     navigate("/");
     return;
   }
-  const [hide, setHide] = useState(false);
 
   const handleEmailSignin = async (e) => {
     e.preventDefault();
