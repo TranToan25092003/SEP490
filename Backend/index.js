@@ -49,7 +49,10 @@ app.use(cookieParser());
 // client router
 const clientRouter = require("./API/client/index.router");
 clientRouter(app);
-// admin router
+
+// staff router
+const staffRouter = require("./API/staff/index.router");
+staffRouter(app);
 
 // manager router
 const managerRouter = require("./API/manager/index.router");

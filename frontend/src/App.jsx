@@ -21,21 +21,24 @@ import CreateGoodsReceipt from "./pages/manager/CreateGoodsReceipt";
 import GoodsReceiptList from "./pages/manager/GoodsReceiptList";
 import GoodsReceiptDetail from "./pages/manager/GoodsReceiptDetail";
 import About from "./pages/AboutUs";
-import NotFoundPage from "./pages/404";
-
 import ItemListPage from "./pages/ItemListPage";
 import ItemDetailPage from "./pages/ItemDetailPage";
 import { AuthenticateWithRedirectCallback } from "@clerk/clerk-react";
-import {} from "@clerk/clerk-react";
-import {
-  partsPageLoader,
-  partFormLoader,
-  partsClientLoader,
-  partLoaderByClient,
-  goodsReceiptListLoader,
-} from "./utils/loaders";
+import NotFoundPage from "./pages/404";
+import { partsPageLoader, 
+  partFormLoader, 
+  partsClientLoader, 
+  partLoaderByClient, 
+  goodsReceiptListLoader, 
+  partsStaffLoader, 
+  partDetailStaffLoader} from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
+import StaffItemsPage from "./pages/staff/StaffItemsPage";
+import StaffItemDetail from "./pages/staff/StaffItemDetail";
+import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
+import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
+import CreateComplaint from "./pages/customer/CreateComplaint";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -72,19 +75,15 @@ const router = createBrowserRouter([
         element: <ItemDetailPage />,
         loader: partLoaderByClient,
       },
+      {
+        path: "/complaint",
+        element: <CreateComplaint />,
+      },
 
       // 404 within HomeLayout
       {
         path: "*",
         element: <NotFoundPage />,
-      },
-      {
-        path: "/items",
-        element: <ItemListPage />,
-      },
-      {
-        path: "/items/1",
-        element: <ItemDetailPage />,
       },
     ],
   },
@@ -147,8 +146,21 @@ const router = createBrowserRouter([
       { index: true, element: <Staff /> },
       {
         path: "items",
-        element: <ManagerItems />,
-        loader: partsPageLoader,
+        element: <StaffItemsPage />,
+        loader: partsStaffLoader,
+      },
+      {
+        path: "items/:id",
+        element: <StaffItemDetail />,
+        loader: partDetailStaffLoader
+      },
+      {
+        path: "complaints",
+        element: <StaffComplaintsPage />,
+      },
+      {
+        path: "complaints/:id",
+        element: <StaffComplaintDetail />,
       },
       {
         path: "chat",

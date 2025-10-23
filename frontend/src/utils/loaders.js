@@ -58,6 +58,102 @@ export const partsLoader = async ({ request }) => {
   }
 };
 
+export const partsClientLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const queryParams = new URLSearchParams(url.search);
+
+    const [partsResponse, groupedModelsResponse] = await Promise.all([
+      customFetch(`/parts?${queryParams.toString()}`),
+      customFetch('/models/grouped-by-brand') 
+    ]);
+
+    const partsApiResponse = partsResponse.data;
+    if (!partsApiResponse.success) {
+      throw new Error(partsApiResponse.message || "Failed to load parts");
+    }
+
+    const groupedModelsApiResponse = groupedModelsResponse.data;
+    if (!groupedModelsApiResponse.success) {
+      throw new Error(groupedModelsApiResponse.message || "Failed to load filter data");
+    }
+
+    return {
+      parts: partsApiResponse.data,
+      pagination: partsApiResponse.pagination,
+      groupedModels: groupedModelsApiResponse.data,
+    };
+
+  } catch (error) {
+    console.error("Parts loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải danh sách phụ tùng",
+    });
+    return {
+      parts: [],
+      pagination: {},
+      groupedModels: [],
+    };
+  }
+};
+
+// Get all parts by staff
+export const partsStaffLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("brand"))
+      queryParams.append("brand", searchParams.get("brand"));
+    if (searchParams.get("vehicleModel"))
+      queryParams.append("vehicleModel", searchParams.get("vehicleModel"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/staff/parts?${queryParams.toString()}`
+    );
+
+    // customFetch returns axios response, so we need response.data
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load parts");
+    }
+
+    return {
+      parts: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Parts loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải danh sách phụ tùng",
+    });
+
+    return {
+      parts: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
 // Load single part data
 export const partLoader = async ({ params }) => {
   try {
@@ -76,6 +172,58 @@ export const partLoader = async ({ params }) => {
     });
 
     return null;
+  }
+};
+
+// Load single part by staff
+export const partDetailStaffLoader = async ({ params }) => {
+  try {
+    const response = await customFetch(`/staff/parts/${params.id}`);
+
+    const apiResponse = response.data;
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load part");
+    }
+
+    return apiResponse.data;
+  } catch (error) {
+    console.error("Part loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải thông tin phụ tùng",
+    });
+    return null;
+  }
+};
+
+// Load single part data by client
+export const partLoaderByClient = async ({ params }) => {
+  try {
+    // Fetch the main product details
+    const mainProductResponse = await customFetch(`/parts/${params.id}`);
+    const mainProductApiResponse = mainProductResponse.data;
+
+    if (!mainProductApiResponse.success) {
+      throw new Error(mainProductApiResponse.message || "Failed to load part details");
+    }
+    const product = mainProductApiResponse.data;
+
+    // Fetch related products based on the brand 
+    let relatedProducts = [];
+    if (product && product.brand) {
+      const relatedResponse = await customFetch(`/parts?brand=${product.brand}`);
+      const relatedApiResponse = relatedResponse.data;
+      if (relatedApiResponse.success) {
+        relatedProducts = relatedApiResponse.data.filter(p => p._id !== product._id);
+      }
+    }
+    return { product, relatedProducts };
+
+  } catch (error) {
+    console.error("Part detail loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải thông tin chi tiết phụ tùng",
+    });
+    return { product: null, relatedProducts: [] };
   }
 };
 
@@ -295,93 +443,4 @@ export const goodsReceiptListLoader = async ({ request }) => {
   }
 };
 
-// Load parts data for client (public API)
-export const partsClientLoader = async ({ request }) => {
-  try {
-    const url = new URL(request.url);
-    const searchParams = url.searchParams;
 
-    // Build query parameters
-    const queryParams = new URLSearchParams();
-
-    if (searchParams.get("page"))
-      queryParams.append("page", searchParams.get("page"));
-    if (searchParams.get("limit"))
-      queryParams.append("limit", searchParams.get("limit"));
-    if (searchParams.get("search"))
-      queryParams.append("search", searchParams.get("search"));
-    if (searchParams.get("brand"))
-      queryParams.append("brand", searchParams.get("brand"));
-    if (searchParams.get("vehicleModel"))
-      queryParams.append("vehicleModel", searchParams.get("vehicleModel"));
-    if (searchParams.get("sortBy"))
-      queryParams.append("sortBy", searchParams.get("sortBy"));
-    if (searchParams.get("sortOrder"))
-      queryParams.append("sortOrder", searchParams.get("sortOrder"));
-
-    const response = await customFetch(`/parts?${queryParams.toString()}`);
-
-    const apiResponse = response.data;
-
-    if (!apiResponse.success) {
-      throw new Error(apiResponse.message || "Failed to load parts");
-    }
-
-    return {
-      parts: apiResponse.data,
-      pagination: apiResponse.pagination,
-    };
-  } catch (error) {
-    console.error("Parts client loader error:", error);
-    toast.error("Lỗi tải dữ liệu", {
-      description: error.message || "Không thể tải danh sách phụ tùng",
-    });
-
-    return {
-      parts: [],
-      pagination: {
-        currentPage: 1,
-        totalPages: 0,
-        totalItems: 0,
-        itemsPerPage: 10,
-      },
-    };
-  }
-};
-
-// Load single part data by client
-export const partLoaderByClient = async ({ params }) => {
-  try {
-    // Fetch the main product details
-    const mainProductResponse = await customFetch(`/parts/${params.id}`);
-    const mainProductApiResponse = mainProductResponse.data;
-
-    if (!mainProductApiResponse.success) {
-      throw new Error(
-        mainProductApiResponse.message || "Failed to load part details"
-      );
-    }
-    const product = mainProductApiResponse.data;
-
-    // Fetch related products based on the brand
-    let relatedProducts = [];
-    if (product && product.brand) {
-      const relatedResponse = await customFetch(
-        `/parts?brand=${product.brand}`
-      );
-      const relatedApiResponse = relatedResponse.data;
-      if (relatedApiResponse.success) {
-        relatedProducts = relatedApiResponse.data.filter(
-          (p) => p._id !== product._id
-        );
-      }
-    }
-    return { product, relatedProducts };
-  } catch (error) {
-    console.error("Part detail loader error:", error);
-    toast.error("Lỗi tải dữ liệu", {
-      description: error.message || "Không thể tải thông tin chi tiết phụ tùng",
-    });
-    return { product: null, relatedProducts: [] };
-  }
-};
