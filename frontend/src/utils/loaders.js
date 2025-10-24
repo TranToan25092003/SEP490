@@ -495,4 +495,33 @@ export const complaintsStaffLoader = async ({ request }) => {
   }
 };
 
+export const complaintDetailStaffLoader = async ({ params }) => {
+  const complaintId = params.id; 
+
+  if (!complaintId) {
+    console.error("Complaint ID is missing in loader params.");
+    toast.error("Lỗi tải dữ liệu", {
+        description: "Không tìm thấy ID khiếu nại.",
+    });
+    return null;
+  }
+
+  try {
+    const response = await customFetch(`/staff/complaints/${complaintId}`);
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load complaint details");
+    }
+    return apiResponse.data;
+
+  } catch (error) {
+    console.error("Complaint detail loader error:", error);
+    toast.error("Lỗi tải dữ liệu chi tiết", {
+      description: error.message || "Không thể tải thông tin chi tiết khiếu nại",
+    });
+    return null;
+  }
+};
+
 

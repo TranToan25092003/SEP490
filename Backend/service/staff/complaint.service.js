@@ -125,8 +125,7 @@ class ComplaintService {
             if (complaint.so_id && complaint.so_id.staff_id && complaint.so_id.staff_id.length > 0) {
                 try {
                     const staffUsersResult = await clerkClient.users.getUserList({ userId: complaint.so_id.staff_id });
-                    // Safely map results, handling potential undefined last names
-                    staffNames = staffUsersResult.map(user =>
+                    staffNames = staffUsersResult.data.map(user =>
                         user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "Staff N/A"
                     );
                 } catch (clerkError) {
@@ -135,7 +134,6 @@ class ComplaintService {
                 }
             }
 
-            // --- Construct the final object with specified fields ---
             const primaryPhoneNumber = customerInfo.phoneNumbers.length > 0 ? customerInfo.phoneNumbers[0] : "N/A";
 
             const detailedComplaint = {
@@ -158,7 +156,7 @@ class ComplaintService {
             return detailedComplaint;
 
         } catch (error) {
-            console.error("Detailed error fetching complaint:", error); // Log detailed error
+            console.error("Detailed error fetching complaint:", error);
             throw new Error(`Failed to fetch complaint details: ${error.message}`);
         }
     }
