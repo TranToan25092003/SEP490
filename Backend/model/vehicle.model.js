@@ -10,6 +10,7 @@ const VehicleSchema = new Schema(
     license_plate: { type: String, required: true, unique: true }, // License plate number
     odo_reading: { type: Number, required: true }, // Odometer reading
     year: { type: Number, required: true }, // Year of vehicle
+    images: [String],
   },
   { timestamps: true }
 );
