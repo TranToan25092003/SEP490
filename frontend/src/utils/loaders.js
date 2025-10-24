@@ -443,4 +443,85 @@ export const goodsReceiptListLoader = async ({ request }) => {
   }
 };
 
+export const complaintsStaffLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/staff/complaints?${queryParams.toString()}`
+    );
+
+    // customFetch returns axios response, so we need response.data
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load complaints");
+    }
+
+    return {
+      complaints: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Complaitns loader error:", error);
+    toast.error("Lỗi tải dữ liệu khiếu nại", {
+      description: error.message || "Không thể tải danh sách khiếu nại",
+    });
+
+    return {
+      complaints: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
+export const complaintDetailStaffLoader = async ({ params }) => {
+  const complaintId = params.id; 
+
+  if (!complaintId) {
+    console.error("Complaint ID is missing in loader params.");
+    toast.error("Lỗi tải dữ liệu", {
+        description: "Không tìm thấy ID khiếu nại.",
+    });
+    return null;
+  }
+
+  try {
+    const response = await customFetch(`/staff/complaints/${complaintId}`);
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load complaint details");
+    }
+    return apiResponse.data;
+
+  } catch (error) {
+    console.error("Complaint detail loader error:", error);
+    toast.error("Lỗi tải dữ liệu chi tiết", {
+      description: error.message || "Không thể tải thông tin chi tiết khiếu nại",
+    });
+    return null;
+  }
+};
+
 
