@@ -1,5 +1,5 @@
 const { clerkClient } = require("../../config/clerk");
-const { Complain, ServiceOrder, Booking, Vehicle, ModelVehicle } = require("../../model");
+const { Complain, ServiceOrder, Booking, Vehicle, ModelVehicle, Model } = require("../../model");
 
 class ComplaintService {
     async getAllComplaints(query = {}) {
@@ -31,15 +31,15 @@ class ComplaintService {
 
         try {
             const complaints = await Complain.find(filter)
-                .select('-__v') 
+                .select('-__v')
                 .sort(sort)
                 .skip((page - 1) * limit)
                 .limit(parseInt(limit))
-                .lean(); 
+                .lean();
 
             const total = await Complain.countDocuments(filter);
 
-            const clerkIds = complaints.map(c => c.clerkId).filter(id => id); 
+            const clerkIds = complaints.map(c => c.clerkId).filter(id => id);
             let clerkUserMap = {};
             if (clerkIds.length > 0) {
                 try {
@@ -79,6 +79,87 @@ class ComplaintService {
             };
         } catch (error) {
             throw new Error(`Failed to fetch complaints: ${error.message}`);
+        }
+    }
+
+    async getComplaintById(complaintId) {
+        try {
+            const complaint = await Complain.findById(complaintId)
+                .populate({
+                    path: 'so_id',
+                    select: 'createdAt staff_id vehicle_id', // Select necessary fields from ServiceOrder
+                    populate: {
+                        path: 'vehicle_id',
+                        select: 'license_plate model_id', // Select necessary fields from Vehicle
+                        populate: {
+                            path: 'model_id',
+                            select: 'name' // Select only name from Model
+                        }
+                    }
+                })
+                .lean();
+
+            if (!complaint) {
+                return null;
+            }
+
+            // --- Fetch Clerk User Data for the customer ---
+            let customerInfo = { fullName: "Không rõ", phoneNumbers: [] };
+            if (complaint.clerkId) {
+                try {
+                    const user = await clerkClient.users.getUser(complaint.clerkId);
+                    customerInfo = {
+                        fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
+                        phoneNumbers: (user.phoneNumbers || []).map(pn => pn.phoneNumber)
+                    };
+                } catch (clerkError) {
+                    if (clerkError.status === 404) {
+                        console.warn(`Clerk user with ID ${complaint.clerkId} not found.`);
+                    } else {
+                        console.error(`Failed to fetch Clerk user data for ID ${complaint.clerkId}:`, clerkError);
+                    }
+                }
+            }
+
+            let staffNames = [];
+            if (complaint.so_id && complaint.so_id.staff_id && complaint.so_id.staff_id.length > 0) {
+                try {
+                    const staffUsersResult = await clerkClient.users.getUserList({ userId: complaint.so_id.staff_id });
+                    // Safely map results, handling potential undefined last names
+                    staffNames = staffUsersResult.map(user =>
+                        user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "Staff N/A"
+                    );
+                } catch (clerkError) {
+                    console.error(`Failed to fetch staff Clerk data:`, clerkError);
+                    staffNames = complaint.so_id.staff_id.map(id => `Staff ID: ${id.slice(-4)}`);
+                }
+            }
+
+            // --- Construct the final object with specified fields ---
+            const primaryPhoneNumber = customerInfo.phoneNumbers.length > 0 ? customerInfo.phoneNumbers[0] : "N/A";
+
+            const detailedComplaint = {
+                _id: complaint._id, 
+                title: complaint.title,
+                content: complaint.content,
+                photos: complaint.photos,
+                rating: complaint.rating,
+                status: complaint.status,
+                createdAt: complaint.createdAt, 
+                so_id: complaint.so_id?._id || null, 
+                serviceDate: complaint.so_id?.createdAt || null, 
+                license_plate: complaint.so_id?.vehicle_id?.license_plate || 'N/A',
+                model: complaint.so_id?.vehicle_id?.model_id?.name || 'N/A',
+                customerName: customerInfo.fullName,
+                customerPhone: primaryPhoneNumber,
+                staffNames: staffNames,
+            };
+
+            return detailedComplaint;
+
+        } catch (error) {
+            console.error("Detailed error fetching complaint:", error); // Log detailed error
+            throw new Error(`Failed to fetch complaint details: ${error.message}`);
         }
     }
 }
