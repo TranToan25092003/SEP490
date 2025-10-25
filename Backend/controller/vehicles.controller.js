@@ -13,12 +13,6 @@ class VehiclesController {
         message: "Vehicles retrieved successfully",
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }

@@ -3,16 +3,24 @@ import { useState } from "react";
 import { BookingHeader, BookingComment, BookingServices, BookingTotal } from ".";
 
 /**
- * @typedef {import("./index").BookingFormProps} BookingFormProps
+ * BookingEditForm Component
+ * A form component for editing and managing booking details including services, comments, and confirmation.
+ *
+ * @typedef {import("./index").BookingEditFormProps} BookingEditFormProps
  */
 
 /**
- * @param {BookingFormProps} props
+ * Renders a booking edit form with service management and booking confirmation capabilities.
+ *
+ * @component
+ * @param {BookingEditFormProps} props - The component props
+ * @returns {JSX.Element} The rendered booking edit form
  */
-const BookingForm = ({
+const BookingEditForm = ({
   booking,
   onUpdateBooking,
   onConfirmBooking,
+  onSendInvoice,
   getTotalPrice
 }) => {
   const [updateBookingLoading, setUpdateBookingLoading] = useState(false);
@@ -47,6 +55,17 @@ const BookingForm = ({
     }
   };
 
+  const handleSendInvoice = async (data) => {
+    try {
+      setUpdateBookingLoading(true);
+      setDisabled(true);
+      await onSendInvoice(data);
+    } finally {
+      setDisabled(false);
+      setUpdateBookingLoading(false);
+    }
+  };
+
   return (
     <FormProvider {...methods}>
       <form
@@ -66,6 +85,7 @@ const BookingForm = ({
           getTotalPrice={getTotalPrice}
           updateBookingLoading={updateBookingLoading}
           disabled={disabled}
+          onSendInvoice={() => handleSendInvoice(methods.getValues())}
           onUpdateServices={() => handleUpdateBooking(methods.getValues())}
         />
       </form>
@@ -73,4 +93,4 @@ const BookingForm = ({
   );
 };
 
-export default BookingForm;
+export default BookingEditForm;

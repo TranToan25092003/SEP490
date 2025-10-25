@@ -1,44 +1,21 @@
 import CRUDTable from "@/components/global/CRUDTable";
 import Container from "@/components/global/Container";
 import { AdminPagination } from "@/components/global/AdminPagination";
+import { StatusBadge } from "@/components/global/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
 import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { H3 } from "@/components/ui/headings";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import usePageParamsStore from "@/hooks/use-page-params-store";
 
-const stringToHue = (value) => {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = value.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return Math.abs(hash) % 360;
-};
-
-const getStatusColors = (status) => {
-  const hue = stringToHue(status || "");
-  return {
-    background: `hsl(${hue}, 80%, 92%)`,
-    foreground: `hsl(${hue}, 45%, 32%)`,
-  };
-};
-
-const StatusBadge = ({ status, colorKey }) => {
-  const { background, foreground } = getStatusColors(colorKey ?? "");
-
-  return (
-    <p
-      className={
-        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-      }
-      style={{ backgroundColor: background, color: foreground }}
-    >
-      {status}
-    </p>
-  );
-};
-
-const posts = [
+const customerBookings = [
   {
     id: 1,
     customerName: "Nguyen Van A",
@@ -53,7 +30,7 @@ const posts = [
   },
 ];
 
-const columnDefs = [
+const bookingListColumnDefinitions = [
   {
     accessorKey: "id",
     header: "ID",
@@ -83,9 +60,60 @@ const columnDefs = [
   },
 ];
 
+const changeRequests = [
+  {
+    id: 101,
+    orderId: 1,
+    title: "Yêu cầu thay đổi lịch hẹn",
+    customerName: "Le Thi C",
+    dateRequested: "2024-10-03",
+  },
+  {
+    id: 102,
+    orderId: 2,
+    title: "Yêu cầu thay đổi dịch vụ",
+    customerName: "Pham Van D",
+    dateRequested: "2024-10-04",
+  },
+];
+
+const changeRequestsColumnDefinitions = [
+  {
+    accessorKey: "id",
+    header: "ID Yêu cầu",
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "orderId",
+    header: "ID Lệnh",
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "title",
+    header: "Tiêu đề",
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "customerName",
+    header: "Tên khách hàng",
+    cell: (info) => info.getValue(),
+  },
+  {
+    accessorKey: "dateRequested",
+    header: "Ngày yêu cầu",
+    cell: (info) => info.getValue(),
+  },
+];
+
+
 const BookingList = () => {
+  const [viewName, switchPageParams] = usePageParamsStore({
+    viewNames: ["all", "change_requests"],
+    defaultViewName: "all"
+  });
+
   return (
-    <Container pageContext="admin">
+    <Container pageContext="admin"a >
       <div className="flex justify-between items-center">
         <H3>Quản lý lệnh</H3>
         <Link to={"/staff/booking/add"}>
@@ -96,25 +124,58 @@ const BookingList = () => {
         </Link>
       </div>
 
-      <CRUDTable data={posts} columns={columnDefs} getRowId={(row) => row.id}>
-        {(row) => (
-          <div className="flex justify-center">
-            <Link to={`/staff/booking/${row.id}`}>
-              <Button variant="outline" className="flex-1 cursor-pointer">
-                <EyeIcon />
-              </Button>
-            </Link>
-          </div>
-        )}
-      </CRUDTable>
+      <Tabs value={viewName} onValueChange={(value) => {
+        switchPageParams(value);
+      }}>
+        <TabsList>
+          <TabsTrigger value="all">Tất cả các lệnh</TabsTrigger>
+          <TabsTrigger value="change_requests">Yêu cầu sửa đổi từ khách hàng</TabsTrigger>
+        </TabsList>
 
-      <AdminPagination
-        pagination={{
-          totalPages: 10,
-          itemsPerPage: 50,
-          totalItems: 1000,
-        }}
-      />
+        <TabsContent className="space-y-3" value="all">
+          <CRUDTable data={customerBookings} columns={bookingListColumnDefinitions} getRowId={(row) => row.id}>
+            {(row) => (
+              <div className="flex justify-center">
+                <Link to={`/staff/booking/${row.id}`}>
+                  <Button variant="outline" className="flex-1 cursor-pointer">
+                    <EyeIcon />
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CRUDTable>
+
+          <AdminPagination
+            pagination={{
+              totalPages: 10,
+              itemsPerPage: 50,
+              totalItems: 1000,
+            }}
+          />
+        </TabsContent>
+        <TabsContent className="space-y-3" value="change_requests">
+          <CRUDTable data={changeRequests} columns={changeRequestsColumnDefinitions} getRowId={(row) => row.id}>
+            {(row) => (
+              <div className="flex justify-center">
+                <Link to={`/staff/booking/${row.id}`}>
+                  <Button variant="outline" className="flex-1 cursor-pointer">
+                    <EyeIcon />
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CRUDTable>
+
+          <AdminPagination
+            pagination={{
+              totalPages: 5,
+              itemsPerPage: 50,
+              totalItems: 250,
+            }}
+          />
+        </TabsContent>
+      </Tabs>
+
     </Container>
   );
 };

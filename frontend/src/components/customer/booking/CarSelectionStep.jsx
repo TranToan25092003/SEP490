@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Car } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 /** @typedef {import("./index").CarSelectionStepProps} CarSelectionStepProps */
 
@@ -43,9 +44,11 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
           <>
             <div className="text-center col-span-full space-y-2 py-8">
               <p>Bạn chưa có xe nào. Vui lòng thêm xe trước khi đặt lịch.</p>
-              <Button variant="outline">
-                Thêm xe mới
-              </Button>
+              <Link to="/profile">
+                <Button variant="outline">
+                  Thêm xe mới
+                </Button>
+              </Link>
             </div>
           </>
         )}

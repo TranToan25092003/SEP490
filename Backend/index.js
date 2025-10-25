@@ -57,9 +57,26 @@ const managerRouter = require("./API/manager/index.router");
 managerRouter(app);
 // manager router
 
+
+app.use((err, req, res, next) => {
+  if (err instanceof DomainError) {
+    return res.status(err.statusCode).json({
+      message: err.message,
+      code: err.code,
+    });
+  }
+
+  console.error(err);
+
+  return res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
 // Swagger
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
+const DomainError = require("./errors/domainError");
 app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger
 

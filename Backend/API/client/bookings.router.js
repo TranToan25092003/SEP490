@@ -193,6 +193,7 @@ router.get(
       .withMessage("Booking ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
+  authenticate,
   bookingsController.getBookingById
 );
 
@@ -245,6 +246,7 @@ router.post(
       .withMessage("Each service ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
+  authenticate,
   bookingsController.addServices
 );
 
@@ -297,6 +299,7 @@ router.post(
       .withMessage("Each service ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
+  authenticate,
   bookingsController.removeServices
 );
 

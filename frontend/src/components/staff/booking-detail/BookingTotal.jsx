@@ -16,6 +16,7 @@ const BookingTotal = ({
   updateBookingLoading = false,
   disabled = false,
   onUpdateServices,
+  onSendInvoice,
   getTotalPrice,
   className,
   ...props
@@ -29,6 +30,7 @@ const BookingTotal = ({
 
   const { watch } = useFormContext();
   const services = watch("services");
+  const hasServices = Array.isArray(services) && services.length > 0;
 
   useEffect(() => {
     let ignore = false;
@@ -77,13 +79,25 @@ const BookingTotal = ({
 
         <Button
           type="button"
+          variant="outline"
           onClick={() => {
             onUpdateServices();
           }}
-          disabled={updateBookingLoading || disabled}
+          disabled={updateBookingLoading || disabled || !hasServices}
           aria-busy={updateBookingLoading}
         >
           Cập nhật thông tin
+        </Button>
+
+        <Button
+          type="button"
+          onClick={() => {
+            onSendInvoice();
+          }}
+          disabled={updateBookingLoading || disabled || !hasServices}
+          aria-busy={updateBookingLoading}
+        >
+          Gửi báo giá
         </Button>
       </CardContent>
 

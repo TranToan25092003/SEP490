@@ -5,6 +5,13 @@
  */
 
 /**
+ * @typedef {object} BayInfo
+ * @property {string} id - Identifier of the bay.
+ * @property {string} name - Display name of the bay.
+ * @property {boolean} isFinal - Indicates if the bay assignment is final.
+ */
+
+/**
  * @typedef {object} ServiceInfo
  * @property {string} sid - Identifier of the service.
  * @property {string} name - Display name of the service.
@@ -19,9 +26,10 @@
  * @property {string} vehicleModel - Model of the vehicle.
  * @property {ServiceInfo[]} services - Services attached to the booking.
  * @property {TechnicianInfo} fixTechnician - Assigned fix technician.
- * @property {TechnicianInfo} bayTechnician - Assigned bay technician.
+ * @property {BayInfo} bayInfo - Assigned bay.
  * @property {string} comment - Booking comments.
  * @property {string} appointmentTime - Appointment timestamp.
+ * @property {string} status - Booking status (e.g., "pending", "confirmed", "completed", "cancelled").
  */
 
 /**
@@ -29,8 +37,9 @@
  *   booking: Booking;
  *   onUpdateBooking: (updatedBooking: Booking) => Promise<any>;
  *   onConfirmBooking: (toBeConfirmed: Booking) => Promise<any>;
+ *   onSendInvoice: (bookingData: Booking) => Promise<any>;
  *   getTotalPrice: (services: ServiceInfo[]) => { price: number, tax: number, total: number };
- * }} BookingFormProps
+ * }} BookingEditFormProps
  */
 
 /**
@@ -63,7 +72,7 @@
  * }} BookingTotalProps
  */
 
-export { default as BookingForm } from "./BookingForm";
+export { default as BookingEditForm } from "./BookingForm";
 export { default as BookingComment } from "./BookingComment";
 export { default as BookingServices } from "./BookingServices";
 export { default as BookingTotal } from "./BookingTotal";

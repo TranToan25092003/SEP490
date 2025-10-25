@@ -21,12 +21,6 @@ class BookingsController {
         message: "Booking created successfully",
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }
@@ -47,12 +41,6 @@ class BookingsController {
         data: booking,
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }
@@ -69,12 +57,6 @@ class BookingsController {
         message: "Services added successfully",
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }
@@ -91,12 +73,6 @@ class BookingsController {
         message: "Services removed successfully",
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }

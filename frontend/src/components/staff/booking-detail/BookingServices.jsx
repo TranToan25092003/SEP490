@@ -65,19 +65,29 @@ const BookingServices = ({ disabled = false, className, ...props }) => {
   return (
     <Card className={cn(className)} {...props}>
       <CardHeader>
-        <CardTitle>Dịch vụ / Hạng mục {serviceItems.length > 0 ? `(${serviceItems.length})` : '' }</CardTitle>
+        <CardTitle>
+          Dịch vụ / Hạng mục{" "}
+          {serviceItems.length > 0 ? `(${serviceItems.length})` : ""}
+        </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col h-[200px] overflow-y-auto">
         {serviceItems.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <Package className="w-12 h-12 text-muted-foreground/50 mb-3" />
-            <p className="text-muted-foreground font-medium">Không có dịch vụ nào</p>
-            <p className="text-sm text-muted-foreground/75 mb-4">Nhấn nút bên dưới để thêm dịch vụ</p>
+            <p className="text-muted-foreground font-medium">
+              Không có dịch vụ nào
+            </p>
+            <p className="text-sm text-muted-foreground/75 mb-4">
+              Nhấn nút bên dưới để thêm dịch vụ
+            </p>
           </div>
         ) : (
           <>
             {serviceItems.map((service, idx) => (
-              <div key={service.id} className="grid grid-cols-4 items-end gap-2">
+              <div
+                key={service.id}
+                className="grid grid-cols-4 items-end gap-2"
+              >
                 <div className="space-y-2 flex-1 col-span-2">
                   <label className="text-sm font-medium">Dịch vụ</label>
                   <Select
@@ -114,10 +124,15 @@ const BookingServices = ({ disabled = false, className, ...props }) => {
             ))}
           </>
         )}
-
       </CardContent>
       <CardFooter>
-        <Button type="button" onClick={handleAddService} disabled={disabled} className="w-full mt-3">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleAddService}
+          disabled={disabled}
+          className="w-full mt-3"
+        >
           <Plus className="w-4 h-4 mr-2" />
           Thêm dịch vụ
         </Button>

@@ -11,10 +11,16 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wrench, MessageSquareWarning } from "lucide-react";
+import { LayoutDashboard, Wrench, MessageSquareWarning, Package } from "lucide-react";
 
 const items = [
   { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/staff" },
+  {
+    key: "orders",
+    label: "Quản lý lệnh",
+    icon: Package,
+    href: "/staff/booking",
+  },
   {
     key: "parts",
     label: "Quản lý phụ tùng",

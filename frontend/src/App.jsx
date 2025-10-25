@@ -150,21 +150,15 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "/staff",
-    element: <AdminLayout />,
-    children: [
-      { path: "booking/:id", element: <BookingDetail /> },
-      { path: "booking/", element: <BookingList /> },
-      { path: "booking/add", element: <BookingAdd /> },
-    ],
-  },
-
+  ,
   {
     path: "/staff",
     element: <StaffLayout />,
     children: [
       { index: true, element: <Staff /> },
+      { path: "booking/:id", element: <BookingDetail /> },
+      { path: "booking/", element: <BookingList /> },
+      { path: "booking/add", element: <BookingAdd /> },
       {
         path: "items",
         element: <StaffItemsPage />,

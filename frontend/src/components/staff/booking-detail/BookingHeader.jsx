@@ -1,18 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { StatusBadge } from "@/components/global/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 
 /** @typedef {import("./index").BookingHeaderProps} BookingHeaderProps */
-/** @typedef {import("./index").ServiceInfo} ServiceInfo */
 
 /**
  * Displays the high-level booking metadata and technician assignments.
@@ -26,24 +19,43 @@ const BookingHeader = ({
   ...props
 }) => {
   const { watch } = useFormContext();
-
-  /** @type {ServiceInfo[]} */
-  const services = watch("services", []);
-  const serviceSummary = services.length
-    ? services.map((s) => s.name).join(", ")
-    : "Không có dịch vụ";
+  const services = watch("services");
+  const hasServices = Array.isArray(services) && services.length > 0;
 
   return (
     <Card className={cn(className)} {...props}>
       <CardHeader className="flex justify-between items-center">
-        <CardTitle>Thông Tin Chung (ID: {booking.id})</CardTitle>
-        <Button
-          type="submit"
-          disabled={confirmBookingLoading || disabled}
-          aria-busy={confirmBookingLoading}
-        >
-          Xác nhận & Tạo Lệnh
-        </Button>
+        <div className="flex items-center gap-3">
+          <CardTitle>Thông Tin Chung (ID: {booking.id})</CardTitle>
+        </div>
+        <div className="space-x-2">
+          <Button
+            type="button"
+            className="text-destructive"
+            variant="outline"
+            onClick={() => onCancelBooking()}
+            disabled={confirmBookingLoading || disabled}
+            aria-busy={confirmBookingLoading}
+          >
+            Từ chối lệnh
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onCancelBooking()}
+            disabled={confirmBookingLoading || disabled}
+            aria-busy={confirmBookingLoading}
+          >
+            Đổi lịch
+          </Button>
+          <Button
+            type="submit"
+            disabled={confirmBookingLoading || disabled || !hasServices}
+            aria-busy={confirmBookingLoading}
+          >
+            Xác nhận & Tạo Lệnh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
@@ -62,36 +74,21 @@ const BookingHeader = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Yêu Cầu Ban Đầu</Label>
-          <div className="font-semibold">{serviceSummary}</div>
+          <Label className="gap-1">
+            Thợ sửa &#183;
+            <Button variant="link" className="leading-none" onClick={() => onEditTechnician(booking.fixTechnician)}>Thay đổi</Button>
+          </Label>
+          <div className="font-semibold">{booking.fixTechnician?.name}</div>
         </div>
 
         <div className="space-y-2">
-          <Label>Thợ sửa</Label>
-          <Select defaultValue={booking.fixTechnician?.id}>
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn thợ sửa" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Nguyễn Văn A</SelectItem>
-              <SelectItem value="2">Trần Văn B</SelectItem>
-              <SelectItem value="3">Lê Văn C</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Bay {booking.bayInfo?.isFinal ? "" : "(tạm thời)"}</Label>
+          <div className="font-semibold">{booking.bayInfo?.name}</div>
         </div>
 
         <div className="space-y-2">
-          <Label>Thợ bay</Label>
-          <Select defaultValue={booking.bayTechnician?.id}>
-            <SelectTrigger>
-              <SelectValue placeholder="Chọn thợ bay" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1">Nguyễn Văn A</SelectItem>
-              <SelectItem value="2">Trần Văn B</SelectItem>
-              <SelectItem value="3">Lê Văn C</SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>Trạng thái</Label>
+          <StatusBadge status={booking.status ?? "Không xác định"} />
         </div>
       </CardContent>
     </Card>

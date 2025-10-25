@@ -18,10 +18,11 @@ export const homeLayoutLoader = async () => {
 };
 
 const HomeLayout = () => {
-  const { setActive, isSignedIn } = useClerk();
+  const { setActive, isSignedIn, user } = useClerk();
 
   useEffect(() => {
     if (isSignedIn) {
+      console.log(user.id);
       setActive({
         organization: "org_32tzUd7dUcFW7Te5gxEO4VcgkX1",
       });
