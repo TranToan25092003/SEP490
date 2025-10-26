@@ -1,22 +1,22 @@
-import BookingHeader from "@/components/customer/booking/BookingHeader";
-import BookingForm from "@/components/customer/booking/BookingForm";
-import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { Loader2, LogIn } from "lucide-react";
 import { useLoaderData, Await, useRevalidator } from "react-router-dom";
-import Container from "@/components/global/Container";
-import { Button } from "@/components/ui/button";
+import { Suspense } from "react";
+import { toast } from "sonner";
 import { getServices } from "@/api/services";
 import { getUserVehicles } from "@/api/vehicles";
 import { createBooking, getAvailableTimeSlots } from "@/api/bookings";
-import { Suspense } from "react";
-import { Loader2, LogIn } from "lucide-react";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
-import { Link } from "react-router-dom";
 import clerk from "@/utils/clerk";
+import { Button } from "@/components/ui/button";
+import BookingHeader from "@/components/customer/booking/BookingHeader";
+import BookingForm from "@/components/customer/booking/BookingForm";
+import Container from "@/components/global/Container";
 
 export function loader() {
   if (!clerk.isSignedIn) {
     return {
-      servicesAndVehicles: Promise.resolve([[], []])
+      servicesAndVehicles: Promise.resolve([[], []]),
     };
   }
 
@@ -25,8 +25,8 @@ export function loader() {
 
   const servicesAndVehicles = Promise.all([services, vehicles]);
   return {
-    servicesAndVehicles
-  }
+    servicesAndVehicles,
+  };
 }
 
 const BookingFormSkeleton = () => {
@@ -35,15 +35,17 @@ const BookingFormSkeleton = () => {
       <Loader2 className="animate-spin mx-auto h-8 w-8 text-primary-600" />
     </div>
   );
-}
+};
 
 const BookingFormError = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
-      <p className="text-center text-red-600">Đã có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.</p>
+      <p className="text-center text-red-600">
+        Đã có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.
+      </p>
     </div>
   );
-}
+};
 
 const NotSignedInComponent = () => {
   return (

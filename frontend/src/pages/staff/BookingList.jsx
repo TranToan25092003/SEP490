@@ -51,8 +51,8 @@ const bookingListColumnDefinitions = [
     header: "Loại lệnh",
     cell: (info) => {
       const services = info.row.original.serviceTypes;
-      const badges = services.map((service, index) => (
-        <StatusBadge key={index} status={service} colorKey={service} />
+      const badges = services.map((service) => (
+        <StatusBadge key={service} status={service} colorKey={service} />
       ));
 
       return <div className="flex flex-wrap gap-2">{badges}</div>;

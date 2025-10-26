@@ -1,12 +1,13 @@
-const { default: mongoose } = require("mongoose");
 const DomainError = require("../errors/domainError");
-const { Service, ServiceOrder } = require("../model");
+const { Service, ServiceOrder, ServiceOrderItem } = require("../model");
+const BaySchedulingService = require("./bay_scheduling.service");
 const ServicesService = require("./services.service");
 const vehiclesService = require("./vehicles.service");
 
 const ERROR_CODES = {
   BOOKINGS_SERVICE_NOT_FOUND: "BOOKINGS_SERVICE_NOT_FOUND",
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
+  BOOKINGS_STATE_INVALID: "BOOKINGS_STATE_INVALID",
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
 };
 
@@ -24,28 +25,6 @@ const ERROR_CODES = {
 function convertTimeSlotToDate(timeSlot) {
   const { day, month, year, hours, minutes } = timeSlot;
   return new Date(year, month - 1, day, hours, minutes);
-}
-
-/**
- * Check if the booking date is valid.
- * @param {Date} bookingDate
- * @returns {[boolean, string]} - Returns a tuple where the first element indicates validity and the second element is an error message if invalid.
- */
-async function isBookingDateValid(bookingDate) {
-  const now = new Date();
-  if (bookingDate < now) {
-    return [false, "Thời gian đặt lịch muộn hơn hiện tại"];
-  }
-  return [true, ""];
-}
-
-/**
- * Find an available bay for the given booking date.
- * @param {Date} bookingDate
- */
-async function findAvailableBay(bookingDate) {
-  // TODO: Implement bay availability logic
-  return null;
 }
 
 class BookingsService {
@@ -79,19 +58,7 @@ class BookingsService {
    * console.log(booking);
    */
   async createBooking(creatorId, userIdToBookFor, vehicleId, serviceIds, timeSlot) {
-    const services = await Service.find({ _id: { $in: serviceIds } }).exec();
-    if (services.length !== serviceIds.length) {
-      console.log("Some services not found:", {
-        requested: serviceIds,
-        found: services.map((s) => s._id.toString()),
-      });
-
-      throw new DomainError(
-        "Một hoặc nhiều dịch vụ không được tìm thấy",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
-        404
-      );
-    }
+    const items = await this.convertServiceIdsToServiceItems(serviceIds);
 
     const vehicleIdsInUse = await vehiclesService.getVehiclesInUse([vehicleId]);
     if (vehicleIdsInUse.includes(vehicleId)) {
@@ -102,48 +69,68 @@ class BookingsService {
       );
     }
 
-    const bookingDate = convertTimeSlotToDate(timeSlot);
-    const [isValid, errorMessage] = await isBookingDateValid(bookingDate);
-    if (!isValid) {
-      throw new DomainError(
-        errorMessage,
-        ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
-        400
-      );
+    const checkInTimeslot = convertTimeSlotToDate(timeSlot);
+
+    let checkInTask;
+    try {
+      checkInTask = await BaySchedulingService.scheduleCheckIn(checkInTimeslot);
+    } catch (e) {
+      if (e instanceof DomainError) {
+        throw new DomainError(
+          "Khung thời gian không khả dụng",
+          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
+          409
+        );
+      }
+
+      throw e;
     }
 
-    const bayId = await findAvailableBay(bookingDate);
+    try {
+      const serviceOrder = new ServiceOrder({
+        order_creator_id: creatorId,
+        order_for_id: userIdToBookFor,
+        vehicle_id: vehicleId,
+        items: items,
+        status: "booked",
+        expected_start_time: checkInTimeslot,
+        started_at: null,
+        expected_completion_time: null,
+        completed_at: null,
+        cancelled_at: null
+      });
 
-    const serviceOrder = new ServiceOrder({
-      order_creator_id: creatorId,
-      vehicle_id: vehicleId,
-      bay_id: bayId,
-      timeline: [],
-      photos: [],
-      service_ids: serviceIds,
-      status: "pending",
-      expected_start_time: bookingDate,
-      order_for_id: userIdToBookFor,
-      started_at: null,
-      completed_at: null,
-      cancelled_at: null
-    });
+      await serviceOrder.save();
 
-    await serviceOrder.save();
-
-    return {
-      id: serviceOrder._id,
+      return {
+        id: serviceOrder._id,
+      }
+    } catch (_) {
+      await checkInTask.deleteOne();
     }
   }
 
   /**
-   * Remove services from a booking.
-   * @param {string} bookingId - ID of the booking.
-   * @param {Array<string>} serviceIds - Array of service IDs to be removed.
-   * @returns {Object} - The updated booking object.
-   * @throws {DomainError} - If there is a domain-specific error during service removal.
+   *
+   * @param {string} bookingId
+   * @param {{
+   *  technicianClerkId: string,
+   *  role: "lead" | "assistant"
+   * }[]} techniciansInfo
+   * @param {Date | undefined} startDate - If not provided, the system will schedule it as early as possible
+   * @returns {Object} - Don't know yet
+   * @throws {DomainError} - If there is a domain-specific error during starting service.
+   * @example - Starting service for a booking
+   * const service = await bookingsService.startService(
+   *  "booking123",
+   *  [
+   *    { technicianClerkId: "tech1", role: "lead" },
+   *    { technicianClerkId: "tech2", role: "assistant" }
+   *  ]
+   * );
+   * console.log(service);
    */
-  async removeServices(bookingId, serviceIds) {
+  async startService(bookingId, techniciansInfo, startDate) {
     const booking = await ServiceOrder.findById(bookingId).exec();
     if (!booking) {
       throw new DomainError(
@@ -153,20 +140,62 @@ class BookingsService {
       );
     }
 
-    booking.service_ids = booking.service_ids.filter(
-      (id) => !serviceIds.includes(id.toString())
-    );
+    if (["in_progress", "completed", "cancelled"].includes(booking.status)) {
+      throw new DomainError(
+        "Không thể bắt đầu dịch vụ cho đơn dịch vụ ở trạng thái hiện tại",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        409
+      );
+    }
 
-    await booking.save();
+    if (!startDate) {
+      const suggestions = await BaySchedulingService.suggestNextNTimeslotForServicingTask(
+        booking,
+        techniciansInfo
+      );
 
-    // Don't know what to return here, so just returning the booking ID for now
-    // TODO: Update to return more useful info
-    return {
-      id: booking._id,
-    };
+      // weird case
+      if (!suggestions || suggestions.length === 0) {
+        throw new DomainError(
+          "Không có khung thời gian khả dụng để bắt đầu dịch vụ",
+          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
+          409
+        );
+      }
+
+      startDate = suggestions[0].start;
+    }
+
+    try {
+      const servicingTask = await BaySchedulingService.scheduleServicingTask(
+        bookingId,
+        techniciansInfo,
+        new Date(), // Start now
+        new Date(Date.now() + 2 * 60 * 60 * 1000) // Expected to end in 2 hours
+      );
+
+      booking.status = "in_progress";
+      booking.started_at = new Date();
+      booking.expected_completion_time = servicingTask.expected_end_time;
+      await booking.save();
+
+      return {
+        id: booking._id,
+      };
+    } catch (err) {
+      if (err instanceof DomainError) {
+        throw new DomainError(
+          "Khung thời gian không khả dụng, vui lòng chọn khung thời gian khác",
+          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
+          409
+        );
+      }
+
+      throw err;
+    }
   }
 
-  async addServices(bookingId, serviceIds) {
+  async confirmBooking(bookingId) {
     const booking = await ServiceOrder.findById(bookingId).exec();
     if (!booking) {
       throw new DomainError(
@@ -176,18 +205,57 @@ class BookingsService {
       );
     }
 
-    // Avoid duplicates
-    const existingServiceIds = booking.service_ids.map((id) => id.toString());
-    const newServiceIds = serviceIds.filter(
-      (id) => !existingServiceIds.includes(id)
-    );
+    if (booking.status !== "waiting_customer_approval") {
+      throw new DomainError(
+        "Không thể phê duyệt đơn dịch vụ ở trạng thái hiện tại",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        409
+      );
+    }
 
-    booking.service_ids.push(...newServiceIds);
+    booking.status = "confirmed";
     await booking.save();
+  }
 
-    return {
-      id: booking._id,
-    };
+  async cancelBooking(bookingId) {
+    const booking = await ServiceOrder.findById(bookingId).exec();
+    if (!booking) {
+      throw new DomainError(
+        "Đơn dịch vụ không tồn tại",
+        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        404
+      );
+    }
+
+    if (["completed", "cancelled", "in_progress"].includes(booking.status)) {
+      throw new DomainError(
+        "Không thể hủy đơn dịch vụ ở trạng thái hiện tại",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        409
+      );
+    }
+
+    booking.status = "cancelled";
+    await booking.save();
+  }
+
+  async convertServiceIdsToServiceItems(serviceIds) {
+    const nonDuplicateServiceIds = [...new Set(serviceIds)];
+
+    const services = await Service.find({ _id: { $in: nonDuplicateServiceIds } }).exec();
+    if (services.length !== nonDuplicateServiceIds.length) {
+      throw new DomainError(
+        "Một hoặc nhiều dịch vụ không được tìm thấy",
+        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        404
+      );
+    }
+
+    return services.map(service => new ServiceOrderItem({
+      price: service.base_price,
+      quantity: 1,
+      service_id: service._id
+    }));
   }
 
   async getBookingById(bookingId) {
@@ -195,7 +263,6 @@ class BookingsService {
       await ServiceOrder
         .findById(bookingId)
         .populate("vehicle_id")
-        .populate("bay_id")
         .exec()
     );
 
@@ -210,9 +277,6 @@ class BookingsService {
       vehicle: {
         licensePlate: booking.vehicle_id.license_plate,
       },
-      bay: {
-        bayName: booking.bay_id ? booking.bay_id.bay_number : null,
-      },
       technicians: [
         {
           technicianName: "Technician Username here",
@@ -223,6 +287,7 @@ class BookingsService {
       ],
       expectedStartTime: booking.expected_start_time,
       startedAt: booking.started_at,
+      expectedCompletionTime: booking.expected_completion_time,
       completedAt: booking.completed_at,
       cancelledAt: booking.cancelled_at,
       status: booking.status,

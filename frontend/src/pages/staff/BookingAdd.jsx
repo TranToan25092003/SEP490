@@ -2,7 +2,6 @@ import BackButton from "@/components/global/BackButton";
 import Container from "@/components/global/Container";
 import { BookingAddForm } from "@/components/staff/booking-add";
 import { H3 } from "@/components/ui/headings";
-import { useState } from "react";
 
 const BookingAdd = () => {
   return (

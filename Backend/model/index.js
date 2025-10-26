@@ -2,8 +2,6 @@ const Test = require("./test.model");
 
 const Banner = require("./banner.model");
 const Bay = require("./bay.model");
-const BookingService = require("./booking_service.model");
-const Booking = require("./booking.model");
 const Complain = require("./complaint.model");
 const DiscountCode = require("./discount_codes.model");
 const GoodsReceipt = require("./goods_receipt.model");
@@ -18,8 +16,8 @@ const Quote = require("./quote.model");
 const MediaAsset = require("./media_asset.model");
 const RecallVehicles = require("./recall_vehicles.model");
 const Recall = require("./recall.model");
-const ServiceOrderStaff = require("./service_order_staff.model");
-const ServiceOrder = require("./service_order.model");
+const { ServiceOrder, CustomOrderItem, PartOrderItem, ServiceOrderItem } = require("./service_order.model");
+const { CheckInTask, ServicingTask, ServiceOrderTask } = require("./service_order_task.model");
 const Service = require("./service.model");
 const ModelVehicle = require("./vehicle_model.model");
 const Vehicle = require("./vehicle.model");
@@ -29,8 +27,6 @@ module.exports = {
   Test,
   Banner,
   Bay,
-  BookingService,
-  Booking,
   Complain,
   DiscountCode,
   GoodsReceipt,
@@ -45,10 +41,15 @@ module.exports = {
   MediaAsset,
   RecallVehicles,
   Recall,
-  ServiceOrderStaff,
   ServiceOrder,
+  ServiceOrderItem,
+  PartOrderItem,
+  CustomOrderItem,
   Service,
   ModelVehicle,
+  CheckInTask,
+  ServicingTask,
+  ServiceOrderTask,
   Vehicle,
   Warranty,
 };
