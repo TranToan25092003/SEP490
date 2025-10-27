@@ -17,7 +17,8 @@ const MediaAsset = require("./media_asset.model");
 const RecallVehicles = require("./recall_vehicles.model");
 const Recall = require("./recall.model");
 const { ServiceOrder, CustomOrderItem, PartOrderItem, ServiceOrderItem } = require("./service_order.model");
-const { CheckInTask, ServicingTask, ServiceOrderTask } = require("./service_order_task.model");
+const { InspectionTask, ServicingTask, ServiceOrderTask } = require("./service_order_task.model");
+const Booking = require("./booking.model");
 const Service = require("./service.model");
 const ModelVehicle = require("./vehicle_model.model");
 const Vehicle = require("./vehicle.model");
@@ -47,9 +48,10 @@ module.exports = {
   CustomOrderItem,
   Service,
   ModelVehicle,
-  CheckInTask,
+  InspectionTask,
   ServicingTask,
   ServiceOrderTask,
   Vehicle,
   Warranty,
+  Booking,
 };

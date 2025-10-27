@@ -10,22 +10,23 @@ function mapServiceToDTO(service) {
   };
 }
 
+const ERROR_CODES = {
+  SERVICE_NOT_FOUND: "SERVICE_NOT_FOUND",
+}
+
 class ServicesService {
   async getAllServices() {
     const services = await Service.find({}).exec();
     return services.map(mapServiceToDTO);
   }
 
-  async getServiceForBookingById(bookingId) {
-    const order = await ServiceOrder.findById(bookingId).exec();
-    if (!order) {
-      throw new Error("Service not found");
-    }
-    const services = await Service.find({
-      _id: { $in: order.service_ids },
-    }).exec();
-    return services.map(mapServiceToDTO);
+  async getValidServiceIds(serviceIds) {
+    const services = await Service.find({ _id: { $in: serviceIds } }).exec();
+    return services.filter(s => serviceIds.includes(s._id.toString())).map(s => s._id.toString());
   }
 }
 
-module.exports = new ServicesService();
+module.exports = {
+  ServicesService: new ServicesService(),
+  ERROR_CODES
+}

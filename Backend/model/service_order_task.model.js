@@ -59,7 +59,7 @@ serviceOrderTaskSchema.virtual("state", function () {
   }
 });
 
-const CheckInTask = serviceOrderTaskSchema.discriminator("check_in", new mongoose.Schema({
+const InspectionTask = serviceOrderTaskSchema.discriminator("inspection", new mongoose.Schema({
   photoUrls: [String],
   comment: String
 }));
@@ -69,14 +69,14 @@ const ServicingTask = serviceOrderTaskSchema.discriminator("servicing", new mong
     {
       title: { type: String, required: true },
       comment: { type: String, required: true },
-      timestamp: { type: Date, required: true },
-      photoUrls: [String]
+      timestamp: { type: Date, required: true, default: Date.now },
+      photoUrls: { type: [String], default: [] }
     }
   ]
 }));
 
 module.exports = {
-  CheckInTask,
+  InspectionTask,
   ServicingTask,
   ServiceOrderTask
 }

@@ -1,4 +1,4 @@
-const { Vehicle, ServiceOrder } = require("../model");
+const { Vehicle, Booking } = require("../model");
 
 class VehiclesService {
   async getUserVehicles(userId) {
@@ -27,13 +27,13 @@ class VehiclesService {
    * @returns {Array<string>} - Array of vehicle IDs that are currently in use.
    */
   async getVehiclesInUse(vehicleIds) {
-    const serviceOrders = await ServiceOrder.find({
+    const bookings = await Booking.find({
       vehicle_id: { $in: vehicleIds },
-      status: { $in: ["pending", "confirmed", "in_progress"] }
+      status: { $in: ["booked", "in_progress"] }
     }).exec();
 
     return vehicleIds.filter(vid => {
-      return serviceOrders.some(so => so.vehicle_id.toString() === vid);
+      return bookings.some(b => b.vehicle_id.toString() === vid);
     });
   }
 }

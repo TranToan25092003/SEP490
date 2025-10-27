@@ -1,11 +1,11 @@
 const DomainError = require("../errors/domainError");
-const { Service, ServiceOrder, ServiceOrderItem } = require("../model");
-const BaySchedulingService = require("./bay_scheduling.service");
-const ServicesService = require("./services.service");
+const { ServicesService, ERROR_CODES: SERVICE_ERROR_CODES } = require("./services.service");
 const vehiclesService = require("./vehicles.service");
+const ServiceOrderService = require("./service_order.service");
+const config = require("./config");
+const { Booking } = require("../model/booking.model");
 
 const ERROR_CODES = {
-  BOOKINGS_SERVICE_NOT_FOUND: "BOOKINGS_SERVICE_NOT_FOUND",
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
   BOOKINGS_STATE_INVALID: "BOOKINGS_STATE_INVALID",
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
@@ -27,29 +27,30 @@ function convertTimeSlotToDate(timeSlot) {
   return new Date(year, month - 1, day, hours, minutes);
 }
 
+function mapToBookingDTO(booking) {
+  return {
+    id: booking._id,
+    customerClerkId: booking.customer_clerk_id,
+    vehicleId: booking.vehicle_id,
+    serviceIds: booking.service_ids,
+    slotStartTime: booking.slot_start_time,
+    slotEndTime: booking.slot_end_time,
+    status: booking.status,
+    serviceOrderId: booking.service_order_id
+  };
+}
+
 class BookingsService {
   /**
    * Create a new booking.
-   * @param {string} creatorId - ID of the user creating the booking.
-   * @param {string} userIdToBookFor - ID of the user for whom the booking is made.
+   * @param {string} customerClerkId - ID of the customer creating the booking.
    * @param {string} vehicleId - ID of the vehicle for the booking.
    * @param {Array<string>} serviceIds - Array of service IDs to be included in the booking.
    * @param {Object} timeSlot - Object representing the desired time slot for the booking.
    * @returns {Object} - The created booking object.
    * @throws {DomainError} - If there is a domain-specific error during booking creation.
-   * @example - Creating a booking by a user for another user
+   * @example
    * const booking = await bookingsService.createBooking(
-   *  "user123",
-   *  "user456",
-   *  "vehicle123",
-   *  ["service1", "service2"],
-   *  { day: 15, month: 8, year: 2024, hours: 10, minutes: 30 }
-   * );
-   * console.log(booking);
-   *
-   * @example - Creating a booking by a user for themselves
-   * const booking = await bookingsService.createBooking(
-   *  "user123",
    * "user123",
    * "vehicle123",
    * ["service1", "service2"],
@@ -57,9 +58,7 @@ class BookingsService {
    * );
    * console.log(booking);
    */
-  async createBooking(creatorId, userIdToBookFor, vehicleId, serviceIds, timeSlot) {
-    const items = await this.convertServiceIdsToServiceItems(serviceIds);
-
+  async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
     const vehicleIdsInUse = await vehiclesService.getVehiclesInUse([vehicleId]);
     if (vehicleIdsInUse.includes(vehicleId)) {
       throw new DomainError(
@@ -69,230 +68,110 @@ class BookingsService {
       );
     }
 
-    const checkInTimeslot = convertTimeSlotToDate(timeSlot);
-
-    let checkInTask;
-    try {
-      checkInTask = await BaySchedulingService.scheduleCheckIn(checkInTimeslot);
-    } catch (e) {
-      if (e instanceof DomainError) {
-        throw new DomainError(
-          "Khung thời gian không khả dụng",
-          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
-          409
-        );
-      }
-
-      throw e;
+    const uniqueServiceIds = [...new Set(serviceIds)];
+    const validServiceIds = await ServicesService.getValidServiceIds(uniqueServiceIds);
+    if (validServiceIds.length === 0) {
+      throw new DomainError(
+        "Một hoặc nhiều dịch vụ không hợp lệ",
+        SERVICE_ERROR_CODES.SERVICE_NOT_FOUND,
+        404
+      );
     }
 
-    try {
-      const serviceOrder = new ServiceOrder({
-        order_creator_id: creatorId,
-        order_for_id: userIdToBookFor,
-        vehicle_id: vehicleId,
-        items: items,
-        status: "booked",
-        expected_start_time: checkInTimeslot,
-        started_at: null,
-        expected_completion_time: null,
-        completed_at: null,
-        cancelled_at: null
-      });
 
-      await serviceOrder.save();
-
-      return {
-        id: serviceOrder._id,
-      }
-    } catch (_) {
-      await checkInTask.deleteOne();
+    const timeSlotStart = convertTimeSlotToDate(timeSlot);
+    if (timeSlotStart.getTime() % config.TIMESLOT_INTERVAL_MILLISECONDS !== 0) {
+      throw new DomainError(
+        "Khung thời gian không hợp lệ",
+        ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
+        400
+      );
     }
+
+    const timeSlotEnd = new Date(timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS);
+
+    const overlappingBookings = await Booking.find({
+      vehicle_id: vehicleId,
+      slot_start_time: { $lt: timeSlotEnd },
+      slot_end_time: { $gt: timeSlotStart },
+      status: "booked"
+    }).exec();
+
+    if (overlappingBookings.length >= config.MAX_BOOKINGS_PER_SLOT) {
+      throw new DomainError(
+        "Slot không khả dụng",
+        ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
+        400
+      );
+    }
+
+    const booking = new Booking({
+      customer_clerk_id: customerClerkId,
+      vehicle_id: vehicleId,
+      service_ids: serviceIds,
+      slot_start_time: timeSlotStart,
+      slot_end_time: timeSlotEnd,
+      status: "pending"
+    });
+
+    await booking.save();
+
+    return mapToBookingDTO(booking);
   }
 
   /**
-   *
-   * @param {string} bookingId
-   * @param {{
-   *  technicianClerkId: string,
-   *  role: "lead" | "assistant"
-   * }[]} techniciansInfo
-   * @param {Date | undefined} startDate - If not provided, the system will schedule it as early as possible
-   * @returns {Object} - Don't know yet
-   * @throws {DomainError} - If there is a domain-specific error during starting service.
-   * @example - Starting service for a booking
-   * const service = await bookingsService.startService(
-   *  "booking123",
-   *  [
-   *    { technicianClerkId: "tech1", role: "lead" },
-   *    { technicianClerkId: "tech2", role: "assistant" }
-   *  ]
-   * );
-   * console.log(service);
+   * Calls this when customer arrives for their booking
+   * to begin the service.
+   * @param {String} staffId - Clerk ID of the staff checking in the booking
+   * @param {String} bookingId - ID of the booking to check in
+   * @returns {Object} - The updated booking object.
+   * @throws {DomainError} - If booking not found or invalid state.
    */
-  async startService(bookingId, techniciansInfo, startDate) {
-    const booking = await ServiceOrder.findById(bookingId).exec();
+  async checkInBooking(staffId, bookingId) {
+    const booking = await Booking.findById(bookingId).exec();
     if (!booking) {
       throw new DomainError(
-        "Đơn dịch vụ không tồn tại",
+        "Booking không tồn tại",
         ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
         404
       );
     }
 
-    if (["in_progress", "completed", "cancelled"].includes(booking.status)) {
+    if (booking.status !== "booked") {
       throw new DomainError(
-        "Không thể bắt đầu dịch vụ cho đơn dịch vụ ở trạng thái hiện tại",
+        "Chỉ có thể check-in các booking ở trạng thái 'booked'",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
-        409
+        400
       );
     }
 
-    if (!startDate) {
-      const suggestions = await BaySchedulingService.suggestNextNTimeslotForServicingTask(
-        booking,
-        techniciansInfo
-      );
+    await ServiceOrderService._createServiceOrderFromBooking(staffId, bookingId);
 
-      // weird case
-      if (!suggestions || suggestions.length === 0) {
-        throw new DomainError(
-          "Không có khung thời gian khả dụng để bắt đầu dịch vụ",
-          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
-          409
-        );
-      }
-
-      startDate = suggestions[0].start;
-    }
-
-    try {
-      const servicingTask = await BaySchedulingService.scheduleServicingTask(
-        bookingId,
-        techniciansInfo,
-        new Date(), // Start now
-        new Date(Date.now() + 2 * 60 * 60 * 1000) // Expected to end in 2 hours
-      );
-
-      booking.status = "in_progress";
-      booking.started_at = new Date();
-      booking.expected_completion_time = servicingTask.expected_end_time;
-      await booking.save();
-
-      return {
-        id: booking._id,
-      };
-    } catch (err) {
-      if (err instanceof DomainError) {
-        throw new DomainError(
-          "Khung thời gian không khả dụng, vui lòng chọn khung thời gian khác",
-          ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
-          409
-        );
-      }
-
-      throw err;
-    }
-  }
-
-  async confirmBooking(bookingId) {
-    const booking = await ServiceOrder.findById(bookingId).exec();
-    if (!booking) {
-      throw new DomainError(
-        "Đơn dịch vụ không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
-        404
-      );
-    }
-
-    if (booking.status !== "waiting_customer_approval") {
-      throw new DomainError(
-        "Không thể phê duyệt đơn dịch vụ ở trạng thái hiện tại",
-        ERROR_CODES.BOOKINGS_STATE_INVALID,
-        409
-      );
-    }
-
-    booking.status = "confirmed";
-    await booking.save();
+    return mapToBookingDTO(booking);
   }
 
   async cancelBooking(bookingId) {
-    const booking = await ServiceOrder.findById(bookingId).exec();
+    const booking = await Booking.findById(bookingId).exec();
     if (!booking) {
       throw new DomainError(
-        "Đơn dịch vụ không tồn tại",
+        "Booking không tồn tại",
         ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
         404
       );
     }
 
-    if (["completed", "cancelled", "in_progress"].includes(booking.status)) {
+    if (booking.status !== "booked") {
       throw new DomainError(
-        "Không thể hủy đơn dịch vụ ở trạng thái hiện tại",
+        "Chỉ có thể hủy các booking ở trạng thái 'booked'",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
-        409
+        400
       );
     }
 
     booking.status = "cancelled";
     await booking.save();
-  }
 
-  async convertServiceIdsToServiceItems(serviceIds) {
-    const nonDuplicateServiceIds = [...new Set(serviceIds)];
-
-    const services = await Service.find({ _id: { $in: nonDuplicateServiceIds } }).exec();
-    if (services.length !== nonDuplicateServiceIds.length) {
-      throw new DomainError(
-        "Một hoặc nhiều dịch vụ không được tìm thấy",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
-        404
-      );
-    }
-
-    return services.map(service => new ServiceOrderItem({
-      price: service.base_price,
-      quantity: 1,
-      service_id: service._id
-    }));
-  }
-
-  async getBookingById(bookingId) {
-    const booking = (
-      await ServiceOrder
-        .findById(bookingId)
-        .populate("vehicle_id")
-        .exec()
-    );
-
-    const services = await ServicesService.getServiceForBookingById(bookingId);
-
-    // TODO: Integrate clerk for complete info
-    return {
-      id: booking._id,
-      customer: {
-        customerName: "Clerk Username here",
-      },
-      vehicle: {
-        licensePlate: booking.vehicle_id.license_plate,
-      },
-      technicians: [
-        {
-          technicianName: "Technician Username here",
-        },
-        {
-          technicianName: "Technician Username 2 here",
-        }
-      ],
-      expectedStartTime: booking.expected_start_time,
-      startedAt: booking.started_at,
-      expectedCompletionTime: booking.expected_completion_time,
-      completedAt: booking.completed_at,
-      cancelledAt: booking.cancelled_at,
-      status: booking.status,
-      services
-    }
+    return mapToBookingDTO(booking);
   }
 }
 

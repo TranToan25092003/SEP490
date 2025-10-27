@@ -37,25 +37,25 @@ const CustomOrderItem = ItemsSchema.discriminator("custom", CustomItemSchema);
 // The main data model
 const ServiceOrderSchema = new Schema(
   {
-    order_creator_id: { type: String, required: true }, // User ID of the order creator
-    order_for_id: { type: String, required: true }, // User ID for whom the order is made
-    vehicle_id: { type: Schema.Types.ObjectId, ref: "Vehicle", required: true }, // The vehicle being serviced
+    staff_clerk_id: { type: String, required: true }, // Staff who created the order
+    booking_id: { type: Schema.Types.ObjectId, ref: "Booking", required: true }, // Associated booking ID
     items: [ItemsSchema], // Array of order items (services, parts, custom)
     status: {
       type: String,
       enum: [
-        "booked",
+        "created",
+        "waiting_inspection",
+        "inspection_completed",
         "waiting_customer_approval",
-        "confirmed",
-        "in_progress",
+        "approved",
+        "scheduled",
+        "servicing",
         "completed",
         "cancelled",
       ],
-      default: "booked",
+      default: "created",
       required: true,
     },
-    expected_start_time: { type: Date, required: true }, // denormalized for convenience, not used in business logic, remember to update!!!!
-    started_at: { type: Date, required: false },
     expected_completion_time: { type: Date, required: false },
     completed_at: { type: Date, required: false },
     cancelled_at: { type: Date, required: false },
