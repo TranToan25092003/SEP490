@@ -204,7 +204,7 @@ export default function ChatStaff() {
   return (
     <div className="h-[calc(100vh-80px)] flex bg-gray-50 overflow-hidden">
       {/* Sidebar - Customer List */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-80 min-w-80 max-w-80 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between mb-4">
