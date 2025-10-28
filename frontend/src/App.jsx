@@ -44,6 +44,8 @@ import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
+import BookingList from "./pages/staff/BookingList";
+import BookingDetail from "./pages/staff/BookingDetail";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -107,19 +109,16 @@ const router = createBrowserRouter([
       },
     ],
   },
-
   {
     path: "/login",
     element: <Login></Login>,
   },
-
   {
     path: "/sso-callback",
     element: (
       <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
     ),
   },
-
   {
     path: "/manager",
     element: <AdminLayout />,
@@ -150,7 +149,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-  ,
   {
     path: "/staff",
     element: <StaffLayout />,
@@ -159,6 +157,16 @@ const router = createBrowserRouter([
       { path: "service-order/:id", element: <ServiceOrderDetail /> },
       { path: "service-order/", element: <ServiceOrderList /> },
       { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "booking/:id",
+        element: <BookingDetail />,
+        loader: BookingDetail.loader,
+      },
+      {
+        path: "booking/",
+        element: <BookingList />,
+        loader: BookingList.loader,
+      },
       {
         path: "items",
         element: <StaffItemsPage />,
