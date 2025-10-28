@@ -21,10 +21,12 @@ import { LuAlignLeft } from "react-icons/lu";
 import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
 import NotificationAlertIcon from "../icons/NotificationAlertIcon";
+import { ArrowUpDown, ChevronsUpDown } from 'lucide-react';
 
 const Header = () => {
   const navigate = useNavigate();
   const { isSignedIn, user } = useUser();
+  console.log(user)
   const [groupedModels, setGroupedModels] = useState([]);
   const [isPartsMenuOpen, setIsPartsMenuOpen] = useState(false);
 
@@ -77,7 +79,10 @@ const Header = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-40" align="center" sideOffset={10}>
                   <SignedIn>
-                    <DropdownMenuSeparator></DropdownMenuSeparator>
+                    <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
+                    <DropdownMenuItem>
+                      <a href="/profile">Profile</a>
+                    </DropdownMenuItem>
                     <DropdownMenuItem>
                       <SignOutLink></SignOutLink>
                     </DropdownMenuItem>
@@ -122,7 +127,7 @@ const Header = () => {
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
                 <button className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${isPartsMenuOpen ? 'bg-[#3a454f]' : ''}`}>
-                  Phụ Tùng
+                  Phụ Tùng <ChevronsUpDown className="ml-2"/>
                 </button>
                 {isPartsMenuOpen && (
                   <div className="absolute top-full left-0 w-full bg-zinc-800 shadow-lg border-t border-zinc-700">
@@ -130,7 +135,10 @@ const Header = () => {
                       {groupedModels.map((group) => (
                         <div key={group.brand} className="break-inside-avoid mb-6">
                           <h3 className="mb-3 text-sm font-bold uppercase text-red-500">
-                            Phụ Tùng {group.brand}
+                            <Link to={`/items?brand=${group.brand}`}>
+                              Phụ Tùng {group.brand}
+                            </Link>
+
                           </h3>
                           <ul className="space-y-2">
                             {group.models.map((model) => (

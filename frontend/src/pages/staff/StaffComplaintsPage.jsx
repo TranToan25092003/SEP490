@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; 
 import { useLoaderData, useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,82 +13,16 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPagination } from "@/components/global/AdminPagination";
-import { Search, Pen, Trash2 } from "lucide-react";
-
-// --- Mock Data (to be replaced by loader) ---
-const mockComplaints = [
-    {
-        _id: "complaint001",
-        so_id: {
-            _id: "so001",
-            booking_id: {
-                clerkId: {
-                    name: "Nguyễn Văn A",
-                    phone: "0123456789",
-                }
-            },
-        },
-        title: "Dịch Vụ",
-        createdAt: "2025-10-25T10:00:00.000Z",
-        status: "resolved", // pending, resolved, rejected
-        totalPrice: 120000, // This would likely be on the service order
-    },
-    {
-        _id: "complaint002",
-        so_id: {
-            _id: "so002",
-            booking_id: {
-                clerkId: {
-                    name: "Trần Thị B",
-                    phone: "0987654321",
-                }
-            },
-        },
-        title: "Nhân viên",
-        createdAt: "2025-10-25T11:30:00.000Z",
-        status: "pending",
-        totalPrice: 250000,
-    },
-    {
-        _id: "complaint003",
-        so_id: {
-            _id: "so003",
-            booking_id: {
-                clerkId: {
-                    name: "Lê Văn C",
-                    phone: "0123123123",
-                }
-            },
-        },
-        title: "Cửa Hàng",
-        createdAt: "2025-10-26T09:00:00.000Z",
-        status: "rejected",
-        totalPrice: 50000,
-    },
-];
-
-const mockLoaderData = {
-    complaints: mockComplaints,
-    pagination: {
-        currentPage: 1,
-        totalPages: 3,
-        totalItems: 21,
-        itemsPerPage: 7,
-    }
-}
-// --- End Mock Data ---
-
+import { Search, Pen, Trash2, Star, Eye } from "lucide-react"; 
 
 export default function StaffComplaintsPage() {
-    // const { complaints = [], pagination = {} } = useLoaderData() || {}; // Use this when loader is ready
-    const { complaints = [], pagination = {} } = mockLoaderData; // Using mock data for now
-
+    const { complaints = [], pagination = {} } = useLoaderData() || {};
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams(); 
     const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
     const [selectedItems, setSelectedItems] = useState([]);
 
-    const handleSearch = (value) => {
+    const handleSearchChange = (value) => {
         setSearchTerm(value);
         const newSearchParams = new URLSearchParams(searchParams);
         if (value) {
@@ -96,8 +30,9 @@ export default function StaffComplaintsPage() {
         } else {
             newSearchParams.delete("search");
         }
-        newSearchParams.delete("page");
-        setSearchParams(newSearchParams);
+        newSearchParams.set("page", "1"); 
+        
+        setSearchParams(newSearchParams, { replace: true }); 
     };
 
     const handleSelectAll = (checked) => {
@@ -127,21 +62,32 @@ export default function StaffComplaintsPage() {
         }
     };
 
+    const renderRating = (rating) => {
+        if (!rating || rating < 1) return <span className="text-gray-400">-</span>;
+        return (
+            <div className="flex items-center">
+                {[...Array(5)].map((_, i) => (
+                    <Star key={i} className={`h-4 w-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-300'}`} />
+                ))}
+            </div>
+        );
+    };
+
 
     return (
         <div className="p-6 space-y-6">
             <h1 className="text-3xl font-bold text-gray-800">Quản lý Khiếu nại</h1>
             <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
                     <Input
                         placeholder="Tìm kiếm..."
-                        className="pl-9 h-10 rounded-md"
+                        className="pl-9 h-10 rounded-full text-base placeholder:text-gray-500" 
                         value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)} 
+                   
                     />
                 </div>
-                {/* Add filter dropdowns or other actions here if needed */}
             </div>
 
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -156,20 +102,21 @@ export default function StaffComplaintsPage() {
                                     className="h-5 w-5 border-gray-400"
                                 />
                             </TableHead>
-                            <TableHead>Đơn Khiếu Nại Dịch Vụ</TableHead>
-                            <TableHead>Ngày Tạo</TableHead>
+                            <TableHead>Mã Dịch Vụ</TableHead>
+                            <TableHead>Tên Khiếu Nại</TableHead>
                             <TableHead>Tên Khách Hàng</TableHead>
                             <TableHead>Số Điện Thoại</TableHead>
+                            <TableHead>Ngày Tạo</TableHead>
+                            <TableHead>Rating</TableHead>
                             <TableHead>Trạng Thái</TableHead>
-                            <TableHead>Giá</TableHead>
-                            <TableHead className="text-center">Action</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {complaints.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center">
-                                    Không có khiếu nại nào.
+                                <TableCell colSpan={9} className="h-24 text-center">
+                                    Không có khiếu nại nào khớp với tìm kiếm của bạn.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -184,14 +131,17 @@ export default function StaffComplaintsPage() {
                                         />
                                     </TableCell>
                                     <TableCell>
+                                        <div className="text-sm text-muted-foreground">#{complaint.so_id?.toString().slice(-6) || 'N/A'}</div>
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="font-medium">{complaint.title}</div>
                                         <div className="text-sm text-muted-foreground">#{complaint._id.slice(-6)}</div>
                                     </TableCell>
+                                    <TableCell>{complaint.customerName || 'N/A'}</TableCell>
+                                    <TableCell>{complaint.customerPhone || 'N/A'}</TableCell>
                                     <TableCell>{formatDate(complaint.createdAt)}</TableCell>
-                                    <TableCell>{complaint.so_id.booking_id.clerkId.name}</TableCell>
-                                    <TableCell>{complaint.so_id.booking_id.clerkId.phone}</TableCell>
+                                    <TableCell>{renderRating(complaint.rating)}</TableCell>
                                     <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                                    <TableCell>{formatPrice(complaint.totalPrice)} vnđ</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <Button variant="ghost" size="icon" className="h-8 w-8">

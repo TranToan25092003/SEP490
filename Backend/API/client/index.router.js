@@ -1,17 +1,21 @@
 const { authenticate } = require("../../middleware/guards/authen.middleware");
 const testRouter = require("./test.router");
 const partRouter = require("./part.router");
+const profileRouter = require("./profile.router");
 const vehicleModelRouter = require("./vehicle-model.router");
 const servicesRouter = require("./services.router");
 const vehiclesRouter = require("./vehicles.router");
 const bookingsRouter = require("./bookings.router");
+const complaintRouter = require("./complaint.router");
 
 module.exports = (app) => {
   // this router only for testing app do not use this router to write data ok
   app.use("/test", authenticate, testRouter);
 
   app.use("/parts", partRouter);
+  app.use("/profile", authenticate, profileRouter);
   app.use("/models", vehicleModelRouter);
+  app.use("/complaints", complaintRouter);
   // ----------------------------------------------
   app.use("/client/services", servicesRouter);
   app.use("/client/bookings", bookingsRouter);

@@ -39,9 +39,14 @@ import {
   goodsReceiptListLoader,
   partsStaffLoader,
   partDetailStaffLoader,
+  complaintsStaffLoader,
+  complaintDetailStaffLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
+import LayoutProfile, {
+  layoutProfileLoader,
+} from "./pages/profile/LayoutProfile";
 import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
@@ -93,6 +98,20 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFoundPage />,
+      },
+      {
+        path: "/items",
+        element: <ItemListPage />,
+      },
+      {
+        path: "/items/1",
+        element: <ItemDetailPage />,
+      },
+      {
+        path: "/profile",
+        loader: layoutProfileLoader,
+
+        element: <LayoutProfile></LayoutProfile>,
       },
     ],
   },
@@ -167,10 +186,12 @@ const router = createBrowserRouter([
       {
         path: "complaints",
         element: <StaffComplaintsPage />,
+        loader: complaintsStaffLoader,
       },
       {
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
+        loader: complaintDetailStaffLoader,
       },
       {
         path: "chat",
