@@ -40,6 +40,32 @@ class ServiceOrderService {
   }
 
   /**
+   * Get the latest servicing task for a service order
+   * @param {String} serviceOrderId
+   * @returns {Promise<ServicingTask>}
+   */
+  async _getLatestServicingTask(serviceOrderId) {
+    return await ServicingTask.findOne({
+      service_order_id: serviceOrderId
+    })
+      .sort({ expected_start_time: -1 })
+      .exec();
+  }
+
+  /**
+   * Get the latest inspection task for a service order
+   * @param {String} serviceOrderId
+   * @returns {Promise<InspectionTask>}
+   */
+  async _getLatestInspectionTask(serviceOrderId) {
+    return await InspectionTask.findOne({
+      service_order_id: serviceOrderId
+    })
+      .sort({ expected_start_time: -1 })
+      .exec();
+  }
+
+  /**
    * Begin the inspection process for a service order by scheduling an inspection task
    * @param {string} serviceOrderId
    * @param {{
@@ -67,7 +93,7 @@ class ServiceOrderService {
       );
     }
 
-    await BaySchedulingService.scheduleInspectionTask(
+    const inspectionTask = await BaySchedulingService.scheduleInspectionTask(
       serviceOrderId,
       expectedDurationInMinutes,
       techniciansInfo
@@ -76,7 +102,7 @@ class ServiceOrderService {
     serviceOrder.status = "waiting_inspection";
     await serviceOrder.save();
 
-    return serviceOrder;
+    return { serviceOrder, inspectionTask };
   }
 
   /**
@@ -104,12 +130,7 @@ class ServiceOrderService {
       );
     }
 
-    const inspectionTask = await InspectionTask.findOne({
-      service_order_id: serviceOrderId,
-      actual_end_time: null,
-    })
-      .sort({ expected_start_time: -1 })
-      .exec();
+    const inspectionTask = await this._getLatestInspectionTask(serviceOrderId);
 
     if (!inspectionTask) {
       throw new DomainError(
@@ -191,12 +212,7 @@ class ServiceOrderService {
       );
     }
 
-    const servicingTask = await ServicingTask.findOne({
-      service_order_id: serviceOrderId,
-      actual_end_time: null,
-    })
-      .sort({ expected_start_time: 1 })
-      .exec();
+    const servicingTask = await this._getLatestServicingTask(serviceOrderId);
 
     if (!servicingTask) {
       throw new DomainError(
@@ -212,7 +228,7 @@ class ServiceOrderService {
     serviceOrder.status = "servicing";
     await serviceOrder.save();
 
-    return serviceOrder;
+    return { serviceOrder, servicingTask };
   }
 
   /**
@@ -238,12 +254,7 @@ class ServiceOrderService {
       );
     }
 
-    const servicingTask = await ServicingTask.findOne({
-      service_order_id: serviceOrderId,
-      actual_end_time: null,
-    })
-      .sort({ expected_start_time: -1 })
-      .exec();
+    const servicingTask = await this._getLatestServicingTask(serviceOrderId);
 
     if (!servicingTask) {
       throw new DomainError(
@@ -270,7 +281,7 @@ class ServiceOrderService {
   /**
    * Append a timeline entry for the servicing task.
    * @param {string} serviceOrderId
-   * @param {{ title: string, comment: string, photoUrls?: string[] }} entry
+   * @param {{ title: string, comment: string, photoUrls: string[] }} entry
    */
   async updateServiceTimeline(serviceOrderId, entry) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
@@ -282,12 +293,7 @@ class ServiceOrderService {
       );
     }
 
-    const servicingTask = await ServicingTask.findOne({
-      service_order_id: serviceOrderId,
-      actual_end_time: null,
-    })
-      .sort({ expected_start_time: -1 })
-      .exec();
+    const servicingTask = await this._getLatestServicingTask(serviceOrderId);
 
     if (!servicingTask) {
       throw new DomainError(
@@ -300,10 +306,9 @@ class ServiceOrderService {
     const timelineEntry = {
       title: entry.title,
       comment: entry.comment,
-      photoUrls: entry.photoUrls || [],
+      photoUrls: entry.photoUrls
     };
 
-    servicingTask.timeline = servicingTask.timeline || [];
     servicingTask.timeline.push(timelineEntry);
     await servicingTask.save();
 

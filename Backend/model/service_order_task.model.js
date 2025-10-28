@@ -39,7 +39,7 @@ const serviceOrderTaskSchema = new mongoose.Schema(
     assigned_technicians: [assignedTechnicianSchema],
     assigned_bay_id: {
       // I assume every task will be done on a bay
-      // The system will automatically assign a bay when scheduling tasks and this is a requirement
+      // The system will automatically assign a bay when scheduling tasks
       type: mongoose.Schema.Types.ObjectId,
       ref: "Bay",
       required: true
@@ -64,16 +64,22 @@ const InspectionTask = serviceOrderTaskSchema.discriminator("inspection", new mo
   comment: String
 }));
 
-const ServicingTask = serviceOrderTaskSchema.discriminator("servicing", new mongoose.Schema({
-  timeline: [
-    {
-      title: { type: String, required: true },
-      comment: { type: String, required: true },
-      timestamp: { type: Date, required: true, default: Date.now },
-      photoUrls: { type: [String], default: [] }
-    }
-  ]
-}));
+const ServicingTask = serviceOrderTaskSchema.discriminator(
+  "servicing",
+  new mongoose.Schema({
+    timeline: {
+      type: [
+        {
+          title: { type: String, required: true },
+          comment: { type: String, required: true },
+          timestamp: { type: Date, required: true, default: Date.now },
+          photoUrls: { type: [String], default: [] },
+        },
+      ],
+      default: [],
+    },
+  })
+);
 
 module.exports = {
   InspectionTask,

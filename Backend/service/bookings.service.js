@@ -3,7 +3,7 @@ const { ServicesService, ERROR_CODES: SERVICE_ERROR_CODES } = require("./service
 const vehiclesService = require("./vehicles.service");
 const ServiceOrderService = require("./service_order.service");
 const config = require("./config");
-const { Booking } = require("../model/booking.model");
+const { Booking } = require("../model");
 
 const ERROR_CODES = {
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
@@ -69,7 +69,9 @@ class BookingsService {
     }
 
     const uniqueServiceIds = [...new Set(serviceIds)];
-    const validServiceIds = await ServicesService.getValidServiceIds(uniqueServiceIds);
+    const validServiceIds = await ServicesService.getValidServiceIds(
+      uniqueServiceIds
+    );
     if (validServiceIds.length === 0) {
       throw new DomainError(
         "Một hoặc nhiều dịch vụ không hợp lệ",
@@ -77,7 +79,6 @@ class BookingsService {
         404
       );
     }
-
 
     const timeSlotStart = convertTimeSlotToDate(timeSlot);
     if (timeSlotStart.getTime() % config.TIMESLOT_INTERVAL_MILLISECONDS !== 0) {
@@ -88,16 +89,12 @@ class BookingsService {
       );
     }
 
-    const timeSlotEnd = new Date(timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS);
+    const timeSlotEnd = new Date(
+      timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
+    );
 
-    const overlappingBookings = await Booking.find({
-      vehicle_id: vehicleId,
-      slot_start_time: { $lt: timeSlotEnd },
-      slot_end_time: { $gt: timeSlotStart },
-      status: "booked"
-    }).exec();
-
-    if (overlappingBookings.length >= config.MAX_BOOKINGS_PER_SLOT) {
+    const isAvailable = await this._isTimeslotAvailable(timeSlotStart, timeSlotEnd);
+    if (!isAvailable) {
       throw new DomainError(
         "Slot không khả dụng",
         ERROR_CODES.BOOKINGS_INVALID_TIME_SLOT,
@@ -111,7 +108,7 @@ class BookingsService {
       service_ids: serviceIds,
       slot_start_time: timeSlotStart,
       slot_end_time: timeSlotEnd,
-      status: "pending"
+      status: "booked",
     });
 
     await booking.save();
@@ -119,7 +116,67 @@ class BookingsService {
     return mapToBookingDTO(booking);
   }
 
+  async _isTimeslotAvailable(slotStartTime, slotEndTime) {
+    const now = new Date();
+    if (slotStartTime < now) {
+      return false;
+    }
+
+    const overlapCount = await this._getOverlappingBookingsCount(
+      slotStartTime,
+      slotEndTime
+    );
+
+    return overlapCount < config.MAX_BOOKINGS_PER_SLOT;
+  }
+
+  async _getOverlappingBookingsCount(slotStartTime, slotEndTime) {
+    const count = await Booking.countDocuments({
+      slot_start_time: { $lt: slotEndTime },
+      slot_end_time: { $gt: slotStartTime },
+      status: "booked",
+    }).exec();
+
+    return count;
+  }
+
   /**
+   * Get available time slots for a specific day.
+   * @param {number} day
+   * @param {number} month
+   * @param {number} year
+   * @returns {Promise<Array<{ hours: number, minutes: number, day: number, month: number, year: number, isAvailable: boolean }>>}
+   */
+  async getTimeSlotsForDMY(day, month, year) {
+    const timeSlots = [];
+    const startHour = 8;
+    const endHour = 17;
+
+    const interval = config.TIMESLOT_INTERVAL_MINUTES;
+    for (let hour = startHour; hour <= endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += interval) {
+        const slot = {
+          day,
+          month,
+          year,
+          hours: hour,
+          minutes: minute,
+        };
+
+        const slotStart = convertTimeSlotToDate(slot);
+        const slotEnd = new Date(
+          slotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
+        );
+
+        const isAvailable = await this._isTimeslotAvailable(slotStart, slotEnd);
+        timeSlots.push({ ...slot, isAvailable });
+      }
+    }
+
+    return timeSlots;
+  }
+
+  /*
    * Calls this when customer arrives for their booking
    * to begin the service.
    * @param {String} staffId - Clerk ID of the staff checking in the booking
@@ -145,7 +202,10 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService._createServiceOrderFromBooking(staffId, bookingId);
+    await ServiceOrderService._createServiceOrderFromBooking(
+      staffId,
+      bookingId
+    );
 
     return mapToBookingDTO(booking);
   }

@@ -10,6 +10,9 @@ function randomSelectFromArray(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// ASSUMPTION: The number of clerks available at any moment
+// is more or equal to the number of bays.
+
 class BaySchedulingService {
   /**
    * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
@@ -151,7 +154,7 @@ class BaySchedulingService {
     const conflictingTasksMap = {};
 
     for (const bay of bays) {
-      const conflictingTasks = await ServiceOrderTask.find({
+      let conflictingTasks = await ServiceOrderTask.find({
         assigned_bay_id: bay._id,
         $or: [
           {
@@ -165,7 +168,8 @@ class BaySchedulingService {
             expected_end_time: { $gte: expectedEndTime },
           },
         ],
-      });
+      }).exec();
+      conflictingTasks = conflictingTasks.filter(task => task.state !== "completed");
 
       if (conflictingTasks.length === 0) {
         availableBays.push(bay);

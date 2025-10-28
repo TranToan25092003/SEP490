@@ -58,7 +58,7 @@ managerRouter(app);
 // manager router
 
 
-app.use((err, req, res, next) => {
+app.use((err, _, res, __) => {
   if (err instanceof DomainError) {
     return res.status(err.statusCode).json({
       message: err.message,
