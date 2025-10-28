@@ -62,4 +62,39 @@
  * @typedef {VehicleDTO | { isAvailable: boolean }} VehicleWithAvailabilityDTO
  */
 
+/**
+ * @typedef {object} ServiceOrderSummaryDTO
+ * @property {string} id - Service order identifier.
+ * @property {string} bookingId - Associated booking identifier.
+ * @property {string} licensePlate - Vehicle license plate.
+ * @property {string} customerName - Name of the customer.
+ * @property {string} status - Status of the service order.
+ * @property {Date} createdAt - Date when the service order was created.
+ * @property {Date} [completedAt] - Date when the service order was completed.
+ * @property {Date} [estimatedCompletedAt] - Estimated completion date.
+ */
+
+/**
+ * @typedef {object} ServiceOrderItemDTO
+ * @property {string} type - Type of item: "service", "part", or "custom".
+ * @property {string} name - Name or description of the item.
+ * @property {number} price - Price per unit.
+ * @property {number} quantity - Quantity of the item.
+ */
+
+/**
+ * @typedef {object} ServiceOrderDetailDTO
+ * @property {string} id - Service order identifier.
+ * @property {string} customerName - Name of the customer.
+ * @property {string} customerClerkId - Clerk ID of the customer.
+ * @property {string} licensePlate - Vehicle license plate with model info.
+ * @property {string} vehicleId - Vehicle identifier.
+ * @property {Array<ServiceOrderItemDTO>} items - Array of service order items.
+ * @property {string} status - Status of the service order.
+ * @property {Date} createdAt - Date when the service order was created.
+ * @property {Date} [completedAt] - Date when the service order was completed.
+ * @property {Date} [estimatedCompletedAt] - Estimated completion date.
+ * @property {string} comment - Additional comments or notes.
+ */
+
 module.exports = {};

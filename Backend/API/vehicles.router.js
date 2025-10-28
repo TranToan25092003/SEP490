@@ -11,7 +11,7 @@ const router = new express.Router();
  *   get:
  *     summary: Retrieve a list of vehicles with availability for the authenticated user
  *     tags:
- *       - Vehicles
+ *       - Vehicle
  *     responses:
  *       200:
  *         description: A list of vehicles with availability

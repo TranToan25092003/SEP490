@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/global/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { useServiceOrder } from "./ServiceOrderContext";
+import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
 
 /**
  * ServiceOrderHeader Component
@@ -23,7 +24,7 @@ const ServiceOrderHeader = ({
     <Card className={cn(className)} {...props}>
       <CardHeader className="flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <CardTitle>Thông Tin Chung (ID: {serviceOrder.id})</CardTitle>
+          <CardTitle>Thông tin chung</CardTitle>
         </div>
         <div className="space-x-2">
           <Button
@@ -34,58 +35,31 @@ const ServiceOrderHeader = ({
             disabled={confirmServiceOrderLoading || disabled}
             aria-busy={confirmServiceOrderLoading}
           >
-            Từ chối lệnh
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onCancelServiceOrder()}
-            disabled={confirmServiceOrderLoading || disabled}
-            aria-busy={confirmServiceOrderLoading}
-          >
-            Đổi lịch
+            Hủy lệnh
           </Button>
           <Button
             type="submit"
             disabled={confirmServiceOrderLoading || disabled || !hasServices}
             aria-busy={confirmServiceOrderLoading}
           >
-            Xác nhận & Tạo Lệnh
+            Bắt đầu
           </Button>
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-2">
-          <Label>Tên Khách Hàng</Label>
+          <Label>Tên khách hàng</Label>
           <div className="font-semibold">{serviceOrder.customerName}</div>
         </div>
 
         <div className="space-y-2">
-          <Label>Thời Gian Mong Muốn</Label>
-          <div className="font-semibold">{serviceOrder.appointmentTime}</div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Xe</Label>
+          <Label>Biển số</Label>
           <div className="font-semibold">{serviceOrder.licensePlate}</div>
         </div>
 
         <div className="space-y-2">
-          <Label className="gap-1">
-            Thợ sửa &#183;
-            <Button variant="link" className="leading-none" onClick={() => onEditTechnician(serviceOrder.fixTechnician)}>Thay đổi</Button>
-          </Label>
-          <div className="font-semibold">{serviceOrder.fixTechnician?.name}</div>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Bay {serviceOrder.bayInfo?.isFinal ? "" : "(tạm thời)"}</Label>
-          <div className="font-semibold">{serviceOrder.bayInfo?.name}</div>
-        </div>
-
-        <div className="space-y-2">
           <Label>Trạng thái</Label>
-          <StatusBadge status={serviceOrder.status ?? "Không xác định"} />
+          <StatusBadge status={translateServiceOrderStatus(serviceOrder.status)} />
         </div>
       </CardContent>
     </Card>

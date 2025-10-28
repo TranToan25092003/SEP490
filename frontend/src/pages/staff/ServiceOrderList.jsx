@@ -14,25 +14,21 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import usePageParamsStore from "@/hooks/use-page-params-store";
+import { useEffect, useState } from "react";
+import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
+import { getAllServiceOrders } from "@/api/serviceOrders";
+import { toast } from "sonner";
 
 /**
- * Sample service orders data
- * @type {Array<Object>}
+ * Format date to Vietnamese format
+ * @param {string} dateString - ISO date string
+ * @returns {string} Formatted date string
  */
-const customerServiceOrders = [
-  {
-    id: 1,
-    customerName: "Nguyen Van A",
-    date: "2024-10-01",
-    serviceTypes: ["Sửa xe", "Bảo dưỡng"],
-  },
-  {
-    id: 2,
-    customerName: "Trankkkkn Thi B",
-    date: "2024-10-02",
-    serviceTypes: ["Thay nhớt"],
-  },
-];
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+};
 
 /**
  * Column definitions for service order list table
@@ -40,8 +36,8 @@ const customerServiceOrders = [
  */
 const serviceOrderListColumnDefinitions = [
   {
-    accessorKey: "id",
-    header: "ID",
+    accessorKey: "licensePlate",
+    header: "Biển số xe",
     cell: (info) => info.getValue(),
   },
   {
@@ -50,20 +46,17 @@ const serviceOrderListColumnDefinitions = [
     cell: (info) => info.getValue(),
   },
   {
-    accessorKey: "date",
-    header: "Ngày đặt",
-    cell: (info) => info.getValue(),
+    accessorKey: "createdAt",
+    header: "Ngày tạo",
+    cell: (info) => formatDate(info.getValue()),
   },
   {
     id: "status",
-    header: "Loại lệnh",
+    header: "Trạng thái",
     cell: (info) => {
-      const services = info.row.original.serviceTypes;
-      const badges = services.map((service) => (
-        <StatusBadge key={service} status={service} colorKey={service} />
-      ));
-
-      return <div className="flex flex-wrap gap-2">{badges}</div>;
+      const status = info.row.original.status;
+      const statusLabel = translateServiceOrderStatus(status);
+      return <StatusBadge status={statusLabel} />;
     },
   },
 ];
@@ -133,6 +126,22 @@ const ServiceOrderList = () => {
     viewNames: ["all", "change_requests"],
     defaultViewName: "all"
   });
+  const [serviceOrders, setServiceOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchServiceOrders = async () => {
+      try {
+        setIsLoading(true);
+        const data = await getAllServiceOrders();
+        setServiceOrders(data);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchServiceOrders();
+  }, []);
 
   return (
     <Container pageContext="admin">
@@ -155,25 +164,31 @@ const ServiceOrderList = () => {
         </TabsList>
 
         <TabsContent className="space-y-3" value="all">
-          <CRUDTable data={customerServiceOrders} columns={serviceOrderListColumnDefinitions} getRowId={(row) => row.id}>
-            {(row) => (
-              <div className="flex justify-center">
-                <Link to={`/staff/service-order/${row.id}`}>
-                  <Button variant="outline" className="flex-1 cursor-pointer">
-                    <EyeIcon />
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </CRUDTable>
+          {isLoading ? (
+            <div className="text-center py-8">Đang tải...</div>
+          ) : (
+            <>
+              <CRUDTable data={serviceOrders} columns={serviceOrderListColumnDefinitions} getRowId={(row) => row.id}>
+                {(row) => (
+                  <div className="flex justify-center">
+                    <Link to={`/staff/service-order/${row.id}`}>
+                      <Button variant="outline" className="flex-1 cursor-pointer">
+                        <EyeIcon />
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </CRUDTable>
 
-          <AdminPagination
-            pagination={{
-              totalPages: 10,
-              itemsPerPage: 50,
-              totalItems: 1000,
-            }}
-          />
+              <AdminPagination
+                pagination={{
+                  totalPages: 1,
+                  itemsPerPage: serviceOrders.length,
+                  totalItems: serviceOrders.length,
+                }}
+              />
+            </>
+          )}
         </TabsContent>
         <TabsContent className="space-y-3" value="change_requests">
           <CRUDTable data={changeRequests} columns={changeRequestsColumnDefinitions} getRowId={(row) => row.id}>

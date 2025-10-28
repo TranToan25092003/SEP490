@@ -1,5 +1,5 @@
 import { useState, Suspense } from "react";
-import { useLoaderData, useRevalidator, Await } from "react-router-dom";
+import { useLoaderData, useRevalidator, Await, Link } from "react-router-dom";
 import Container from "@/components/global/Container";
 import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
@@ -12,6 +12,7 @@ import { formatPrice } from "@/lib/utils";
 import { getBookingById, checkInBooking, cancelBooking } from "@/api/bookings";
 import { toast } from "sonner";
 import { Calendar, Clock, Car, User, Package, AlertCircle } from "lucide-react";
+import { translateBookingStatus } from "@/utils/enumsTranslator";
 
 /**
  * Format timeslot to readable string
@@ -102,30 +103,40 @@ const BookingDetailContent = ({ booking, revalidator }) => {
               <CardTitle>Thông Tin Đặt Lịch</CardTitle>
             </div>
             <div className="space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                className="text-destructive"
-                onClick={handleCancel}
-                disabled={
-                  cancelLoading || checkInLoading || booking.status !== "booked"
-                }
-                aria-busy={cancelLoading}
-              >
-                {cancelLoading && <Spinner className="size-4 mr-2" />}
-                Hủy đặt lịch
-              </Button>
-              <Button
-                type="button"
-                onClick={handleCheckIn}
-                disabled={
-                  checkInLoading || cancelLoading || booking.status !== "booked"
-                }
-                aria-busy={checkInLoading}
-              >
-                {checkInLoading && <Spinner className="size-4 mr-2" />}
-                Check-in
-              </Button>
+              {booking.status === "in_progress" && booking.serviceOrderId ? (
+                <Link to={`/staff/service-order/${booking.serviceOrderId}`}>
+                  <Button type="button">
+                    Xem lệnh sửa chữa
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="text-destructive"
+                    onClick={handleCancel}
+                    disabled={
+                      cancelLoading || checkInLoading || booking.status !== "booked"
+                    }
+                    aria-busy={cancelLoading}
+                  >
+                    {cancelLoading && <Spinner className="size-4 mr-2" />}
+                    Hủy đặt lịch
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCheckIn}
+                    disabled={
+                      checkInLoading || cancelLoading || booking.status !== "booked"
+                    }
+                    aria-busy={checkInLoading}
+                  >
+                    {checkInLoading && <Spinner className="size-4 mr-2" />}
+                    Check-in
+                  </Button>
+                </>
+              )}
             </div>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -157,7 +168,7 @@ const BookingDetailContent = ({ booking, revalidator }) => {
                 <Calendar className="size-4" />
                 Trạng Thái
               </Label>
-              <StatusBadge status={booking.status || "unknown"} />
+              <StatusBadge status={translateBookingStatus(booking.status)} />
             </div>
 
             {booking.serviceOrderId && (

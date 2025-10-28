@@ -28,7 +28,7 @@
  *           description: Minutes of the hour (0-59)
  *
  *     TimeslotWithAvailability:
- *       oneOf:
+ *       allOf:
  *         - $ref: '#/components/schemas/Timeslot'
  *         - type: object
  *           properties:

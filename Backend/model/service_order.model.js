@@ -29,9 +29,6 @@ const CustomItemSchema = new Schema({
   description: { type: String, required: true },
 }, { _id: false });
 
-const ServiceOrderItem = ItemsSchema.discriminator("service", ServiceItemSchema);
-const PartOrderItem = ItemsSchema.discriminator("part", PartItemSchema);
-const CustomOrderItem = ItemsSchema.discriminator("custom", CustomItemSchema);
 
 // Service_Orders Schema
 // The main data model
@@ -63,6 +60,10 @@ const ServiceOrderSchema = new Schema(
   { timestamps: true }
 );
 
+ServiceOrderSchema.path("items").discriminator("service", ServiceItemSchema);
+ServiceOrderSchema.path("items").discriminator("part", PartItemSchema);
+ServiceOrderSchema.path("items").discriminator("custom", CustomItemSchema);
+
 ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
   return this.items.reduce((total, item) => {
     return total + item.price * item.quantity;
@@ -72,8 +73,5 @@ ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 
 module.exports = {
-  ServiceOrder,
-  ServiceOrderItem,
-  PartOrderItem,
-  CustomOrderItem,
+  ServiceOrder
 };

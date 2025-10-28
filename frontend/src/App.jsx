@@ -156,8 +156,16 @@ const router = createBrowserRouter([
     element: <StaffLayout />,
     children: [
       { index: true, element: <Staff /> },
-      { path: "service-order/:id", element: <ServiceOrderDetail /> },
-      { path: "service-order/", element: <ServiceOrderList /> },
+      {
+        path: "service-order/:id",
+        element: <ServiceOrderDetail />,
+        loader: ServiceOrderDetail.loader,
+      },
+      {
+        path: "service-order/",
+        element: <ServiceOrderList />,
+        loader: ServiceOrderList.loader,
+      },
       { path: "service-order/add", element: <ServiceOrderAdd /> },
       {
         path: "booking/:id",

@@ -8,6 +8,8 @@ import { Suspense } from "react";
 import { getAllBookings } from "@/api/bookings";
 import StatusBadge from "@/components/global/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { translateBookingStatus } from "@/utils/enumsTranslator";
+import { memo } from "react";
 
 const formatTimeSlot = (startTime, endTime) => {
   try {
@@ -50,13 +52,6 @@ const renderServiceBadges = (services) => {
   );
 };
 
-const statusMap = {
-  booked: "Đã đặt",
-  cancelled: "Đã hủy",
-  "in_progress": "Đang thực hiện",
-  completed: "Hoàn thành",
-};
-
 const bookingListColumnDefinitions = [
   {
     accessorKey: "customerName",
@@ -86,7 +81,7 @@ const bookingListColumnDefinitions = [
     header: "Trạng thái",
     cell: (info) => {
       const status = info.getValue();
-      const vietnameseStatus = statusMap[status] || status;
+      const vietnameseStatus = translateBookingStatus(status);
       return <StatusBadge status={vietnameseStatus} colorKey={status} />;
     },
   },
@@ -97,6 +92,10 @@ function loader() {
     bookingList: getAllBookings()
   };
 }
+
+const LoadingSkeleton = memo(() => {
+  return <CRUDTable isLoading={true} columns={bookingListColumnDefinitions} />;
+});
 
 const BookingList = () => {
   const { bookingList } = useLoaderData();
@@ -109,9 +108,7 @@ const BookingList = () => {
       </div>
 
       <Suspense
-        fallback={
-          <CRUDTable isLoading={true} columns={bookingListColumnDefinitions} />
-        }
+        fallback={<LoadingSkeleton />}
       >
         <Await
           resolve={bookingList}

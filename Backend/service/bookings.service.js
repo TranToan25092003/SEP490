@@ -1,6 +1,7 @@
 const DomainError = require("../errors/domainError");
 const { ServicesService, mapServiceToDTO, ERROR_CODES: SERVICE_ERROR_CODES } = require("./services.service");
 const { VehiclesService, mapToVehicleDTO } = require("./vehicles.service");
+const { UsersService } = require("./users.service");
 const ServiceOrderService = require("./service_order.service");
 const config = require("./config");
 const { Booking } = require("../model");
@@ -172,11 +173,13 @@ class BookingsService {
       return null;
     }
 
+    const userMap = await UsersService.getFullNamesByIds([booking.customer_clerk_id]);
+
     return {
       id: booking._id,
       customer: {
         customerClerkId: booking.customer_clerk_id,
-        customerName: `Name or ID: ${booking.customer_clerk_id}`,
+        customerName: userMap[booking.customer_clerk_id]
       },
       vehicle: mapToVehicleDTO(booking.vehicle_id),
       services: booking.service_ids.map(mapServiceToDTO),
@@ -197,9 +200,13 @@ class BookingsService {
       .populate("vehicle_id")
       .sort({ slot_start_time: 1 })
       .exec();
+
+    const customerIds = bookings.map(b => b.customer_clerk_id.toString());
+    const userMap = await UsersService.getFullNamesByIds(customerIds);
+
     return bookings.map(booking => ({
       id: booking._id,
-      customerName: `Name or ID: ${booking.customer_clerk_id}`,
+      customerName: userMap[booking.customer_clerk_id.toString()],
       services: booking.service_ids.map(s => s.name),
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,

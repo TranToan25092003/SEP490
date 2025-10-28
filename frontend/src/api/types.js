@@ -88,4 +88,40 @@
  * @property {Timeslot} timeSlot - The booking time slot
  */
 
+/**
+ * @typedef {Object} ServiceOrderSummaryDTO
+ * @property {string} id - Service order identifier
+ * @property {string} bookingId - Associated booking identifier
+ * @property {string} licensePlate - Vehicle license plate
+ * @property {string} customerName - Name of the customer
+ * @property {string} status - Status of the service order
+ * @property {string} createdAt - Date when the service order was created (ISO 8601 format)
+ * @property {string} [completedAt] - Date when the service order was completed (ISO 8601 format)
+ * @property {string} [estimatedCompletedAt] - Estimated completion date (ISO 8601 format)
+ */
+
+/**
+ * @typedef {Object} ServiceOrderItemDTO
+ * @property {string} id - Item identifier (service_id, part_id, or generated for custom)
+ * @property {string} type - Type of item: "service", "part", or "custom"
+ * @property {string} name - Name or description of the item
+ * @property {number} price - Price per unit
+ * @property {number} quantity - Quantity of the item
+ */
+
+/**
+ * @typedef {Object} ServiceOrderDetailDTO
+ * @property {string} id - Service order identifier
+ * @property {string} customerName - Name of the customer
+ * @property {string} customerClerkId - Clerk ID of the customer
+ * @property {string} licensePlate - Vehicle license plate with model info
+ * @property {string} vehicleId - Vehicle identifier
+ * @property {ServiceOrderItemDTO[]} items - Array of service order items
+ * @property {string} status - Status of the service order
+ * @property {string} createdAt - Date when the service order was created (ISO 8601 format)
+ * @property {string} [completedAt] - Date when the service order was completed (ISO 8601 format)
+ * @property {string} [estimatedCompletedAt] - Estimated completion date (ISO 8601 format)
+ * @property {string} comment - Additional comments or notes
+ */
+
 export {};

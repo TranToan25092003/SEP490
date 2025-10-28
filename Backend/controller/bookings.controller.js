@@ -22,6 +22,39 @@ class BookingsController {
     }
   }
 
+  async cancelBooking(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      await bookingsService.cancelBooking(id);
+
+      res.status(200).json({
+        message: "Booking cancelled successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async checkInBooking(req, res, next) {
+    try {
+      const { id } = req.params;
+      console.log("Check-in booking ID:", id);
+      const userId = req.userId;
+
+      const booking = await bookingsService.checkInBooking(userId, id);
+
+      res.status(200).json({
+        message: "Booking checked in successfully",
+        data: {
+          serviceOrderId: booking.service_order_id
+        }
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getBookingById(req, res, next) {
     try {
       const { id } = req.params;

@@ -124,7 +124,9 @@ export const getAllBookings = async () => {
  * @async
  * @function checkInBooking
  * @param {string} bookingId - The ID of the booking to check in
- * @returns {Promise<BookingDTO>} A promise that resolves to the updated booking
+ * @returns {Promise<{
+ *   serviceOrderId: string
+ * }>} A promise that resolves to the checked-in booking details
  * @throws {Error} If the API request fails or booking cannot be checked in
  *
  * @example
@@ -149,7 +151,7 @@ export const checkInBooking = async (bookingId) => {
  * @async
  * @function cancelBooking
  * @param {string} bookingId - The ID of the booking to cancel
- * @returns {Promise<BookingDTO>} A promise that resolves to the cancelled booking
+ * @returns {Promise<void>}
  * @throws {Error} If the API request fails or booking cannot be cancelled
  *
  * @example
@@ -161,9 +163,7 @@ export const checkInBooking = async (bookingId) => {
  * }
  */
 export const cancelBooking = async (bookingId) => {
-  const response = await customFetch(`/bookings/${bookingId}/cancel`, {
+  await customFetch(`/bookings/${bookingId}/cancel`, {
     method: "POST",
   });
-
-  return response.data.data;
 };

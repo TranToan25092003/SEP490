@@ -204,4 +204,114 @@ router.get(
   bookingsController.getBookingById
 )
 
+/**
+ * @swagger
+ * /bookings/{id}/cancel:
+ *   post:
+ *     summary: Cancel a booking by ID
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the booking to cancel
+ *     responses:
+ *       200:
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking cancelled successfully
+ *       409:
+ *         description: Conflict - Invalid booking state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Cannot cancel a booking that is already 'completed' or 'cancelled'
+ *       404:
+ *         description: Booking not found
+ */
+router.post(
+  "/:id/cancel",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Booking ID is required")
+      .isMongoId()
+      .withMessage("Booking ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  bookingsController.cancelBooking
+);
+
+/**
+ * @swagger
+ * /bookings/{id}/check-in:
+ *   post:
+ *     summary: Check in a booking by ID
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the booking to check in
+ *     responses:
+ *       200:
+ *         description: Booking checked in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking checked in successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     serviceOrderId:
+ *                       type: string
+ *                       description: ID of the created service order
+ *       409:
+ *         description: Conflict - Invalid booking state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Cannot check in a booking that is already 'completed' or 'cancelled'
+ *       404:
+ *         description: Booking not found
+ */
+router.post("/:id/check-in",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Booking ID is required")
+      .isMongoId()
+      .withMessage("Booking ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  bookingsController.checkInBooking
+);
+
+
 module.exports = router;

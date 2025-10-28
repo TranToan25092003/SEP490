@@ -1,6 +1,6 @@
 import { FormProvider, useForm } from "react-hook-form";
 import { useState } from "react";
-import { ServiceOrderHeader, ServiceOrderComment, ServiceOrderServices, ServiceOrderTotal } from ".";
+import { ServiceOrderHeader, ServiceOrderServices, ServiceOrderTotal } from ".";
 import { ServiceOrderProvider } from "./ServiceOrderContext";
 
 /**
@@ -101,12 +101,11 @@ const ServiceOrderEditForm = ({
     <ServiceOrderProvider value={contextValue}>
       <FormProvider {...methods}>
         <form
-          className="grid grid-cols-1 lg:grid-cols-5 gap-3"
+          className="grid grid-cols-1 lg:grid-cols-4 gap-3"
           onSubmit={methods.handleSubmit(handleConfirmServiceOrder)}
         >
-          <ServiceOrderHeader className="lg:col-span-5" />
+          <ServiceOrderHeader className="lg:col-span-4" />
           <ServiceOrderServices className="lg:col-span-2" />
-          <ServiceOrderComment className="lg:col-span-1" />
           <ServiceOrderTotal className="lg:col-span-2" />
         </form>
       </FormProvider>
