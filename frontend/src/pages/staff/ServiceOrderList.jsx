@@ -15,7 +15,11 @@ import {
 } from "@/components/ui/tabs";
 import usePageParamsStore from "@/hooks/use-page-params-store";
 
-const customerBookings = [
+/**
+ * Sample service orders data
+ * @type {Array<Object>}
+ */
+const customerServiceOrders = [
   {
     id: 1,
     customerName: "Nguyen Van A",
@@ -30,7 +34,11 @@ const customerBookings = [
   },
 ];
 
-const bookingListColumnDefinitions = [
+/**
+ * Column definitions for service order list table
+ * @type {Array<Object>}
+ */
+const serviceOrderListColumnDefinitions = [
   {
     accessorKey: "id",
     header: "ID",
@@ -38,12 +46,12 @@ const bookingListColumnDefinitions = [
   },
   {
     accessorKey: "customerName",
-    header: "Họ tên khách hàng",
+    header: "Họ tên khách hàng",
     cell: (info) => info.getValue(),
   },
   {
     accessorKey: "date",
-    header: "Ngày đặt",
+    header: "Ngày đặt",
     cell: (info) => info.getValue(),
   },
   {
@@ -60,6 +68,10 @@ const bookingListColumnDefinitions = [
   },
 ];
 
+/**
+ * Sample change requests data
+ * @type {Array<Object>}
+ */
 const changeRequests = [
   {
     id: 101,
@@ -77,6 +89,10 @@ const changeRequests = [
   },
 ];
 
+/**
+ * Column definitions for change requests table
+ * @type {Array<Object>}
+ */
 const changeRequestsColumnDefinitions = [
   {
     accessorKey: "id",
@@ -106,17 +122,23 @@ const changeRequestsColumnDefinitions = [
 ];
 
 
-const BookingList = () => {
+/**
+ * ServiceOrderList Component
+ * Page for listing and managing service orders
+ * @component
+ * @returns {JSX.Element} The service order list page
+ */
+const ServiceOrderList = () => {
   const [viewName, switchPageParams] = usePageParamsStore({
     viewNames: ["all", "change_requests"],
     defaultViewName: "all"
   });
 
   return (
-    <Container pageContext="admin"a >
+    <Container pageContext="admin">
       <div className="flex justify-between items-center">
         <H3>Quản lý lệnh</H3>
-        <Link to={"/staff/booking/add"}>
+        <Link to={"/staff/service-order/add"}>
           <Button>
             <Plus />
             Thêm lệnh mới
@@ -133,10 +155,10 @@ const BookingList = () => {
         </TabsList>
 
         <TabsContent className="space-y-3" value="all">
-          <CRUDTable data={customerBookings} columns={bookingListColumnDefinitions} getRowId={(row) => row.id}>
+          <CRUDTable data={customerServiceOrders} columns={serviceOrderListColumnDefinitions} getRowId={(row) => row.id}>
             {(row) => (
               <div className="flex justify-center">
-                <Link to={`/staff/booking/${row.id}`}>
+                <Link to={`/staff/service-order/${row.id}`}>
                   <Button variant="outline" className="flex-1 cursor-pointer">
                     <EyeIcon />
                   </Button>
@@ -157,7 +179,7 @@ const BookingList = () => {
           <CRUDTable data={changeRequests} columns={changeRequestsColumnDefinitions} getRowId={(row) => row.id}>
             {(row) => (
               <div className="flex justify-center">
-                <Link to={`/staff/booking/${row.id}`}>
+                <Link to={`/staff/service-order/${row.id}`}>
                   <Button variant="outline" className="flex-1 cursor-pointer">
                     <EyeIcon />
                   </Button>
@@ -180,5 +202,5 @@ const BookingList = () => {
   );
 };
 
-BookingList.displayName = "BookingList";
-export default BookingList;
+ServiceOrderList.displayName = "ServiceOrderList";
+export default ServiceOrderList;

@@ -1,5 +1,5 @@
 /**
- * @typedef {object} BookingAddRequest
+ * @typedef {object} ServiceOrderAddRequest
  * @property {string} customerName
  * @property {string} phone
  * @property {string} licensePlate
@@ -17,9 +17,9 @@
 
 /**
  * @typedef {import("react").ComponentPropsWithRef<"form"> & {
- *  onSubmit: (data: BookingAddRequest) => Promise<any>,
+ *  onSubmit: (data: ServiceOrderAddRequest) => Promise<any>,
  *  services: ServiceInfo[]
- * }} BookingAddFormProps
+ * }} ServiceOrderAddFormProps
  */
 
-export { default as BookingAddForm } from "./BookingAddForm";
+export { default as ServiceOrderAddForm } from "./ServiceOrderAddForm";

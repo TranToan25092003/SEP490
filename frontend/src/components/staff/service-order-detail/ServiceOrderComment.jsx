@@ -3,13 +3,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
-/** @typedef {import("./index").BookingCommentProps} BookingCommentProps */
-
 /**
- * Displays the comment section tied to the booking form.
- * @param {BookingCommentProps} props
+ * ServiceOrderComment Component
+ * Displays the comment section tied to the service order form.
  */
-const BookingComment = ({ className, ...props }) => {
+const ServiceOrderComment = ({ className, ...props }) => {
   return (
     <Card className={cn(className)} {...props}>
       <CardHeader>
@@ -31,6 +29,6 @@ const BookingComment = ({ className, ...props }) => {
   );
 };
 
-BookingComment.displayName = "BookingComment";
+ServiceOrderComment.displayName = "ServiceOrderComment";
 
-export default BookingComment;
+export default ServiceOrderComment;

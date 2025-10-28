@@ -5,22 +5,17 @@ import { formatPrice, cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { useEffect } from "react";
 import { useState } from "react";
-
-/** @typedef {import("./index").BookingTotalProps} BookingTotalProps */
+import { useServiceOrder } from "./ServiceOrderContext";
 
 /**
+ * ServiceOrderTotal Component
  * Summarises pricing details and triggers confirmation actions.
- * @param {BookingTotalProps} props
  */
-const BookingTotal = ({
-  updateBookingLoading = false,
-  disabled = false,
-  onUpdateServices,
-  onSendInvoice,
-  getTotalPrice,
+const ServiceOrderTotal = ({
   className,
   ...props
 }) => {
+  const { disabled, updateServiceOrderLoading, getTotalPrice, handleUpdateServiceOrder, handleSendInvoice } = useServiceOrder();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState({
     price: 0,
@@ -52,7 +47,9 @@ const BookingTotal = ({
       }
     })();
 
-    return () => ignore = true;
+    return () => {
+      ignore = true;
+    };
   }, [services, getTotalPrice]);
 
   return (
@@ -81,10 +78,10 @@ const BookingTotal = ({
           type="button"
           variant="outline"
           onClick={() => {
-            onUpdateServices();
+            handleUpdateServiceOrder(watch());
           }}
-          disabled={updateBookingLoading || disabled || !hasServices}
-          aria-busy={updateBookingLoading}
+          disabled={updateServiceOrderLoading || disabled || !hasServices}
+          aria-busy={updateServiceOrderLoading}
         >
           Cập nhật thông tin
         </Button>
@@ -92,10 +89,10 @@ const BookingTotal = ({
         <Button
           type="button"
           onClick={() => {
-            onSendInvoice();
+            handleSendInvoice(watch());
           }}
-          disabled={updateBookingLoading || disabled || !hasServices}
-          aria-busy={updateBookingLoading}
+          disabled={updateServiceOrderLoading || disabled || !hasServices}
+          aria-busy={updateServiceOrderLoading}
         >
           Gửi báo giá
         </Button>
@@ -111,6 +108,6 @@ const BookingTotal = ({
   );
 };
 
-BookingTotal.displayName = "BookingTotal";
+ServiceOrderTotal.displayName = "ServiceOrderTotal";
 
-export default BookingTotal;
+export default ServiceOrderTotal;

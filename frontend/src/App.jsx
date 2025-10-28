@@ -10,9 +10,9 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
-import BookingDetail from "./pages/staff/BookingDetail";
-import BookingList from "./pages/staff/BookingList";
-import BookingAdd from "./pages/staff/BookingAdd";
+import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
+import ServiceOrderList from "./pages/staff/ServiceOrderList";
+import ServiceOrderAdd from "./pages/staff/ServiceOrderAdd";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -156,9 +156,9 @@ const router = createBrowserRouter([
     element: <StaffLayout />,
     children: [
       { index: true, element: <Staff /> },
-      { path: "booking/:id", element: <BookingDetail /> },
-      { path: "booking/", element: <BookingList /> },
-      { path: "booking/add", element: <BookingAdd /> },
+      { path: "service-order/:id", element: <ServiceOrderDetail /> },
+      { path: "service-order/", element: <ServiceOrderList /> },
+      { path: "service-order/add", element: <ServiceOrderAdd /> },
       {
         path: "items",
         element: <StaffItemsPage />,

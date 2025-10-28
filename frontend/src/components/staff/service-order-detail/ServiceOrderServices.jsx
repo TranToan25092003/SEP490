@@ -11,11 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Plus, Package } from "lucide-react";
 import { cn, formatPrice } from "@/lib/utils";
 import { useFieldArray } from "react-hook-form";
+import { useServiceOrder } from "./ServiceOrderContext";
 
-/** @typedef {import("./index").BookingServicesProps} BookingServicesProps */
-/** @typedef {import("./index").ServiceInfo} ServiceInfo */
-
-/** @type {ServiceInfo[]} */
 const serviceOptions = [
   { sid: "1", name: "Thay dầu", basePrice: 399000 },
   { sid: "2", name: "Kiểm tra phanh", basePrice: 250000 },
@@ -24,10 +21,11 @@ const serviceOptions = [
 ];
 
 /**
- * Manages the services field array within the booking detail form.
- * @param {BookingServicesProps} props
+ * ServiceOrderServices Component
+ * Manages the services field array within the service order detail form.
  */
-const BookingServices = ({ disabled = false, className, ...props }) => {
+const ServiceOrderServices = ({ className, ...props }) => {
+  const { disabled } = useServiceOrder();
   const {
     fields: serviceItems,
     append,
@@ -37,14 +35,18 @@ const BookingServices = ({ disabled = false, className, ...props }) => {
     name: "services",
   });
 
+  /**
+   * Handle adding a new service
+   */
   const handleAddService = () => {
     if (!serviceOptions.length) return;
     append({ ...serviceOptions[0] });
   };
 
   /**
-   * @param {number} index
-   * @param {string} sid
+   * Handle updating a service
+   * @param {number} index - Index of the service to update
+   * @param {string} sid - Service ID to update to
    */
   const handleUpdateService = (index, sid) => {
     const updatedService = serviceOptions.find((s) => s.sid === sid);
@@ -53,7 +55,8 @@ const BookingServices = ({ disabled = false, className, ...props }) => {
   };
 
   /**
-   * @param {string} fieldId
+   * Handle removing a service
+   * @param {string} fieldId - Field ID of the service to remove
    */
   const handleRemoveService = (fieldId) => {
     const index = serviceItems.findIndex((item) => item.id === fieldId);
@@ -141,6 +144,6 @@ const BookingServices = ({ disabled = false, className, ...props }) => {
   );
 };
 
-BookingServices.displayName = "BookingServices";
+ServiceOrderServices.displayName = "ServiceOrderServices";
 
-export default BookingServices;
+export default ServiceOrderServices;
