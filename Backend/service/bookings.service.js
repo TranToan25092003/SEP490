@@ -1,6 +1,6 @@
 const DomainError = require("../errors/domainError");
-const { ServicesService, ERROR_CODES: SERVICE_ERROR_CODES } = require("./services.service");
-const vehiclesService = require("./vehicles.service");
+const { ServicesService, mapServiceToDTO, ERROR_CODES: SERVICE_ERROR_CODES } = require("./services.service");
+const { VehiclesService, mapToVehicleDTO } = require("./vehicles.service");
 const ServiceOrderService = require("./service_order.service");
 const config = require("./config");
 const { Booking } = require("../model");
@@ -13,31 +13,12 @@ const ERROR_CODES = {
 
 /**
  * Utility to convert a time slot object to a Date.
- * @param {{
- *  day: number,
- *  month: number,
- *  year: number,
- *  hours: number,
- *  minutes: number
- * }} timeSlot
+ * @param {import("./types").Timeslot} timeSlot
  * @returns {Date}
  */
 function convertTimeSlotToDate(timeSlot) {
   const { day, month, year, hours, minutes } = timeSlot;
   return new Date(year, month - 1, day, hours, minutes);
-}
-
-function mapToBookingDTO(booking) {
-  return {
-    id: booking._id,
-    customerClerkId: booking.customer_clerk_id,
-    vehicleId: booking.vehicle_id,
-    serviceIds: booking.service_ids,
-    slotStartTime: booking.slot_start_time,
-    slotEndTime: booking.slot_end_time,
-    status: booking.status,
-    serviceOrderId: booking.service_order_id
-  };
 }
 
 class BookingsService {
@@ -46,8 +27,8 @@ class BookingsService {
    * @param {string} customerClerkId - ID of the customer creating the booking.
    * @param {string} vehicleId - ID of the vehicle for the booking.
    * @param {Array<string>} serviceIds - Array of service IDs to be included in the booking.
-   * @param {Object} timeSlot - Object representing the desired time slot for the booking.
-   * @returns {Object} - The created booking object.
+   * @param {import("./types").Timeslot} timeSlot - Object representing the desired time slot for the booking.
+   * @returns {Promise<Booking>} - The created booking object.
    * @throws {DomainError} - If there is a domain-specific error during booking creation.
    * @example
    * const booking = await bookingsService.createBooking(
@@ -59,7 +40,7 @@ class BookingsService {
    * console.log(booking);
    */
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
-    const vehicleIdsInUse = await vehiclesService.getVehiclesInUse([vehicleId]);
+    const vehicleIdsInUse = await VehiclesService.getVehiclesInUse([vehicleId]);
     if (vehicleIdsInUse.includes(vehicleId)) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
@@ -113,7 +94,7 @@ class BookingsService {
 
     await booking.save();
 
-    return mapToBookingDTO(booking);
+    return booking;
   }
 
   async _isTimeslotAvailable(slotStartTime, slotEndTime) {
@@ -145,7 +126,7 @@ class BookingsService {
    * @param {number} day
    * @param {number} month
    * @param {number} year
-   * @returns {Promise<Array<{ hours: number, minutes: number, day: number, month: number, year: number, isAvailable: boolean }>>}
+   * @returns {Promise<Array<import("./types").TimeslotWithAvailability>>}
    */
   async getTimeSlotsForDMY(day, month, year) {
     const timeSlots = [];
@@ -176,12 +157,63 @@ class BookingsService {
     return timeSlots;
   }
 
-  /*
+  /**
+   * Get booking by ID.
+   * @param {string} bookingId
+   * @returns {Promise<import("./types").BookingDTO>}
+   */
+  async getBookingById(bookingId) {
+    const booking = await Booking.findById(bookingId)
+      .populate("service_ids")
+      .populate("vehicle_id")
+      .exec();
+
+    if (!booking) {
+      return null;
+    }
+
+    return {
+      id: booking._id,
+      customer: {
+        customerClerkId: booking.customer_clerk_id,
+        customerName: `Name or ID: ${booking.customer_clerk_id}`,
+      },
+      vehicle: mapToVehicleDTO(booking.vehicle_id),
+      services: booking.service_ids.map(mapServiceToDTO),
+      slotStartTime: booking.slot_start_time,
+      slotEndTime: booking.slot_end_time,
+      status: booking.status,
+      serviceOrderId: booking.service_order_id,
+    };
+  }
+
+  /**
+   * Get all bookings sorted by start time.
+   * @returns {Promise<Array<import("./types").BookingDTO>>}
+   */
+  async getAllBookingsSortedAscending() {
+    const bookings = await Booking.find()
+      .populate("service_ids")
+      .populate("vehicle_id")
+      .sort({ slot_start_time: 1 })
+      .exec();
+    return bookings.map(booking => ({
+      id: booking._id,
+      customerName: `Name or ID: ${booking.customer_clerk_id}`,
+      services: booking.service_ids.map(s => s.name),
+      slotStartTime: booking.slot_start_time,
+      slotEndTime: booking.slot_end_time,
+      status: booking.status,
+      serviceOrderId: booking.service_order_id,
+    }));
+  }
+
+  /**
    * Calls this when customer arrives for their booking
    * to begin the service.
    * @param {String} staffId - Clerk ID of the staff checking in the booking
    * @param {String} bookingId - ID of the booking to check in
-   * @returns {Object} - The updated booking object.
+   * @returns {Promise<Booking>} - The updated booking object.
    * @throws {DomainError} - If booking not found or invalid state.
    */
   async checkInBooking(staffId, bookingId) {
@@ -207,9 +239,14 @@ class BookingsService {
       bookingId
     );
 
-    return mapToBookingDTO(booking);
+    return booking;
   }
 
+  /**
+   * Cancel a booking.
+   * @param {string} bookingId
+   * @returns {Promise<Booking>}
+   */
   async cancelBooking(bookingId) {
     const booking = await Booking.findById(bookingId).exec();
     if (!booking) {
@@ -231,7 +268,7 @@ class BookingsService {
     booking.status = "cancelled";
     await booking.save();
 
-    return mapToBookingDTO(booking);
+    return booking;
   }
 }
 

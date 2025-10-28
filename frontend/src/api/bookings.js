@@ -1,60 +1,11 @@
 import { customFetch } from "@/utils/customAxios";
 
 /**
- * @typedef {Object} TimeSlot
- * @property {number} day - Day of the month
- * @property {number} month - Month (1-12)
- * @property {number} year - Year
- * @property {number} hours - Hour (0-23)
- * @property {number} minutes - Minutes (0-59)
- */
-
-/**
- * @typedef {Object} BookingRequest
- * @property {string} vehicleId - Vehicle ID for the booking
- * @property {string[]} serviceIds - Array of service IDs
- * @property {TimeSlot} timeSlot - The booking time slot
- * @property {string} [userIdToBookFor] - Optional user ID to book for (defaults to current user)
- */
-
-/**
- * @typedef {Object} Booking
- * @property {string} id - The unique identifier for the booking
- */
-
-/**
- * @typedef {Object} BookingDetails
- * @property {string} id - The unique identifier for the booking
- * @property {Object} customer - Customer information
- * @property {string} customer.customerName - Customer name
- * @property {Object} vehicle - Vehicle information
- * @property {string} vehicle.licensePlate - Vehicle license plate
- * @property {Object} bay - Bay information
- * @property {string} bay.bayName - Bay name/number
- * @property {Array<Object>} technicians - Array of technician information
- * @property {string} technicians[].technicianName - Technician name
- * @property {string} expectedStartTime - Expected start time
- * @property {string} startedAt - Actual start time
- * @property {string} completedAt - Completion time
- * @property {string} cancelledAt - Cancellation time
- * @property {string} status - The booking status (e.g., "pending", "confirmed", "cancelled")
- * @property {Array<Object>} services - Array of services
- */
-
-/**
- * @typedef {Object} TimeSlotInfo
- * @property {number} hours - Hour (0-23)
- * @property {number} minutes - Minutes (0-59)
- * @property {number} day - Day of the month
- * @property {number} month - Month (1-12)
- * @property {number} year - Year
- * @property {boolean} isAvailable - Whether the time slot is available
- */
-
-/**
- * @typedef {Object} AvailableTimeSlotsResponse
- * @property {TimeSlotInfo[]} timeSlots - Array of available time slots
- * @property {string} comment - Additional comment or instruction
+ * @typedef {import('./types').Timeslot} Timeslot
+ * @typedef {import('./types').TimeslotWithAvailability} TimeslotWithAvailability
+ * @typedef {import('./types').BookingDTO} BookingDTO
+ * @typedef {import('./types').BookingSummaryDTO} BookingSummaryDTO
+ * @typedef {import('./types').BookingRequest} BookingRequest
  */
 
 /**
@@ -63,7 +14,7 @@ import { customFetch } from "@/utils/customAxios";
  * @async
  * @function createBooking
  * @param {BookingRequest} bookingData - The booking data
- * @returns {Promise<Booking>} A promise that resolves to the created booking
+ * @returns {Promise<BookingDTO>} A promise that resolves to the created booking
  * @throws {Error} If the API request fails
  *
  * @example
@@ -79,7 +30,7 @@ import { customFetch } from "@/utils/customAxios";
  * }
  */
 export const createBooking = async (bookingData) => {
-  const response = await customFetch("/client/bookings/create", {
+  const response = await customFetch("/bookings/create", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -110,9 +61,108 @@ export const createBooking = async (bookingData) => {
  * }
  */
 export const getAvailableTimeSlots = async (day, month, year) => {
-  const response = await customFetch("/client/bookings/available-time-slots", {
+  const response = await customFetch("/bookings/available-time-slots", {
     method: "GET",
     params: { day, month, year },
+  });
+
+  return response.data.data;
+};
+
+/**
+ * Get a booking by ID
+ *
+ * @async
+ * @function getBookingById
+ * @param {string} bookingId - The ID of the booking to retrieve
+ * @returns {Promise<BookingDTO>} A promise that resolves to the booking details
+ * @throws {Error} If the API request fails or booking is not found
+ *
+ * @example
+ * try {
+ *   const booking = await getBookingById('booking-123');
+ *   console.log(booking);
+ * } catch (error) {
+ *   console.error('Failed to fetch booking:', error);
+ * }
+ */
+export const getBookingById = async (bookingId) => {
+  const response = await customFetch(`/bookings/${bookingId}`, {
+    method: "GET",
+  });
+
+  return response.data.data;
+};
+
+/**
+ * Get all bookings
+ *
+ * @async
+ * @function getAllBookings
+ * @returns {Promise<BookingSummaryDTO[]>} A promise that resolves to an array of all bookings
+ * @throws {Error} If the API request fails
+ *
+ * @example
+ * try {
+ *   const bookings = await getAllBookings();
+ *   console.log(bookings);
+ * } catch (error) {
+ *   console.error('Failed to fetch bookings:', error);
+ * }
+ */
+export const getAllBookings = async () => {
+  const response = await customFetch("/bookings/all", {
+    method: "GET",
+  });
+
+  return response.data.data;
+};
+
+/**
+ * Check in a booking when customer arrives
+ *
+ * @async
+ * @function checkInBooking
+ * @param {string} bookingId - The ID of the booking to check in
+ * @returns {Promise<BookingDTO>} A promise that resolves to the updated booking
+ * @throws {Error} If the API request fails or booking cannot be checked in
+ *
+ * @example
+ * try {
+ *   const booking = await checkInBooking('booking-123');
+ *   console.log('Booking checked in:', booking);
+ * } catch (error) {
+ *   console.error('Failed to check in booking:', error);
+ * }
+ */
+export const checkInBooking = async (bookingId) => {
+  const response = await customFetch(`/bookings/${bookingId}/check-in`, {
+    method: "POST",
+  });
+
+  return response.data.data;
+};
+
+/**
+ * Cancel a booking
+ *
+ * @async
+ * @function cancelBooking
+ * @param {string} bookingId - The ID of the booking to cancel
+ * @returns {Promise<BookingDTO>} A promise that resolves to the cancelled booking
+ * @throws {Error} If the API request fails or booking cannot be cancelled
+ *
+ * @example
+ * try {
+ *   const booking = await cancelBooking('booking-123');
+ *   console.log('Booking cancelled:', booking);
+ * } catch (error) {
+ *   console.error('Failed to cancel booking:', error);
+ * }
+ */
+export const cancelBooking = async (bookingId) => {
+  const response = await customFetch(`/bookings/${bookingId}/cancel`, {
+    method: "POST",
   });
 
   return response.data.data;

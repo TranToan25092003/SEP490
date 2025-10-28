@@ -1,12 +1,11 @@
-const vehiclesService = require("../service/vehicles.service");
-const DomainError = require("../errors/domainError");
+const { VehiclesService } = require("../service/vehicles.service");
 
 class VehiclesController {
-  async getUserVehicles(req, res, next) {
+  async getVehiclesWithAvailability(req, res, next) {
     try {
       const userId = req.userId;
 
-      const vehicles = await vehiclesService.getUserVehicles(userId);
+      const vehicles = await VehiclesService.getUserVehiclesWithAvailability(userId);
 
       res.status(200).json({
         data: vehicles,

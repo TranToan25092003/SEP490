@@ -1,39 +1,13 @@
 const express = require("express");
 const { body, query, param } = require("express-validator");
-const bookingsController = require("../../controller/bookings.controller");
-const { throwErrors } = require("../../middleware/validate-data/throwErrors.middleware");
-const { authenticate } = require("../../middleware/guards/authen.middleware");
+const bookingsController = require("../controller/bookings.controller");
+const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
+const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = new express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *    BookingRequest:
- *      type: object
- *      properties:
- *       serviceIds:
- *        type: array
- *        items:
- *          type: string
- *       timeSlot:
- *        type: object
- *        properties:
- *         day:
- *          type: integer
- *         month:
- *          type: integer
- *         year:
- *          type: integer
- *         hours:
- *          type: integer
- *         minutes:
- *          type: integer
- */
-
-/**
- * @swagger
- * /client/bookings/create:
+ * /bookings/create:
  *   post:
  *     summary: Create a new booking
  *     tags:
@@ -47,6 +21,10 @@ const router = new express.Router();
  *     responses:
  *       201:
  *         description: Booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingDTO'
  *       400:
  *         description: Bad request
  *       409:
@@ -104,7 +82,30 @@ router.post(
 
 /**
  * @swagger
- * /client/bookings/available-time-slots:
+ * /bookings/all:
+ *   get:
+ *     summary: Get all bookings for the staff
+ *     tags:
+ *       - Bookings
+ *     responses:
+ *       200:
+ *         description: A list of bookings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/BookingSummaryDTO'
+ */
+router.get(
+  "/all",
+  authenticate,
+  bookingsController.getAllBookings
+);
+
+/**
+ * @swagger
+ * /bookings/available-time-slots:
  *   get:
  *     summary: Get available time slots for a specific date
  *     tags:
@@ -131,6 +132,12 @@ router.post(
  *     responses:
  *       200:
  *         description: Available time slots retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TimeslotWithAvailability'
  *       400:
  *         description: Bad request - Missing or invalid parameters
  */
@@ -156,5 +163,45 @@ router.get(
   throwErrors,
   bookingsController.getAvailableTimeSlots
 );
+
+
+
+/**
+ * @swagger
+ * /bookings/{id}:
+ *   get:
+ *     summary: Get a booking by ID
+ *     tags:
+ *       - Bookings
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the booking
+ *     responses:
+ *       200:
+ *         description: Booking retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingDTO'
+ *       404:
+ *         description: Booking not found
+ */
+router.get(
+  "/:id",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Booking ID is required")
+      .isMongoId()
+      .withMessage("Booking ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  bookingsController.getBookingById
+)
 
 module.exports = router;

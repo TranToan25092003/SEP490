@@ -22,6 +22,35 @@ class BookingsController {
     }
   }
 
+  async getBookingById(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      const booking = await bookingsService.getBookingById(id);
+      if (!booking) {
+        return res.status(404).json({ message: "Booking not found" });
+      }
+
+      res.status(200).json({
+        data: booking,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAllBookings(req, res, next) {
+    try {
+      const bookings = await bookingsService.getAllBookingsSortedAscending();
+
+      res.status(200).json({
+        data: bookings,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAvailableTimeSlots(req, res, next) {
     try {
       const { day, month, year } = req.query;

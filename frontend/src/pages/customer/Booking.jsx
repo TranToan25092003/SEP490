@@ -4,7 +4,7 @@ import { useLoaderData, Await, useRevalidator } from "react-router-dom";
 import { Suspense } from "react";
 import { toast } from "sonner";
 import { getServices } from "@/api/services";
-import { getUserVehicles } from "@/api/vehicles";
+import { getUserVehiclesWithAvailability } from "@/api/vehicles";
 import { createBooking, getAvailableTimeSlots } from "@/api/bookings";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import clerk from "@/utils/clerk";
@@ -21,7 +21,7 @@ export function loader() {
   }
 
   const services = getServices();
-  const vehicles = getUserVehicles();
+  const vehicles = getUserVehiclesWithAvailability();
 
   const servicesAndVehicles = Promise.all([services, vehicles]);
   return {
