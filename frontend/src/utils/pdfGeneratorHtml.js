@@ -11,15 +11,16 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
 
   // Position off-screen and out of view to prevent any layout shifts
   tempDiv.style.position = "fixed";
-  tempDiv.style.top = "-9999px";
-  tempDiv.style.left = "-9999px";
+  tempDiv.style.top = "0";
+  tempDiv.style.left = "-10000px";
   tempDiv.style.width = "794px"; // 210mm = 794px at 96dpi
   tempDiv.style.height = "auto";
   tempDiv.style.backgroundColor = "#ffffff";
-  tempDiv.style.visibility = "hidden";
-  tempDiv.style.opacity = "0";
+  // Ensure element is renderable by html2canvas
+  // tempDiv.style.visibility = "hidden"; // removed to allow rendering
+  // tempDiv.style.opacity = "0"; // removed to allow rendering
   tempDiv.style.pointerEvents = "none";
-  tempDiv.style.zIndex = "-9999";
+  tempDiv.style.zIndex = "-1";
   tempDiv.style.overflow = "auto";
   tempDiv.innerHTML = `
     <!DOCTYPE html>
@@ -227,8 +228,7 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
               <th style="width: 140px;">Ten san pham</th>
               <th style="width: 70px;">Ma so</th>
               <th style="width: 50px;">Don vi tinh</th>
-              <th colspan="2" style="width: 110px;">So luong
-              </th>
+              <th colspan="2" style="width: 110px;">So luong</th>
               <th style="width: 70px;">Don gia</th>
               <th style="width: 75px;">Thanh tien</th>
             </tr>
@@ -329,7 +329,7 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
 
   try {
     // Wait a bit for the element to be properly rendered before capturing
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 150));
 
     // Convert HTML to canvas
     const canvas = await html2canvas(tempDiv, {
