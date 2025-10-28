@@ -15,7 +15,7 @@ const ComplaintSchema = new Schema(
       type: String,
       enum: ["pending", "resolved", "rejected"],
       required: true,
-    }, // Complaint status
+    },
   },
   { timestamps: true }
 );

@@ -114,6 +114,10 @@ export const uploadInvoicePDF = async (file) => {
   return await uploadPDFToFolder(file, "invoice");
 };
 
+export const uploadComplaintImage = async (file) => {
+  return await uploadImageToFolder(file, "complaint");
+};
+
 // Determine file kind based on resource type and MIME type
 const getFileKind = (resourceType, mimeType) => {
   if (resourceType === "image") return "image";

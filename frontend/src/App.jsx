@@ -33,6 +33,8 @@ import {
   goodsReceiptListLoader,
   partsStaffLoader,
   partDetailStaffLoader,
+  complaintsStaffLoader,
+  complaintDetailStaffLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import Staff from "./pages/staff/Staff";
@@ -180,10 +182,12 @@ const router = createBrowserRouter([
       {
         path: "complaints",
         element: <StaffComplaintsPage />,
+        loader: complaintsStaffLoader
       },
       {
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
+        loader: complaintDetailStaffLoader,
       },
     ],
   },

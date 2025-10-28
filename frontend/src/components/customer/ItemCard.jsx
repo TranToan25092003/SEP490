@@ -1,7 +1,5 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Plus } from 'lucide-react';
 import partImage from '@/assets/part-lopsau.png';
 
 const formatPrice = (price) => {
@@ -37,13 +35,6 @@ function ItemCard({ product }) {
 
           <div className="flex justify-between items-end">
             <p className="text-red-600 text-base font-bold leading-tight tracking-tight">{sellingPrice ? formatPrice(sellingPrice) : '??? VND'}</p>
-            <Button
-              size="icon"
-              className="w-10 h-10 bg-red-700 rounded-full shadow-[0px_1px_10px_0px_rgba(0,0,0,0.10)] flex-shrink-0 hover:bg-red-800"
-              onClick={handleAddToCart}
-            >
-              <Plus className="w-5 h-5 text-white" />
-            </Button>
           </div>
         </div>
       </div>
