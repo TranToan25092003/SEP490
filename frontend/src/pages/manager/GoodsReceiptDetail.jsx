@@ -126,45 +126,6 @@ export default function GoodsReceiptDetail() {
 
     setExporting(true);
 
-    // Create loading overlay that covers entire page
-    const overlay = document.createElement("div");
-    overlay.id = "pdf-loading-overlay";
-    overlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-    `;
-    overlay.innerHTML = `
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        #spinner {
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #dc2626;
-          border-radius: 50%;
-          width: 50px;
-          height: 50px;
-          animation: spin 1s linear infinite;
-          margin: 0 auto 20px;
-        }
-      </style>
-      <div style="text-align: center;">
-        <div id="spinner"></div>
-        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #1f2937;">Đang tạo PDF...</div>
-        <div style="color: #6b7280; font-size: 14px;">Vui lòng chờ trong giây lát</div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
-
     try {
       const totalAmount = receipt.totalAmount || 0;
       const pdfBlob = await generateGoodsReceiptPDF({
@@ -194,11 +155,6 @@ export default function GoodsReceiptDetail() {
         description: "Không thể tạo PDF. Vui lòng thử lại.",
       });
     } finally {
-      // Remove loading overlay
-      const loadingOverlay = document.getElementById("pdf-loading-overlay");
-      if (loadingOverlay && loadingOverlay.parentNode) {
-        loadingOverlay.parentNode.removeChild(loadingOverlay);
-      }
       setExporting(false);
     }
   };
@@ -268,6 +224,20 @@ export default function GoodsReceiptDetail() {
           <Button onClick={() => navigate("/manager/goods-receipt-list")}>
             Quay lại danh sách
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (exporting) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-primary border-r-transparent animate-spin" />
+          <div className="text-gray-900 font-semibold">Đang tạo PDF...</div>
+          <div className="text-gray-500 text-sm">
+            Vui lòng chờ trong giây lát
+          </div>
         </div>
       </div>
     );
