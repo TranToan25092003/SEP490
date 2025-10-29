@@ -108,7 +108,7 @@ const BookingForm = ({
     }
 
     mounted.current = true;
-  }, [currentStep]);
+  }, []);
 
   const methods = useForm({
     defaultValues: {
@@ -135,7 +135,7 @@ const BookingForm = ({
     }
   };
 
-  const handleNext = (e) => {
+  const handleNext = () => {
     const [isValid, message] = validateStep(currentStep);
     if (!isValid) {
       if (message) {

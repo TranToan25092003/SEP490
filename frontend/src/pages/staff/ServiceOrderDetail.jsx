@@ -38,14 +38,39 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     <ServiceOrderEditForm
       serviceOrder={{
         ...serviceOrder,
-        items: serviceOrder.items.map((item) => ({
-          ...item,
-          type: item.item_type
-        })),
+        items: serviceOrder.items.map((item) => {
+          switch (item.item_type) {
+            case "part":
+              return {
+                price: item.price,
+                quantity: item.quantity,
+                partId: item.part_id,
+                type: "part",
+              };
+            case "service":
+              return {
+                price: item.price,
+                quantity: item.quantity,
+                serviceId: item.service_id,
+                type: "service",
+              };
+            case "custom":
+              return {
+                price: item.price,
+                quantity: item.quantity,
+                description: item.description,
+                type: "custom",
+              };
+            default:
+              return item;
+          }
+        }),
       }}
-      getTotalPrice={async (services) => {
+      getTotalPrice={async (items) => {
         await new Promise((resolve, _) => setTimeout(resolve, 500));
-        const sum = services.reduce((acc, x) => acc + x.basePrice, 0);
+        const all = [...items.parts, ...items.services, ...items.customs];
+        console.log(all);
+        const sum = all.reduce((acc, x) => acc + x.price * x.quantity, 0);
         return {
           price: sum,
           tax: sum * 0.1,

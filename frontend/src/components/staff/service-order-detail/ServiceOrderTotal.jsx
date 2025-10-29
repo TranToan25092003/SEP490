@@ -2,20 +2,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { formatPrice, cn } from "@/lib/utils";
-import { useFormContext } from "react-hook-form";
 import { useEffect } from "react";
 import { useState } from "react";
 import { useServiceOrder } from "./ServiceOrderContext";
+import { useFormContext } from "react-hook-form";
+import { useDebouncedCallback } from "use-debounce";
 
-/**
- * ServiceOrderTotal Component
- * Summarises pricing details and triggers confirmation actions.
- */
 const ServiceOrderTotal = ({
   className,
   ...props
 }) => {
-  const { disabled, updateServiceOrderLoading, getTotalPrice, handleUpdateServiceOrder, handleSendInvoice } = useServiceOrder();
+  const {
+    disabled,
+    serviceOrder,
+    getTotalPrice,
+    handleUpdateServiceOrder,
+    handleSendInvoice,
+  } = useServiceOrder();
   const [loading, setLoading] = useState(false);
   const [price, setPrice] = useState({
     price: 0,
@@ -23,34 +26,50 @@ const ServiceOrderTotal = ({
     total: 0
   });
 
-  const { watch } = useFormContext();
-  const services = watch("services");
-  const hasServices = Array.isArray(services) && services.length > 0;
+  const { watch, subscribe } = useFormContext();
+  const items = watch();
+  const hasServices = items.services.length + items.parts.length > 0;
+  const debounced = useDebouncedCallback((fn) => fn(), 1000);
 
   useEffect(() => {
     let ignore = false;
 
-    (async () => {
+    const fetchPrice = async (values) => {
       if (typeof getTotalPrice !== "function") return;
 
       try {
         setLoading(true);
 
-        const price = await getTotalPrice(services);
+        const price = await getTotalPrice(values);
         if (!ignore) {
           setPrice(price);
           setLoading(false);
         }
-      } catch(e) {
+      } catch (e) {
         console.log(e);
         setLoading(false);
       }
-    })();
+    };
+
+    const unsub = subscribe({
+      formState: {
+        values: true,
+        isValid: true
+      },
+      callback: ({ values, isValid }) => {
+        if (isValid) {
+          debounced(() => fetchPrice(values));
+        }
+      }
+    })
+
+    fetchPrice(items);
 
     return () => {
+      unsub();
       ignore = true;
     };
-  }, [services, getTotalPrice]);
+  }, [subscribe, getTotalPrice]);
 
   return (
     <Card className={cn(className, "relative")} {...props}>
@@ -78,10 +97,10 @@ const ServiceOrderTotal = ({
           type="button"
           variant="outline"
           onClick={() => {
-            handleUpdateServiceOrder(watch());
+            handleUpdateServiceOrder(serviceOrder);
           }}
-          disabled={updateServiceOrderLoading || disabled || !hasServices}
-          aria-busy={updateServiceOrderLoading}
+          disabled={disabled || !hasServices}
+          aria-busy={disabled || !hasServices}
         >
           Cập nhật thông tin
         </Button>
@@ -89,10 +108,10 @@ const ServiceOrderTotal = ({
         <Button
           type="button"
           onClick={() => {
-            handleSendInvoice(watch());
+            handleSendInvoice(serviceOrder);
           }}
-          disabled={updateServiceOrderLoading || disabled || !hasServices}
-          aria-busy={updateServiceOrderLoading}
+          disabled={disabled || !hasServices}
+          aria-busy={disabled || !hasServices}
         >
           Gửi báo giá
         </Button>

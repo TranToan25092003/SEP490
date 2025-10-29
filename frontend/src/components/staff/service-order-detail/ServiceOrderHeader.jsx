@@ -3,22 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { cn } from "@/lib/utils";
-import { useFormContext } from "react-hook-form";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
+import { useFormContext } from "react-hook-form";
 
-/**
- * ServiceOrderHeader Component
- * Displays the high-level service order metadata and technician assignments.
- */
 const ServiceOrderHeader = ({
   className,
   ...props
 }) => {
-  const { serviceOrder, confirmServiceOrderLoading, disabled } = useServiceOrder();
+  const { serviceOrder, disabled } = useServiceOrder();
   const { watch } = useFormContext();
-  const services = watch("services");
-  const hasServices = Array.isArray(services) && services.length > 0;
+  const items = watch();
+  const hasServices = items.services.length + items.parts.length > 0;
 
   return (
     <Card className={cn(className)} {...props}>
@@ -31,16 +27,17 @@ const ServiceOrderHeader = ({
             type="button"
             className="text-destructive"
             variant="outline"
-            onClick={() => onCancelServiceOrder()}
-            disabled={confirmServiceOrderLoading || disabled}
-            aria-busy={confirmServiceOrderLoading}
+            onClick={() => onCancelServiceOrder(serviceOrder)}
+            disabled={disabled}
+            aria-busy={disabled}
           >
             Hủy lệnh
           </Button>
           <Button
             type="submit"
-            disabled={confirmServiceOrderLoading || disabled || !hasServices}
-            aria-busy={confirmServiceOrderLoading}
+            onClick={() => onStartServiceOrder(serviceOrder)}
+            disabled={disabled || !hasServices}
+            aria-busy={disabled || !hasServices}
           >
             Bắt đầu
           </Button>
