@@ -17,7 +17,7 @@ import { Link } from "react-router-dom";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { Eye, FileText } from "lucide-react";
-import { generateGoodsReceiptPDF } from "@/utils/pdfGenerator";
+import { generateGoodsReceiptPDF } from "@/utils/pdfGeneratorHtml";
 
 export default function GoodsReceiptList() {
   const loaderData = useLoaderData();
@@ -210,6 +210,20 @@ export default function GoodsReceiptList() {
       setExporting(false);
     }
   };
+
+  if (exporting) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-primary border-r-transparent animate-spin" />
+          <div className="text-gray-900 font-semibold">Đang tạo PDF...</div>
+          <div className="text-gray-500 text-sm">
+            Vui lòng chờ trong giây lát
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">

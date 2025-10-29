@@ -1,5 +1,10 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ClerkProvider, GoogleOneTap, SignedIn, useUser } from "@clerk/clerk-react";
+import {
+  ClerkProvider,
+  GoogleOneTap,
+  SignedIn,
+  useUser,
+} from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
@@ -13,6 +18,9 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderList from "./pages/staff/ServiceOrderList";
 import ServiceOrderAdd from "./pages/staff/ServiceOrderAdd";
+import BookingDetail from "./pages/staff/BookingDetail";
+import BookingList from "./pages/staff/BookingList";
+import ChatStaff from "./pages/staff/ChatStaff";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -46,8 +54,6 @@ import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import BookingList from "./pages/staff/BookingList";
-import BookingDetail from "./pages/staff/BookingDetail";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -190,12 +196,16 @@ const router = createBrowserRouter([
       {
         path: "complaints",
         element: <StaffComplaintsPage />,
-        loader: complaintsStaffLoader
+        loader: complaintsStaffLoader,
       },
       {
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "chat",
+        element: <ChatStaff />,
       },
     ],
   },

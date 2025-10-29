@@ -4,6 +4,7 @@ import Container from "@/components/global/Container";
 import { Outlet, useNavigation } from "react-router-dom";
 import Loading from "@/components/global/Loading";
 import Footer from "@/components/global/Footer";
+import FloatingChatButton from "@/components/global/FloatingChatButton";
 
 import { useClerk } from "@clerk/clerk-react";
 import { useEffect } from "react";
@@ -45,6 +46,7 @@ const HomeLayout = () => {
           )}
         </div>
         <Footer />
+        <FloatingChatButton />
       </div>
     </>
   );

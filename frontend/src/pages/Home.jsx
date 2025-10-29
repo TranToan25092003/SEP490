@@ -1,5 +1,5 @@
 import React from "react";
-import { useLoaderData } from 'react-router-dom'
+import { useLoaderData } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -135,8 +135,9 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
-                      }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                      selectedIndex === i ? "bg-white" : "bg-white/50"
+                    }`}
                   />
                 ))}
               </div>
@@ -168,8 +169,7 @@ function Home() {
               </p>
             </div>
 
-            <ItemList products={parts} size={3}/>
-
+            <ItemList products={parts} size={3} />
 
             {/* --- NEW MOTORMATE QUOTE SECTION --- */}
             <div className="mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2">
@@ -249,11 +249,12 @@ function Home() {
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
             <div className="w-11/12 max-w-xl border-4 border-white  p-8 text-white md:mr-16 lg:mr-24">
               <h2 className="text-3xl font-bold uppercase tracking-wider md:text-4xl">
-                Chào mừng bạn đến với <span className="text-red-500">MotorMate</span>
+                Chào mừng bạn đến với{" "}
+                <span className="text-red-500">MotorMate</span>
               </h2>
               <p className="mt-4 text-gray-300">
-                MotorMate tự hào mang đến những giải pháp toàn diện cho chiếc xe của bạn,
-                từ phụ tùng chính hãng đến dịch vụ bảo dưỡng tận tâm.
+                MotorMate tự hào mang đến những giải pháp toàn diện cho chiếc xe
+                của bạn, từ phụ tùng chính hãng đến dịch vụ bảo dưỡng tận tâm.
               </p>
               <a
                 href="/about"

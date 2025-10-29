@@ -1,6 +1,8 @@
 // create server
 const express = require("express");
+const { createServer } = require("http");
 const app = express();
+const server = createServer(app);
 
 //end create server
 
@@ -82,7 +84,11 @@ const DomainError = require("./errors/domainError");
 app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger
 
-// Create HTTP server and integrate Socket.IO
-app.listen(port, () => {
+// Initialize Socket.IO
+const { initializeSocket } = require("./socket");
+initializeSocket(server);
+
+// Start server
+server.listen(port, () => {
   console.log(`server is running at port ${port}`);
 });
