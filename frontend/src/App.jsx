@@ -93,14 +93,6 @@ const router = createBrowserRouter([
         element: <NotFoundPage />,
       },
       {
-        path: "/items",
-        element: <ItemListPage />,
-      },
-      {
-        path: "/items/1",
-        element: <ItemDetailPage />,
-      },
-      {
         path: "/profile",
         loader: layoutProfileLoader,
 
