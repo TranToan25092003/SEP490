@@ -77,10 +77,15 @@
 /**
  * @typedef {object} ServiceOrderItemDTO
  * @property {string} type - Type of item: "service", "part", or "custom".
- * @property {string} name - Name or description of the item.
+ * @property {string | undefined} name - Name or description of the item.
+ * @property {string | undefined} serviceId - Service identifier (for service items).
+ * @property {string | undefined} partId - Part identifier (for part items).
+ * @property {string | undefined} partName - Name of the part (for part items).
  * @property {number} price - Price per unit.
  * @property {number} quantity - Quantity of the item.
  */
+
+
 
 /**
  * @typedef {object} ServiceOrderDetailDTO

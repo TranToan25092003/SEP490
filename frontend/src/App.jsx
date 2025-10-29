@@ -20,6 +20,7 @@ import ServiceOrderList from "./pages/staff/ServiceOrderList";
 import ServiceOrderAdd from "./pages/staff/ServiceOrderAdd";
 import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
+import NiceModal from "@ebay/nice-modal-react";
 import ChatStaff from "./pages/staff/ChatStaff";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
@@ -219,8 +220,10 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <Toaster></Toaster>
-        <RouterProvider router={router} />
+        <NiceModal.Provider>
+          <Toaster></Toaster>
+          <RouterProvider router={router} />
+        </NiceModal.Provider>
       </ClerkProvider>
     </ThemeProvider>
   );

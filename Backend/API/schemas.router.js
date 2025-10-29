@@ -199,6 +199,126 @@
  *           description: Array of service IDs (each must be valid MongoDB ObjectId)
  *         timeSlot:
  *           $ref: '#/components/schemas/Timeslot'
+ *
+ *     ServiceOrderItemDTO:
+ *       type: object
+ *       required:
+ *         - type
+ *         - price
+ *         - quantity
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [service, part, custom]
+ *           description: Type of item
+ *         name:
+ *           type: string
+ *           description: Name or description of the item
+ *         serviceId:
+ *           type: string
+ *           description: Service identifier (for service items)
+ *         partId:
+ *           type: string
+ *           description: Part identifier (for part items)
+ *         partName:
+ *           type: string
+ *           description: Name of the part (for part items)
+ *         price:
+ *           type: number
+ *           description: Price per unit
+ *         quantity:
+ *           type: integer
+ *           description: Quantity of the item
+ *
+ *     ServiceOrderDetailDTO:
+ *       type: object
+ *       required:
+ *         - id
+ *         - customerName
+ *         - customerClerkId
+ *         - licensePlate
+ *         - vehicleId
+ *         - items
+ *         - status
+ *         - createdAt
+ *         - comment
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Service order identifier
+ *         customerName:
+ *           type: string
+ *           description: Name of the customer
+ *         customerClerkId:
+ *           type: string
+ *           description: Clerk ID of the customer
+ *         licensePlate:
+ *           type: string
+ *           description: Vehicle license plate with model info
+ *         vehicleId:
+ *           type: string
+ *           description: Vehicle identifier
+ *         items:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/ServiceOrderItemDTO'
+ *           description: Array of service order items
+ *         status:
+ *           type: string
+ *           description: Status of the service order
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the service order was created
+ *         completedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the service order was completed
+ *         estimatedCompletedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Estimated completion date
+ *         comment:
+ *           type: string
+ *           description: Additional comments or notes
+ *
+ *     ServiceOrderSummaryDTO:
+ *       type: object
+ *       required:
+ *         - id
+ *         - bookingId
+ *         - licensePlate
+ *         - customerName
+ *         - status
+ *         - createdAt
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Service order identifier
+ *         bookingId:
+ *           type: string
+ *           description: Associated booking identifier
+ *         licensePlate:
+ *           type: string
+ *           description: Vehicle license plate
+ *         customerName:
+ *           type: string
+ *           description: Name of the customer
+ *         status:
+ *           type: string
+ *           description: Status of the service order
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the service order was created
+ *         completedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the service order was completed
+ *         estimatedCompletedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Estimated completion date
  */
 
 module.exports = {};

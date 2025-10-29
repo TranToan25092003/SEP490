@@ -6,6 +6,9 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ChooseServiceModal from "./ChooseServiceModal";
+import NiceModal from "@ebay/nice-modal-react";
+import { Warehouse } from "lucide-react";
 
 const PartItemRow = ({ index, disabled, register, errors, ...props }) => (
   <div className="grid grid-cols-12 items-start gap-2 px-3" {...props}>
@@ -117,7 +120,7 @@ const ServiceItemRow = ({
       <Input
         id={`services.${index}.name`}
         placeholder="Nhập tên dịch vụ"
-        {...register(`services.${index}.serviceId`)}
+        {...register(`services.${index}.name`)}
         readOnly={disabled}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
       />
@@ -221,14 +224,32 @@ const ServiceOrderServices = ({ className, ...props }) => {
     });
   };
 
-  const handleAddService = () => {
+  const handleAddServiceFromInventory = async () => {
+    try {
+      const services = await NiceModal.show(ChooseServiceModal);
+      for (const service of services) {
+        serviceItemsMethods.append({
+          type: "service",
+          serviceId: service.id,
+          name: service.name,
+          price: service.basePrice,
+          quantity: 1
+        });
+      }
+    } catch (error) {
+      console.error("Failed to open ChooseServiceModal:", error);
+    }
+  };
+
+  const handleAddEmptyService = () => {
     serviceItemsMethods.append({
       type: "service",
       serviceId: "",
+      name: "",
       price: 0,
       quantity: 1
     });
-  };
+  }
 
   return (
     <Card className={cn(className, "gap-0")} {...props}>
@@ -274,8 +295,8 @@ const ServiceOrderServices = ({ className, ...props }) => {
               disabled={disabled}
               className="w-full"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Thêm phụ tùng
+              <Warehouse className="w-4 h-4 mr-2" />
+              Thêm phụ tùng từ kho
             </Button>
           </CardFooter>
         </TabsContent>
@@ -299,17 +320,28 @@ const ServiceOrderServices = ({ className, ...props }) => {
               })
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              onClick={handleAddService}
+              onClick={handleAddServiceFromInventory}
               disabled={disabled}
-              className="w-full"
+              className="flex-1"
+            >
+              <Warehouse className="w-4 h-4 mr-2" />
+              Thêm dịch vụ có sẵn
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handleAddEmptyService}
+              disabled={disabled}
+              className="flex-1"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Thêm dịch vụ
+              Thêm dịch vụ trống
             </Button>
           </CardFooter>
         </TabsContent>

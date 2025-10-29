@@ -18,7 +18,8 @@ const ItemsSchema = new Schema(
 );
 
 const ServiceItemSchema = new Schema({
-  service_id: { type: Schema.Types.ObjectId, ref: "Service", required: true },
+  service_id: { type: Schema.Types.ObjectId, ref: "Service", required: false },
+  name: { type: String, required: true },
 }, { _id: false });
 
 const PartItemSchema = new Schema({

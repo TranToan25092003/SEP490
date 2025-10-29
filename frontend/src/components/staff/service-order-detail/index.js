@@ -2,6 +2,9 @@
  * @typedef {object} ItemInfo
  * @property {string} type - Identifier of the item.
  * @property {string} name - Display name of the item.
+ * @property {string | undefined} serviceId - Service identifier (for service items).
+ * @property {string | undefined} partId - Part identifier (for part items).
+ * @property {string | undefined} partName - Name of the part (for part items).
  * @property {number} price - Base price for the item.
  * @property {number} quantity - Quantity of the item.
  */

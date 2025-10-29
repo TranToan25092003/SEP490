@@ -52,14 +52,8 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
                 price: item.price,
                 quantity: item.quantity,
                 serviceId: item.service_id,
+                name: item.name,
                 type: "service",
-              };
-            case "custom":
-              return {
-                price: item.price,
-                quantity: item.quantity,
-                description: item.description,
-                type: "custom",
               };
             default:
               return item;

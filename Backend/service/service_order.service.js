@@ -396,6 +396,7 @@ class ServiceOrderService {
       price: service.base_price,
       quantity: 1,
       service_id: service._id,
+      name: service.name,
       item_type: "service"
     }));
   }

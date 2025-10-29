@@ -94,7 +94,8 @@ const ServiceOrderEditForm = ({
   const methods = useForm({
     defaultValues: initialItems,
     resolver: zodResolver(formSchema),
-    mode: "onChange"
+    mode: "onChange",
+    disabled
   });
 
   const handleUpdateServiceOrder = (data) => {
