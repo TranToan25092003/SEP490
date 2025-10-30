@@ -26,7 +26,6 @@ import { ArrowUpDown, ChevronsUpDown } from 'lucide-react';
 const Header = () => {
   const navigate = useNavigate();
   const { isSignedIn, user } = useUser();
-  console.log(user)
   const [groupedModels, setGroupedModels] = useState([]);
   const [isPartsMenuOpen, setIsPartsMenuOpen] = useState(false);
 

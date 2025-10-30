@@ -1,12 +1,12 @@
-import React, { useState } from 'react'; // Added useState for potential future state needs
-import { useLoaderData, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLoaderData, Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, UploadCloud, Star } from 'lucide-react';
-import photoPlaceholder from '@/assets/mission-image.jpg'; // Placeholder for photos if none exist
+import { ArrowLeft, Star, Send, Loader2 } from 'lucide-react';
+import { customFetch } from '@/utils/customAxios';
+import { toast } from 'sonner';
 
-// Helper component for displaying detail fields
 const DetailField = ({ label, children }) => (
     <div>
         <p className="text-sm font-medium text-gray-500">{label}</p>
@@ -15,14 +15,12 @@ const DetailField = ({ label, children }) => (
 );
 
 export default function StaffComplaintDetailPage() {
-    // Get complaint data from the loader
     const complaint = useLoaderData();
-    // State for response section (if needed later)
+    const navigate = useNavigate();
+
     const [responseText, setResponseText] = useState('');
-    const [responseFiles, setResponseFiles] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-    // Handle case where loader returns null (error occurred)
     if (!complaint) {
         return (
             <div className="flex h-screen flex-col items-center justify-center gap-4 p-6">
@@ -58,7 +56,7 @@ export default function StaffComplaintDetailPage() {
     const getStatusBadge = (status) => {
         switch (status) {
             case "resolved":
-                return <Badge variant="success">Đã giải quyết</Badge>;
+                return <Badge variant="secondary" className="bg-green-500 text-white dark:bg-blue-600">Đã giải quyết</Badge>;
             case "pending":
                 return <Badge variant="warning">Chờ xử lý</Badge>;
             case "rejected":
@@ -68,10 +66,32 @@ export default function StaffComplaintDetailPage() {
         }
     };
 
-    // TODO: Implement image upload logic for response
-    const handleResponseFileChange = (e) => { console.log(e.target.files) };
-    const handleResponseSubmit = () => { console.log('Submitting response:', responseText, responseFiles) };
+    const handleResponseSubmit = async () => {
+        if (!responseText.trim()) {
+            toast.error("Nội dung phản hồi không được để trống.");
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            const response = await customFetch.patch(
+                `/staff/complaints/${complaint._id}/reply`,
+                { content: responseText }
+            );
 
+            if (response.data.success) {
+                toast.success("Đã gửi phản hồi thành công!");
+                navigate(0);
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Gửi phản hồi thất bại", {
+                description: error.message || "Đã có lỗi xảy ra."
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="p-6 space-y-6">
@@ -85,10 +105,6 @@ export default function StaffComplaintDetailPage() {
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-800">Chi Tiết Khiếu Nại #{complaint._id.slice(-6)}</h1>
                 </div>
-                <div className="flex items-center gap-4">
-                    <Button variant="destructive" className="bg-pink-900 hover:bg-pink-800">Duyệt</Button>
-                    <Button variant="secondary" className="bg-neutral-900 text-white hover:bg-neutral-800">Huỷ</Button>
-                </div>
             </div>
 
             {/* Customer & Service Info Card */}
@@ -96,17 +112,16 @@ export default function StaffComplaintDetailPage() {
                 <h2 className="text-2xl font-medium mb-6">Thông Tin Chung</h2>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 md:grid-cols-3">
                     <DetailField label="Mã Đơn Dịch Vụ">{complaint.so_id ? `#${complaint.so_id.toString().slice(-6)}` : 'N/A'}</DetailField>
-                    <DetailField label="Khiếu nại">{complaint.title}</DetailField>
+                    <DetailField label="Tiêu đề khiếu nại">{complaint.title}</DetailField>
+                    <DetailField label="Danh mục khiếu nại">{complaint.category || 'N/A'}</DetailField>
                     <DetailField label="Tên Khách Hàng">{complaint.customerName}</DetailField>
                     <DetailField label="Số Điện Thoại">{complaint.customerPhone}</DetailField>
                     <DetailField label="Xe">{`${complaint.license_plate} - ${complaint.model}`}</DetailField>
-                    {/* <DetailField label="Chi Nhánh">{complaint.branchName}</DetailField> */}
-                    <DetailField label="Kỹ Thuật Viên">{complaint.staffNames?.join(', ') || 'N/A'}</DetailField>
+                    <DetailField label="Kỹ Thuật Viên (Dịch vụ)">{complaint.staffNames?.join(', ') || 'N/A'}</DetailField>
                     <DetailField label="Ngày Tạo Khiếu Nại">{formatDate(complaint.createdAt)}</DetailField>
                     <DetailField label="Ngày làm dịch vụ">{formatDate(complaint.serviceDate)}</DetailField>
                     <DetailField label="Trạng Thái">{getStatusBadge(complaint.status)}</DetailField>
                     <DetailField label="Đánh giá">{renderRating(complaint.rating)}</DetailField>
-
                 </div>
             </div>
 
@@ -120,7 +135,7 @@ export default function StaffComplaintDetailPage() {
             {complaint.photos && complaint.photos.length > 0 && (
                 <div className="rounded-xl border bg-white p-6 shadow-sm">
                     <h2 className="text-2xl font-medium mb-6">Hình chụp thực tế (Từ Khách Hàng)</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {complaint.photos.map((photoUrl, index) => (
                             <div key={index} className="aspect-video w-full overflow-hidden rounded-lg bg-gray-100">
                                 <img src={photoUrl} alt={`Complaint photo ${index + 1}`} className="h-full w-full object-cover" />
@@ -130,31 +145,46 @@ export default function StaffComplaintDetailPage() {
                 </div>
             )}
 
-            {/* Response Section */}
             <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
                 <div>
                     <h2 className="text-2xl font-medium text-stone-700">Ghi chú / Phản hồi cho khách</h2>
-                    <Textarea
-                        className="mt-3 bg-neutral-100"
-                        placeholder="Nhập nội dung phản hồi..."
-                        value={responseText}
-                        onChange={(e) => setResponseText(e.target.value)}
-                    />
-                </div>
-                <div>
-                    <h2 className="text-2xl font-medium text-stone-700">Hình ảnh đính kèm (Nếu có)</h2>
-                    <div className="mt-3 flex items-center justify-center w-full md:w-72 h-60 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-100">
-                        {/* TODO: Implement file upload logic similar to CreateComplaintPage */}
-                        <div className="text-center">
-                            <UploadCloud className="mx-auto h-12 w-12 text-stone-700/25" />
-                            <p className="mt-2 text-xs text-stone-700/75">Drop image here, paste or</p>
-                            <Button variant="outline" className="mt-2 text-sm capitalize h-8">Chọn</Button>
+
+                    {complaint.reply && complaint.reply.content ? (
+                        <div className="mt-3 space-y-2">
+                            <Textarea
+                                className="mt-3 bg-neutral-100"
+                                value={complaint.reply.content}
+                                readOnly
+                                disabled
+                                rows={5}
+                            />
+                            <p className="text-sm text-gray-500">
+                                Đã phản hồi lúc: {formatDate(complaint.reply.repliedAt)}
+                                <span className="ml-2">
+                                    (bởi {complaint.reply.staffFullName || 'N/A'})
+                                </span>
+                            </p>
                         </div>
-                    </div>
-                </div>
-                <div className="flex justify-end">
-                    {/* TODO: Add submit handler */}
-                    <Button onClick={handleResponseSubmit}>Gửi Phản Hồi</Button>
+                    ) : (
+                        <>
+                            <Textarea
+                                className="mt-3 bg-neutral-100"
+                                placeholder="Nhập nội dung phản hồi..."
+                                value={responseText}
+                                onChange={(e) => setResponseText(e.target.value)}
+                            />
+                            <div className="flex justify-end">
+                                <Button onClick={handleResponseSubmit} disabled={isSubmitting}>
+                                    {isSubmitting ? (
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    ) : (
+                                        <Send className="mr-2 h-4 w-4" />
+                                    )}
+                                    {isSubmitting ? "Đang gửi..." : "Gửi Phản Hồi"}
+                                </Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

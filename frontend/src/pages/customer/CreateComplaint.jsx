@@ -3,23 +3,41 @@ import { useAuth } from '@clerk/clerk-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { UploadCloud, Send, X, Loader2, Star } from 'lucide-react';
 import complaintBannerImage from '@/assets/complaint-banner.png';
-import { uploadComplaintImage, validateFile } from "@/utils/uploadCloudinary";
+import { uploadImageToFolder as uploadComplaintImage, validateFile } from "@/utils/uploadCloudinary";
 import { customFetch } from '@/utils/customAxios';
 import { toast } from "sonner";
 
+// Danh sách danh mục dựa trên schema
+const complaintCategories = [
+  "Chất lượng dịch vụ",
+  "Chất lượng phụ tùng",
+  "Thái độ nhân viên",
+  "Thời gian chờ đợi",
+  "Giá cả & Thanh toán",
+  "Cơ sở vật chất",
+  "Khác"
+];
+
 function CreateComplaintPage() {
     const { userId } = useAuth();
-    // Hardcoded Service Order ID for now
     const hardcodedSoId = "68fb321427149d97dac22b15";
     const [formData, setFormData] = useState({
         fullName: '',
-        issue: '',
+        issue: '', // Tên/Tiêu đề khiếu nại
         phone: '',
         content: '',
-        so_id: hardcodedSoId, // Use the hardcoded ID
+        so_id: hardcodedSoId,
         rating: 0,
+        category: '', // Thêm category vào state
     });
     const [previews, setPreviews] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -95,6 +113,10 @@ function CreateComplaintPage() {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+     const handleSelectChange = (name, value) => {
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
     const handleRatingChange = (newRating) => {
          setFormData(prev => ({ ...prev, rating: newRating }));
     };
@@ -107,8 +129,8 @@ function CreateComplaintPage() {
             return;
         }
 
-        if (!formData.issue || !formData.content || !formData.so_id) {
-            toast.error("Thiếu thông tin", { description: "Vui lòng nhập Vấn đề, Chi tiết và ID Đơn hàng Dịch vụ." });
+        if (!formData.issue || !formData.content || !formData.so_id || !formData.category) {
+            toast.error("Thiếu thông tin", { description: "Vui lòng nhập đầy đủ các trường bắt buộc (*)." });
             return;
         }
 
@@ -137,6 +159,7 @@ function CreateComplaintPage() {
                 so_id: formData.so_id,
                 photos: uploadedImageUrls,
                 clerkId: userId,
+                category: formData.category,
                 rating: formData.rating > 0 ? formData.rating : undefined,
             };
 
@@ -144,7 +167,7 @@ function CreateComplaintPage() {
 
             if (response.data.success) {
                 toast.success("Thành Công", { description: "Khiếu nại của bạn đã được gửi." });
-                setFormData({ fullName: '', issue: '', phone: '', content: '', so_id: hardcodedSoId, rating: 0 }); // Reset with hardcoded ID
+                setFormData({ fullName: '', issue: '', phone: '', content: '', so_id: hardcodedSoId, rating: 0, category: '' });
                 previews.forEach(p => URL.revokeObjectURL(p.url));
                 setPreviews([]);
                 setHoverRating(0);
@@ -186,9 +209,9 @@ function CreateComplaintPage() {
       <section className="w-full bg-white py-16 md:py-24">
         <div className="mx-auto max-w-[1271px] px-4">
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Service Order ID - Top row */}
+            {/* Service Order ID - Row 1 */}
              <div>
-                 <label className="text-base font-medium text-stone-700">ID Đơn Hàng Dịch Vụ</label>
+                 <label className="text-base font-medium text-stone-700">ID Đơn Hàng Dịch Vụ <span className="text-red-500">*</span></label>
                  <Input 
                     name="so_id" 
                     value={formData.so_id} 
@@ -199,15 +222,11 @@ function CreateComplaintPage() {
                  <p className="text-xs text-gray-500 mt-1">ID đơn hàng liên quan đến khiếu nại.</p>
              </div>
              
-             {/* Name, Issue, Phone - Second row */}
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+             {/* Name, Phone - Row 2 */}
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
                <div>
                 <label className="text-base font-medium text-stone-700">Họ Và Tên Người Khiếu Nại</label>
                 <Input name="fullName" placeholder="Nhập họ và tên của bạn" value={formData.fullName} onChange={handleInputChange} className="mt-3 h-12 rounded-xl bg-neutral-100" />
-              </div>
-              <div>
-                <label className="text-base font-medium text-stone-700">Vấn Đề Khiếu Nại <span className="text-red-500">*</span></label>
-                <Input name="issue" placeholder="Ví dụ: Dịch vụ, Sản phẩm lỗi" value={formData.issue} onChange={handleInputChange} required className="mt-3 h-12 rounded-xl bg-neutral-100" />
               </div>
               <div>
                 <label className="text-base font-medium text-stone-700">Số Điện Thoại</label>
@@ -215,29 +234,52 @@ function CreateComplaintPage() {
               </div>
             </div>
 
-            {/* Rating Input - Third row */}
-            <div>
-                 <label className="text-base font-medium text-stone-700">Đánh giá (Tùy chọn)</label>
-                 <div 
-                    className="mt-3 flex items-center gap-1"
-                    onMouseLeave={() => setHoverRating(0)}
-                 >
-                     {[...Array(5)].map((_, index) => {
-                         const starValue = index + 1;
-                         return (
-                             <Star
-                                 key={starValue}
-                                 className={`h-6 w-6 cursor-pointer transition-colors ${
-                                    (hoverRating || formData.rating) >= starValue 
-                                    ? 'text-yellow-400 fill-yellow-400' 
-                                    : 'text-zinc-300'
-                                 }`}
-                                 onClick={() => handleRatingChange(starValue)}
-                                 onMouseEnter={() => setHoverRating(starValue)}
-                             />
-                         );
-                     })}
-                 </div>
+            {/* Category, Issue Title, Rating - Row 3 */}
+            <div className="grid grid-cols-1 gap-8 md:flex md:items-end md:justify-between">
+                <div className="md:flex-1">
+                    <label className="text-base font-medium text-stone-700">Vấn Đề Khiếu Nại (Tiêu đề) <span className="text-red-500">*</span></label>
+                    <Input name="issue" placeholder="Ví dụ: Dịch vụ, Sản phẩm lỗi" value={formData.issue} onChange={handleInputChange} required className="mt-3 h-12 rounded-xl bg-neutral-100" />
+                </div>
+                <div className="md:flex-1 md:ml-24">
+                    <label className="text-base font-medium text-stone-700">Danh Mục Khiếu Nại <span className="text-red-500">*</span></label>
+                    <Select 
+                        value={formData.category} 
+                        onValueChange={(value) => handleSelectChange('category', value)}
+                        required
+                    >
+                        <SelectTrigger className="mt-3 h-12 rounded-xl bg-neutral-100">
+                            <SelectValue placeholder="Chọn danh mục khiếu nại" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {complaintCategories.map((cat, index) => (
+                                <SelectItem key={index} value={cat}>{cat}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                 <div className="md:flex-shrink-0">
+                    <label className="text-base font-medium text-stone-700">Đánh giá (Tùy chọn)</label>
+                    <div 
+                        className="mt-3 flex items-center gap-1 h-12" // Set height to match inputs
+                        onMouseLeave={() => setHoverRating(0)}
+                    >
+                        {[...Array(5)].map((_, index) => {
+                            const starValue = index + 1;
+                            return (
+                                <Star
+                                    key={starValue}
+                                    className={`h-6 w-6 cursor-pointer transition-colors ${
+                                        (hoverRating || formData.rating) >= starValue 
+                                        ? 'text-yellow-400 fill-yellow-400' 
+                                        : 'text-zinc-300'
+                                    }`}
+                                    onClick={() => handleRatingChange(starValue)}
+                                    onMouseEnter={() => setHoverRating(starValue)}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
 
             {/* Main content area */}
