@@ -6,8 +6,9 @@ import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
 import { Suspense } from "react";
 import { useLoaderData, useRevalidator, Await } from "react-router-dom";
-import { getServiceOrderById } from "@/api/serviceOrders";
+import { getServiceOrderById, updateServiceOrderItems } from "@/api/serviceOrders";
 import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
 
 function loader({ params }) {
   return {
@@ -16,10 +17,15 @@ function loader({ params }) {
 }
 
 const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
-  const handleUpdateServiceOrder = async (updatedData) => {
-    await new Promise((resolve, _) => setTimeout(resolve, 4000));
-    console.log("Updating service order:", updatedData);
-    revalidator.revalidate();
+  const handleUpdateServiceOrder = async (updatedData, items) => {
+    console.log(items);
+    try {
+      await updateServiceOrderItems(serviceOrder.id, items);
+      toast.success("Cập nhật lệnh sửa chữa thành công");
+      revalidator.revalidate();
+    } catch (error) {
+      console.error("Failed to update service order items:", error);
+    }
   };
 
   const handleConfirmServiceOrder = async (serviceOrderData) => {
@@ -28,7 +34,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     revalidator.revalidate();
   };
 
-  const handleSendInvoice = async (serviceOrderData) => {
+  const handleSendInvoice = async (serviceOrderData, items) => {
     await new Promise((resolve, _) => setTimeout(resolve, 2000));
     console.log("Sending invoice for service order:", serviceOrderData);
     revalidator.revalidate();
@@ -61,10 +67,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
         }),
       }}
       getTotalPrice={async (items) => {
-        await new Promise((resolve, _) => setTimeout(resolve, 500));
-        const all = [...items.parts, ...items.services, ...items.customs];
-        console.log(all);
-        const sum = all.reduce((acc, x) => acc + x.price * x.quantity, 0);
+        const sum = items.reduce((acc, x) => acc + x.price * x.quantity, 0);
         return {
           price: sum,
           tax: sum * 0.1,

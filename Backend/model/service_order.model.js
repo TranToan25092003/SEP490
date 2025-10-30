@@ -26,10 +26,6 @@ const PartItemSchema = new Schema({
   part_id: { type: Schema.Types.ObjectId, ref: "Part", required: true },
 }, { _id: false });
 
-const CustomItemSchema = new Schema({
-  description: { type: String, required: true },
-}, { _id: false });
-
 
 // Service_Orders Schema
 // The main data model
@@ -63,7 +59,6 @@ const ServiceOrderSchema = new Schema(
 
 ServiceOrderSchema.path("items").discriminator("service", ServiceItemSchema);
 ServiceOrderSchema.path("items").discriminator("part", PartItemSchema);
-ServiceOrderSchema.path("items").discriminator("custom", CustomItemSchema);
 
 ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
   return this.items.reduce((total, item) => {

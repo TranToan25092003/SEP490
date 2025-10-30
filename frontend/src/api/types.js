@@ -126,4 +126,41 @@
  * @property {string} comment - Additional comments or notes
  */
 
+/**
+ * @typedef {Object} TechnicianInfo
+ * @property {string} technicianClerkId - Clerk ID of the technician
+ * @property {"lead" | "assistant"} role - Role of the technician in the task
+ */
+
+/**
+ * @typedef {Object} TechnicianInfoWithAvailabilityDTO
+ * @property {string} technicianClerkId - Clerk ID of the technician
+ * @property {string} technicianName - Name of the technician
+ * @property {boolean} isBusy - Whether the technician is currently assigned to a task
+ * @property {string | null} assignedTaskId - ID of the assigned task, or null if none
+ */
+
+/**
+ * @typedef {Object} CompleteInspectionPayload
+ * @property {string} comment - Comment or notes about the inspection
+ * @property {string[]} photoUrls - URLs of photos taken during the inspection
+ */
+
+/**
+ * @typedef {Object} ServiceTimelineEntry
+ * @property {string} title - Title of the timeline entry
+ * @property {string} comment - Comment or notes for the timeline entry
+ * @property {string[]} photoUrls - URLs of photos for the timeline entry
+ */
+
+/**
+ * @typedef {Object} ServiceOrderItemPayload
+ * @property {string} type - Type of item: "service", "part", or "custom"
+ * @property {string | undefined} serviceId - Service identifier (for service items)
+ * @property {string | undefined} partId - Part identifier (for part items)
+ * @property {string | undefined} name - Name or description of the item
+ * @property {number} price - Price per unit
+ * @property {number} quantity - Quantity of the item
+ */
+
 export {};

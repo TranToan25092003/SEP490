@@ -41,15 +41,9 @@ const serviceItemSchema = basePartShema.extend({
   serviceId: z.string().min(1, "Không được để trống"),
 });
 
-const customItemSchema = basePartShema.extend({
-  type: z.literal("custom"),
-  description: z.string().min(1, "Không được để trống"),
-});
-
 const formSchema = z.object({
   services: z.array(serviceItemSchema),
-  parts: z.array(partItemSchema),
-  customs: z.array(customItemSchema),
+  parts: z.array(partItemSchema)
 });
 
 /**
@@ -98,11 +92,11 @@ const ServiceOrderEditForm = ({
     disabled
   });
 
-  const handleUpdateServiceOrder = (data) => {
+  const handleUpdateServiceOrder = (data, items) => {
     methods.handleSubmit(async () => {
       try {
         setDisabled(true);
-        await onUpdateServiceOrder(data);
+        await onUpdateServiceOrder(data, items);
       } finally {
         setDisabled(false);
       }
@@ -118,12 +112,12 @@ const ServiceOrderEditForm = ({
     }
   };
 
-  const handleSendInvoice = (data) => {
+  const handleSendInvoice = (data, items) => {
     methods.handleSubmit(async () => {
       try {
         methods.handleSubmit(() => {})();
         setDisabled(true);
-        await onSendInvoice(data);
+        await onSendInvoice(data, items);
       } finally {
         setDisabled(false);
       }

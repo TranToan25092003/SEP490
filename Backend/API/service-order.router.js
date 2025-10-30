@@ -20,9 +20,12 @@ const router = express.Router();
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/ServiceOrderSummaryDTO'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ServiceOrderSummaryDTO'
  */
 router.get(
   "/",
@@ -52,7 +55,10 @@ router.get(
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/ServiceOrderDetailDTO'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   $ref: '#/components/schemas/ServiceOrderDetailDTO'
  *       404:
  *         description: Service order not found
  */
@@ -68,6 +74,62 @@ router.get(
   throwErrors,
   authenticate,
   serviceOrderController.getServiceOrderById
+);
+
+/**
+ * @swagger
+ * /service-orders/{id}/items:
+ *   put:
+ *     summary: Update items in a service order
+ *     tags:
+ *       - Service Orders
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the service order
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/ServiceOrderItemPayload'
+ *     responses:
+ *       200:
+ *         description: Service order items updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       404:
+ *         description: Service order not found
+ */
+router.put(
+  "/:id/items",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Service order ID is required")
+      .isMongoId()
+      .withMessage("Service order ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderController.updateServiceOrderItems
 );
 
 module.exports = router;

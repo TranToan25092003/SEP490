@@ -209,7 +209,7 @@
  *       properties:
  *         type:
  *           type: string
- *           enum: [service, part, custom]
+ *           enum: [service, part]
  *           description: Type of item
  *         name:
  *           type: string
@@ -389,6 +389,33 @@
  *           items:
  *             type: string
  *           description: URLs of photos for the timeline entry
+ *
+ *     ServiceOrderItemPayload:
+ *       type: object
+ *       required:
+ *         - type
+ *         - price
+ *         - quantity
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [service, part, custom]
+ *           description: Type of item
+ *         name:
+ *           type: string
+ *           description: Name or description of the item
+ *         serviceId:
+ *           type: string
+ *           description: Service identifier (for service items)
+ *         partId:
+ *           type: string
+ *           description: Part identifier (for part items)
+ *         price:
+ *           type: number
+ *           description: Price per unit
+ *         quantity:
+ *           type: integer
+ *           description: Quantity of the item
  */
 
 module.exports = {};

@@ -39,7 +39,8 @@ class ServiceOrderService {
   /**
    * Update items in a service order
    * @param {string} serviceOrderId
-   * @param {ServiceOrderItem} items
+   * @param {import("./types").ServiceOrderItemPayload[]} items
+   * @returns {Promise<ServiceOrder>}
    */
   async updateServiceOrderItems(serviceOrderId, items) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
@@ -51,14 +52,23 @@ class ServiceOrderService {
       );
     }
 
-    serviceOrder.items = items;
+    serviceOrder.items = items.map(item => ({
+      item_type: item.type,
+      service_id: item.serviceId,
+      part_id: item.partId,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity
+    }));
     await serviceOrder.save();
+
+    return serviceOrder;
   }
 
   /**
    * Get service order by ID with detailed information
    * @param {string} serviceOrderId
-   * @returns {Promise<ServiceOrderDetailDTO>}
+   * @returns {Promise<import("./types").ServiceOrderDetailDTO | null>}
    */
   async getServiceOrderById(serviceOrderId) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)

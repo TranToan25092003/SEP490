@@ -3,6 +3,7 @@ import { customFetch } from "@/utils/customAxios";
 /**
  * @typedef {import('./types').ServiceOrderSummaryDTO} ServiceOrderSummaryDTO
  * @typedef {import('./types').ServiceOrderDetailDTO} ServiceOrderDetailDTO
+ * @typedef {import('./types').ServiceOrderItemPayload} ServiceOrderItemPayload
  */
 
 /**
@@ -52,4 +53,38 @@ export const getServiceOrderById = async (serviceOrderId) => {
   });
 
   return response.data.data;
+};
+
+/**
+ * Update items in a service order
+ *
+ * @async
+ * @function updateServiceOrderItems
+ * @param {string} serviceOrderId - The ID of the service order to update
+ * @param {ServiceOrderItemPayload[]} items - Array of items to update
+ * @returns {Promise<void>}
+ * @throws {Error} If the API request fails or service order is not found
+ *
+ * @example
+ * try {
+ *   const items = [
+ *     { type: 'service', serviceId: 'service-123', price: 100, quantity: 1 },
+ *     { type: 'part', partId: 'part-456', price: 50, quantity: 2 }
+ *   ];
+ *   await updateServiceOrderItems('order-789', items);
+ *   console.log('Items updated successfully');
+ * } catch (error) {
+ *   console.error('Failed to update service order items:', error);
+ * }
+ */
+export const updateServiceOrderItems = async (serviceOrderId, items) => {
+  const response = await customFetch(`/service-orders/${serviceOrderId}/items`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: { items },
+  });
+
+  return response.data;
 };

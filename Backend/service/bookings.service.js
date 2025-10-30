@@ -161,7 +161,7 @@ class BookingsService {
   /**
    * Get booking by ID.
    * @param {string} bookingId
-   * @returns {Promise<import("./types").BookingDTO>}
+   * @returns {Promise<import("./types").BookingDTO | null>}
    */
   async getBookingById(bookingId) {
     const booking = await Booking.findById(bookingId)

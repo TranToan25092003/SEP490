@@ -1,7 +1,7 @@
 const serviceOrderService = require("../service/service_order.service");
 
 class ServiceOrderController {
-  async getAllServiceOrders(req, res, next) {
+  async getAllServiceOrders(_, res, next) {
     try {
       const serviceOrders = await serviceOrderService.getAllServiceOrdersByCreatedDateAscending();
 
@@ -23,6 +23,21 @@ class ServiceOrderController {
 
       res.status(200).json({
         data: serviceOrder
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateServiceOrderItems(req, res, next) {
+    try {
+      const serviceOrderId = req.params.id;
+      const items = req.body.items;
+
+      await serviceOrderService.updateServiceOrderItems(serviceOrderId, items);
+
+      res.status(200).json({
+        message: "Service order items updated successfully",
       });
     } catch (error) {
       next(error);

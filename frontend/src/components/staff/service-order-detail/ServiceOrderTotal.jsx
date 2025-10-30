@@ -58,12 +58,15 @@ const ServiceOrderTotal = ({
       },
       callback: ({ values, isValid }) => {
         if (isValid) {
-          debounced(() => fetchPrice(values));
+          debounced(() => fetchPrice([
+            ...values.services,
+            ...values.parts
+          ]));
         }
       }
     })
 
-    fetchPrice(items);
+    fetchPrice([...items.services, ...items.parts]);
 
     return () => {
       unsub();
@@ -97,7 +100,10 @@ const ServiceOrderTotal = ({
           type="button"
           variant="outline"
           onClick={() => {
-            handleUpdateServiceOrder(serviceOrder);
+            handleUpdateServiceOrder(serviceOrder, [
+              ...items.services,
+              ...items.parts
+            ]);
           }}
           disabled={disabled || !hasServices}
           aria-busy={disabled || !hasServices}
@@ -108,7 +114,10 @@ const ServiceOrderTotal = ({
         <Button
           type="button"
           onClick={() => {
-            handleSendInvoice(serviceOrder);
+            handleSendInvoice(serviceOrder, [
+              ...items.services,
+              ...items.parts
+            ]);
           }}
           disabled={disabled || !hasServices}
           aria-busy={disabled || !hasServices}
