@@ -17,7 +17,7 @@ function loader({ params }) {
 }
 
 const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
-  const handleUpdateServiceOrder = async (updatedData, items) => {
+  const handleUpdateServiceOrder = async (serviceOrder, items) => {
     console.log(items);
     try {
       await updateServiceOrderItems(serviceOrder.id, items);
@@ -42,30 +42,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
 
   return (
     <ServiceOrderEditForm
-      serviceOrder={{
-        ...serviceOrder,
-        items: serviceOrder.items.map((item) => {
-          switch (item.item_type) {
-            case "part":
-              return {
-                price: item.price,
-                quantity: item.quantity,
-                partId: item.part_id,
-                type: "part",
-              };
-            case "service":
-              return {
-                price: item.price,
-                quantity: item.quantity,
-                serviceId: item.service_id,
-                name: item.name,
-                type: "service",
-              };
-            default:
-              return item;
-          }
-        }),
-      }}
+      serviceOrder={serviceOrder}
       getTotalPrice={async (items) => {
         const sum = items.reduce((acc, x) => acc + x.price * x.quantity, 0);
         return {

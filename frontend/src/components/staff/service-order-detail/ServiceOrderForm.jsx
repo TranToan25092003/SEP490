@@ -38,7 +38,8 @@ const partItemSchema = basePartShema.extend({
 
 const serviceItemSchema = basePartShema.extend({
   type: z.literal("service"),
-  serviceId: z.string().min(1, "Không được để trống"),
+  serviceId: z.string().optional(),
+  name: z.string().min(1, "Không được để trống"),
 });
 
 const formSchema = z.object({

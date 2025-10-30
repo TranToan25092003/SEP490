@@ -1,31 +1,39 @@
 import { Plus, Package, Wrench, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ChooseServiceModal from "./ChooseServiceModal";
+import ChoosePartsModal from "./ChoosePartsModal";
 import NiceModal from "@ebay/nice-modal-react";
 import { Warehouse } from "lucide-react";
+import { NumericFormat } from "react-number-format";
 
-const PartItemRow = ({ index, disabled, register, errors, ...props }) => (
+const PartItemRow = ({
+  index,
+  disabled,
+  control,
+  register,
+  errors,
+  ...props
+}) => (
   <div className="grid grid-cols-12 items-start gap-2 px-3" {...props}>
     <div className="col-span-5">
       {index === 0 && (
         <label
-          htmlFor={`parts.${index}.name`}
+          htmlFor={`parts.${index}.partName`}
           className="text-xs font-semibold text-muted-foreground"
         >
           Tên phụ tùng
         </label>
       )}
       <Input
-        id={`parts.${index}.name`}
+        id={`parts.${index}.partName`}
         placeholder="Nhập tên phụ tùng"
-        {...register(`parts.${index}.partId`)}
-        readOnly={disabled}
+        {...register(`parts.${index}.partName`, { disabled: true })}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
       />
       {errors?.parts?.[index]?.partId && (
@@ -44,14 +52,25 @@ const PartItemRow = ({ index, disabled, register, errors, ...props }) => (
           Giá
         </label>
       )}
-      <Input
-        id={`parts.${index}.price`}
-        placeholder="Giá"
-        type="number"
-        {...register(`parts.${index}.price`)}
-        readOnly={disabled}
-        min={0}
-        className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+      <Controller
+        name={`parts.${index}.price`}
+        control={control}
+        render={({ field: { onChange, value } }) => {
+          console.log(value);
+          return (
+            <NumericFormat
+              customInput={Input}
+              value={value}
+              onValueChange={(v) => onChange(v.value)}
+              id={`parts.${index}.price`}
+              placeholder="Giá"
+              thousandSeparator=","
+              suffix=" ₫"
+              disabled={disabled}
+              className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+            />
+          );
+        }}
       />
       {errors?.parts?.[index]?.price && (
         <p className="text-sm text-red-500 mt-1">
@@ -74,7 +93,6 @@ const PartItemRow = ({ index, disabled, register, errors, ...props }) => (
         placeholder="Số lượng"
         type="number"
         {...register(`parts.${index}.quantity`)}
-        readOnly={disabled}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
         min={1}
       />
@@ -103,6 +121,7 @@ const PartItemRow = ({ index, disabled, register, errors, ...props }) => (
 const ServiceItemRow = ({
   index,
   disabled,
+  control,
   register,
   errors,
   ...props
@@ -121,7 +140,6 @@ const ServiceItemRow = ({
         id={`services.${index}.name`}
         placeholder="Nhập tên dịch vụ"
         {...register(`services.${index}.name`)}
-        readOnly={disabled}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
       />
       {errors?.services?.[index]?.serviceId && (
@@ -140,14 +158,25 @@ const ServiceItemRow = ({
           Giá
         </label>
       )}
-      <Input
-        id={`services.${index}.price`}
-        placeholder="Giá"
-        type="number"
-        {...register(`services.${index}.price`)}
-        readOnly={disabled}
-        className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
-        min={0}
+      <Controller
+        name={`services.${index}.price`}
+        control={control}
+        render={({ field: { onChange, value } }) => {
+          console.log(value);
+          return (
+            <NumericFormat
+              customInput={Input}
+              value={value}
+              onValueChange={(v) => onChange(v.value)}
+              id={`services.${index}.price`}
+              placeholder="Giá"
+              thousandSeparator=","
+              suffix=" ₫"
+              disabled={disabled}
+              className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+            />
+          );
+        }}
       />
       {errors?.services?.[index]?.price && (
         <p className="text-sm text-red-500 mt-1">
@@ -170,7 +199,6 @@ const ServiceItemRow = ({
         placeholder="Số lượng"
         type="number"
         {...register(`services.${index}.quantity`)}
-        readOnly={disabled}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
         min={1}
       />
@@ -205,7 +233,7 @@ const EmptyState = ({ icon: Icon, title }) => (
 
 const ServiceOrderServices = ({ className, ...props }) => {
   const { disabled } = useServiceOrder();
-  const { register, formState: { errors } } = useFormContext();
+  const { register, control, formState: { errors } } = useFormContext();
 
   const partsMethods = useFieldArray({
     name: "parts",
@@ -215,13 +243,22 @@ const ServiceOrderServices = ({ className, ...props }) => {
     name: "services",
   });
 
-  const handleAddPart = () => {
-    partsMethods.append({
-      type: "part",
-      partId: "",
-      price: 0,
-      quantity: 1
-    });
+  const handleAddPart = async () => {
+    try {
+      const parts = await NiceModal.show(ChoosePartsModal);
+      for (const part of parts) {
+        console.log(part);
+        partsMethods.append({
+          type: "part",
+          partId: part._id,
+          partName: part.name,
+          price: part.sellingPrice,
+          quantity: 1
+        });
+      }
+    } catch (error) {
+      console.error("Failed to open ChoosePartsModal:", error);
+    }
   };
 
   const handleAddServiceFromInventory = async () => {
@@ -279,6 +316,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     index={index}
                     disabled={disabled}
                     register={register}
+                    control={control}
                     errors={errors}
                     onRemove={{ onClick: () => partsMethods.remove(index) }}
                   />
@@ -312,6 +350,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     key={item.id}
                     index={index}
                     disabled={disabled}
+                    control={control}
                     register={register}
                     errors={errors}
                     onRemove={{ onClick: () => serviceItemsMethods.remove(index) }}

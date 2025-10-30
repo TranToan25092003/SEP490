@@ -76,6 +76,7 @@ class ServiceOrderService {
         path: "booking_id",
         populate: { path: "vehicle_id" }
       })
+      .populate("items.part_id")
       .exec();
 
     if (!serviceOrder) {
@@ -92,7 +93,15 @@ class ServiceOrderService {
       customerClerkId: serviceOrder.booking_id.customer_clerk_id,
       licensePlate: licensePlateInfo,
       vehicleId: serviceOrder.booking_id.vehicle_id._id.toString(),
-      items: serviceOrder.items,
+      items: serviceOrder.items.map(item => ({
+        type: item.item_type,
+        serviceId: item.service_id?.toString(),
+        partId: item.part_id?._id?.toString(),
+        partName: item.part_id?.name,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity
+      })),
       status: serviceOrder.status,
       createdAt: serviceOrder.createdAt,
       completedAt: serviceOrder.completed_at,
