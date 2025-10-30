@@ -36,6 +36,11 @@ const serviceOrderTaskSchema = new mongoose.Schema(
     actual_end_time: {
       type: Date,
     },
+    status: {
+      type: String,
+      enum: ["scheduled", "in_progress", "completed"],
+      default: "scheduled",
+    },
     assigned_technicians: [assignedTechnicianSchema],
     assigned_bay_id: {
       // I assume every task will be done on a bay
@@ -48,16 +53,6 @@ const serviceOrderTaskSchema = new mongoose.Schema(
 );
 
 const ServiceOrderTask = mongoose.model("ServiceOrderTask", serviceOrderTaskSchema, "service_order_tasks");
-
-serviceOrderTaskSchema.virtual("state", function () {
-  if (!this.actual_start_time) {
-    return "scheduled";
-  } else if (!this.actual_end_time) {
-    return "in_progress";
-  } else {
-    return "completed";
-  }
-});
 
 const InspectionTask = serviceOrderTaskSchema.discriminator("inspection", new mongoose.Schema({
   photoUrls: [String],

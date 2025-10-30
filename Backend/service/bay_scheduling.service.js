@@ -18,13 +18,10 @@ class BaySchedulingService {
    * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
    * @param {string} serviceOrderId
    * @param {Number} durationToHoldForMinutes
-   * @param {{
-   *  technicianClerkId: string,
-   *  role: "lead" | "assistant"
-   * }[]} techniciansInfo
+   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
    * @returns {Promise<InspectionTask>}
    */
-  async scheduleInspectionTask(serviceOrderId, durationToHoldForMinutes, techniciansInfo) {
+  async scheduleInspectionTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
     const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
     if (!slot) {
       throw new DomainError(
@@ -43,7 +40,7 @@ class BaySchedulingService {
       expected_end_time: slot.end,
       actual_start_time: null,
       actual_end_time: null,
-      assigned_technicians: techniciansInfo.map(ti => ({
+      assigned_technicians: techniciansInfoArray.map(ti => ({
         technician_clerk_id: ti.technicianClerkId,
         role: ti.role
       })),
@@ -59,10 +56,10 @@ class BaySchedulingService {
    * Schedule a servicing task as soon as possible, assigning a bay and timeslot.
    * @param {string} serviceOrderId
    * @param {number} durationToHoldForMinutes
-   * @param {{ technicianClerkId: string, role: "lead" | "assistant" }[]} techniciansInfo
+   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
    * @returns {Promise<ServicingTask>}
    */
-  async scheduleServicingTask(serviceOrderId, durationToHoldForMinutes, techniciansInfo) {
+  async scheduleServicingTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
     const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
     if (!slot) {
       throw new DomainError(
@@ -80,7 +77,7 @@ class BaySchedulingService {
       expected_end_time: slot.end,
       actual_start_time: null,
       actual_end_time: null,
-      assigned_technicians: techniciansInfo.map(ti => ({
+      assigned_technicians: techniciansInfoArray.map(ti => ({
         technician_clerk_id: ti.technicianClerkId,
         role: ti.role
       })),
@@ -111,9 +108,7 @@ class BaySchedulingService {
       Date.now() + (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
     )
   ) {
-    const initial = new Date(starting);
-
-    while (starting.getTime() - initial.getTime() < maxCutOffDate.getTime() - initial.getTime()) {
+    while (starting < maxCutOffDate) {
       const end = new Date(starting.getTime() + durationInMinutes * 60_000);
       const [availableBays, conflictingTasksMap] = await this.findAvailableBay(starting, end);
 
@@ -124,18 +119,33 @@ class BaySchedulingService {
           candidateBays: availableBays,
         };
       } else {
-        let nextTime = null;
-        for (const tasks of Object.values(conflictingTasksMap)) {
-          for (const t of tasks) {
-            const candidate = t.expected_end_time.getTime() + 2_000;
-            if (nextTime === null || candidate < nextTime.getTime()) {
-              nextTime = new Date(candidate);
+        // Preprocess: Finding the maximum endtime of conflicting tasks per bay
+        const maxEndTimePerBay = [];
+        for (const conflictingTasksPerBay of Object.values(conflictingTasksMap)) {
+          let maxEndTime = null;
+          for (const task of conflictingTasksPerBay) {
+            if (maxEndTime === null || task.expected_end_time > maxEndTime) {
+              maxEndTime = task.expected_end_time;
             }
           }
+          maxEndTimePerBay.push(maxEndTime);
         }
 
-        // fallback: if for some reason we couldn't derive a next time, bump by the duration
-        starting = nextTime || new Date(end.getTime());
+        // Finding the minimum endtimes across bays
+        const nextTime = maxEndTimePerBay.reduce((min, curr) => {
+          if (min === null || curr < min) {
+            return curr;
+          }
+          return min;
+        }, null);
+
+
+        //Defensive programming: bump by duration
+        if (nextTime === null) {
+          starting = new Date(starting.getTime() + durationInMinutes * 60_000);
+        } else {
+          starting = nextTime;
+        }
       }
     }
 
@@ -154,6 +164,7 @@ class BaySchedulingService {
     const conflictingTasksMap = {};
 
     for (const bay of bays) {
+      // Finding tasks that conflict with the given time slot (state is not 'completed')
       let conflictingTasks = await ServiceOrderTask.find({
         assigned_bay_id: bay._id,
         $or: [
@@ -180,7 +191,6 @@ class BaySchedulingService {
 
     return [availableBays, conflictingTasksMap];
   }
-
 }
 
 

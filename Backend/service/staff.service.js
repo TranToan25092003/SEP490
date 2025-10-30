@@ -35,15 +35,13 @@ class StaffService {
    * List all technicians in the system along with their status
    * whether they are currently assigned to any tasks.
    *
-   * @return {{
-   *   technicianClerkId: string,
-   *   technicianName: string,
-   *   isBusy: boolean,
-   *   assignedTaskId: string | null
-   * }}
+   * @return {import("./types").TechnicianInfoWithAvailabilityDTO[]}
    */
-  async getTechniciansStatus() {
+  async getTechniciansWithStatusAtThisMoment() {
     const technicians = await getAllTechnicians();
+    const activeTasks = await ServiceOrderTask.find({
+      
+
   }
 }
 

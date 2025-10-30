@@ -1,6 +1,28 @@
 // The DTOs will become Swagger definitions and client API models
 
 /**
+ * STAFF / TECHNICIAN SERVICE
+ */
+
+/**
+ * @typedef {object} TechnicianInfo
+ * @property {string} technicianClerkId - Clerk ID of the technician.
+ * @property {"lead" | "assistant"} role - Role of the technician in the task.
+ */
+
+/**
+ * @typedef {object} TechnicianInfoWithAvailabilityDTO
+ * @property {string} technicianClerkId - Clerk ID of the technician.
+ * @property {string} technicianName - Name of the technician.
+ * @property {boolean} isBusy - Whether the technician is currently assigned to a task.
+ * @property {string | null} assignedTaskId - ID of the assigned task, or null if none.
+ */
+
+/**
+ * BOOKING SERVICE
+ */
+
+/**
  * @typedef {object} Timeslot
  * @property {number} day - Day of the week (0-6, where 0 is Sunday).
  * @property {number} month - Month of the year (1-12).
@@ -40,26 +62,16 @@
  */
 
 /**
+ * SERVICE ORDER SERVICE
+ */
+
+/**
  * @typedef {object} ServiceDTO
  * @property {string} id - Service identifier.
  * @property {string} name - Name of the service.
  * @property {number} basePrice - Base price of the service.
  * @property {string} description - Description of the service.
  * @property {number} estimatedTimeInMinutes - Estimated time to complete the service in minutes.
- */
-
-/**
- * @typedef {object} VehicleDTO
- * @property {string} id - Vehicle identifier.
- * @property {string} licensePlate - License plate number of the vehicle.
- * @property {number} odoReading - Odometer reading of the vehicle.
- * @property {number} year - Manufacturing year of the vehicle.
- * @property {string} brand - Brand of the vehicle.
- * @property {string} model - Model name of the vehicle.
- */
-
-/**
- * @typedef {VehicleDTO | { isAvailable: boolean }} VehicleWithAvailabilityDTO
  */
 
 /**
@@ -85,8 +97,6 @@
  * @property {number} quantity - Quantity of the item.
  */
 
-
-
 /**
  * @typedef {object} ServiceOrderDetailDTO
  * @property {string} id - Service order identifier.
@@ -100,6 +110,41 @@
  * @property {Date} [completedAt] - Date when the service order was completed.
  * @property {Date} [estimatedCompletedAt] - Estimated completion date.
  * @property {string} comment - Additional comments or notes.
+ */
+
+/**
+ * SERVICE ORDER TASK SERVICE
+ */
+
+/**
+ * @typedef {object} CompleteInspectionPayload
+ * @property {string} comment - Comment or notes about the inspection.
+ * @property {string[]} photoUrls - URLs of photos taken during the inspection.
+ */
+
+/**
+ * @typedef {object} ServiceTimelineEntry
+ * @property {string} title - Title of the timeline entry.
+ * @property {string} comment - Comment or notes for the timeline entry.
+ * @property {string[]} photoUrls - URLs of photos for the timeline entry.
+ */
+
+/**
+ * VEHICLE SERVICE
+ */
+
+/**
+ * @typedef {object} VehicleDTO
+ * @property {string} id - Vehicle identifier.
+ * @property {string} licensePlate - License plate number of the vehicle.
+ * @property {number} odoReading - Odometer reading of the vehicle.
+ * @property {number} year - Manufacturing year of the vehicle.
+ * @property {string} brand - Brand of the vehicle.
+ * @property {string} model - Model name of the vehicle.
+ */
+
+/**
+ * @typedef {VehicleDTO | { isAvailable: boolean }} VehicleWithAvailabilityDTO
  */
 
 module.exports = {};
