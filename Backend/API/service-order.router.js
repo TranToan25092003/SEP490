@@ -1,6 +1,6 @@
 const express = require("express");
 const { param } = require("express-validator");
-const serviceOrderController = require("../controller/staff/service-order.controller");
+const serviceOrderController = require("../controller/service-order.controller");
 const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();

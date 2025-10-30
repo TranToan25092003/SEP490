@@ -22,6 +22,8 @@ class BaySchedulingService {
    * @returns {Promise<InspectionTask>}
    */
   async scheduleInspectionTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
+    // TODO: VERY IMPORTANT: VALIDATE TECHNICIANS AVAILABILITY
+
     const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
     if (!slot) {
       throw new DomainError(
@@ -60,6 +62,8 @@ class BaySchedulingService {
    * @returns {Promise<ServicingTask>}
    */
   async scheduleServicingTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
+    // TODO: VERY IMPORTANT: VALIDATE TECHNICIANS AVAILABILITY
+
     const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
     if (!slot) {
       throw new DomainError(

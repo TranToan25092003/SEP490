@@ -39,9 +39,36 @@ class StaffService {
    */
   async getTechniciansWithStatusAtThisMoment() {
     const technicians = await getAllTechnicians();
-    const activeTasks = await ServiceOrderTask.find({
-      
 
+    // Find all tasks in progress
+    const activeTasks = await ServiceOrderTask.find({
+      status: "in_progress"
+    }).exec();
+
+    // Just data conversion
+    const map = {};
+
+    for (const task of activeTasks) {
+      for (const assignedTech of task.assigned_technicians) {
+        const technicianClerkId = assignedTech.technician_clerk_id;
+        map[technicianClerkId] = {
+          isBusy: true,
+          assignedTaskId: task._id
+        };
+      }
+    }
+
+    return technicians.map(technician => {
+      const info = map[technician.technicianClerkId] || {
+        isBusy: false,
+        assignedTaskId: null
+      };
+
+      return {
+        ...technician,
+        ...info
+      };
+    });
   }
 }
 

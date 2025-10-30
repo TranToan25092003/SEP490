@@ -1,4 +1,4 @@
-const serviceOrderService = require("../../service/service_order.service");
+const serviceOrderService = require("../service/service_order.service");
 
 class ServiceOrderController {
   async getAllServiceOrders(req, res, next) {

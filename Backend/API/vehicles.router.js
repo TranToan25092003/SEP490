@@ -1,7 +1,5 @@
 const express = require("express");
-const { body, param } = require("express-validator");
 const vehiclesController = require("../controller/vehicles.controller");
-const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
 const authenticate = require("../middleware/guards/authen.middleware").authenticate;
 const router = new express.Router();
 

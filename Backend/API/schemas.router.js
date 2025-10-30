@@ -319,6 +319,76 @@
  *           type: string
  *           format: date-time
  *           description: Estimated completion date
+ *
+ *     TechnicianInfo:
+ *       type: object
+ *       required:
+ *         - technicianClerkId
+ *         - role
+ *       properties:
+ *         technicianClerkId:
+ *           type: string
+ *           description: Clerk ID of the technician
+ *         role:
+ *           type: string
+ *           enum: [lead, assistant]
+ *           description: Role of the technician in the task
+ *
+ *     TechnicianInfoWithAvailabilityDTO:
+ *       type: object
+ *       required:
+ *         - technicianClerkId
+ *         - technicianName
+ *         - isBusy
+ *         - assignedTaskId
+ *       properties:
+ *         technicianClerkId:
+ *           type: string
+ *           description: Clerk ID of the technician
+ *         technicianName:
+ *           type: string
+ *           description: Name of the technician
+ *         isBusy:
+ *           type: boolean
+ *           description: Whether the technician is currently assigned to a task
+ *         assignedTaskId:
+ *           type: string
+ *           nullable: true
+ *           description: ID of the assigned task, or null if none
+ *
+ *     CompleteInspectionPayload:
+ *       type: object
+ *       required:
+ *         - comment
+ *         - photoUrls
+ *       properties:
+ *         comment:
+ *           type: string
+ *           description: Comment or notes about the inspection
+ *         photoUrls:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: URLs of photos taken during the inspection
+ *
+ *     ServiceTimelineEntry:
+ *       type: object
+ *       required:
+ *         - title
+ *         - comment
+ *         - photoUrls
+ *       properties:
+ *         title:
+ *           type: string
+ *           description: Title of the timeline entry
+ *         comment:
+ *           type: string
+ *           description: Comment or notes for the timeline entry
+ *         photoUrls:
+ *           type: array
+ *           items:
+ *             type: string
+ *           description: URLs of photos for the timeline entry
  */
 
 module.exports = {};
