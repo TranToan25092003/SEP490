@@ -416,6 +416,138 @@
  *         quantity:
  *           type: integer
  *           description: Quantity of the item
+ *
+ *     QuoteItemDTO:
+ *       type: object
+ *       required:
+ *         - type
+ *         - name
+ *         - quantity
+ *         - price
+ *       properties:
+ *         type:
+ *           type: string
+ *           enum: [part, service]
+ *           description: Type of item
+ *         name:
+ *           type: string
+ *           description: Name or description of the item
+ *         quantity:
+ *           type: integer
+ *           description: Quantity of the item
+ *         price:
+ *           type: number
+ *           description: Price per unit
+ *
+ *     QuoteDTO:
+ *       type: object
+ *       required:
+ *         - id
+ *         - serviceOrderId
+ *         - items
+ *         - totalAmount
+ *         - tax
+ *         - grandTotal
+ *         - status
+ *         - createdAt
+ *         - updatedAt
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Quote identifier
+ *         serviceOrderId:
+ *           type: string
+ *           description: Associated service order identifier
+ *         items:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/QuoteItemDTO'
+ *           description: Array of quote items (parts and services)
+ *         totalAmount:
+ *           type: number
+ *           description: Total amount before tax
+ *         tax:
+ *           type: number
+ *           description: Tax amount
+ *         grandTotal:
+ *           type: number
+ *           description: Grand total (totalAmount + tax)
+ *         status:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *           description: Status of the quote
+ *         rejectedReason:
+ *           type: string
+ *           description: Reason for rejection (if status is "rejected")
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the quote was created
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the quote was last updated
+ *
+ *     QuoteSummaryDTO:
+ *       type: object
+ *       required:
+ *         - id
+ *         - serviceOrderId
+ *         - grandTotal
+ *         - status
+ *         - createdAt
+ *       properties:
+ *         id:
+ *           type: string
+ *           description: Quote identifier
+ *         serviceOrderId:
+ *           type: string
+ *           description: Associated service order identifier
+ *         grandTotal:
+ *           type: number
+ *           description: Grand total amount
+ *         status:
+ *           type: string
+ *           enum: [pending, approved, rejected]
+ *           description: Status of the quote
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           description: Date when the quote was created
+ *
+ *     PaginationInfo:
+ *       type: object
+ *       required:
+ *         - currentPage
+ *         - totalPages
+ *         - totalItems
+ *         - itemsPerPage
+ *       properties:
+ *         currentPage:
+ *           type: integer
+ *           description: Current page number (1-indexed)
+ *         totalPages:
+ *           type: integer
+ *           description: Total number of pages
+ *         totalItems:
+ *           type: integer
+ *           description: Total number of items
+ *         itemsPerPage:
+ *           type: integer
+ *           description: Number of items per page
+ *
+ *     QuotesListResponse:
+ *       type: object
+ *       required:
+ *         - quotes
+ *         - pagination
+ *       properties:
+ *         quotes:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/QuoteSummaryDTO'
+ *         pagination:
+ *           $ref: '#/components/schemas/PaginationInfo'
  */
 
 module.exports = {};

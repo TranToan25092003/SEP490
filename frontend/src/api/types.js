@@ -163,4 +163,49 @@
  * @property {number} quantity - Quantity of the item
  */
 
+/**
+ * @typedef {Object} QuoteItemDTO
+ * @property {"part" | "service"} type - Type of item: "part" or "service"
+ * @property {string} name - Name or description of the item
+ * @property {number} quantity - Quantity of the item
+ * @property {number} price - Price per unit
+ */
+
+/**
+ * @typedef {Object} QuoteDTO
+ * @property {string} id - Quote identifier
+ * @property {string} serviceOrderId - Associated service order identifier
+ * @property {QuoteItemDTO[]} items - Array of quote items (parts and services)
+ * @property {number} totalAmount - Total amount before tax
+ * @property {number} tax - Tax amount
+ * @property {number} grandTotal - Grand total (totalAmount + tax)
+ * @property {"pending" | "approved" | "rejected"} status - Status of the quote
+ * @property {string} [rejectedReason] - Reason for rejection (if status is "rejected")
+ * @property {string} createdAt - Date when the quote was created (ISO 8601 format)
+ * @property {string} updatedAt - Date when the quote was last updated (ISO 8601 format)
+ */
+
+/**
+ * @typedef {Object} QuoteSummaryDTO
+ * @property {string} id - Quote identifier
+ * @property {string} serviceOrderId - Associated service order identifier
+ * @property {number} grandTotal - Grand total amount
+ * @property {"pending" | "approved" | "rejected"} status - Status of the quote
+ * @property {string} createdAt - Date when the quote was created (ISO 8601 format)
+ */
+
+/**
+ * @typedef {Object} PaginationInfo
+ * @property {number} currentPage - Current page number (1-indexed)
+ * @property {number} totalPages - Total number of pages
+ * @property {number} totalItems - Total number of items
+ * @property {number} itemsPerPage - Number of items per page
+ */
+
+/**
+ * @typedef {Object} QuotesListResponse
+ * @property {QuoteSummaryDTO[]} quotes - List of quote summaries
+ * @property {PaginationInfo} pagination - Pagination information
+ */
+
 export {};

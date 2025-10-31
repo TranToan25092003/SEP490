@@ -16,6 +16,8 @@ import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
+import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
+import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
 import ServiceOrderList from "./pages/staff/ServiceOrderList";
 import ServiceOrderAdd from "./pages/staff/ServiceOrderAdd";
 import BookingDetail from "./pages/staff/BookingDetail";
@@ -167,6 +169,16 @@ const router = createBrowserRouter([
         path: "service-order/:id",
         element: <ServiceOrderDetail />,
         loader: ServiceOrderDetail.loader,
+      },
+      {
+        path: "service-order/:id/quotes",
+        element: <ServiceOrderDetailQuotes />,
+        loader: ServiceOrderDetailQuotes.loader,
+      },
+      {
+        path: "service-order/:id/progress",
+        element: <ServiceOrderDetailProgress />,
+        loader: ServiceOrderDetailProgress.loader,
       },
       {
         path: "service-order/",

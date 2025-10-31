@@ -184,7 +184,7 @@ class BaySchedulingService {
           },
         ],
       }).exec();
-      conflictingTasks = conflictingTasks.filter(task => task.state !== "completed");
+      conflictingTasks = conflictingTasks.filter(task => task.status !== "completed");
 
       if (conflictingTasks.length === 0) {
         availableBays.push(bay);

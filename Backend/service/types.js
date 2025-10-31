@@ -151,4 +151,39 @@
  * @typedef {VehicleDTO | { isAvailable: boolean }} VehicleWithAvailabilityDTO
  */
 
+/**
+ * QUOTE SERVICE
+ */
+
+/**
+ * @typedef {object} QuoteItemDTO
+ * @property {"part" | "service"} type - Type of item: "part" or "service"
+ * @property {string} name - Name or description of the item
+ * @property {number} quantity - Quantity of the item
+ * @property {number} price - Price per unit
+ */
+
+/**
+ * @typedef {object} QuoteDTO
+ * @property {string} id - Quote identifier
+ * @property {string} serviceOrderId - Associated service order identifier
+ * @property {Array<QuoteItemDTO>} items - Array of quote items (parts and services)
+ * @property {number} totalAmount - Total amount before tax
+ * @property {number} tax - Tax amount
+ * @property {number} grandTotal - Grand total (totalAmount + tax)
+ * @property {"pending" | "approved" | "rejected"} status - Status of the quote
+ * @property {string} [rejectedReason] - Reason for rejection (if status is "rejected")
+ * @property {Date} createdAt - Date when the quote was created
+ * @property {Date} updatedAt - Date when the quote was last updated
+ */
+
+/**
+ * @typedef {object} QuoteSummaryDTO
+ * @property {string} id - Quote identifier
+ * @property {string} serviceOrderId - Associated service order identifier
+ * @property {number} grandTotal - Grand total amount
+ * @property {"pending" | "approved" | "rejected"} status - Status of the quote
+ * @property {Date} createdAt - Date when the quote was created
+ */
+
 module.exports = {};

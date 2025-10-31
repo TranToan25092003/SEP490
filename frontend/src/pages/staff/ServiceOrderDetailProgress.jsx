@@ -7,7 +7,6 @@ import { H3 } from "@/components/ui/headings";
 import { Suspense } from "react";
 import { useLoaderData, useParams, useRevalidator, Await, Link } from "react-router-dom";
 import { getServiceOrderById, updateServiceOrderItems } from "@/api/serviceOrders";
-import { createQuote } from "@/api/quotes";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import {
@@ -24,6 +23,7 @@ function loader({ params }) {
 
 const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
   const handleUpdateServiceOrder = async (serviceOrder, items) => {
+    console.log(items);
     try {
       await updateServiceOrderItems(serviceOrder.id, items);
       toast.success("Cập nhật lệnh sửa chữa thành công");
@@ -39,15 +39,10 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     revalidator.revalidate();
   };
 
-  const handleSendInvoice = async (serviceOrderData, _) => {
-    try {
-      await createQuote(serviceOrderData.id);
-      toast.success("Gửi báo giá thành công");
-      revalidator.revalidate();
-    } catch (error) {
-      console.error("Failed to send invoice:", error);
-      return;
-    }
+  const handleSendInvoice = async (serviceOrderData, items) => {
+    await new Promise((resolve, _) => setTimeout(resolve, 2000));
+    console.log("Sending invoice for service order:", serviceOrderData);
+    revalidator.revalidate();
   };
 
   return (
@@ -78,7 +73,7 @@ const ServiceOrderDetail = () => {
       <BackButton to="/staff/service-order" label="Quay lại trang quản lý lệnh" />
       <div className="flex justify-between">
         <H3>Chi Tiết Lệnh Sửa Chữa</H3>
-        <Tabs value="main">
+        <Tabs value="progress">
           <TabsList>
             <TabsTrigger value="main">
               <Link to={`/staff/service-order/${id}`}>
@@ -108,7 +103,7 @@ const ServiceOrderDetail = () => {
           resolve={serviceOrder}
           errorElement={
             <div className="text-center py-8 text-destructive">
-              Không thể tải thông tin lệnh sửa chữa
+              Không thể tải tiến trình
             </div>
           }
         >

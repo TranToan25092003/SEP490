@@ -11,7 +11,6 @@ const LoyalPoint = require("./loyalty_points.model");
 const MaintenanceRule = require("./maintenance_rule.model");
 const Notification = require("./notification.model");
 const Part = require("./part.model");
-const QuotePart = require("./quote_part.model");
 const Quote = require("./quote.model");
 const MediaAsset = require("./media_asset.model");
 const RecallVehicles = require("./recall_vehicles.model");
@@ -36,7 +35,6 @@ module.exports = {
   LoyalPoint,
   MaintenanceRule,
   Notification,
-  QuotePart,
   Part,
   Quote,
   MediaAsset,
