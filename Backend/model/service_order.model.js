@@ -66,6 +66,15 @@ ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
   }, 0);
 };
 
+ServiceOrderSchema.methods.getTaxAmount = function () {
+  const totalBeforeTax = this.getTotalCostBeforeTax();
+  return totalBeforeTax * 0.1;
+}
+
+ServiceOrderSchema.methods.getAmountAfterTax = function () {
+  return this.getTotalCostBeforeTax() + this.getTaxAmount();
+}
+
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 
 module.exports = {

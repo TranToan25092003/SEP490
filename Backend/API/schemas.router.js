@@ -463,7 +463,7 @@
  *           items:
  *             $ref: '#/components/schemas/QuoteItemDTO'
  *           description: Array of quote items (parts and services)
- *         totalAmount:
+ *         subtotal:
  *           type: number
  *           description: Total amount before tax
  *         tax:
@@ -471,7 +471,7 @@
  *           description: Tax amount
  *         grandTotal:
  *           type: number
- *           description: Grand total (totalAmount + tax)
+ *           description: Grand total (subtotal + tax)
  *         status:
  *           type: string
  *           enum: [pending, approved, rejected]

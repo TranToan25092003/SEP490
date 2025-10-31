@@ -17,6 +17,25 @@ const serviceOrderStatusMap = {
   cancelled: "Đã hủy",
 };
 
+const statusBadgeVariant = {
+  pending: "secondary",
+  approved: "success",
+  rejected: "destructive",
+};
+
+const statusText = {
+  pending: "Chờ duyệt",
+  approved: "Đã duyệt",
+  rejected: "Đã từ chối",
+};
+
+export function translateQuoteStatus(status) {
+  return statusText[status] || "Không xác định";
+}
+
+export function getQuoteStatusBadgeVariant(status) {
+  return statusBadgeVariant[status] || "default";
+}
 
 export function translateBookingStatus(status) {
   return bookingStatusMap[status] || "Không xác định";

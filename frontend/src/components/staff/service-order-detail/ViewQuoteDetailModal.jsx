@@ -13,20 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
 import { getQuoteById } from "@/api/quotes";
-import { formatPrice } from "@/lib/utils";
+import { formatDate, formatDateTime, formatPrice } from "@/lib/utils";
 import { Package, Wrench } from "lucide-react";
-
-const statusBadgeVariant = {
-  pending: "secondary",
-  approved: "success",
-  rejected: "destructive",
-};
-
-const statusText = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Đã từ chối",
-};
+import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
 
 const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
   const modal = useModal();
@@ -58,20 +47,7 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
     modal.remove();
   };
 
-  const calculateTotals = () => {
-    if (!quote || !quote.items) return { subtotal: 0, tax: 0, grandTotal: 0 };
-
-    const subtotal = quote.items.reduce((sum, item) => {
-      return sum + (item.price * item.quantity);
-    }, 0);
-
-    const tax = quote.tax || 0;
-    const grandTotal = subtotal + tax;
-
-    return { subtotal, tax, grandTotal };
-  };
-
-  const { subtotal, tax, grandTotal } = calculateTotals();
+  const { subtotal, tax, grandTotal } = quote ?? {};
 
   const groupedItems = quote?.items?.reduce((acc, item) => {
     const type = item.type || "other";
@@ -117,8 +93,8 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
                     <p className="text-sm text-gray-600">Mã báo giá</p>
                     <p className="font-mono font-semibold">{quote.id?.slice(-8) || "N/A"}</p>
                   </div>
-                  <Badge className="rounded-full" variant={statusBadgeVariant[quote.status]}>
-                    {statusText[quote.status]}
+                  <Badge className="rounded-full" variant={getQuoteStatusBadgeVariant(quote.status)}>
+                    {translateQuoteStatus(quote.status)}
                   </Badge>
                 </div>
 
@@ -126,14 +102,14 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
                   <div>
                     <p className="text-sm text-gray-600">Ngày tạo</p>
                     <p className="font-medium">
-                      {quote.createdAt ? new Date(quote.createdAt).toLocaleString("vi-VN") : "N/A"}
+                      {quote.createdAt ? formatDateTime(quote.createdAt) : "N/A"}
                     </p>
                   </div>
                   {quote.updatedAt && (
                     <div>
                       <p className="text-sm text-gray-600">Cập nhật lần cuối</p>
                       <p className="font-medium">
-                        {new Date(quote.updatedAt).toLocaleString("vi-VN")}
+                        {quote.updatedAt ? formatDateTime(quote.updatedAt) : "N/A"}
                       </p>
                     </div>
                   )}

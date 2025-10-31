@@ -25,8 +25,12 @@ function loader({ params }) {
 const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
   const handleUpdateServiceOrder = async (serviceOrder, items) => {
     try {
-      await updateServiceOrderItems(serviceOrder.id, items);
-      toast.success("Cập nhật lệnh sửa chữa thành công");
+      const task = updateServiceOrderItems(serviceOrder.id, items);
+      await toast.promise(() => task, {
+        loading: "Đang cập nhật lệnh sửa chữa...",
+        success: "Cập nhật lệnh sửa chữa thành công",
+        error: "Cập nhật lệnh sửa chữa thất bại"
+      }).unwrap();
       revalidator.revalidate();
     } catch (error) {
       console.error("Failed to update service order items:", error);
@@ -39,10 +43,16 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     revalidator.revalidate();
   };
 
-  const handleSendInvoice = async (serviceOrderData, _) => {
+  const handleSendInvoice = async (serviceOrderData, items) => {
     try {
-      await createQuote(serviceOrderData.id);
-      toast.success("Gửi báo giá thành công");
+      const task = updateServiceOrderItems(serviceOrderData.id, items).then(() => {
+        createQuote(serviceOrderData.id);
+      });
+      await toast.promise(() => task, {
+        loading: "Đang cập nhật và gửi báo giá...",
+        success: "Gửi báo giá thành công",
+        error: "Gửi báo giá thất bại"
+      }).unwrap();
       revalidator.revalidate();
     } catch (error) {
       console.error("Failed to send invoice:", error);

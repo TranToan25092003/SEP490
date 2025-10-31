@@ -10,6 +10,7 @@ import StatusBadge from "@/components/global/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
 import { memo } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
 const formatTimeSlot = (startTime, endTime) => {
   try {
@@ -93,10 +94,6 @@ function loader() {
   };
 }
 
-const LoadingSkeleton = memo(() => {
-  return <CRUDTable isLoading={true} columns={bookingListColumnDefinitions} />;
-});
-
 const BookingList = () => {
   const { bookingList } = useLoaderData();
   const revalidator = useRevalidator();
@@ -108,7 +105,11 @@ const BookingList = () => {
       </div>
 
       <Suspense
-        fallback={<LoadingSkeleton />}
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
       >
         <Await
           resolve={bookingList}
@@ -122,36 +123,35 @@ const BookingList = () => {
           }
         >
           {(data) => (
-            <CRUDTable
-              data={data}
-              columns={bookingListColumnDefinitions}
-            >
-              {(row) => {
-                return (
-                  <div className="flex justify-center">
-                    <Link to={`/staff/booking/${row.id}`}>
-                      <Button
-                        variant="outline"
-                        className="flex-1 cursor-pointer"
-                      >
-                        <EyeIcon />
-                      </Button>
-                    </Link>
-                  </div>
-                );
-              }}
-            </CRUDTable>
+            <>
+              <CRUDTable data={data} columns={bookingListColumnDefinitions}>
+                {(row) => {
+                  return (
+                    <div className="flex justify-center">
+                      <Link to={`/staff/booking/${row.id}`}>
+                        <Button
+                          variant="outline"
+                          className="flex-1 cursor-pointer"
+                        >
+                          <EyeIcon />
+                        </Button>
+                      </Link>
+                    </div>
+                  );
+                }}
+              </CRUDTable>
+
+              <AdminPagination
+                pagination={{
+                  totalPages: 10,
+                  itemsPerPage: 50,
+                  totalItems: 1000,
+                }}
+              />
+            </>
           )}
         </Await>
       </Suspense>
-
-      <AdminPagination
-        pagination={{
-          totalPages: 10,
-          itemsPerPage: 50,
-          totalItems: 1000,
-        }}
-      />
     </Container>
   );
 }

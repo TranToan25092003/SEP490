@@ -8,7 +8,7 @@ const QuoteSchema = new Schema(
       ref: "ServiceOrder",
       required: true
     },
-    total_amount: { type: Number, required: true },
+    subtotal: { type: Number, required: true },
     tax: { type: Number, required: true },
     items: [
       new mongoose.Schema({

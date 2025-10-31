@@ -36,7 +36,6 @@ class QuotesService {
       );
     }
 
-    // Calculate totals from service order items
     const items = serviceOrder.items.map(item => ({
       type: item.item_type,
       name: item.name,
@@ -44,13 +43,10 @@ class QuotesService {
       price: item.price,
     }));
 
-    const totalAmount = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = totalAmount * 0.1; // 10% tax
-
     const quote = new Quote({
       so_id: serviceOrderId,
-      total_amount: totalAmount,
-      tax: tax,
+      subtotal: serviceOrder.getTotalCostBeforeTax(),
+      tax: serviceOrder.getTaxAmount(),
       items: items,
       status: "pending",
     });
@@ -205,9 +201,9 @@ class QuotesService {
         quantity: item.quantity,
         price: item.price,
       })),
-      totalAmount: quote.total_amount,
+      subtotal: quote.subtotal,
       tax: quote.tax,
-      grandTotal: quote.total_amount + quote.tax,
+      grandTotal: quote.subtotal + quote.tax,
       status: quote.status,
       rejectedReason: quote.rejected_reason,
       createdAt: quote.createdAt,
@@ -225,7 +221,7 @@ class QuotesService {
     return {
       id: quote._id.toString(),
       serviceOrderId: quote.so_id.toString(),
-      grandTotal: quote.total_amount + quote.tax,
+      grandTotal: quote.subtotal + quote.tax,
       status: quote.status,
       createdAt: quote.createdAt,
     };

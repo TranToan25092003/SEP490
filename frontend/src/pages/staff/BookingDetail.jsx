@@ -153,7 +153,7 @@ const BookingDetailContent = ({ booking, revalidator }) => {
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Clock className="size-4" />
-                Thời Gian Đặt Lịch
+                Slot
               </Label>
               <div className="font-semibold">
                 {formatDate(booking.slotStartTime)}

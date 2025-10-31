@@ -14,9 +14,10 @@ import CRUDTable from "@/components/global/CRUDTable";
 import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatPrice } from "@/lib/utils";
+import { formatDateTime, formatPrice } from "@/lib/utils";
 import NiceModal from "@ebay/nice-modal-react";
 import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
+import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
 
 function loader({ params, request }) {
   const url = new URL(request.url);
@@ -28,17 +29,6 @@ function loader({ params, request }) {
   };
 }
 
-const statusBadgeVariant = {
-  pending: "secondary",
-  approved: "success",
-  rejected: "destructive",
-};
-
-const statusText = {
-  pending: "Chờ duyệt",
-  approved: "Đã duyệt",
-  rejected: "Đã từ chối",
-};
 
 const quotesTableDefinition = [
   {
@@ -63,17 +53,17 @@ const quotesTableDefinition = [
     header: "Trạng thái",
     accessorKey: "status",
     cell: ({ row }) => (
-      <Badge className="rounded-full" variant={statusBadgeVariant[row.original.status]}>
-        {statusText[row.original.status]}
+      <Badge className="rounded-full" variant={getQuoteStatusBadgeVariant(row.original.status)}>
+        {translateQuoteStatus(row.original.status)}
       </Badge>
     ),
   },
   {
     header: "Ngày tạo",
     accessorKey: "createdAt",
-    cell: ({ row }) => (
-      new Date(row.original.createdAt).toLocaleString("vi-VN")
-    ),
+    cell: ({ row }) => {
+      return formatDateTime(row.original.createdAt);
+    },
   },
 ];
 

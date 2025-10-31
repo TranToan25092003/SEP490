@@ -168,9 +168,9 @@
  * @property {string} id - Quote identifier
  * @property {string} serviceOrderId - Associated service order identifier
  * @property {Array<QuoteItemDTO>} items - Array of quote items (parts and services)
- * @property {number} totalAmount - Total amount before tax
+ * @property {number} subtotal - Total amount before tax
  * @property {number} tax - Tax amount
- * @property {number} grandTotal - Grand total (totalAmount + tax)
+ * @property {number} grandTotal - Grand total (subtotal + tax)
  * @property {"pending" | "approved" | "rejected"} status - Status of the quote
  * @property {string} [rejectedReason] - Reason for rejection (if status is "rejected")
  * @property {Date} createdAt - Date when the quote was created
