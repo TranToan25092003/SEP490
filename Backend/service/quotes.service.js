@@ -85,7 +85,7 @@ class QuotesService {
       );
     }
 
-    quote.status = "waiting_customer_approval";
+    quote.status = "approved";
     await quote.save();
 
     return this._mapToQuoteDTO(quote);

@@ -352,7 +352,7 @@ export function FileUpload({
   const failedUploads = uploadedFiles.filter((f) => f.status === "error")
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div>
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }
