@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { useFormContext } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 const ServiceOrderTotal = ({
   className,
@@ -102,7 +103,7 @@ const ServiceOrderTotal = ({
           onClick={() => {
             handleUpdateServiceOrder(serviceOrder, [
               ...items.services,
-              ...items.parts
+              ...items.parts,
             ]);
           }}
           disabled={disabled || !hasServices}
@@ -111,25 +112,42 @@ const ServiceOrderTotal = ({
           Cập nhật thông tin
         </Button>
 
-        <Button
-          type="button"
-          onClick={() => {
-            handleSendInvoice(serviceOrder, [
-              ...items.services,
-              ...items.parts
-            ]);
-          }}
-          disabled={disabled || !hasServices}
-          aria-busy={disabled || !hasServices}
-        >
-          Gửi báo giá
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="m-0">
+              <Button
+                className="w-full"
+                type="button"
+                onClick={() => {
+                  handleSendInvoice(serviceOrder, [
+                    ...items.services,
+                    ...items.parts,
+                  ]);
+                }}
+                disabled={serviceOrder.status !== "inspection_completed" || !hasServices || disabled}
+                aria-busy={disabled || !hasServices}
+              >
+                Gửi báo giá
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left">
+              {serviceOrder.status !== "inspection_completed" ? (
+                <span>
+                  Chỉ có thể gửi báo giá khi lệnh sửa chữa ở trạng thái "Hoàn tất
+                  kiểm tra"
+                </span>
+              ) : null}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </CardContent>
 
       {loading && (
         <div className="absolute inset-0 bg-white/80 rounded-lg flex flex-col items-center justify-center gap-2">
           <Spinner className="size-6" />
-          <span className="text-sm text-muted-foreground">Đang tính giá...</span>
+          <span className="text-sm text-muted-foreground">
+            Đang tính giá...
+          </span>
         </div>
       )}
     </Card>

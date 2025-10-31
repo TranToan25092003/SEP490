@@ -64,6 +64,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     <ServiceOrderEditForm
       serviceOrder={serviceOrder}
       getTotalPrice={async (items) => {
+        //TODO: replace this with calls to the server
         const sum = items.reduce((acc, x) => acc + x.price * x.quantity, 0);
         return {
           price: sum,
