@@ -15,13 +15,14 @@ export const authenTicationLoader = async () => {
     const memberships = await clerk.user.getOrganizationMemberships();
 
     if (!memberships.data || memberships.data.length === 0) {
-      toast.error("Bạn không thuộc tổ chức nào", {
-        description: "Vui lòng liên hệ admin để được thêm vào tổ chức",
+      toast.error("có quyền truy cập vào đây", {
+        description: "Vui lòng liên hệ admin ",
       });
       return redirect("/");
     }
 
     const role = memberships.data[0].role;
+    console.log(role);
 
     if (!role.includes("admin")) {
       toast.error("Bạn không có quyền truy cập trang này", {

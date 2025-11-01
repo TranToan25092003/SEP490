@@ -8,6 +8,7 @@ import {
   iconInvoice as imgInvoice,
   iconBanking as imgMoney,
   iconTickets as imgTicket,
+  iconStaff as imgStaff,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,7 @@ const items = [
   { key: "invoice", label: "Invoice", icon: imgCoin },
   { key: "bank", label: "Banking", icon: imgEmail },
   { key: "ticket", label: "Tickets", icon: imgTicket },
+  { key: "staff", label: "Staff", icon: imgStaff, href: "/manager/staff" },
 ];
 
 export default function Sidebar({ width = 80, offsetTop = 100 }) {
