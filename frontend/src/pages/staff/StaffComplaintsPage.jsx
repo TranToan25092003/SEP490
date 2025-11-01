@@ -13,82 +13,20 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPagination } from "@/components/global/AdminPagination";
-import { Search, Pen, Trash2 } from "lucide-react";
-
-// --- Mock Data (to be replaced by loader) ---
-const mockComplaints = [
-    {
-        _id: "complaint001",
-        so_id: {
-            _id: "so001",
-            booking_id: {
-                clerkId: {
-                    name: "Nguyễn Văn A",
-                    phone: "0123456789",
-                }
-            },
-        },
-        title: "Dịch Vụ",
-        createdAt: "2025-10-25T10:00:00.000Z",
-        status: "resolved", // pending, resolved, rejected
-        totalPrice: 120000, // This would likely be on the service order
-    },
-    {
-        _id: "complaint002",
-        so_id: {
-            _id: "so002",
-            booking_id: {
-                clerkId: {
-                    name: "Trần Thị B",
-                    phone: "0987654321",
-                }
-            },
-        },
-        title: "Nhân viên",
-        createdAt: "2025-10-25T11:30:00.000Z",
-        status: "pending",
-        totalPrice: 250000,
-    },
-    {
-        _id: "complaint003",
-        so_id: {
-            _id: "so003",
-            booking_id: {
-                clerkId: {
-                    name: "Lê Văn C",
-                    phone: "0123123123",
-                }
-            },
-        },
-        title: "Cửa Hàng",
-        createdAt: "2025-10-26T09:00:00.000Z",
-        status: "rejected",
-        totalPrice: 50000,
-    },
-];
-
-const mockLoaderData = {
-    complaints: mockComplaints,
-    pagination: {
-        currentPage: 1,
-        totalPages: 3,
-        totalItems: 21,
-        itemsPerPage: 7,
-    }
-}
-// --- End Mock Data ---
-
+import { Search, Pen, Trash2, Eye, Loader2 } from "lucide-react"; 
+import { customFetch } from "@/utils/customAxios"; 
+import { toast } from "sonner"; 
 
 export default function StaffComplaintsPage() {
-    // const { complaints = [], pagination = {} } = useLoaderData() || {}; // Use this when loader is ready
-    const { complaints = [], pagination = {} } = mockLoaderData; // Using mock data for now
-
+    const { complaints = [], pagination = {} } = useLoaderData() || {};
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
     const [selectedItems, setSelectedItems] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false); 
+    console.log(selectedItems)
 
-    const handleSearch = (value) => {
+    const handleSearchChange = (value) => {
         setSearchTerm(value);
         const newSearchParams = new URLSearchParams(searchParams);
         if (value) {
@@ -96,8 +34,8 @@ export default function StaffComplaintsPage() {
         } else {
             newSearchParams.delete("search");
         }
-        newSearchParams.delete("page");
-        setSearchParams(newSearchParams);
+        newSearchParams.set("page", "1");
+        setSearchParams(newSearchParams, { replace: true });
     };
 
     const handleSelectAll = (checked) => {
@@ -117,7 +55,7 @@ export default function StaffComplaintsPage() {
     const getStatusBadge = (status) => {
         switch (status) {
             case "resolved":
-                return <Badge variant="success">Đã giải quyết</Badge>;
+                return <Badge variant="secondary" className="bg-green-500 text-white dark:bg-blue-600">Đã giải quyết</Badge>;
             case "pending":
                 return <Badge variant="warning">Chờ xử lý</Badge>;
             case "rejected":
@@ -127,21 +65,98 @@ export default function StaffComplaintsPage() {
         }
     };
 
+   
+    const handleDeleteItem = async (complaintId) => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa khiếu nại này?")) return;
+
+        setIsDeleting(true); 
+        try {
+            const response = await customFetch.delete(`/staff/complaints/${complaintId}`);
+
+            if (response.data.success) {
+                toast.success("Thành công", {
+                    description: "Khiếu nại đã được xóa.",
+                });
+                navigate(0); 
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Lỗi", {
+                description: error.message || "Không thể xóa khiếu nại.",
+            });
+        } finally {
+            setIsDeleting(false); 
+        }
+    };
+
+
+    const handleBulkDelete = async () => {
+        if (selectedItems.length === 0) {
+            toast.error("Vui lòng chọn ít nhất một khiếu nại để xóa");
+            return;
+        }
+
+        if (
+            !window.confirm(
+                `Bạn có chắc chắn muốn xóa ${selectedItems.length} khiếu nại đã chọn?`
+            )
+        )
+            return;
+
+        setIsDeleting(true);
+        try {
+            const response = await customFetch.delete("/staff/complaints/bulk-delete", {
+                data: { ids: selectedItems }
+            });
+
+            if (response.data.success) {
+                toast.success("Thành công", {
+                    description: `${selectedItems.length} khiếu nại đã được xóa`,
+                });
+                setSelectedItems([]);
+                navigate(0); 
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Lỗi", {
+                description: error.message || "Không thể xóa khiếu nại.",
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
 
     return (
         <div className="p-6 space-y-6">
             <h1 className="text-3xl font-bold text-gray-800">Quản lý Khiếu nại</h1>
             <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400 pointer-events-none" />
                     <Input
                         placeholder="Tìm kiếm..."
-                        className="pl-9 h-10 rounded-md"
+                        className="pl-9 h-10 rounded-full text-base placeholder:text-gray-500"
                         value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                     />
                 </div>
-                {/* Add filter dropdowns or other actions here if needed */}
+                {/* Nút xóa hàng loạt */}
+                {selectedItems.length > 0 && (
+                    <Button
+                        variant="destructive"
+                        onClick={handleBulkDelete}
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        {isDeleting ? "Đang xóa..." : `Xóa (${selectedItems.length})`}
+                    </Button>
+                )}
             </div>
 
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
@@ -156,20 +171,22 @@ export default function StaffComplaintsPage() {
                                     className="h-5 w-5 border-gray-400"
                                 />
                             </TableHead>
-                            <TableHead>Đơn Khiếu Nại Dịch Vụ</TableHead>
-                            <TableHead>Ngày Tạo</TableHead>
+                            <TableHead>Mã Dịch Vụ</TableHead>
+                            <TableHead>Tên Khiếu Nại</TableHead>
                             <TableHead>Tên Khách Hàng</TableHead>
                             <TableHead>Số Điện Thoại</TableHead>
+                            <TableHead>Ngày Tạo</TableHead>
+                            <TableHead>Danh Mục</TableHead>
                             <TableHead>Trạng Thái</TableHead>
-                            <TableHead>Giá</TableHead>
-                            <TableHead className="text-center">Action</TableHead>
+                            <TableHead>Phản Hồi</TableHead>
+                            <TableHead className="text-right">Action</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {complaints.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="h-24 text-center">
-                                    Không có khiếu nại nào.
+                                <TableCell colSpan={10} className="h-24 text-center">
+                                    Không có khiếu nại nào khớp với tìm kiếm của bạn.
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -184,20 +201,33 @@ export default function StaffComplaintsPage() {
                                         />
                                     </TableCell>
                                     <TableCell>
+                                        <div className="text-sm text-muted-foreground">#{complaint.so_id?.toString().slice(-6) || 'N/A'}</div>
+                                    </TableCell>
+                                    <TableCell>
                                         <div className="font-medium">{complaint.title}</div>
                                         <div className="text-sm text-muted-foreground">#{complaint._id.slice(-6)}</div>
                                     </TableCell>
+                                    <TableCell>{complaint.customerName || 'N/A'}</TableCell>
+                                    <TableCell>{complaint.customerPhone || 'N/A'}</TableCell>
                                     <TableCell>{formatDate(complaint.createdAt)}</TableCell>
-                                    <TableCell>{complaint.so_id.booking_id.clerkId.name}</TableCell>
-                                    <TableCell>{complaint.so_id.booking_id.clerkId.phone}</TableCell>
+                                    <TableCell>{complaint.category || 'N/A'}</TableCell>
                                     <TableCell>{getStatusBadge(complaint.status)}</TableCell>
-                                    <TableCell>{formatPrice(complaint.totalPrice)} vnđ</TableCell>
+                                    <TableCell>
+                                        {complaint.reply && complaint.reply.content ? (
+                                            <Badge variant="secondary">Đã phản hồi</Badge>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                <Pen className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <div className="flex items-center justify-end gap-2">                                                                 
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                onClick={() => handleDeleteItem(complaint._id)}
+                                                disabled={isDeleting}
+                                            >
                                                 <Trash2 className="h-4 w-4" />
                                             </Button>
                                             <Button asChild className="h-8 rounded-md" variant="destructive">

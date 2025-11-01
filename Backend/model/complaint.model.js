@@ -1,8 +1,16 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Complaints Schema
-// Represents customer complaints
+const complaintCategories = [
+  "Chất lượng dịch vụ",
+  "Chất lượng phụ tùng",
+  "Thái độ nhân viên",
+  "Thời gian chờ đợi",
+  "Giá cả & Thanh toán",
+  "Cơ sở vật chất",
+  "Khác"
+];
+
 const ComplaintSchema = new Schema(
   {
     so_id: { type: Schema.Types.ObjectId, ref: "ServiceOrder", required: true }, // Reference to Service_Orders
@@ -15,7 +23,19 @@ const ComplaintSchema = new Schema(
       type: String,
       enum: ["pending", "resolved", "rejected"],
       required: true,
-    }, // Complaint status
+    },
+    category: {
+      type: String,
+      required: [true, "Vui lòng chọn danh mục khiếu nại"],
+      enum: complaintCategories,
+      default: "Khác"
+    },
+    reply: {
+      staffClerkId: { type: String },
+      content: { type: String },
+      repliedAt: { type: Date },
+      _id: false
+    },
   },
   { timestamps: true }
 );
