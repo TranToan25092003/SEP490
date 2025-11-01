@@ -36,11 +36,12 @@ import { toast } from "sonner";
 export const layoutProfileLoader = async () => {
   try {
     const data = (await customFetch("/profile/models/get")).data;
+    console.log(data);
     const { brand } = data.data;
 
     const res = await customFetch("/profile/vehicles/get");
-    const vehicles = res.data.data;
-
+    const vehicles = res.data.data || [];
+    console.log(brand);
     return { brand, vehicles };
   } catch (error) {
     console.log(error);
