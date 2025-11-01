@@ -6,7 +6,6 @@ const Schema = mongoose.Schema;
 const BaySchema = new Schema(
   {
     bay_number: { type: String, required: true }, // Bay number (e.g., "Bay 1")
-    status: { type: String, enum: ["available", "occupied"], required: true }, // Bay status
     description: { type: String, required: false }, // Bay description (optional)
   },
   { timestamps: true }

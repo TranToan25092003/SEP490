@@ -1,98 +1,150 @@
+import { Link } from "react-router-dom";
+import { Loader2, LogIn } from "lucide-react";
+import { useLoaderData, Await, useRevalidator } from "react-router-dom";
+import { Suspense } from "react";
+import { toast } from "sonner";
+import { getServices } from "@/api/services";
+import { getUserVehiclesWithAvailability } from "@/api/vehicles";
+import { createBooking, getAvailableTimeSlots } from "@/api/bookings";
+import { SignedIn, SignedOut } from "@clerk/clerk-react";
+import clerk from "@/utils/clerk";
+import { Button } from "@/components/ui/button";
 import BookingHeader from "@/components/customer/booking/BookingHeader";
 import BookingForm from "@/components/customer/booking/BookingForm";
-import { toast } from "sonner";
 import Container from "@/components/global/Container";
 
-const services = [
-  {
-    sid: "1",
-    name: "Thay dầu động cơ",
-    basePrice: 500000,
-    desc: "Thay dầu động cơ và lọc dầu",
-    estimatedTime: 30,
-  },
-  {
-    sid: "2",
-    name: "Bảo dưỡng định kỳ",
-    basePrice: 1000000,
-    desc: "Kiểm tra toàn bộ hệ thống xe",
-    estimatedTime: 120,
-  },
-  {
-    sid: "3",
-    name: "Thay lốp xe",
-    basePrice: 2000000,
-    desc: "Thay 4 lốp xe mới",
-    estimatedTime: 60,
-  },
-  {
-    sid: "4",
-    name: "Kiểm tra phanh",
-    basePrice: 300000,
-    desc: "Kiểm tra và điều chỉnh hệ thống phanh",
-    estimatedTime: 45,
-  },
-];
+export function loader() {
+  if (!clerk.isSignedIn) {
+    return {
+      servicesAndVehicles: Promise.resolve([[], []]),
+    };
+  }
+
+  const services = getServices();
+  const vehicles = getUserVehiclesWithAvailability();
+
+  const servicesAndVehicles = Promise.all([services, vehicles]);
+  return {
+    servicesAndVehicles,
+  };
+}
+
+const BookingFormSkeleton = () => {
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <Loader2 className="animate-spin mx-auto h-8 w-8 text-primary-600" />
+    </div>
+  );
+};
+
+const BookingFormError = () => {
+  return (
+    <div className="max-w-6xl mx-auto space-y-6">
+      <p className="text-center text-red-600">
+        Đã có lỗi xảy ra khi tải dữ liệu. Vui lòng thử lại sau.
+      </p>
+    </div>
+  );
+};
+
+const NotSignedInComponent = () => {
+  return (
+    <div className="py-20 text-center">
+      <div className="flex justify-center mb-4">
+        <LogIn className="h-12 w-12 text-blue-600" />
+      </div>
+      <h2 className="text-2xl font-bold text-gray-800 mb-8">
+        Vui lòng đăng nhập
+      </h2>
+      <Link to="/login">
+        <Button>Đăng nhập</Button>
+      </Link>
+    </div>
+  );
+};
 
 const Booking = () => {
-  const myCar = {
-    licensePlate: "30A-12345",
+  const { servicesAndVehicles } = useLoaderData();
+  const revalidator = useRevalidator();
+
+  const handleSubmit = async (data) => {
+    try {
+      const bookingRequest = {
+        vehicleId: data.vehicle.id,
+        serviceIds: data.services.map((service) => service.sid),
+        timeSlot: {
+          day: data.timeslot.day,
+          month: data.timeslot.month,
+          year: data.timeslot.year,
+          hours: data.timeslot.hours,
+          minutes: data.timeslot.minutes,
+        },
+      };
+
+      const result = await createBooking(bookingRequest);
+      console.log("Booking created:", result);
+      toast.success("Đặt lịch thành công!");
+      revalidator.revalidate();
+    } catch (error) {
+      if (error.response?.errorCode) {
+        toast.error(error.response.message);
+      }
+
+      throw error;
+    }
   };
 
   const fetchAvailableTimeSlots = async (day, month, year) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const timeSlots = [];
-        const startHour = 8;
-        const endHour = 17;
-
-        for (let hour = startHour; hour <= endHour; hour++) {
-          for (let minute = 0; minute < 60; minute += 30) {
-            const isAvailable = Math.random() > 0.3; // Random availability
-            timeSlots.push({
-              hours: hour,
-              minutes: minute,
-              day,
-              month,
-              year,
-              isAvailable,
-            });
-          }
-        }
-
-        resolve({
-          timeSlots,
-          comment: "Vui lòng đến trước giờ hẹn 10 phút.",
-        });
-      }, 1000);
-    });
-  };
-
-  const handleSubmit = async (data) => {
-    console.log("Booking data:", data);
-
-    await new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ success: true });
-      }, 1000);
-    });
-
-    toast.success("Đặt lịch thành công!");
+    const data = await getAvailableTimeSlots(day, month, year);
+    return data;
   };
 
   return (
     <Container className="space-y-14 my-8">
       <BookingHeader />
 
-      <BookingForm
-        className="max-w-6xl mx-auto"
-        onSubmit={handleSubmit}
-        myCar={myCar}
-        services={services}
-        fetchAvailableTimeSlots={fetchAvailableTimeSlots}
-      />
+      <SignedIn>
+        <Suspense fallback={<BookingFormSkeleton />}>
+          <Await
+            resolve={servicesAndVehicles}
+            errorElement={<BookingFormError />}
+          >
+            {(servicesAndVehicles) => {
+              const [services, vehicles] = servicesAndVehicles;
+              return (
+                <BookingForm
+                  className="max-w-6xl mx-auto"
+                  onSubmit={handleSubmit}
+                  vehicles={vehicles.map((v) => ({
+                    id: v.id,
+                    licensePlate: v.licensePlate,
+                    brand: v.brand,
+                    model: v.model,
+                    year: v.year,
+                    isAvailable: v.isAvailable,
+                  }))}
+                  services={services.map((s) => ({
+                    sid: s.id,
+                    name: s.name,
+                    estimatedTime: s.estimatedTimeInMinutes,
+                    basePrice: s.basePrice,
+                    desc: s.description,
+                  }))}
+                  fetchAvailableTimeSlots={fetchAvailableTimeSlots}
+                />
+              );
+            }}
+          </Await>
+        </Suspense>
+      </SignedIn>
+
+      <SignedOut>
+        <NotSignedInComponent />
+      </SignedOut>
     </Container>
   );
 };
+
+Booking.loader = loader;
 
 export default Booking;

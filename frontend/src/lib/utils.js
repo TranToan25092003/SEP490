@@ -17,7 +17,7 @@ export function formatPrice(price) {
 // Function to format date
 export function formatDate(dateString) {
   const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("vi-VN", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -26,7 +26,7 @@ export function formatDate(dateString) {
 
 /**
  * Format time from minutes to hours and minutes
- * @param {number} minutes 
+ * @param {number} minutes
  * @returns {string} Formatted time string in "X giờ Y phút" or "Y phút" format
  */
 export function formatTimeXGioYPhut(minutes) {
@@ -38,9 +38,10 @@ export function formatTimeXGioYPhut(minutes) {
 /**
  * Format date and time to dd/MM/yyyy - HH:mm
  * @param {Date} date - Date object to format
- * @returns 
+ * @returns
  */
 export function formatDateTime(date) {
+  date = new Date(date);
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const year = date.getFullYear();

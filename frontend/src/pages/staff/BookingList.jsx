@@ -1,121 +1,162 @@
-import CRUDTable from "@/components/global/CRUDTable";
+import { Link, useLoaderData, useRevalidator, Await } from "react-router-dom";
 import Container from "@/components/global/Container";
-import { AdminPagination } from "@/components/global/AdminPagination";
-import { Button } from "@/components/ui/button";
-import { EyeIcon } from "lucide-react";
-import { Plus } from "lucide-react";
-import { Link } from "react-router-dom";
 import { H3 } from "@/components/ui/headings";
+import { Clock, EyeIcon } from "lucide-react";
+import CRUDTable from "@/components/global/CRUDTable";
+import { AdminPagination } from "@/components/global/AdminPagination";
+import { Suspense } from "react";
+import { getAllBookings } from "@/api/bookings";
+import StatusBadge from "@/components/global/StatusBadge";
+import { Button } from "@/components/ui/button";
+import { translateBookingStatus } from "@/utils/enumsTranslator";
+import { memo } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
-const stringToHue = (value) => {
-  let hash = 0;
-  for (let i = 0; i < value.length; i += 1) {
-    hash = value.charCodeAt(i) + ((hash << 5) - hash);
+const formatTimeSlot = (startTime, endTime) => {
+  try {
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+    const startHour = start.getHours().toString().padStart(2, "0");
+    const startMinute = start.getMinutes().toString().padStart(2, "0");
+    const endHour = end.getHours().toString().padStart(2, "0");
+    const endMinute = end.getMinutes().toString().padStart(2, "0");
+    return `${startHour}:${startMinute} - ${endHour}:${endMinute}`;
+  } catch {
+    return "N/A";
   }
-  return Math.abs(hash) % 360;
 };
 
-const getStatusColors = (status) => {
-  const hue = stringToHue(status || "");
-  return {
-    background: `hsl(${hue}, 80%, 92%)`,
-    foreground: `hsl(${hue}, 45%, 32%)`,
-  };
-};
+const renderServiceBadges = (services) => {
+  if (!Array.isArray(services) || services.length === 0) {
+    return <span className="text-muted-foreground">Không có dịch vụ</span>;
+  }
 
-const StatusBadge = ({ status, colorKey }) => {
-  const { background, foreground } = getStatusColors(colorKey ?? "");
+  if (services.length <= 2) {
+    return (
+      <div className="flex flex-wrap gap-1">
+        {services.map((service) => (
+          <StatusBadge key={service} status={service} />
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <p
-      className={
-        "inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium"
-      }
-      style={{ backgroundColor: background, color: foreground }}
-    >
-      {status}
-    </p>
+    <div className="flex flex-wrap gap-1 items-center">
+      {services.slice(0, 2).map((service) => (
+        <StatusBadge key={service} status={service} />
+      ))}
+      <span className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium bg-muted text-muted-foreground">
+        +{services.length - 2}
+      </span>
+    </div>
   );
 };
 
-const posts = [
-  {
-    id: 1,
-    customerName: "Nguyen Van A",
-    date: "2024-10-01",
-    serviceTypes: ["Sửa xe", "Bảo dưỡng"],
-  },
-  {
-    id: 2,
-    customerName: "Trankkkkn Thi B",
-    date: "2024-10-02",
-    serviceTypes: ["Thay nhớt"],
-  },
-];
-
-const columnDefs = [
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: (info) => info.getValue(),
-  },
+const bookingListColumnDefinitions = [
   {
     accessorKey: "customerName",
-    header: "Họ tên khách hàng",
+    header: "Tên khách hàng",
     cell: (info) => info.getValue(),
   },
   {
-    accessorKey: "date",
-    header: "Ngày đặt",
-    cell: (info) => info.getValue(),
+    accessorKey: "services",
+    header: "Dịch vụ",
+    cell: (info) => renderServiceBadges(info.getValue()),
   },
   {
-    id: "status",
-    header: "Loại lệnh",
+    accessorKey: "slotStartTime",
+    header: "Slot thời gian",
     cell: (info) => {
-      const services = info.row.original.serviceTypes;
-      const badges = services.map((service, index) => (
-        <StatusBadge key={index} status={service} colorKey={service} />
-      ));
-
-      return <div className="flex flex-wrap gap-2">{badges}</div>;
+      const row = info.row.original;
+      return (
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          {formatTimeSlot(row.slotStartTime, row.slotEndTime)}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Trạng thái",
+    cell: (info) => {
+      const status = info.getValue();
+      const vietnameseStatus = translateBookingStatus(status);
+      return <StatusBadge status={vietnameseStatus} colorKey={status} />;
     },
   },
 ];
 
+function loader() {
+  return {
+    bookingList: getAllBookings()
+  };
+}
+
 const BookingList = () => {
+  const { bookingList } = useLoaderData();
+  const revalidator = useRevalidator();
+
   return (
     <Container pageContext="admin">
       <div className="flex justify-between items-center">
-        <H3>Quản lý lệnh</H3>
-        <Button>
-          <Plus />
-          Thêm lệnh mới
-        </Button>
+        <H3>Quản lý đặt lịch</H3>
       </div>
 
-      <CRUDTable data={posts} columns={columnDefs} getRowId={(row) => row.id}>
-        {(row) => (
-          <div className="flex justify-center">
-            <Link to={`/staff/booking/${row.id}`}>
-              <Button variant="outline" className="flex-1 cursor-pointer">
-                <EyeIcon />
-              </Button>
-            </Link>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
           </div>
-        )}
-      </CRUDTable>
+        }
+      >
+        <Await
+          resolve={bookingList}
+          errorElement={
+            <CRUDTable
+              isLoading={false}
+              isError={true}
+              columns={bookingListColumnDefinitions}
+              onRetry={() => revalidator.revalidate()}
+            />
+          }
+        >
+          {(data) => (
+            <>
+              <CRUDTable data={data} columns={bookingListColumnDefinitions}>
+                {(row) => {
+                  return (
+                    <div className="flex justify-center">
+                      <Link to={`/staff/booking/${row.id}`}>
+                        <Button
+                          variant="outline"
+                          className="flex-1 cursor-pointer"
+                        >
+                          <EyeIcon />
+                        </Button>
+                      </Link>
+                    </div>
+                  );
+                }}
+              </CRUDTable>
 
-      <AdminPagination
-        pagination={{
-          totalPages: 10,
-          itemsPerPage: 50,
-          totalItems: 1000,
-        }}
-      />
+              <AdminPagination
+                pagination={{
+                  totalPages: 10,
+                  itemsPerPage: 50,
+                  totalItems: 1000,
+                }}
+              />
+            </>
+          )}
+        </Await>
+      </Suspense>
     </Container>
   );
-};
+}
 
 BookingList.displayName = "BookingList";
+BookingList.loader = loader;
+
 export default BookingList;

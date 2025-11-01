@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Clock } from "lucide-react";
+import { Clock, RefreshCw } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 /** @typedef {import("./index").TimeSlotSelectionStepProps} TimeSlotSelectionStepProps */
@@ -45,7 +45,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
     try {
       setLoading(true);
       const day = date.getDate();
-      const month = date.getMonth();
+      const month = date.getMonth() + 1;
       const year = date.getFullYear();
 
       const data = await fetchAvailableTimeSlots(day, month, year);
@@ -77,35 +77,27 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
     );
   };
 
-  const getTotalEstimatedTime = () => {
-    return services.reduce((sum, service) => sum + service.estimatedTime, 0);
-  };
-
-
   return (
     <div className={cn("space-y-6", className)} {...props}>
       <div className="text-center mb-6">
         <h1>
-          <span className="text-2xl font-bold">Chọn ngày phục vụ</span>
+          <span className="text-2xl font-bold">Chọn ngày bạn đến</span>
         </h1>
-        {services.length > 0 && (
-          <p className="text-sm text-gray-500 mt-2">
-            Thời gian dự kiến: {formatTimeXGioYPhut(getTotalEstimatedTime())}
-          </p>
-        )}
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
         <Card className="flex-1">
           <CardHeader>
-            <CardTitle className="font-semibold">Chọn ngày</CardTitle>
+            <CardTitle className="font-semibold py-2">Chọn ngày</CardTitle>
           </CardHeader>
           <CardContent className="min-h-[400px]">
             <Calendar
               mode="single"
               selected={date}
               onSelect={setDate}
-              disabled={(date) => date < new Date()}
+              disabled={(date) => {
+                return date < new Date().setHours(0, 0, 0, 0);
+              }}
               className="w-full"
             />
           </CardContent>
@@ -113,7 +105,21 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
 
         <Card className="flex-1">
           <CardHeader>
-            <CardTitle className="font-semibold">Chọn giờ</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-semibold">Chọn giờ</CardTitle>
+              {date && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={loadAvailableSlots}
+                  disabled={loading}
+                  className="h-8 w-8 p-0"
+                  title="Làm mới"
+                >
+                  <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="h-[400px] space-y-3 overflow-y-auto">
             {!date && (
@@ -152,7 +158,7 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
                   <Clock className="w-4 h-4" />
                   {formatTimeSlot(slot)}
                   {!slot.isAvailable && (
-                    <span className="ml-auto text-xs">(Đã đầy)</span>
+                    <span className="ml-auto text-xs">(không có sẵn)</span>
                   )}
                 </Button>
               ))}
