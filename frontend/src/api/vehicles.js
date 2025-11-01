@@ -1,34 +1,28 @@
 import { customFetch } from "@/utils/customAxios";
 
 /**
- * @typedef {Object} Vehicle
- * @property {string} id - Unique identifier for the vehicle
- * @property {string} licensePlate - License plate number
- * @property {string} brand - Vehicle brand/manufacturer
- * @property {string} model - Vehicle model name
- * @property {number} year - Manufacturing year
- * @property {number} [odoReading] - Current odometer reading
- * @property {boolean} [isAvailable] - Availability status of the vehicle
+ * @typedef {import('./types').VehicleDTO} VehicleDTO
+ * @typedef {import('./types').VehicleWithAvailabilityDTO} VehicleWithAvailabilityDTO
  */
 
 /**
  * Retrieves the authenticated user's vehicles.
  *
  * @async
- * @function getUserVehicles
- * @returns {Promise<Vehicle[]>} A promise that resolves to the user's vehicles
+ * @function getUserVehiclesWithAvailability
+ * @returns {Promise<VehicleWithAvailabilityDTO[]>} A promise that resolves to an array of the user's vehicles with availability
  * @throws {Error} If the API request fails
  *
  * @example
  * try {
- *   const vehicles = await getUserVehicles();
+ *   const vehicles = await getUserVehiclesWithAvailability();
  *   console.log(vehicles);
  * } catch (error) {
  *   console.error('Failed to fetch vehicles:', error);
  * }
  */
-export const getUserVehicles = async () => {
-  const response = await customFetch("/client/vehicles/summary", {
+export const getUserVehiclesWithAvailability = async () => {
+  const response = await customFetch("/vehicles/with-availability", {
     method: "GET",
   });
 

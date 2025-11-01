@@ -81,11 +81,8 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
     <div className={cn("space-y-6", className)} {...props}>
       <div className="text-center mb-6">
         <h1>
-          <span className="text-2xl font-bold">Chọn ngày phục vụ</span>
+          <span className="text-2xl font-bold">Chọn ngày bạn đến</span>
         </h1>
-        <p className="text-sm text-gray-500 mt-2">
-          Lưu ý: Thời gian phục vụ có thể thay đổi dựa điều kiện thực tế.
-        </p>
       </div>
 
       <div className="flex flex-col md:flex-row gap-6">
@@ -98,7 +95,9 @@ const TimeSlotSelectionStep = ({ fetchAvailableTimeSlots, className, ...props })
               mode="single"
               selected={date}
               onSelect={setDate}
-              disabled={(date) => date < new Date()}
+              disabled={(date) => {
+                return date < new Date().setHours(0, 0, 0, 0);
+              }}
               className="w-full"
             />
           </CardContent>

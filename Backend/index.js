@@ -59,9 +59,28 @@ const managerRouter = require("./API/manager/index.router");
 managerRouter(app);
 // manager router
 
+const separationMakesNoSense = require("./API");
+separationMakesNoSense(app);
+
+app.use((err, _, res, __) => {
+  console.error(err);
+
+  if (err instanceof DomainError) {
+    return res.status(err.statusCode).json({
+      message: err.message,
+      code: err.code,
+    });
+  }
+
+  return res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
 // Swagger
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
+const DomainError = require("./errors/domainError");
 app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger
 

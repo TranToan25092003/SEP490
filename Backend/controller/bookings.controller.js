@@ -1,16 +1,13 @@
 const bookingsService = require("../service/bookings.service");
-const DomainError = require("../errors/domainError");
 
 class BookingsController {
   async createBooking(req, res, next) {
     try {
       const { vehicleId, serviceIds, timeSlot } = req.body;
-      const creatorId = req.userId;
-      const userIdToBookFor = req.body.userIdToBookFor || creatorId;
+      const customerId = req.userId;
 
       const booking = await bookingsService.createBooking(
-        creatorId,
-        userIdToBookFor,
+        customerId,
         vehicleId,
         serviceIds,
         timeSlot
@@ -21,82 +18,68 @@ class BookingsController {
         message: "Booking created successfully",
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
+      next(error);
+    }
+  }
+
+  async cancelBooking(req, res, next) {
+    try {
+      const { id } = req.params;
+
+      await bookingsService.cancelBooking(id);
+
+      res.status(200).json({
+        message: "Booking cancelled successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async checkInBooking(req, res, next) {
+    try {
+      const { id } = req.params;
+      console.log("Check-in booking ID:", id);
+      const userId = req.userId;
+
+      const booking = await bookingsService.checkInBooking(userId, id);
+
+      res.status(200).json({
+        message: "Booking checked in successfully",
+        data: {
+          serviceOrderId: booking.service_order_id
+        }
+      });
+    } catch (error) {
       next(error);
     }
   }
 
   async getBookingById(req, res, next) {
     try {
-      const { bookingId } = req.params;
+      const { id } = req.params;
 
-      const booking = await bookingsService.getBookingById(bookingId);
-
+      const booking = await bookingsService.getBookingById(id);
       if (!booking) {
-        return res.status(404).json({
-          message: "Booking not found",
-        });
+        return res.status(404).json({ message: "Booking not found" });
       }
 
       res.status(200).json({
         data: booking,
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }
 
-  async addServices(req, res, next) {
+  async getAllBookings(req, res, next) {
     try {
-      const { bookingId } = req.params;
-      const { serviceIds } = req.body;
-
-      const result = await bookingsService.addServices(bookingId, serviceIds);
+      const bookings = await bookingsService.getAllBookingsSortedAscending();
 
       res.status(200).json({
-        data: result,
-        message: "Services added successfully",
+        data: bookings,
       });
     } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
-      next(error);
-    }
-  }
-
-  async removeServices(req, res, next) {
-    try {
-      const { bookingId } = req.params;
-      const { serviceIds } = req.body;
-
-      const result = await bookingsService.removeServices(bookingId, serviceIds);
-
-      res.status(200).json({
-        data: result,
-        message: "Services removed successfully",
-      });
-    } catch (error) {
-      if (error instanceof DomainError) {
-        return res.status(error.statusCode).json({
-          message: error.message,
-          code: error.code,
-        });
-      }
       next(error);
     }
   }
@@ -105,29 +88,15 @@ class BookingsController {
     try {
       const { day, month, year } = req.query;
 
-      const dayNum = parseInt(day);
-      const monthNum = parseInt(month);
-      const yearNum = parseInt(year);
+      const dayNum = parseInt(day, 10);
+      const monthNum = parseInt(month, 10);
+      const yearNum = parseInt(year, 10);
 
-      // Mock: Generate time slots
-      // TODO: Replace with actual availability check from database
-      const timeSlots = [];
-      const startHour = 8;
-      const endHour = 17;
-
-      for (let hour = startHour; hour <= endHour; hour++) {
-        for (let minute = 0; minute < 60; minute += 30) {
-          const isAvailable = Math.random() > 0.3;
-          timeSlots.push({
-            hours: hour,
-            minutes: minute,
-            day: dayNum,
-            month: monthNum,
-            year: yearNum,
-            isAvailable,
-          });
-        }
-      }
+      const timeSlots = await bookingsService.getTimeSlotsForDMY(
+        dayNum,
+        monthNum,
+        yearNum
+      );
 
       res.status(200).json({
         data: {

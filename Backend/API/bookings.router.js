@@ -1,39 +1,13 @@
 const express = require("express");
 const { body, query, param } = require("express-validator");
-const bookingsController = require("../../controller/bookings.controller");
-const { throwErrors } = require("../../middleware/validate-data/throwErrors.middleware");
-const { authenticate } = require("../../middleware/guards/authen.middleware");
+const bookingsController = require("../controller/bookings.controller");
+const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
+const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = new express.Router();
 
 /**
  * @swagger
- * components:
- *   schemas:
- *    BookingRequest:
- *      type: object
- *      properties:
- *       serviceIds:
- *        type: array
- *        items:
- *          type: string
- *       timeSlot:
- *        type: object
- *        properties:
- *         day:
- *          type: integer
- *         month:
- *          type: integer
- *         year:
- *          type: integer
- *         hours:
- *          type: integer
- *         minutes:
- *          type: integer
- */
-
-/**
- * @swagger
- * /client/bookings/create:
+ * /bookings/create:
  *   post:
  *     summary: Create a new booking
  *     tags:
@@ -47,6 +21,10 @@ const router = new express.Router();
  *     responses:
  *       201:
  *         description: Booking created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingDTO'
  *       400:
  *         description: Bad request
  *       409:
@@ -66,10 +44,6 @@ router.post(
     body("serviceIds.*")
       .isMongoId()
       .withMessage("Each service ID must be a valid MongoDB ObjectId"),
-    body("userIdToBookFor")
-      .optional()
-      .isString()
-      .withMessage("User ID to book for must be a string"),
     body("timeSlot")
       .notEmpty()
       .withMessage("Time slot is required")
@@ -108,7 +82,30 @@ router.post(
 
 /**
  * @swagger
- * /client/bookings/available-time-slots:
+ * /bookings/all:
+ *   get:
+ *     summary: Get all bookings for the staff
+ *     tags:
+ *       - Bookings
+ *     responses:
+ *       200:
+ *         description: A list of bookings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/BookingSummaryDTO'
+ */
+router.get(
+  "/all",
+  authenticate,
+  bookingsController.getAllBookings
+);
+
+/**
+ * @swagger
+ * /bookings/available-time-slots:
  *   get:
  *     summary: Get available time slots for a specific date
  *     tags:
@@ -135,6 +132,12 @@ router.post(
  *     responses:
  *       200:
  *         description: Available time slots retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TimeslotWithAvailability'
  *       400:
  *         description: Bad request - Missing or invalid parameters
  */
@@ -161,143 +164,154 @@ router.get(
   bookingsController.getAvailableTimeSlots
 );
 
+
+
 /**
  * @swagger
- * /client/bookings/{bookingId}:
+ * /bookings/{id}:
  *   get:
- *     summary: Get booking details by ID
+ *     summary: Get a booking by ID
  *     tags:
  *       - Bookings
  *     parameters:
  *       - in: path
- *         name: bookingId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Booking ID
+ *         description: The ID of the booking
  *     responses:
  *       200:
- *         description: Booking details retrieved successfully
- *       400:
- *         description: Bad request - Invalid booking ID
+ *         description: Booking retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BookingDTO'
  *       404:
  *         description: Booking not found
  */
 router.get(
-  "/:bookingId",
+  "/:id",
   [
-    param("bookingId")
+    param("id")
       .notEmpty()
       .withMessage("Booking ID is required")
       .isMongoId()
       .withMessage("Booking ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
+  authenticate,
   bookingsController.getBookingById
-);
+)
 
 /**
  * @swagger
- * /client/bookings/{bookingId}/add-services:
+ * /bookings/{id}/cancel:
  *   post:
- *     summary: Add services to an existing booking
+ *     summary: Cancel a booking by ID
  *     tags:
  *       - Bookings
  *     parameters:
  *       - in: path
- *         name: bookingId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Booking ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               serviceIds:
- *                 type: array
- *                 items:
- *                   type: string
+ *         description: The ID of the booking to cancel
  *     responses:
  *       200:
- *         description: Services added successfully
- *       400:
- *         description: Bad request
+ *         description: Booking cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking cancelled successfully
+ *       409:
+ *         description: Conflict - Invalid booking state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Cannot cancel a booking that is already 'completed' or 'cancelled'
  *       404:
  *         description: Booking not found
  */
 router.post(
-  "/:bookingId/add-services",
+  "/:id/cancel",
   [
-    param("bookingId")
+    param("id")
       .notEmpty()
       .withMessage("Booking ID is required")
       .isMongoId()
       .withMessage("Booking ID must be a valid MongoDB ObjectId"),
-    body("serviceIds")
-      .isArray({ min: 1 })
-      .withMessage("Service IDs must be a non-empty array"),
-    body("serviceIds.*")
-      .isMongoId()
-      .withMessage("Each service ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
-  bookingsController.addServices
+  authenticate,
+  bookingsController.cancelBooking
 );
 
 /**
  * @swagger
- * /client/bookings/{bookingId}/remove-services:
+ * /bookings/{id}/check-in:
  *   post:
- *     summary: Remove services from an existing booking
+ *     summary: Check in a booking by ID
  *     tags:
  *       - Bookings
  *     parameters:
  *       - in: path
- *         name: bookingId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: Booking ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               serviceIds:
- *                 type: array
- *                 items:
- *                   type: string
+ *         description: The ID of the booking to check in
  *     responses:
  *       200:
- *         description: Services removed successfully
- *       400:
- *         description: Bad request
+ *         description: Booking checked in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Booking checked in successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     serviceOrderId:
+ *                       type: string
+ *                       description: ID of the created service order
+ *       409:
+ *         description: Conflict - Invalid booking state
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Cannot check in a booking that is already 'completed' or 'cancelled'
  *       404:
  *         description: Booking not found
  */
-router.post(
-  "/:bookingId/remove-services",
+router.post("/:id/check-in",
   [
-    param("bookingId")
+    param("id")
       .notEmpty()
       .withMessage("Booking ID is required")
       .isMongoId()
       .withMessage("Booking ID must be a valid MongoDB ObjectId"),
-    body("serviceIds")
-      .isArray({ min: 1 })
-      .withMessage("Service IDs must be a non-empty array"),
-    body("serviceIds.*")
-      .isMongoId()
-      .withMessage("Each service ID must be a valid MongoDB ObjectId"),
   ],
   throwErrors,
-  bookingsController.removeServices
+  authenticate,
+  bookingsController.checkInBooking
 );
+
 
 module.exports = router;

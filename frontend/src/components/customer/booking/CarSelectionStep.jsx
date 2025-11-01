@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Car } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 /** @typedef {import("./index").CarSelectionStepProps} CarSelectionStepProps */
 
@@ -16,7 +17,6 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
   const selectedVehicle = watch("vehicle");
 
   const handleVehicleSelect = (vehicle) => {
-    // Only allow selection if vehicle is available
     if (vehicle.isAvailable !== false) {
       setValue("vehicle", vehicle);
     }
@@ -40,17 +40,15 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {vehicles && vehicles.length === 0 && (
-          <>
-            <div className="text-center col-span-full space-y-2 py-8">
-              <p>Bạn chưa có xe nào. Vui lòng thêm xe trước khi đặt lịch.</p>
-              <Button variant="outline">
-                Thêm xe mới
-              </Button>
-            </div>
-          </>
+          <div className="text-center col-span-full space-y-2 py-8">
+            <p>Bạn chưa có xe nào. Vui lòng thêm xe trước khi đặt lịch.</p>
+            <Link to="/profile">
+              <Button variant="outline">Thêm xe mới</Button>
+            </Link>
+          </div>
         )}
 
-        {vehicles && vehicles.map((vehicle) => (
+        {vehicles?.map((vehicle) => (
           <Card
             key={vehicle.id}
             className={cn(
@@ -97,7 +95,6 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
               </div>
             </CardContent>
 
-            {/* Show "Order" button on hover for unavailable vehicles */}
             {vehicle.isAvailable === false && (
               <div className="absolute inset-0 bg-black/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Button
@@ -106,8 +103,6 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
                   className="gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
-                    // Navigate to order/maintenance page
-                    window.location.href = "/order";
                   }}
                 >
                   Xem tình trạng
@@ -117,7 +112,6 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
           </Card>
         ))}
       </div>
-
     </div>
   );
 };

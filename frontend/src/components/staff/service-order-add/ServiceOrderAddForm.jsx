@@ -15,9 +15,12 @@ import {
 import { cn } from "@/lib/utils";
 
 /**
- * @param {import("./index").BookingAddFormProps} props
+ * ServiceOrderAddForm Component
+ * Form for creating a new service order
+ *
+ * @param {import("./index").ServiceOrderAddFormProps} props
  */
-const BookingAddForm = ({ onSubmit, services, className, ...props }) => {
+const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
   const {
     register,
     control,
@@ -40,6 +43,12 @@ const BookingAddForm = ({ onSubmit, services, className, ...props }) => {
 
   const serviceIds = watch("serviceIds");
 
+  /**
+   * Handle form submission for creating a service order
+   * @async
+   * @param {Object} data - Form data
+   * @returns {Promise<void>}
+   */
   const onFormSubmit = async (data) => {
     try {
       await onSubmit({
@@ -186,5 +195,5 @@ const BookingAddForm = ({ onSubmit, services, className, ...props }) => {
   );
 };
 
-BookingAddForm.displayName = "BookingAddForm";
-export default BookingAddForm;
+ServiceOrderAddForm.displayName = "ServiceOrderAddForm";
+export default ServiceOrderAddForm;
