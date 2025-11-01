@@ -36,12 +36,12 @@ import { toast } from "sonner";
 export const layoutProfileLoader = async () => {
   try {
     const data = (await customFetch("/profile/models/get")).data;
-    const { name, brand } = data.data;
+    const { brand } = data.data;
 
     const res = await customFetch("/profile/vehicles/get");
     const vehicles = res.data.data;
 
-    return { name, brand, vehicles };
+    return { brand, vehicles };
   } catch (error) {
     console.log(error);
   }
@@ -63,7 +63,7 @@ const LayoutProfile = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const { name, brand, vehicles } = useLoaderData();
+  const { brand, vehicles } = useLoaderData();
 
   const form = useForm({
     resolver: zodResolver(vehicleSchema),
