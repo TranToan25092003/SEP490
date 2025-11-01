@@ -1,8 +1,9 @@
 const partRouter = require("./part.router");
 const complaintRouter = require("./complaint.router");
-const { authenticate } = require("../../middleware/guards/authen.middleware");
+const bayRouter = require("./bay.router");
 
 module.exports = (app) => {
-  app.use("/staff/parts", authenticate, partRouter);
-  app.use("/staff/complaints", authenticate, complaintRouter);
+  app.use("/staff/parts", partRouter);
+  app.use("/staff/complaints", complaintRouter);
+  app.use("/staff/bays", bayRouter);
 };
