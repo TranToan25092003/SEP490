@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
-import { generateGoodsReceiptPDF } from "@/utils/pdfGenerator";
+import { generateGoodsReceiptPDF } from "@/utils/pdfGeneratorHtml";
 import { ArrowLeft, Download, FileText } from "lucide-react";
 
 export default function GoodsReceiptDetail() {
@@ -125,6 +125,7 @@ export default function GoodsReceiptDetail() {
     if (!receipt) return;
 
     setExporting(true);
+
     try {
       const totalAmount = receipt.totalAmount || 0;
       const pdfBlob = await generateGoodsReceiptPDF({
@@ -223,6 +224,20 @@ export default function GoodsReceiptDetail() {
           <Button onClick={() => navigate("/manager/goods-receipt-list")}>
             Quay lại danh sách
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (exporting) {
+    return (
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-12 w-12 rounded-full border-4 border-gray-200 border-t-primary border-r-transparent animate-spin" />
+          <div className="text-gray-900 font-semibold">Đang tạo PDF...</div>
+          <div className="text-gray-500 text-sm">
+            Vui lòng chờ trong giây lát
+          </div>
         </div>
       </div>
     );

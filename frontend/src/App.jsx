@@ -1,5 +1,10 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { ClerkProvider, GoogleOneTap } from "@clerk/clerk-react";
+import {
+  ClerkProvider,
+  GoogleOneTap,
+  SignedIn,
+  useUser,
+} from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
@@ -10,8 +15,15 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
+import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
+import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
+import ServiceOrderList from "./pages/staff/ServiceOrderList";
+import ServiceOrderAdd from "./pages/staff/ServiceOrderAdd";
 import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
+import NiceModal from "@ebay/nice-modal-react";
+import ChatStaff from "./pages/staff/ChatStaff";
 import AdminLayout from "./layout/admin-layout/AdminLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
@@ -62,6 +74,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/booking",
+        loader: Booking.loader,
         element: <Booking />,
       },
       {
@@ -100,19 +113,16 @@ const router = createBrowserRouter([
       },
     ],
   },
-
   {
     path: "/login",
     element: <Login></Login>,
   },
-
   {
     path: "/sso-callback",
     element: (
       <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
     ),
   },
-
   {
     path: "/manager",
     element: <AdminLayout />,
@@ -145,18 +155,40 @@ const router = createBrowserRouter([
   },
   {
     path: "/staff",
-    element: <AdminLayout />,
-    children: [
-      { path: "booking/:id", element: <BookingDetail /> },
-      { path: "booking/", element: <BookingList /> },
-    ],
-  },
-
-  {
-    path: "/staff",
     element: <StaffLayout />,
     children: [
       { index: true, element: <StaffDashboardPage /> },
+      {
+        path: "service-order/:id",
+        element: <ServiceOrderDetail />,
+        loader: ServiceOrderDetail.loader,
+      },
+      {
+        path: "service-order/:id/quotes",
+        element: <ServiceOrderDetailQuotes />,
+        loader: ServiceOrderDetailQuotes.loader,
+      },
+      {
+        path: "service-order/:id/progress",
+        element: <ServiceOrderDetailProgress />,
+        loader: ServiceOrderDetailProgress.loader,
+      },
+      {
+        path: "service-order/",
+        element: <ServiceOrderList />,
+        loader: ServiceOrderList.loader,
+      },
+      { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "booking/:id",
+        element: <BookingDetail />,
+        loader: BookingDetail.loader,
+      },
+      {
+        path: "booking/",
+        element: <BookingList />,
+        loader: BookingList.loader,
+      },
       {
         path: "items",
         element: <StaffItemsPage />,
@@ -170,12 +202,16 @@ const router = createBrowserRouter([
       {
         path: "complaints",
         element: <StaffComplaintsPage />,
-        loader: complaintsStaffLoader
+        loader: complaintsStaffLoader,
       },
       {
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "chat",
+        element: <ChatStaff />,
       },
     ],
   },
@@ -189,8 +225,10 @@ function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <Toaster></Toaster>
-        <RouterProvider router={router} />
+        <NiceModal.Provider>
+          <Toaster></Toaster>
+          <RouterProvider router={router} />
+        </NiceModal.Provider>
       </ClerkProvider>
     </ThemeProvider>
   );

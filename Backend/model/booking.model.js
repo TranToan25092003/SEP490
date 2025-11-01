@@ -1,21 +1,43 @@
 const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
 
-// Bookings Schema
-// Represents customer bookings for services
-const BookingSchema = new Schema(
-  {
-    clerkId: { type: String, required: true }, // Clerk user ID
-    vehicle_id: { type: Schema.Types.ObjectId, ref: "Vehicle", required: true }, // Reference to Vehicles
-    booking_date: { type: Date, required: true }, // Booking date and time
-    status: {
-      type: String,
-      enum: ["pending", "confirmed", "completed"],
-      required: true,
-    }, // Booking status
+const bookingSchema = new mongoose.Schema({
+  customer_clerk_id: {
+    type: String,
+    required: true,
   },
-  { timestamps: true }
-);
+  vehicle_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Vehicle",
+    required: true,
+  },
+  service_ids: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Service",
+      required: true,
+    },
+  ],
+  slot_start_time: {
+    type: Date,
+    required: true,
+  },
+  slot_end_time: {
+    type: Date,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["booked", "in_progress", "cancelled", "completed"],
+    default: "booked",
+    required: true,
+  },
+  service_order_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "ServiceOrder",
+    required: false,
+  },
+});
 
-const Booking = mongoose.model("Booking", BookingSchema);
+const Booking = mongoose.model("Booking", bookingSchema, "bookings");
 module.exports = Booking;
+

@@ -96,126 +96,199 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
     }
   };
 
-  // Company header
-  drawText("CÔNG TY CỔ PHẦN ĐẦU TƯ VÀ CÔNG NGHỆ VIỆT HƯNG", 50, height - 50, {
+  // Company header - according to image, it should be a full company name with address
+  const companyName =
+    receiptData.companyName || "CONG TY CO PHAN DAU TU VA CONG NGHE VIET HUNG";
+  const companyAddress =
+    receiptData.companyAddress ||
+    "So 2, ngach 84/2 duong Tran Quang Dieu, Phuong O Cho Dua, Quan Dong da, Thanh pho Ha Noi, Viet Nam";
+
+  // Company name - larger, bold font (10-11pt)
+  drawText(companyName, 50, height - 50, {
     font: boldFont,
-    size: 14,
+    size: 11,
   });
 
-  drawText(
-    "Số 2, ngách 84/2 đường Trần Quang Diệu, Phường Ô Chợ Dừa, Quận Đống đa, Thành phố Hà Nội, Việt Nam",
-    50,
-    height - 70,
-    { size: 9 }
-  );
+  // Company address lines (9pt, normal)
+  drawText(companyAddress, 50, height - 65, { size: 9 });
 
-  // Form reference
-  drawText("Mẫu số: 01 - VT", width - 150, height - 50, { size: 9 });
-  drawText(
-    "(Ban hành theo Thông tư số 133/2016/TT-BTC Ngày 26/08/2016 của Bộ Tài chính)",
-    width - 200,
-    height - 65,
-    { size: 8, color: lightGray }
-  );
+  // Form reference - right-aligned with rightmost signature block
+  drawText("Mau so: 01 - VT", width - 150, height - 50, {
+    size: 10,
+    font: boldFont,
+  });
 
-  // Main title
-  drawText("PHIẾU NHẬP KHO", width / 2 - 60, height - 120, {
+  // Footnote lines - centered horizontally, below "Mau so"
+  const footnoteText1 = "(Ban hanh theo Thong tu so 133/2016/TT-BTC";
+  const footnoteText1Width = font.widthOfTextAtSize(footnoteText1, 8);
+  drawText(footnoteText1, (width - footnoteText1Width) / 2, height - 65, {
+    size: 8,
+    color: lightGray,
+  });
+
+  const footnoteText2 = "Ngay 26/08/2016 cua Bo Tai chinh)";
+  const footnoteText2Width = font.widthOfTextAtSize(footnoteText2, 8);
+  drawText(footnoteText2, (width - footnoteText2Width) / 2, height - 77, {
+    size: 8,
+    color: lightGray,
+  });
+
+  // Main title - "PHIẾU NHẬP KHO" centered, large bold (14-16pt)
+  const titleText = "PHIEU NHAP KHO";
+  const titleWidth = boldFont.widthOfTextAtSize(titleText, 16);
+  drawText(titleText, (width - titleWidth) / 2, height - 110, {
     font: boldFont,
     size: 16,
   });
 
-  // Document info
-  const documentDate = new Date(
+  // Date below title - centered, smaller (10pt)
+  const titleDate = new Date(
     receiptData.documentDate || new Date()
-  ).toLocaleDateString("vi-VN");
-  drawText(`Ngày ${documentDate}`, 50, height - 150, { size: 10 });
-  drawText(
-    `Số: ${receiptData.receiptNumber || "N/A"}`,
-    width - 150,
-    height - 150,
-    {
-      size: 10,
-    }
-  );
-
-  // Debit/Credit accounts
-  drawText("Nợ: 156", width - 100, height - 170, { size: 10 });
-  drawText("Có: 331", width - 50, height - 170, { size: 10 });
-
-  // Supplier information
-  drawText("Họ và tên người giao:", 50, height - 200, { size: 10 });
-  drawText(receiptData.supplier?.name || "N/A", 200, height - 200, {
-    font: boldFont,
+  ).toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  const dateText = `Ngay ${titleDate.split("/")[0]} thang ${
+    titleDate.split("/")[1]
+  } nam ${titleDate.split("/")[2]}`;
+  const dateTextWidth = font.widthOfTextAtSize(dateText, 10);
+  drawText(dateText, (width - dateTextWidth) / 2, height - 135, {
     size: 10,
   });
 
-  // Invoice reference
+  // Document specifics (Nợ, Có, Số) - according to image layout
+  // Note: Nợ và Có are right-aligned with each other, Số is positioned below
+  drawText(`No: 156`, width - 220, height - 165, { size: 10 });
+  drawText(`Co: 331`, width - 170, height - 165, { size: 10 });
+  drawText(`So: ${receiptData.receiptNumber || "NK00012"}`, 430, height - 180, {
+    size: 10,
+  });
+
+  // Supplier information - using "-" prefix as shown in image
+  const supplierName =
+    receiptData.supplier?.name || "CONG TY TNHH THIET BI TAN AN PHAT";
+  drawText(`- Ho va ten nguoi giao ${supplierName}`, 50, height - 200, {
+    size: 10,
+  });
+
+  // Invoice reference - also using "-" prefix
+  const invoiceNumber = receiptData.invoiceNumber || "1379";
+  const invoiceDate = receiptData.invoiceDate || "14 thang 07 nam 2022";
   drawText(
-    "Theo hóa đơn số 1379 ngày 14 tháng 07 năm 2022 của",
+    `- Theo hoa don so ${invoiceNumber} ngay ${invoiceDate} cua ${supplierName}`,
     50,
     height - 220,
     { size: 10 }
   );
-  drawText(receiptData.supplier?.name || "N/A", 50, height - 235, {
-    font: boldFont,
+
+  // Warehouse location - using "-" prefix
+  const warehouseLocation = receiptData.warehouseLocation || "Kho NVL";
+  drawText(`- Nhap tai kho: ${warehouseLocation}`, 50, height - 240, {
     size: 10,
   });
 
-  // Warehouse location
-  drawText("Nhập tại kho:", 50, height - 260, { size: 10 });
-  drawText(receiptData.warehouseLocation || "N/A", 150, height - 260, {
-    font: boldFont,
-    size: 10,
-  });
-
-  drawText("Địa điểm:", 50, height - 280, { size: 10 });
+  // Location - "-" prefix with underline for input
+  drawText("- Dia diem: ", 50, height - 260, { size: 10 });
 
   // Items table header
   const tableStartY = height - 320;
-  const colWidths = [30, 200, 80, 40, 60, 60, 60, 60]; // Column widths
-  const colPositions = [50, 80, 280, 360, 400, 460, 520, 580];
+  const colWidths = [35, 140, 70, 50, 55, 55, 70, 75]; // Reduced widths: STT, Product Name (140), Code (70), Unit, Qty Doc, Qty Actual, Price, Total
+  const colPositions = [50, 85, 225, 295, 345, 400, 455, 525];
+  const totalTableWidth = colWidths.reduce((sum, w) => sum + w, 0);
+
+  // Draw table borders for all cells
+  const drawTableBorder = (startY, endY) => {
+    // Vertical lines (columns)
+    colPositions.forEach((x, index) => {
+      page.drawLine({
+        start: { x: x, y: startY },
+        end: { x: x, y: endY },
+        thickness: 0.5,
+        color: black,
+      });
+    });
+    // Rightmost border
+    page.drawLine({
+      start: { x: colPositions[7] + colWidths[7], y: startY },
+      end: { x: colPositions[7] + colWidths[7], y: endY },
+      thickness: 0.5,
+      color: black,
+    });
+
+    // Horizontal lines
+    page.drawLine({
+      start: { x: 50, y: startY },
+      end: { x: colPositions[7] + colWidths[7], y: startY },
+      thickness: 0.5,
+      color: black,
+    });
+    page.drawLine({
+      start: { x: 50, y: endY },
+      end: { x: colPositions[7] + colWidths[7], y: endY },
+      thickness: 0.5,
+      color: black,
+    });
+  };
 
   // Table header background
-  drawRect(50, tableStartY - 20, width - 100, 20, {
+  drawRect(50, tableStartY - 20, totalTableWidth, 20, {
     color: rgb(0.9, 0.9, 0.9),
   });
 
-  // Table headers
+  drawTableBorder(tableStartY, tableStartY - 20);
+
+  // Table headers - shortened text
   const headers = [
     "STT",
-    "Tên, nhãn hiệu, quy cách, phẩm chất vật tư, dụng cụ sản phẩm, hàng hóa",
-    "Mã số",
-    "Đơn vị tính",
-    "Số lượng",
-    "Số lượng",
-    "Đơn giá",
-    "Thành tiền",
+    "Ten san pham",
+    "Ma so",
+    "Don vi tinh",
+    "So luong",
+    "So luong",
+    "Don gia",
+    "Thanh tien",
   ];
   headers.forEach((header, index) => {
+    const align = index === 1 ? "left" : "center"; // Product name left-aligned
     drawText(header, colPositions[index], tableStartY - 15, {
       font: boldFont,
-      size: 8,
+      size: 9,
       maxWidth: colWidths[index] - 5,
     });
   });
 
   // Sub-headers for quantity columns
-  drawText("Theo chứng từ", 400, tableStartY - 5, { size: 7 });
-  drawText("Thực nhập", 460, tableStartY - 5, { size: 7 });
+  const subHeaderY = tableStartY - 5;
+  const theoChungTuWidth = font.widthOfTextAtSize("Theo chung tu", 7);
+  drawText(
+    "Theo chung tu",
+    colPositions[4] + (colWidths[4] - theoChungTuWidth) / 2,
+    subHeaderY,
+    { size: 7, font: boldFont }
+  );
+
+  const thucNhapWidth = font.widthOfTextAtSize("Thuc nhap", 7);
+  drawText(
+    "Thuc nhap",
+    colPositions[5] + (colWidths[5] - thucNhapWidth) / 2,
+    subHeaderY,
+    { size: 7, font: boldFont }
+  );
 
   // Table rows
-  let currentY = tableStartY - 40;
+  let currentY = tableStartY - 20;
   let totalAmount = 0;
-
-  // Validate items array
+  const rowHeight = 18; // Tighter row height
   const items = receiptData.items || [];
 
   items.forEach((item, index) => {
-    if (currentY < 100) {
-      // Add new page if needed
+    if (currentY - rowHeight < 100) {
       const newPage = pdfDoc.addPage([595.28, 841.89]);
       currentY = newPage.getSize().height - 50;
     }
+
+    currentY -= rowHeight;
 
     const rowData = [
       (index + 1).toString(),
@@ -230,45 +303,83 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
 
     // Draw row background (alternating)
     if (index % 2 === 0) {
-      drawRect(50, currentY - 15, width - 100, 20, {
+      drawRect(50, currentY - rowHeight, totalTableWidth, rowHeight, {
         color: rgb(0.98, 0.98, 0.98),
       });
     }
 
-    // Draw row data
+    // Draw cell borders for each cell in this row
+    colPositions.forEach((x, colIndex) => {
+      page.drawRectangle({
+        x: x,
+        y: currentY - rowHeight,
+        width: colWidths[colIndex],
+        height: rowHeight,
+        borderColor: black,
+        borderWidth: 0.5,
+      });
+    });
+
+    // Draw row data with proper alignment
     rowData.forEach((data, colIndex) => {
-      drawText(data, colPositions[colIndex], currentY - 10, {
+      const align =
+        colIndex === 1 ? "left" : colIndex >= 4 ? "right" : "center";
+
+      let textX = colPositions[colIndex];
+      if (align === "center") {
+        const textWidth = font.widthOfTextAtSize(data, 8);
+        textX = colPositions[colIndex] + (colWidths[colIndex] - textWidth) / 2;
+      } else if (align === "right") {
+        const textWidth = font.widthOfTextAtSize(data, 8);
+        textX = colPositions[colIndex] + colWidths[colIndex] - textWidth - 2;
+      }
+
+      drawText(data, textX, currentY - rowHeight + 3, {
         size: 8,
         maxWidth: colWidths[colIndex] - 5,
       });
     });
 
     totalAmount += item.totalAmount;
-    currentY -= 20;
   });
 
   // Total row
   currentY -= 10;
-  drawRect(50, currentY - 15, width - 100, 20, {
+  drawRect(50, currentY - 15, totalTableWidth + 10, 20, {
     color: rgb(0.95, 0.95, 0.95),
   });
-  drawText("Cộng", 50, currentY - 10, { font: boldFont, size: 10 });
-  drawText(totalAmount.toLocaleString("vi-VN"), 580, currentY - 10, {
-    font: boldFont,
-    size: 10,
-  });
+  drawText("Cong", 50, currentY - 10, { font: boldFont, size: 10 });
+
+  // Right-align total amount in the last column
+  const totalAmountText = totalAmount.toLocaleString("vi-VN");
+  const totalAmountWidth = boldFont.widthOfTextAtSize(totalAmountText, 10);
+  drawText(
+    totalAmountText,
+    colPositions[7] + colWidths[7] - totalAmountWidth - 2,
+    currentY - 10,
+    {
+      font: boldFont,
+      size: 10,
+    }
+  );
 
   // Total amount in words
   currentY -= 40;
-  drawText("Tổng số tiền (Viết bằng chữ):", 50, currentY, { size: 10 });
-  drawText(receiptData.totalAmountInWords, 50, currentY - 15, {
-    font: boldFont,
-    size: 10,
-  });
+  drawText("Tong so tien (Viet bang chu):", 50, currentY, { size: 10 });
+  drawText(
+    receiptData.totalAmountInWords ||
+      "Muoi hai trieu tam tram tam muoi lam nghin dong chan.",
+    50,
+    currentY - 15,
+    {
+      font: boldFont,
+      size: 10,
+    }
+  );
 
   // Attached documents
-  currentY -= 40;
-  drawText("Số chứng từ gốc kèm theo:", 50, currentY, { size: 10 });
+  currentY -= 25;
+  drawText("So chung tu goc kem theo:", 50, currentY, { size: 10 });
 
   // Signature section
   currentY -= 60;
@@ -288,12 +399,19 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
       size: 9,
       maxWidth: signatureWidth - 10,
     });
-    drawText("(Ký, họ tên)", x, signatureY - 30, {
+    drawText("(Ky, ho ten)", x, signatureY - 30, {
       size: 8,
       color: lightGray,
       maxWidth: signatureWidth - 10,
     });
-    drawText(documentDate, x, signatureY - 50, {
+
+    // Use documentDate variable that was defined earlier in the code
+    const docDate = new Date(receiptData.documentDate || new Date());
+    const day = String(docDate.getDate()).padStart(2, "0");
+    const month = String(docDate.getMonth() + 1).padStart(2, "0");
+    const year = docDate.getFullYear();
+    const signatureDateText = `Ngay ${day} thang ${month} nam ${year}`;
+    drawText(signatureDateText, x, signatureY - 50, {
       size: 8,
       color: lightGray,
       maxWidth: signatureWidth - 10,

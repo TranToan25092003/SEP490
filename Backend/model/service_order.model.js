@@ -1,38 +1,82 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
+const ItemsSchema = new Schema(
+  {
+    price: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      default: 1
+    }
+  },
+  { discriminatorKey: "item_type", _id: false }
+);
+
+const ServiceItemSchema = new Schema({
+  service_id: { type: Schema.Types.ObjectId, ref: "Service", required: false },
+  name: { type: String, required: true },
+}, { _id: false });
+
+const PartItemSchema = new Schema({
+  part_id: { type: Schema.Types.ObjectId, ref: "Part", required: true },
+}, { _id: false });
+
+
 // Service_Orders Schema
-// Represents service orders created from bookings
+// The main data model
 const ServiceOrderSchema = new Schema(
   {
-    booking_id: {
-      type: Schema.Types.ObjectId,
-      ref: "Booking",
-      required: true,
-      unique: true,
-    }, // 1:1 with Bookings
-    vehicle_id: { type: Schema.Types.ObjectId, ref: "Vehicle", required: true }, // Reference to Vehicles
-    bay_id: { type: Schema.Types.ObjectId, ref: "Bay", required: false }, // Reference to Bays (optional)
-    staff_id: [{ type: String, required: false }], // Array of Clerk user IDs for staff (optional)
-    timeline: [
-      {
-        event: { type: String, required: true }, // Event description (e.g., "Started", "Completed")
-        timestamp: { type: Date, required: true }, // Timestamp of event
-      },
-    ], // Timeline of service order events
-    photos: [{ type: String, required: false }], // Array of photo URLs (optional)
-    estimated_completion_time: { type: Date, required: false }, // Estimated completion time (optional)
+    staff_clerk_id: { type: String, required: true }, // Staff who created the order
+    booking_id: { type: Schema.Types.ObjectId, ref: "Booking", required: true }, // Associated booking ID
+    items: [ItemsSchema], // Array of order items (services, parts, custom)
     status: {
       type: String,
-      enum: ["in_progress", "completed", "cancelled"],
+      enum: [
+        "created",
+        "waiting_inspection",
+        "inspection_completed",
+        "waiting_customer_approval",
+        "approved",
+        "scheduled",
+        "servicing",
+        "completed",
+        "cancelled",
+      ],
+      default: "created",
       required: true,
-    }, // Order status
-    assigned_at: { type: Date, required: false }, // Time bay assigned (optional)
-    released_at: { type: Date, required: false }, // Time bay released (optional)
+    },
+    expected_completion_time: { type: Date, required: false },
+    completed_at: { type: Date, required: false },
+    cancelled_at: { type: Date, required: false },
   },
   { timestamps: true }
 );
 
+ServiceOrderSchema.path("items").discriminator("service", ServiceItemSchema);
+ServiceOrderSchema.path("items").discriminator("part", PartItemSchema);
+
+ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
+  return this.items.reduce((total, item) => {
+    return total + item.price * item.quantity;
+  }, 0);
+};
+
+ServiceOrderSchema.methods.getTaxAmount = function () {
+  const totalBeforeTax = this.getTotalCostBeforeTax();
+  return totalBeforeTax * 0.1;
+}
+
+ServiceOrderSchema.methods.getAmountAfterTax = function () {
+  return this.getTotalCostBeforeTax() + this.getTaxAmount();
+}
+
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 
-module.exports = ServiceOrder;
+module.exports = {
+  ServiceOrder
+};

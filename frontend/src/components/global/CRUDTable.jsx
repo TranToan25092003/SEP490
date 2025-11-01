@@ -19,6 +19,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SelectedItemsActions } from "./SelectedItemsActions";
+import { Button } from "@/components/ui/button";
 
 /**
  * @typedef {Object} CRUDTableProps
@@ -29,6 +30,8 @@ import { SelectedItemsActions } from "./SelectedItemsActions";
  * @property {(items: string[] | undefined) => void} [onSelectedItemsChange]
  * @property {string[] | undefined} [selectedItems]
  * @property {boolean} [isLoading=false]
+ * @property {boolean} [isError=false]
+ * @property {() => void} [onRetry]
  * @property {boolean} [readOnly=false]
  * @property {(row: any) => React.ReactNode} [children]
  */
@@ -54,6 +57,8 @@ const CRUDTable = ({
   getRowId,
   onSelectedItemsChange,
   isLoading = false,
+  isError = false,
+  onRetry,
   selectedItems,
   readOnly = false,
   children,
@@ -117,7 +122,7 @@ const CRUDTable = ({
             }),
           ]),
     ],
-    [columns, columnHelper]
+    [columns, columnHelper, selectionEnabled, readOnly, children]
   );
 
   const table = useReactTable({
@@ -192,6 +197,28 @@ const CRUDTable = ({
             >
               <div className="flex justify-center">
                 <Spinner className="h-6 w-6" />
+              </div>
+            </TableCell>
+          </TableRow>
+        ) : isError ? (
+          <TableRow>
+            <TableCell
+              colSpan={table.getAllColumns().length}
+              className="text-center py-8"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <p className="text-muted-foreground">
+                  Đã xảy ra lỗi khi tải dữ liệu
+                </p>
+                {typeof onRetry === "function" && (
+                  <Button
+                    type="button"
+                    onClick={onRetry}
+                    className="cursor-pointer"
+                  >
+                    Thử lại
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>

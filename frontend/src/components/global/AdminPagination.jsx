@@ -7,11 +7,18 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import {
-  useLoaderData,
   useSearchParams,
   useNavigate,
   useLocation,
 } from "react-router-dom";
+
+/**
+ * @typedef {object} PaginationInfo
+ * @property {number} currentPage - Current active page number (1-indexed)
+ * @property {number} totalPages - Total number of pages available
+ * @property {number} [itemsPerPage=10] - Number of items displayed per page
+ * @property {number} [totalItems] - Total number of items in the dataset
+ */
 
 /**
  * AdminPagination Component
@@ -19,13 +26,8 @@ import {
  * A pagination component with Vietnamese text display showing current page info
  * and navigation controls for admin interfaces.
  *
- * @param {Object} props - Component props
- * @param {Object} props.pagination - Pagination configuration object
- * @param {number} props.pagination.currentPage - Current active page number (1-indexed)
- * @param {number} props.pagination.totalPages - Total number of pages available
- * @param {number} [props.pagination.itemsPerPage=10] - Number of items displayed per page
- * @param {number} [props.pagination.totalItems] - Total number of items in the dataset
- * @param {function} [props.onPageChange] - Callback function called when page changes
+ * @param {object} props - Component props
+ * @param {PaginationInfo} props.pagination - Pagination information object
  *
  * @example
  * <AdminPagination
@@ -35,19 +37,60 @@ import {
  *     itemsPerPage: 10,
  *     totalItems: 50
  *   }}
- *   onPageChange={(page) => console.log('Page changed to:', page)}
  * />
  */
-export function AdminPagination({ pagination, onPageChange }) {
+export function AdminPagination({
+  pagination = {
+    currentPage: 1,
+    totalPages: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+  }
+}) {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const {
     currentPage = searchParams.get("page")
-      ? parseInt(searchParams.get("page")) || 1
+      ? parseInt(searchParams.get("page"), 10) || 1
       : 1,
     totalPages,
-    itemsPerPage = 10,
+    itemsPerPage,
+    totalItems,
+  } = pagination;
+
+
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page);
+    const url = `${location.pathname}?${params.toString()}`;
+    navigate(url);
+  };
+
+  return <PaginationControl
+    pagination={{
+      currentPage,
+      totalPages,
+      itemsPerPage,
+      totalItems,
+    }}
+    onPageChange={handlePageChange}
+  />;
+}
+
+export function PaginationControl({
+  pagination = {
+    currentPage: 1,
+    totalPages: 1,
+    itemsPerPage: 10,
+    totalItems: 0,
+  },
+  onPageChange,
+}) {
+  const {
+    currentPage,
+    totalPages,
+    itemsPerPage,
     totalItems,
   } = pagination;
 
@@ -61,24 +104,7 @@ export function AdminPagination({ pagination, onPageChange }) {
   const handlePageChange = (page) => {
     if (onPageChange) {
       onPageChange(page);
-    } else {
-      const params = new URLSearchParams(searchParams);
-      params.set("page", page);
-      const url = `${location.pathname}?${params.toString()}`;
-      navigate(url);
     }
-  };
-
-  const firstPageUrl = () => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", currentPage - 1);
-    return `${location.pathname}?${params.toString()}`;
-  };
-
-  const lastPageUrl = () => {
-    const params = new URLSearchParams(searchParams);
-    params.set("page", currentPage + 1);
-    return `${location.pathname}?${params.toString()}`;
   };
 
   return (
@@ -91,7 +117,6 @@ export function AdminPagination({ pagination, onPageChange }) {
         <PaginationContent>
           <PaginationItem disabled={currentPage <= 1}>
             <PaginationPrevious
-              href={firstPageUrl()}
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange(currentPage - 1);
@@ -101,14 +126,9 @@ export function AdminPagination({ pagination, onPageChange }) {
 
           {[...Array(totalPages)].map((_, i) => {
             const pageNumber = i + 1;
-            const params = new URLSearchParams(searchParams);
-            params.set("page", pageNumber);
-            const url = `${location.pathname}?${params.toString()}`;
-
             return (
               <PaginationItem key={pageNumber}>
                 <PaginationLink
-                  href={url}
                   isActive={currentPage === pageNumber}
                   onClick={(e) => {
                     e.preventDefault();
@@ -123,7 +143,6 @@ export function AdminPagination({ pagination, onPageChange }) {
 
           <PaginationItem disabled={currentPage >= totalPages}>
             <PaginationNext
-              href={lastPageUrl()}
               onClick={(e) => {
                 e.preventDefault();
                 handlePageChange(currentPage + 1);

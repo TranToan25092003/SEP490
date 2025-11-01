@@ -1,6 +1,8 @@
 // create server
 const express = require("express");
+const { createServer } = require("http");
 const app = express();
+const server = createServer(app);
 
 //end create server
 
@@ -57,13 +59,36 @@ const managerRouter = require("./API/manager/index.router");
 managerRouter(app);
 // manager router
 
+const separationMakesNoSense = require("./API");
+separationMakesNoSense(app);
+
+app.use((err, _, res, __) => {
+  console.error(err);
+
+  if (err instanceof DomainError) {
+    return res.status(err.statusCode).json({
+      message: err.message,
+      code: err.code,
+    });
+  }
+
+  return res.status(500).json({
+    message: "Internal Server Error",
+  });
+});
+
 // Swagger
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
+const DomainError = require("./errors/domainError");
 app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger
 
-// Create HTTP server and integrate Socket.IO
-app.listen(port, () => {
+// Initialize Socket.IO
+const { initializeSocket } = require("./socket");
+initializeSocket(server);
+
+// Start server
+server.listen(port, () => {
   console.log(`server is running at port ${port}`);
 });
