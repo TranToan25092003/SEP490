@@ -156,6 +156,16 @@ const router = createBrowserRouter([
         path: "goods-receipt/:id",
         element: <GoodsReceiptDetail />,
       },
+    ],
+  },
+  {
+    path: "/staff",
+    element: <AdminLayout />,
+    children: [
+      { path: "booking/:id", element: <BookingDetail /> },
+      { path: "booking/", element: <BookingList /> },
+    ],
+  },
 
       {
         path: "staff",
