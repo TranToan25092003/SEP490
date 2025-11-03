@@ -6,103 +6,58 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { initializeSocket } from "@/utils/socket";
-import { Send, Phone, Video, MoreVertical, Search, Filter } from "lucide-react";
+import {
+  Send,
+  Phone,
+  Video,
+  MoreVertical,
+  Search,
+  Filter,
+  Image,
+  Package,
+  X,
+} from "lucide-react";
 
-// Mock data for customers
-const mockCustomers = [
-  {
-    id: "1",
-    name: "Nguyễn Văn A",
-    avatar: "/api/placeholder/40/40",
-    lastMessage: "Xe tôi có vấn đề gì không ạ?",
-    lastMessageTime: "10:30",
-    unreadCount: 2,
-    status: "online",
-    bookingId: "BK001",
-    vehicleInfo: "Honda Wave RSX 2023",
-  },
-  {
-    id: "2",
-    name: "Trần Thị B",
-    avatar: "/api/placeholder/40/40",
-    lastMessage: "Cảm ơn anh, xe chạy tốt rồi",
-    lastMessageTime: "09:15",
-    unreadCount: 0,
-    status: "offline",
-    bookingId: "BK002",
-    vehicleInfo: "Yamaha Exciter 2022",
-  },
-  {
-    id: "3",
-    name: "Lê Văn C",
-    avatar: "/api/placeholder/40/40",
-    lastMessage: "Khi nào có thể lấy xe ạ?",
-    lastMessageTime: "08:45",
-    unreadCount: 1,
-    status: "online",
-    bookingId: "BK003",
-    vehicleInfo: "Suzuki Raider 2023",
-  },
-];
-
-// Mock messages for selected customer
-const mockMessages = {
-  1: [
-    {
-      id: "1",
-      senderId: "customer",
-      senderName: "Nguyễn Văn A",
-      content: "Chào anh, xe tôi có vấn đề gì không ạ?",
-      timestamp: "10:25",
-      type: "text",
-    },
-    {
-      id: "2",
-      senderId: "staff",
-      senderName: "Kỹ thuật viên",
-      content:
-        "Chào anh! Tôi đang kiểm tra xe của anh. Có vẻ như phanh trước cần thay mới.",
-      timestamp: "10:28",
-      type: "text",
-    },
-    {
-      id: "3",
-      senderId: "customer",
-      senderName: "Nguyễn Văn A",
-      content: "Vậy chi phí thay phanh là bao nhiêu ạ?",
-      timestamp: "10:30",
-      type: "text",
-    },
-  ],
-};
+// Mock data removed - using real-time socket data
 
 export default function ChatStaff() {
   const [socket, setSocket] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState({}); // { customerId: [messages] }
   const [newMessage, setNewMessage] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const seenMessageIdsRef = useRef(new Map());
+  const localStoreKey = (cid) => `staff_chat_${cid}`;
 
   useEffect(() => {
     // Initialize socket connection
     const socketInstance = initializeSocket();
     setSocket(socketInstance);
-    setCustomers(mockCustomers);
 
-    // Join staff room
-    socketInstance.emit("joinRoom", {
-      room: "staff_room",
-      userId: "staff_user",
-      userType: "staff",
-    });
+    // Join staff room immediately if already connected
+    if (socketInstance.connected) {
+      socketInstance.emit("joinRoom", {
+        room: "staff_room",
+        userId: "staff_user",
+        userType: "staff",
+      });
+    }
 
     // Socket event listeners
     socketInstance.on("connect", () => {
       setIsConnected(true);
       console.log("Connected to chat server");
+      // Join staff room after connection is established
+      socketInstance.emit("joinRoom", {
+        room: "staff_room",
+        userId: "staff_user",
+        userType: "staff",
+      });
     });
 
     socketInstance.on("disconnect", () => {
@@ -110,19 +65,102 @@ export default function ChatStaff() {
       console.log("Disconnected from chat server");
     });
 
-    socketInstance.on("newMessage", (message) => {
-      setMessages((prev) => [...prev, message]);
-      scrollToBottom();
+    // Receive active customers list when staff connects
+    socketInstance.on("activeCustomers", (customersList) => {
+      const formattedCustomers = customersList.map((c) => ({
+        id: c.customerId,
+        name: c.name,
+        avatar: "/api/placeholder/40/40",
+        lastMessage: "",
+        lastMessageTime: new Date(c.lastSeen).toLocaleTimeString("vi-VN", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        unreadCount: 0,
+        status: "online",
+        vehicleInfo: c.userType === "guest" ? "Khách vãng lai" : "",
+      }));
+      setCustomers(formattedCustomers);
     });
 
-    socketInstance.on("customerOnline", (customerId) => {
+    // Receive new customer notification
+    socketInstance.on("newCustomer", (customer) => {
+      setCustomers((prev) => {
+        const exists = prev.find((c) => c.id === customer.customerId);
+        if (exists) return prev;
+        return [
+          {
+            id: customer.customerId,
+            name: customer.name,
+            avatar: "/api/placeholder/40/40",
+            lastMessage: "",
+            lastMessageTime: new Date().toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            unreadCount: 0,
+            status: "online",
+            vehicleInfo: customer.userType === "guest" ? "Khách vãng lai" : "",
+          },
+          ...prev,
+        ];
+      });
+    });
+
+    // Receive new message from any customer (de-duplicate by id)
+    socketInstance.on("newMessage", (data) => {
+      const { customerId, ...message } = data;
+
+      const seenSet = seenMessageIdsRef.current.get(customerId) || new Set();
+      if (message.id && seenSet.has(message.id)) {
+        return;
+      }
+      if (message.id) {
+        seenSet.add(message.id);
+        seenMessageIdsRef.current.set(customerId, seenSet);
+      }
+
+      // Update messages for this customer
+      setMessages((prev) => {
+        const customerMessages = prev[customerId] || [];
+        const next = {
+          ...prev,
+          [customerId]: [...customerMessages, message],
+        };
+        // persist to localStorage
+        try {
+          localStorage.setItem(
+            localStoreKey(customerId),
+            JSON.stringify(next[customerId])
+          );
+        } catch {}
+        return next;
+      });
+
+      // Update customer's last message and time
       setCustomers((prev) =>
-        prev.map((customer) =>
-          customer.id === customerId
-            ? { ...customer, status: "online" }
-            : customer
-        )
+        prev.map((customer) => {
+          if (customer.id === customerId) {
+            return {
+              ...customer,
+              lastMessage:
+                message.content ||
+                (message.type === "image" ? "Đã gửi ảnh" : ""),
+              lastMessageTime: message.timestamp,
+              unreadCount:
+                customer.id === selectedCustomer?.id
+                  ? customer.unreadCount
+                  : customer.unreadCount + 1,
+            };
+          }
+          return customer;
+        })
       );
+
+      // Scroll if this is the selected customer
+      if (selectedCustomer?.id === customerId) {
+        setTimeout(() => scrollToBottom(), 100);
+      }
     });
 
     socketInstance.on("customerOffline", (customerId) => {
@@ -135,18 +173,42 @@ export default function ChatStaff() {
       );
     });
 
+    // Receive chat history when joining a chat room
+    socketInstance.on("chatHistory", ({ customerId: cid, messages: list }) => {
+      if (!cid || !Array.isArray(list)) return;
+      setMessages((prev) => {
+        const next = { ...prev, [cid]: list };
+        try {
+          localStorage.setItem(localStoreKey(cid), JSON.stringify(list));
+        } catch {}
+        return next;
+      });
+      if (selectedCustomer?.id === cid) {
+        setTimeout(() => scrollToBottom(), 100);
+      }
+    });
+
     return () => {
       socketInstance.off("connect");
       socketInstance.off("disconnect");
       socketInstance.off("newMessage");
-      socketInstance.off("customerOnline");
+      socketInstance.off("activeCustomers");
+      socketInstance.off("newCustomer");
       socketInstance.off("customerOffline");
+      socketInstance.off("chatHistory");
     };
-  }, []);
+  }, [selectedCustomer]);
 
   useEffect(() => {
     if (selectedCustomer && socket) {
-      setMessages(mockMessages[selectedCustomer.id] || []);
+      // Reset unread count when viewing
+      setCustomers((prev) =>
+        prev.map((customer) =>
+          customer.id === selectedCustomer.id
+            ? { ...customer, unreadCount: 0 }
+            : customer
+        )
+      );
 
       // Join customer chat room
       socket.emit("joinRoom", {
@@ -154,6 +216,18 @@ export default function ChatStaff() {
         userId: "staff_user",
         userType: "staff",
       });
+
+      // Bootstrap messages from localStorage for immediate UX
+      try {
+        const cached = JSON.parse(
+          localStorage.getItem(localStoreKey(selectedCustomer.id)) || "[]"
+        );
+        if (Array.isArray(cached) && cached.length > 0) {
+          setMessages((prev) => ({ ...prev, [selectedCustomer.id]: cached }));
+        }
+      } catch {}
+
+      setTimeout(() => scrollToBottom(), 100);
     }
   }, [selectedCustomer, socket]);
 
@@ -162,7 +236,8 @@ export default function ChatStaff() {
   };
 
   const handleSendMessage = () => {
-    if (!newMessage.trim() || !selectedCustomer || !socket) return;
+    if ((!newMessage.trim() && !selectedImage) || !selectedCustomer || !socket)
+      return;
 
     const message = {
       id: Date.now().toString(),
@@ -173,7 +248,68 @@ export default function ChatStaff() {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      type: "text",
+      type: selectedImage ? "image" : "text",
+      image: selectedImage,
+    };
+
+    // Send message via socket
+    socket.emit("sendMessage", {
+      customerId: selectedCustomer.id,
+      message: message,
+    });
+
+    // Clear input; rely on server echo to append to list (avoids duplicates)
+    setNewMessage("");
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+    scrollToBottom();
+  };
+
+  const handleImageSelect = (event) => {
+    const file = event.target.files[0];
+    if (file && file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage({
+          file: file,
+          preview: e.target.result,
+          name: file.name,
+          size: file.size,
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeSelectedImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  // eslint-disable-next-line no-unused-vars
+  const handleSendProduct = (product) => {
+    if (!selectedCustomer || !socket) return;
+
+    const message = {
+      id: Date.now().toString(),
+      senderId: "staff",
+      senderName: "Kỹ thuật viên",
+      content: `Gợi ý sản phẩm: ${product.name}`,
+      timestamp: new Date().toLocaleTimeString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      type: "product",
+      product: {
+        name: product.name,
+        price: product.price,
+        link: product.link || `/items/${product.id}`,
+        id: product.id,
+      },
     };
 
     // Send message via socket
@@ -183,8 +319,14 @@ export default function ChatStaff() {
     });
 
     // Add to local state
-    setMessages((prev) => [...prev, message]);
-    setNewMessage("");
+    setMessages((prev) => {
+      const customerMessages = prev[selectedCustomer.id] || [];
+      return {
+        ...prev,
+        [selectedCustomer.id]: [...customerMessages, message],
+      };
+    });
+
     scrollToBottom();
   };
 
@@ -339,7 +481,7 @@ export default function ChatStaff() {
         {/* Vùng chat (cuộn được) */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 min-h-0">
           {selectedCustomer ? (
-            messages.map((message) => (
+            (messages[selectedCustomer.id] || []).map((message) => (
               <div
                 key={message.id}
                 className={`flex ${
@@ -353,7 +495,43 @@ export default function ChatStaff() {
                       : "bg-gray-200 text-gray-900"
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  {message.type === "image" && message.image && (
+                    <div className="mb-2">
+                      <img
+                        src={message.image.preview || message.image}
+                        alt={message.image.name || "Image"}
+                        className="max-w-full h-auto rounded-lg"
+                        style={{ maxHeight: "200px" }}
+                      />
+                    </div>
+                  )}
+                  {message.type === "product" && message.product && (
+                    <div className="mb-2 p-2 bg-white/10 rounded border border-white/20">
+                      <p className="font-semibold text-sm mb-1">
+                        {message.product.name}
+                      </p>
+                      {message.product.price && (
+                        <p className="text-xs opacity-90">
+                          {message.product.price}
+                        </p>
+                      )}
+                      {message.product.link && (
+                        <a
+                          href={message.product.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs underline opacity-90"
+                        >
+                          Xem chi tiết
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {message.content && (
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {message.content}
+                    </p>
+                  )}
                   <p
                     className={`text-xs mt-1 ${
                       message.senderId === "staff"
@@ -396,7 +574,58 @@ export default function ChatStaff() {
 
         {/* Input - luôn cố định */}
         <div className="shrink-0 bg-white border-t border-gray-200 p-4 sticky bottom-0">
+          {/* Selected Image Preview */}
+          {selectedImage && (
+            <div className="mb-3 p-3 bg-gray-100 rounded-lg border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <img
+                    src={selectedImage.preview}
+                    alt="Preview"
+                    className="w-12 h-12 object-cover rounded-lg"
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-gray-900 truncate max-w-32">
+                      {selectedImage.name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {(selectedImage.size / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={removeSelectedImage}
+                  className="h-6 w-6 text-gray-500 hover:text-red-500"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+            />
+
+            {/* Image upload button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fileInputRef.current?.click()}
+              className="h-10 w-10 text-gray-500 hover:text-blue-500"
+              disabled={!isConnected || !selectedCustomer}
+            >
+              <Image className="h-4 w-4" />
+            </Button>
+
             <Input
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
@@ -409,7 +638,11 @@ export default function ChatStaff() {
             />
             <Button
               onClick={handleSendMessage}
-              disabled={!newMessage.trim() || !isConnected || !selectedCustomer}
+              disabled={
+                (!newMessage.trim() && !selectedImage) ||
+                !isConnected ||
+                !selectedCustomer
+              }
               size="icon"
             >
               <Send className="h-4 w-4" />

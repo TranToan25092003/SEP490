@@ -1,5 +1,5 @@
 const { Server } = require("socket.io");
-const { handleConnection } = require("./eventHandlers");
+const { handleConnection, setIOInstance } = require("./eventHandlers");
 
 let io = null;
 
@@ -11,6 +11,9 @@ const initializeSocket = (server) => {
       credentials: true,
     },
   });
+
+  // Set io instance in eventHandlers for broadcasting
+  setIOInstance(io);
 
   // Socket.IO connection handling
   io.on("connection", handleConnection);
