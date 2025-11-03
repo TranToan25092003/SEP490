@@ -60,41 +60,75 @@ const FloatingChatButton = () => {
   const { isSignedIn } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState(mockMessages);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const [customerId, setCustomerId] = useState(null);
+  const [customerName, setCustomerName] = useState("");
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    // Determine identity (clerk or guest)
+    let id = null;
+    let name = "";
+    if (isSignedIn && user?.id) {
+      id = user.id;
+      name = user.firstName || user.username || "Khách hàng";
+    } else {
+      try {
+        id = localStorage.getItem("guest_id");
+        let guestNumber = parseInt(localStorage.getItem("guest_number") || "0");
+        if (!id) {
+          guestNumber = guestNumber + 1;
+          id = `guest_${guestNumber}_${Date.now()}`;
+          localStorage.setItem("guest_id", id);
+          localStorage.setItem("guest_number", guestNumber.toString());
+        }
+        name = `Guest ${guestNumber || 1}`;
+      } catch {}
+    }
+    setCustomerId(id);
+    setCustomerName(name);
 
     // Initialize socket connection
     const socketInstance = initializeSocket();
     setSocket(socketInstance);
 
-    // Join customer support room
+    // Join per-customer room
     socketInstance.emit("joinRoom", {
-      room: "customer_support",
-      userId: user?.id || "guest",
+      room: `chat_${id}`,
+      userId: id,
       userType: "customer",
+      customerName: name,
     });
 
     // Socket event listeners
     socketInstance.on("connect", () => {
       setIsConnected(true);
-      console.log("Connected to chat server");
     });
 
     socketInstance.on("disconnect", () => {
       setIsConnected(false);
-      console.log("Disconnected from chat server");
     });
 
     socketInstance.on("newMessage", (message) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        const next = [...prev, message];
+        try {
+          localStorage.setItem(`chat_${id}`, JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      scrollToBottom();
+    });
+
+    socketInstance.on("chatHistory", ({ customerId: cid, messages: list }) => {
+      if (!cid || !Array.isArray(list)) return;
+      setMessages(list);
+      try { localStorage.setItem(`chat_${cid}`, JSON.stringify(list)); } catch {}
       scrollToBottom();
     });
 
@@ -102,6 +136,7 @@ const FloatingChatButton = () => {
       socketInstance.off("connect");
       socketInstance.off("disconnect");
       socketInstance.off("newMessage");
+      socketInstance.off("chatHistory");
     };
   }, [isSignedIn, user]);
 
@@ -114,12 +149,12 @@ const FloatingChatButton = () => {
   };
 
   const handleSendMessage = () => {
-    if ((!newMessage.trim() && !selectedImage) || !socket) return;
+    if ((!newMessage.trim() && !selectedImage) || !socket || !customerId) return;
 
     const message = {
       id: Date.now().toString(),
       senderId: "customer",
-      senderName: user?.firstName || "Khách hàng",
+      senderName: customerName || (user?.firstName || "Khách hàng"),
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -131,15 +166,13 @@ const FloatingChatButton = () => {
 
     // Send message via socket
     socket.emit("sendMessage", {
-      room: "customer_support",
+      customerId: customerId,
       message: message,
     });
 
-    // Add to local state
-    setMessages((prev) => [...prev, message]);
+    // Clear inputs; rely on server echo (avoids duplicates)
     setNewMessage("");
     setSelectedImage(null);
-    scrollToBottom();
   };
 
   const handleKeyPress = (e) => {
@@ -193,9 +226,14 @@ const FloatingChatButton = () => {
     setIsMinimized(false);
   };
 
-  if (!isSignedIn) {
-    return null; // Don't show chat for non-authenticated users
-  }
+  // Bootstrap cached history for immediate UX
+  useEffect(() => {
+    try {
+      if (!customerId) return;
+      const cached = JSON.parse(localStorage.getItem(`chat_${customerId}`) || "[]");
+      if (Array.isArray(cached) && cached.length > 0) setMessages(cached);
+    } catch {}
+  }, [customerId]);
 
   return (
     <>
@@ -310,7 +348,7 @@ const FloatingChatButton = () => {
                         </div>
                       )}
                       {message.content && (
-                        <p className="text-sm leading-relaxed">
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
                           {message.content}
                         </p>
                       )}
