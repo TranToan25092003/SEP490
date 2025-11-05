@@ -130,7 +130,6 @@
  * @property {string} createdAt - Date when the service order was created (ISO 8601 format)
  * @property {string} [completedAt] - Date when the service order was completed (ISO 8601 format)
  * @property {string} [estimatedCompletedAt] - Estimated completion date (ISO 8601 format)
- * @property {string} comment - Additional comments or notes
  */
 
 /**

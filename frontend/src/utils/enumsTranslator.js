@@ -29,6 +29,12 @@ const statusText = {
   rejected: "Đã từ chối",
 };
 
+const taskStatusMap = {
+  scheduled: "Đã lên lịch",
+  in_progress: "Đang thực hiện",
+  completed: "Đã hoàn thành",
+};
+
 export function translateQuoteStatus(status) {
   return statusText[status] || "Không xác định";
 }
@@ -43,4 +49,8 @@ export function translateBookingStatus(status) {
 
 export function translateServiceOrderStatus(status) {
   return serviceOrderStatusMap[status] || "Không xác định";
+}
+
+export function translateTaskStatus(status) {
+  return taskStatusMap[status] || "Không xác định";
 }
