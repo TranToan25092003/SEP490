@@ -199,8 +199,8 @@ class ServiceOrderTaskService {
    * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
    */
   async startService(taskId) {
-    const task = await ServicingTask.findById(taskId).exec();
-    if (!task) {
+    const servicingTask = await ServicingTask.findById(taskId).exec();
+    if (!servicingTask) {
       throw new DomainError(
         "Tác vụ dịch vụ không tồn tại",
         ERROR_CODES.SERVICE_TASK_NOT_FOUND,
@@ -208,7 +208,7 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(task.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(servicingTask.service_order_id).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -217,7 +217,7 @@ class ServiceOrderTaskService {
       );
     }
 
-    await this.beginTask(task);
+    await this.beginTask(servicingTask);
 
     serviceOrder.status = "servicing";
     await serviceOrder.save();
