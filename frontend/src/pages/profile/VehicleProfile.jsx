@@ -17,7 +17,10 @@ const VehicleProfile = (vehicles) => {
       {/* Horizontal List - Mỗi xe 1 dòng */}
       <div className="flex flex-col container">
         {cars.map((car) => (
-          <div className="grid grid-cols-4 gap-4 items-center border-b py-2">
+          <div
+            className="grid grid-cols-4 gap-4 items-center border-b py-2"
+            key={car._id}
+          >
             <div>
               <img
                 src={car.image}

@@ -90,7 +90,7 @@ module.exports.getVehicles = async (req, res) => {
       .select("_id license_plate model_id images license_plate year");
 
     if (!vehicles.length) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "Không tìm thấy xe nào cho người dùng này",
       });
