@@ -490,6 +490,7 @@ export function FileUpload({
                 {t.uploads} ({uploadedFiles.length}/{maxFilesCount})
               </h3>
               <button
+                type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="p-1 hover:bg-muted rounded-md transition-colors"
                 title={isExpanded ? "Collapse" : "Expand"}
@@ -504,6 +505,7 @@ export function FileUpload({
             <div className="flex items-center gap-2">
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setLayout("list")}
                   className={cn(
                     "p-2 rounded-md transition-colors",
@@ -516,6 +518,7 @@ export function FileUpload({
                   <List className="w-4 h-4" />
                 </button>
                 <button
+                  type="button"
                   onClick={() => setLayout("grid")}
                   className={cn(
                     "p-2 rounded-md transition-colors",
@@ -693,6 +696,7 @@ function FileUploadItem({ file, onRemove, onCancel, onRetry, layout = "list" }) 
           <div className="flex items-center justify-center gap-2">
             {file.status === "uploading" && (
               <button
+                type="button"
                 onClick={onCancel}
                 className="p-1.5 hover:bg-muted rounded-md transition-colors"
                 title="Cancel upload"
@@ -703,6 +707,7 @@ function FileUploadItem({ file, onRemove, onCancel, onRetry, layout = "list" }) 
 
             {file.status === "error" && (
               <button
+                type="button"
                 onClick={onRetry}
                 className="p-1.5 hover:bg-muted rounded-md transition-colors"
                 title="Retry upload"
@@ -713,6 +718,7 @@ function FileUploadItem({ file, onRemove, onCancel, onRetry, layout = "list" }) 
 
             {(file.status === "completed" || file.status === "error" || file.status === "cancelled") && (
               <button
+                type="button"
                 onClick={onRemove}
                 className="p-1.5 hover:bg-muted rounded-md transition-colors"
                 title="Remove file"

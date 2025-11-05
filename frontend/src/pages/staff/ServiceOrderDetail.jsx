@@ -15,6 +15,8 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
+import NiceModal from "@ebay/nice-modal-react";
+import ChooseStaffModal from "@/components/staff/service-order-detail/ChooseStaffModal";
 
 function loader({ params }) {
   return {
@@ -37,11 +39,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     }
   };
 
-  const handleConfirmServiceOrder = async (serviceOrderData) => {
-    await new Promise((resolve, _) => setTimeout(resolve, 4000));
-    console.log("Confirming service order:", serviceOrderData);
-    revalidator.revalidate();
-  };
+
 
   const handleSendInvoice = async (serviceOrderData, items) => {
     try {
@@ -60,6 +58,16 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     }
   };
 
+  const handleCancelServiceOrder = async (serviceOrderData) => {
+
+  };
+
+  const handleStartServiceOrder = async (serviceOrderData) => {
+    const result = await NiceModal.show(ChooseStaffModal);
+
+    console.log(result);
+  };
+
   return (
     <ServiceOrderEditForm
       serviceOrder={serviceOrder}
@@ -72,7 +80,8 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
           total: 1.1 * sum
         };
       }}
-      onConfirmServiceOrder={handleConfirmServiceOrder}
+      onStartServiceOrder={handleStartServiceOrder}
+      onCancelServiceOrder={handleCancelServiceOrder}
       onUpdateServiceOrder={handleUpdateServiceOrder}
       onSendInvoice={handleSendInvoice}
     />

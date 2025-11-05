@@ -1,6 +1,7 @@
 const { Booking, ServiceOrder, InspectionTask, ServicingTask } = require("../model");
 const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
+const { MediaAssetService } = require("./media_asset.service");
 
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
@@ -123,9 +124,10 @@ class ServiceOrderTaskService {
       );
     }
 
+    const assetIds = await MediaAssetService.saveMediaAsset(payload.media);
 
     inspectionTask.comment = payload.comment;
-    inspectionTask.photoUrls = payload.photoUrls;
+    inspectionTask.media = assetIds;
 
     await this.completeTask(inspectionTask);
 
@@ -260,10 +262,12 @@ class ServiceOrderTaskService {
       );
     }
 
+    const assetIds = await MediaAssetService.saveMediaAsset(entry.media);
+
     const timelineEntry = {
       title: entry.title,
       comment: entry.comment,
-      photoUrls: entry.photoUrls
+      media: assetIds
     };
 
     servicingTask.timeline.push(timelineEntry);
