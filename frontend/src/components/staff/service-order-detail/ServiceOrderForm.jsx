@@ -57,7 +57,8 @@ const formSchema = z.object({
 const ServiceOrderEditForm = ({
   serviceOrder,
   onUpdateServiceOrder,
-  onConfirmServiceOrder,
+  onCancelServiceOrder,
+  onStartServiceOrder,
   onSendInvoice,
   getTotalPrice
 }) => {
@@ -93,32 +94,41 @@ const ServiceOrderEditForm = ({
     disabled
   });
 
-  const handleUpdateServiceOrder = (data, items) => {
+  const handleUpdateServiceOrder = (serviceOrder, items) => {
     methods.handleSubmit(async () => {
       try {
         setDisabled(true);
-        await onUpdateServiceOrder(data, items);
+        await onUpdateServiceOrder(serviceOrder, items);
       } finally {
         setDisabled(false);
       }
     })();
   };
 
-  const handleConfirmServiceOrder = async (data) => {
+  const handleCancelServiceOrder = async (serviceOrder) => {
     try {
       setDisabled(true);
-      await onConfirmServiceOrder(data);
+      await onCancelServiceOrder(serviceOrder);
     } finally {
       setDisabled(false);
     }
   };
 
-  const handleSendInvoice = (data, items) => {
+  const handleStartServiceOrder = async (serviceOrder) => {
+    try {
+      setDisabled(true);
+      await onStartServiceOrder(serviceOrder);
+    } finally {
+      setDisabled(false);
+    }
+  }
+
+  const handleSendInvoice = (serviceOrder, items) => {
     methods.handleSubmit(async () => {
       try {
         methods.handleSubmit(() => {})();
         setDisabled(true);
-        await onSendInvoice(data, items);
+        await onSendInvoice(serviceOrder, items);
       } finally {
         setDisabled(false);
       }
@@ -128,7 +138,8 @@ const ServiceOrderEditForm = ({
   const contextValue = {
     serviceOrder,
     handleUpdateServiceOrder,
-    handleConfirmServiceOrder,
+    handleStartServiceOrder,
+    handleCancelServiceOrder,
     handleSendInvoice,
     disabled,
     getTotalPrice,

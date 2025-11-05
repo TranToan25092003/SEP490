@@ -55,7 +55,10 @@ const serviceOrderTaskSchema = new mongoose.Schema(
 const ServiceOrderTask = mongoose.model("ServiceOrderTask", serviceOrderTaskSchema, "service_order_tasks");
 
 const InspectionTask = serviceOrderTaskSchema.discriminator("inspection", new mongoose.Schema({
-  photoUrls: [String],
+  media: [{
+    type: mongoose.Types.ObjectId,
+    ref: "MediaAsset"
+  }],
   comment: String
 }));
 
@@ -68,7 +71,10 @@ const ServicingTask = serviceOrderTaskSchema.discriminator(
           title: { type: String, required: true },
           comment: { type: String, required: true },
           timestamp: { type: Date, required: true, default: Date.now },
-          photoUrls: { type: [String], default: [] },
+          media: [{
+            type: mongoose.Types.ObjectId,
+            ref: "MediaAsset"
+          }]
         },
       ],
       default: [],

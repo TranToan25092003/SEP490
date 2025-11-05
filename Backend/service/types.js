@@ -1,6 +1,17 @@
 // The DTOs will become Swagger definitions and client API models
 
 /**
+ * GENERAL
+ */
+
+/**
+ * @typedef {object} MediaAsset
+ * @property {string} publicId - The public id of the cloudinary resource
+ * @property {string} url - The url of the cloudinary resource
+ * @property {"image" | "video" | "pdf" | "other"} kind - The kind of the resource
+ */
+
+/**
  * STAFF / TECHNICIAN SERVICE
  */
 
@@ -123,14 +134,14 @@
 /**
  * @typedef {object} CompleteInspectionPayload
  * @property {string} comment - Comment or notes about the inspection.
- * @property {string[]} photoUrls - URLs of photos taken during the inspection.
+ * @property {MediaAsset[]} media - The photos of the inspection
  */
 
 /**
  * @typedef {object} ServiceTimelineEntry
  * @property {string} title - Title of the timeline entry.
  * @property {string} comment - Comment or notes for the timeline entry.
- * @property {string[]} photoUrls - URLs of photos for the timeline entry.
+ * @property {MediaAsset[]} media - The photos to be part of the timeline entry
  */
 
 /**

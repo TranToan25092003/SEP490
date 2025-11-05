@@ -11,7 +11,7 @@ const ServiceOrderHeader = ({
   className,
   ...props
 }) => {
-  const { serviceOrder, disabled } = useServiceOrder();
+  const { serviceOrder, disabled, handleCancelServiceOrder, handleStartServiceOrder } = useServiceOrder();
   const { watch } = useFormContext();
   const items = watch();
   const hasServices = items.services.length + items.parts.length > 0;
@@ -27,7 +27,7 @@ const ServiceOrderHeader = ({
             type="button"
             className="text-destructive"
             variant="outline"
-            onClick={() => onCancelServiceOrder(serviceOrder)}
+            onClick={() => handleCancelServiceOrder(serviceOrder)}
             disabled={disabled}
             aria-busy={disabled}
           >
@@ -35,7 +35,7 @@ const ServiceOrderHeader = ({
           </Button>
           <Button
             type="submit"
-            onClick={() => onStartServiceOrder(serviceOrder)}
+            onClick={() => handleStartServiceOrder(serviceOrder)}
             disabled={disabled || !hasServices}
             aria-busy={disabled || !hasServices}
           >

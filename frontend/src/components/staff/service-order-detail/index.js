@@ -23,7 +23,8 @@
  * @typedef {import("react").ComponentPropsWithRef<"form"> & {
  *   serviceOrder: ServiceOrder;
  *   onUpdateServiceOrder: (updatedServiceOrder: ServiceOrder, items: ItemInfo[]) => Promise<any>;
- *   onConfirmServiceOrder: (toBeConfirmed: ServiceOrder) => Promise<any>;
+ *   onStartServiceOrder: (toBeConfirmed: ServiceOrder) => Promise<any>;
+ *   onCancelServiceOrder: (toBeConfirmed: ServiceOrder) => Promise<any>;
  *   onSendInvoice: (serviceOrderData: ServiceOrder, items: ItemInfo[]) => Promise<any>;
  *   getTotalPrice: (services: ServiceInfo[]) => { price: number, tax: number, total: number };
  * }} ServiceOrderEditFormProps

@@ -2,6 +2,24 @@
  * @swagger
  * components:
  *   schemas:
+ *     MediaAsset:
+ *       type: object
+ *       required:
+ *         - publicId
+ *         - url
+ *         - kind
+ *       properties:
+ *         publicId:
+ *           type: string
+ *           description: The public ID of the Cloudinary resource
+ *         url:
+ *           type: string
+ *           description: The public url of the Cloudinary resource
+ *         kind:
+ *           type: string
+ *           description: The public url of the Cloudinary resource
+ *           enum: [image, video, pdf, other]
+ *
  *     Timeslot:
  *       type: object
  *       required:
@@ -365,11 +383,10 @@
  *         comment:
  *           type: string
  *           description: Comment or notes about the inspection
- *         photoUrls:
+ *         media:
  *           type: array
  *           items:
- *             type: string
- *           description: URLs of photos taken during the inspection
+ *             $ref: '#/components/schemas/MediaAsset'
  *
  *     ServiceTimelineEntry:
  *       type: object

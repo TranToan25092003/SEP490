@@ -21,6 +21,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { CheckCircle2, Circle, Plus } from "lucide-react";
+import { uploadImageToFolderWithProgress } from "@/utils/uploadCloudinary";
+import { completeInspection } from "@/api/serviceTasks";
 
 function loader({ params }) {
   return {
@@ -28,17 +30,18 @@ function loader({ params }) {
   };
 }
 
-// Form schemas
 const inspectionFormSchema = z.object({
   comment: z.string().min(1, "Vui lòng nhập nhận xét"),
-  files: z.array(z.any()).default([]),
+  media: z.array(z.any()).default([]),
 });
 
 const timelineEntrySchema = z.object({
   title: z.string().min(1, "Vui lòng nhập tiêu đề"),
   comment: z.string().min(1, "Vui lòng nhập mô tả"),
-  files: z.array(z.any()).default([]),
+  media: z.array(z.any()).default([]),
 });
+
+const MEDIA_FOLDER = "service_tasks_content";
 
 const InspectionTaskForm = ({ taskId }) => {
   const {
@@ -50,25 +53,32 @@ const InspectionTaskForm = ({ taskId }) => {
     resolver: zodResolver(inspectionFormSchema),
     defaultValues: {
       comment: "",
-      files: [],
+      media: [],
     },
   });
 
   const onSubmit = async (data) => {
-    console.log("Inspection Task Submit:", { taskId, ...data });
-    toast.success("Đã lưu kết quả kiểm tra");
+    await toast.promise(
+      completeInspection(taskId, {
+        comment: data.comment,
+        media: data.media
+      }),
+      {
+        loading: "Đang lưu kết quả kiểm tra...",
+        success: "Đã lưu kết quả kiểm tra",
+        error: "Lưu kết quả kiểm tra thất bại"
+      }
+    ).unwrap();
   };
 
   const handleFileUpload = async (file, updateProgress, abortController) => {
-    // Simulate upload
-    for (let i = 0; i <= 100; i += 10) {
-      if (abortController.signal.aborted) {
-        throw new Error("Upload cancelled");
-      }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      updateProgress(i);
-    }
-    return { url: URL.createObjectURL(file), name: file.name };
+    const fileInfo = await uploadImageToFolderWithProgress(
+      file,
+      MEDIA_FOLDER,
+      (progress) => updateProgress(progress),
+      abortController
+    )
+    return fileInfo;
   };
 
   return (
@@ -160,14 +170,13 @@ const ServiceTaskTimeline = ({ taskId }) => {
   };
 
   const handleFileUpload = async (file, updateProgress, abortController) => {
-    for (let i = 0; i <= 100; i += 10) {
-      if (abortController.signal.aborted) {
-        throw new Error("Upload cancelled");
-      }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      updateProgress(i);
-    }
-    return { url: URL.createObjectURL(file), name: file.name };
+    const fileInfo = await uploadImageToFolderWithProgress(
+      file,
+      MEDIA_FOLDER,
+      (progress) => updateProgress(progress),
+      abortController
+    )
+    return fileInfo;
   };
 
   return (
