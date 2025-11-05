@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { initializeSocket } from "@/utils/socket";
+import MentionInput from "@/components/chat/MentionInput";
+import { renderMessageWithMentions } from "@/utils/mentionParser";
 import {
   Send,
   Phone,
@@ -21,6 +24,7 @@ import {
 // Mock data removed - using real-time socket data
 
 export default function ChatStaff() {
+  const navigate = useNavigate();
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState({}); // { customerId: [messages] }
   const [newMessage, setNewMessage] = useState("");
@@ -33,6 +37,11 @@ export default function ChatStaff() {
   const fileInputRef = useRef(null);
   const seenMessageIdsRef = useRef(new Map());
   const localStoreKey = (cid) => `staff_chat_${cid}`;
+
+  // Handle product click from mention
+  const handleProductClick = (productId) => {
+    navigate(`/items/${productId}`);
+  };
 
   useEffect(() => {
     // Initialize socket connection
@@ -529,7 +538,10 @@ export default function ChatStaff() {
                   )}
                   {message.content && (
                     <p className="text-sm whitespace-pre-wrap break-words">
-                      {message.content}
+                      {renderMessageWithMentions(
+                        message.content,
+                        handleProductClick
+                      )}
                     </p>
                   )}
                   <p
@@ -626,12 +638,14 @@ export default function ChatStaff() {
               <Image className="h-4 w-4" />
             </Button>
 
-            <Input
+            <MentionInput
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               placeholder={
-                selectedCustomer ? "Nhập tin nhắn..." : "Chưa chọn khách hàng"
+                selectedCustomer
+                  ? "Nhập tin nhắn... (gõ @ để tìm sản phẩm)"
+                  : "Chưa chọn khách hàng"
               }
               className="flex-1"
               disabled={!isConnected || !selectedCustomer}
