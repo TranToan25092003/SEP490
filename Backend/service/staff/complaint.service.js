@@ -8,6 +8,7 @@ class ComplaintService {
             limit = 10,
             search = "",
             status = "",
+            category = "",
             sortBy = "createdAt",
             sortOrder = "desc",
         } = query;
@@ -24,6 +25,10 @@ class ComplaintService {
 
         if (status && ["pending", "resolved", "rejected"].includes(status)) {
             filter.status = status;
+        }
+
+        if (category) {
+            filter.category = category;
         }
 
         const sort = {};
@@ -43,7 +48,7 @@ class ComplaintService {
             let clerkUserMap = {};
             if (clerkIds.length > 0) {
                 try {
-                    const clerkUsersResult = await clerkClient.users.getUserList({ userId: ["user_34TCUNQspbdhExUc1J8MB1gjnJV"] });
+                    const clerkUsersResult = await clerkClient.users.getUserList({ userId: clerkIds });
                     for (const user of clerkUsersResult.data) {
                         clerkUserMap[user.id] = {
                             fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
@@ -87,13 +92,13 @@ class ComplaintService {
             const complaint = await Complain.findById(complaintId)
                 .populate({
                     path: 'so_id',
-                    select: 'createdAt staff_id vehicle_id', // Select necessary fields from ServiceOrder
+                    select: 'createdAt staff_id vehicle_id',
                     populate: {
                         path: 'vehicle_id',
-                        select: 'license_plate model_id', // Select necessary fields from Vehicle
+                        select: 'license_plate model_id',
                         populate: {
                             path: 'model_id',
-                            select: 'name' // Select only name from Model
+                            select: 'name',
                         }
                     }
                 })
@@ -103,7 +108,6 @@ class ComplaintService {
                 return null;
             }
 
-            // --- Fetch Clerk User Data for the customer ---
             let customerInfo = { fullName: "Không rõ", phoneNumbers: [] };
             if (complaint.clerkId) {
                 try {
@@ -134,18 +138,41 @@ class ComplaintService {
                 }
             }
 
+            let populatedReply = complaint.reply;
+            if (complaint.reply && complaint.reply.staffClerkId) {
+                try {
+                    const staffUser = await clerkClient.users.getUser(complaint.reply.staffClerkId);
+                    const staffFullName = staffUser.firstName
+                        ? `${staffUser.firstName} ${staffUser.lastName || ''}`.trim()
+                        : staffUser.username || "Staff N/A";
+
+                    populatedReply = {
+                        ...complaint.reply,
+                        staffFullName: staffFullName
+                    };
+                } catch (clerkError) {
+                    console.error(`Failed to fetch replying staff name for ID ${complaint.reply.staffClerkId}:`, clerkError);
+                    populatedReply = {
+                        ...complaint.reply,
+                        staffFullName: "Staff (Không tìm thấy)"
+                    };
+                }
+            }
+
             const primaryPhoneNumber = customerInfo.phoneNumbers.length > 0 ? customerInfo.phoneNumbers[0] : "N/A";
 
             const detailedComplaint = {
-                _id: complaint._id, 
+                _id: complaint._id,
                 title: complaint.title,
                 content: complaint.content,
                 photos: complaint.photos,
                 rating: complaint.rating,
                 status: complaint.status,
-                createdAt: complaint.createdAt, 
-                so_id: complaint.so_id?._id || null, 
-                serviceDate: complaint.so_id?.createdAt || null, 
+                category: complaint.category,
+                reply: populatedReply,
+                createdAt: complaint.createdAt,
+                so_id: complaint.so_id?._id || null,
+                serviceDate: complaint.so_id?.createdAt || null,
                 license_plate: complaint.so_id?.vehicle_id?.license_plate || 'N/A',
                 model: complaint.so_id?.vehicle_id?.model_id?.name || 'N/A',
                 customerName: customerInfo.fullName,
@@ -158,6 +185,79 @@ class ComplaintService {
         } catch (error) {
             console.error("Detailed error fetching complaint:", error);
             throw new Error(`Failed to fetch complaint details: ${error.message}`);
+        }
+    }
+
+    async addReplyToComplaint(complaintId, staffClerkId, content) {
+        try {
+            const complaint = await Complain.findById(complaintId);
+
+            if (!complaint) {
+                throw new Error("Complaint not found.");
+            }
+
+            if (complaint.reply && complaint.reply.content) {
+                throw new Error("This complaint has already been replied to.");
+            }
+
+            if (!content) {
+                throw new Error("Reply content is required.");
+            }
+
+            // Cập nhật phản hồi và trạng thái
+            complaint.reply = {
+                staffClerkId: staffClerkId,
+                content: content,
+                repliedAt: new Date(),
+            };
+            complaint.status = "resolved";
+
+            const updatedComplaint = await complaint.save();
+            return updatedComplaint;
+
+        } catch (error) {
+            throw new Error(`Failed to add reply: ${error.message}`);
+        }
+    }
+
+    async deleteComplaint(complaintId) {
+        if (!complaintId) {
+            throw new Error("Complaint ID is required.");
+        }
+
+        try {
+            const deletedComplaint = await Complain.findByIdAndDelete(complaintId);
+
+            if (!deletedComplaint) {
+                throw new Error("Complaint not found.");
+            }
+            return deletedComplaint;
+
+        } catch (error) {
+            console.error("Error deleting complaint:", error);
+            throw new Error(`Failed to delete complaint: ${error.message}`);
+        }
+    }
+
+    async bulkDeleteComplaints(complaintIds) {
+        if (!complaintIds || !Array.isArray(complaintIds) || complaintIds.length === 0) {
+            throw new Error("An array of complaint IDs is required.");
+        }
+
+        try {
+            const result = await Complain.deleteMany({
+                _id: { $in: complaintIds }
+            });
+
+            if (result.deletedCount === 0) {
+                console.warn("Bulk delete operation completed, but no complaints were found or deleted.");
+            }
+
+            return result;
+
+        } catch (error) {
+            console.error("Error bulk deleting complaints:", error);
+            throw new Error(`Failed to bulk delete complaints: ${error.message}`);
         }
     }
 }

@@ -3,6 +3,14 @@ const complaintService = require("../../service/client/complaint.service");
 class ComplaintController {
     async createComplaint(req, res) {
     try {
+
+        if(req.userId !== req.body.clerkId){
+            res.status(401).json({
+                success: false,
+                message: "Unauthorized user!",
+            });
+        }
+
         const newComplaint = await complaintService.createComplaint(req.body);
 
          res.status(201).json({

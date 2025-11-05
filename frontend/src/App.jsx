@@ -57,6 +57,7 @@ import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
+import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -103,14 +104,6 @@ const router = createBrowserRouter([
       {
         path: "*",
         element: <NotFoundPage />,
-      },
-      {
-        path: "/items",
-        element: <ItemListPage />,
-      },
-      {
-        path: "/items/1",
-        element: <ItemDetailPage />,
       },
       {
         path: "/profile",
@@ -164,7 +157,7 @@ const router = createBrowserRouter([
     path: "/staff",
     element: <StaffLayout />,
     children: [
-      { index: true, element: <Staff /> },
+      { index: true, element: <StaffDashboardPage /> },
       {
         path: "service-order/:id",
         element: <ServiceOrderDetail />,
