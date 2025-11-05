@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Send, X, Minimize2, MessageCircle, Image } from "lucide-react";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { initializeSocket } from "@/utils/socket";
+import MentionInput from "@/components/chat/MentionInput";
+import { renderMessageWithMentions } from "@/utils/mentionParser";
 
 // Chat icon SVG component
 const ChatIcon = ({ className = "w-6 h-6" }) => (
@@ -35,27 +38,21 @@ const mockStaff = {
   department: "Hỗ trợ khách hàng",
 };
 
-// Mock messages
-const mockMessages = [
-  {
-    id: "1",
-    senderId: "staff",
-    senderName: "Nhân viên hỗ trợ",
-    content: "Xin chào! Tôi có thể giúp gì cho bạn?",
-    timestamp: "10:00",
-    type: "text",
-  },
-  {
-    id: "2",
-    senderId: "customer",
-    senderName: "Khách hàng",
-    content: "Tôi muốn hỏi về dịch vụ sửa chữa xe",
-    timestamp: "10:05",
-    type: "text",
-  },
-];
+// Helper function to create welcome message
+const createWelcomeMessage = () => ({
+  id: "welcome_001",
+  senderId: "staff",
+  senderName: "Chăm sóc khách hàng",
+  content: "Xin chào! Tôi có thể giúp gì cho bạn?",
+  timestamp: new Date().toLocaleTimeString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+  type: "text",
+});
 
 const FloatingChatButton = () => {
+  const navigate = useNavigate();
   const { user } = useUser();
   const { isSignedIn } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -69,6 +66,11 @@ const FloatingChatButton = () => {
   const fileInputRef = useRef(null);
   const [customerId, setCustomerId] = useState(null);
   const [customerName, setCustomerName] = useState("");
+
+  // Handle product click from mention
+  const handleProductClick = (productId) => {
+    navigate(`/items/${productId}`);
+  };
 
   useEffect(() => {
     // Determine identity (clerk or guest)
@@ -88,7 +90,9 @@ const FloatingChatButton = () => {
           localStorage.setItem("guest_number", guestNumber.toString());
         }
         name = `Guest ${guestNumber || 1}`;
-      } catch {}
+      } catch {
+        // Ignore localStorage errors
+      }
     }
     setCustomerId(id);
     setCustomerName(name);
@@ -119,16 +123,38 @@ const FloatingChatButton = () => {
         const next = [...prev, message];
         try {
           localStorage.setItem(`chat_${id}`, JSON.stringify(next));
-        } catch {}
+        } catch {
+          // Ignore localStorage errors
+        }
         return next;
       });
       scrollToBottom();
     });
 
     socketInstance.on("chatHistory", ({ customerId: cid, messages: list }) => {
-      if (!cid || !Array.isArray(list)) return;
-      setMessages(list);
-      try { localStorage.setItem(`chat_${cid}`, JSON.stringify(list)); } catch {}
+      const welcomeMessage = createWelcomeMessage();
+
+      if (!cid || !Array.isArray(list)) {
+        // If no history, show welcome message
+        setMessages([welcomeMessage]);
+        return;
+      }
+      if (list.length === 0) {
+        // If history is empty, show welcome message
+        setMessages([welcomeMessage]);
+        try {
+          localStorage.setItem(`chat_${cid}`, JSON.stringify([welcomeMessage]));
+        } catch {
+          // Ignore localStorage errors
+        }
+      } else {
+        setMessages(list);
+        try {
+          localStorage.setItem(`chat_${cid}`, JSON.stringify(list));
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
       scrollToBottom();
     });
 
@@ -149,12 +175,13 @@ const FloatingChatButton = () => {
   };
 
   const handleSendMessage = () => {
-    if ((!newMessage.trim() && !selectedImage) || !socket || !customerId) return;
+    if ((!newMessage.trim() && !selectedImage) || !socket || !customerId)
+      return;
 
     const message = {
       id: Date.now().toString(),
       senderId: "customer",
-      senderName: customerName || (user?.firstName || "Khách hàng"),
+      senderName: customerName || user?.firstName || "Khách hàng",
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -230,9 +257,19 @@ const FloatingChatButton = () => {
   useEffect(() => {
     try {
       if (!customerId) return;
-      const cached = JSON.parse(localStorage.getItem(`chat_${customerId}`) || "[]");
-      if (Array.isArray(cached) && cached.length > 0) setMessages(cached);
-    } catch {}
+      const cached = JSON.parse(
+        localStorage.getItem(`chat_${customerId}`) || "[]"
+      );
+      if (Array.isArray(cached) && cached.length > 0) {
+        setMessages(cached);
+      } else {
+        // Show welcome message if no messages exist
+        const welcomeMessage = createWelcomeMessage();
+        setMessages([welcomeMessage]);
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
   }, [customerId]);
 
   return (
@@ -349,7 +386,10 @@ const FloatingChatButton = () => {
                       )}
                       {message.content && (
                         <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                          {message.content}
+                          {renderMessageWithMentions(
+                            message.content,
+                            handleProductClick
+                          )}
                         </p>
                       )}
                       <p
@@ -402,14 +442,13 @@ const FloatingChatButton = () => {
 
                 <div className="flex items-end gap-2">
                   <div className="flex-1 relative">
-                    <Input
+                    <MentionInput
                       value={newMessage}
                       onChange={handleInputChange}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Nhập tin nhắn..."
+                      onKeyDown={handleKeyPress}
+                      placeholder="Nhập tin nhắn... (gõ @ để tìm sản phẩm)"
                       className="w-full pr-12 py-3 rounded-full border-border focus:border-primary focus:ring-primary/20 focus:outline-none"
                       disabled={false}
-                      autoComplete="off"
                     />
                   </div>
 
