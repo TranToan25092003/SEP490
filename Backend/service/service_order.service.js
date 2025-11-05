@@ -105,8 +105,7 @@ class ServiceOrderService {
       status: serviceOrder.status,
       createdAt: serviceOrder.createdAt,
       completedAt: serviceOrder.completed_at,
-      estimatedCompletedAt: serviceOrder.expected_completion_time,
-      comment: ""
+      estimatedCompletedAt: serviceOrder.expected_completion_time
     };
   }
 

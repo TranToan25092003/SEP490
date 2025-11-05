@@ -21,6 +21,36 @@ class ServiceOrderTaskController {
     }
   }
 
+  async getTaskDetails(req, res, next) {
+    try {
+      const { taskId } = req.params;
+
+      const result = await serviceOrderTaskService.getTaskDetails(taskId);
+
+      res.status(200).json({
+        data: result,
+        message: "Task details retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAllTasksForServiceOrder(req, res, next) {
+    try {
+      const { serviceOrderId } = req.params;
+
+      const result = await serviceOrderTaskService.getAllTasksForServiceOrder(serviceOrderId);
+
+      res.status(200).json({
+        data: result,
+        message: "All tasks for service order retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async beginInspectionTask(req, res, next) {
     try {
       const { taskId } = req.params;
@@ -39,11 +69,11 @@ class ServiceOrderTaskController {
   async completeInspection(req, res, next) {
     try {
       const { taskId } = req.params;
-      const { comment, photoUrls } = req.body;
+      const { comment, media } = req.body;
 
       const result = await serviceOrderTaskService.completeInspection(taskId, {
         comment,
-        photoUrls,
+        media,
       });
 
       res.status(200).json({
@@ -108,14 +138,14 @@ class ServiceOrderTaskController {
   async updateServiceTaskTimeline(req, res, next) {
     try {
       const { taskId } = req.params;
-      const { title, comment, photoUrls } = req.body;
+      const { title, comment, media } = req.body;
 
       const result = await serviceOrderTaskService.updateServiceTaskTimeline(
         taskId,
         {
           title,
           comment,
-          photoUrls,
+          media
         }
       );
 

@@ -223,3 +223,19 @@ export const updateServiceTaskTimeline = async (taskId, entry) => {
 
   return response.data.data;
 };
+
+export const getAllTasksForServiceOrder = async (serviceOrderId) => {
+  const response = await customFetch(`/service-tasks/tasks-for-service-order/${serviceOrderId}`, {
+    method: "GET",
+  });
+
+  return response.data.data;
+};
+
+export const getServiceTaskById = async (taskId) => {
+  const response = await customFetch(`/service-tasks/${taskId}`, {
+    method: "GET",
+  });
+
+  return response.data.data;
+}

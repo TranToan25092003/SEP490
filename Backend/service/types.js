@@ -124,7 +124,6 @@
  * @property {Date} createdAt - Date when the service order was created.
  * @property {Date} [completedAt] - Date when the service order was completed.
  * @property {Date} [estimatedCompletedAt] - Estimated completion date.
- * @property {string} comment - Additional comments or notes.
  */
 
 /**

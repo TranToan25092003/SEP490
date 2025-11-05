@@ -1,4 +1,4 @@
-const { Booking, ServiceOrder, InspectionTask, ServicingTask } = require("../model");
+const { Booking, ServiceOrder, InspectionTask, ServicingTask, ServiceOrderTask } = require("../model");
 const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
 const { MediaAssetService } = require("./media_asset.service");
@@ -26,6 +26,20 @@ class ServiceOrderTaskService {
     task.status = "in_progress";
     task.actual_start_time = new Date();
     await task.save();
+  }
+
+  async getTaskDetails(taskId) {
+    const task = await ServiceOrderTask.findById(taskId);
+    return task;
+  }
+
+  async getAllTasksForServiceOrder(serviceOrderId) {
+    const tasks = await ServiceOrderTask.find({
+      service_order_id: serviceOrderId,
+    })
+      .populate("media", "publicId url kind")
+      .exec();
+    return tasks;
   }
 
   /**
@@ -125,6 +139,7 @@ class ServiceOrderTaskService {
     }
 
     const assetIds = await MediaAssetService.saveMediaAsset(payload.media);
+    console.log("Saved media asset IDs:", assetIds);
 
     inspectionTask.comment = payload.comment;
     inspectionTask.media = assetIds;
