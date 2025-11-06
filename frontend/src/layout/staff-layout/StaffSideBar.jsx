@@ -10,21 +10,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Wrench,
   MessageSquareWarning,
   Package,
   Calendar1,
+  Building2,
+  MessageCircle,
+  LogOut,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClerk } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 const items = [
   {
     key: "dashboard",
-    label: "Dashboard",
+    label: "Tổng quát",
     icon: LayoutDashboard,
     href: "/staff",
   },
@@ -48,9 +53,21 @@ const items = [
   },
   {
     key: "complaint",
-    label: "Complaints",
+    label: "Xem tồn kho",
     icon: MessageSquareWarning,
     href: "/staff/complaints",
+  },
+  {
+    key: "bays",
+    label: "Quản lý bay",
+    icon: Building2,
+    href: "/staff/bays",
+  },
+  {
+    key: "chat",
+    label: "Chat",
+    icon: MessageCircle,
+    href: "/staff/chat",
   },
 ];
 
@@ -62,6 +79,17 @@ export default function StaffSideBar({
   onExpandToggle = () => {},
 }) {
   const location = useLocation();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(() => navigate("/"));
+      toast.success("Đăng xuất thành công");
+    } catch {
+      toast.error("Lỗi khi đăng xuất");
+    }
+  };
 
   return (
     <aside
@@ -79,7 +107,7 @@ export default function StaffSideBar({
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
           >
             <div className="flex flex-col gap-3">
-              {items.map((it, i) => {
+              {items.map((it) => {
                 const Icon = it.icon;
                 // Kiểm tra xem mục này có đang hoạt động không
                 // Xử lý trường hợp đặc biệt cho trang chủ dashboard
@@ -131,14 +159,42 @@ export default function StaffSideBar({
                 );
               })}
             </div>
-            <Button variant="ghost" onClick={onExpandToggle}>
-              <ChevronRight
-                className={cn(
-                  "size-6 transition-transform",
-                  expanded ? "rotate-180" : "rotate-0"
-                )}
-              />
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <span
+                      className={cn(
+                        "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                        {
+                          "opacity-0": !expanded,
+                          "opacity-100": expanded,
+                        }
+                      )}
+                    >
+                      Đăng xuất
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleLogout}
+                      className="rounded-xl size-11 shadow-sm transition-colors text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <LogOut className="size-7" />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">Đăng xuất</TooltipContent>
+              </Tooltip>
+              <Button variant="ghost" onClick={onExpandToggle}>
+                <ChevronRight
+                  className={cn(
+                    "size-6 transition-transform",
+                    expanded ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </Button>
+            </div>
           </nav>
         </TooltipProvider>
       </div>

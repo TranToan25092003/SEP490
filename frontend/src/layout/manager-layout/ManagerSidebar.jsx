@@ -2,13 +2,8 @@ import {
   sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
   iconHome as imgHome,
-  iconEmail as imgEmail,
-  iconContacts as imgContactBook,
-  iconCrypto as imgCoin,
-  iconKanban as imgDashboard,
   iconInvoice as imgInvoice,
   iconBanking as imgMoney,
-  iconTickets as imgTicket,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,9 +12,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link, useLocation } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClerk } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 const items = [
   { key: "home", label: "Dashboard", icon: imgHome, href: "/manager" },
@@ -35,11 +32,7 @@ const items = [
     icon: imgInvoice,
     href: "/manager/goods-receipt-list",
   },
-  { key: "coin", label: "Chat CSKH", icon: imgContactBook },
-  { key: "kanban", label: "Kanban", icon: imgDashboard },
-  { key: "invoice", label: "Invoice", icon: imgCoin },
-  { key: "bank", label: "Banking", icon: imgEmail },
-  { key: "ticket", label: "Tickets", icon: imgTicket },
+  // Only include items that actually have routes
 ];
 
 export default function ManagerSidebar({
@@ -50,6 +43,17 @@ export default function ManagerSidebar({
   onExpandToggle = () => {},
 }) {
   const location = useLocation();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      toast.success("Đăng xuất thành công");
+      await signOut(() => navigate("/"));
+    } catch {
+      toast.error("Lỗi khi đăng xuất");
+    }
+  };
 
   return (
     <aside
@@ -121,14 +125,42 @@ export default function ManagerSidebar({
                 );
               })}
             </div>
-            <Button variant="ghost" onClick={onExpandToggle}>
-              <ChevronRight
-                className={cn(
-                  "size-6 transition-transform",
-                  expanded ? "rotate-180" : "rotate-0"
-                )}
-              />
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="relative">
+                    <span
+                      className={cn(
+                        "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                        {
+                          "opacity-0": !expanded,
+                          "opacity-100": expanded,
+                        }
+                      )}
+                    >
+                      Đăng xuất
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleLogout}
+                      className="rounded-xl size-11 shadow-sm transition-colors text-red-600 hover:bg-red-50 hover:text-red-700"
+                    >
+                      <LogOut className="size-7" />
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">Đăng xuất</TooltipContent>
+              </Tooltip>
+              <Button variant="ghost" onClick={onExpandToggle}>
+                <ChevronRight
+                  className={cn(
+                    "size-6 transition-transform",
+                    expanded ? "rotate-180" : "rotate-0"
+                  )}
+                />
+              </Button>
+            </div>
           </nav>
         </TooltipProvider>
       </div>

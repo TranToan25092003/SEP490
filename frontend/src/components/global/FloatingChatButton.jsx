@@ -446,7 +446,7 @@ const FloatingChatButton = () => {
                       value={newMessage}
                       onChange={handleInputChange}
                       onKeyDown={handleKeyPress}
-                      placeholder="Nhập tin nhắn... (gõ @ để tìm sản phẩm)"
+                      placeholder="Nhập tin nhắn... "
                       className="w-full pr-12 py-3 rounded-full border-border focus:border-primary focus:ring-primary/20 focus:outline-none"
                       disabled={false}
                     />
