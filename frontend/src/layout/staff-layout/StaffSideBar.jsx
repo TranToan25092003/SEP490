@@ -11,10 +11,21 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Wrench, MessageSquareWarning, Package, Calendar1 } from "lucide-react";
+import {
+  LayoutDashboard,
+  Wrench,
+  MessageSquareWarning,
+  Package,
+  Calendar1,
+} from "lucide-react";
 
 const items = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, href: "/staff" },
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    href: "/staff",
+  },
   {
     key: "bookings",
     label: "Quản lý đặt lịch",
@@ -63,9 +74,10 @@ export default function StaffSideBar({ width = 80, offsetTop = 100 }) {
               const Icon = it.icon;
               // Kiểm tra xem mục này có đang hoạt động không
               // Xử lý trường hợp đặc biệt cho trang chủ dashboard
-              const isActive = (it.href === "/staff")
-                ? location.pathname === it.href
-                : location.pathname.startsWith(it.href);
+              const isActive =
+                it.href === "/staff"
+                  ? location.pathname === it.href
+                  : location.pathname.startsWith(it.href);
 
               return (
                 <div key={it.key} className="w-full flex flex-col items-center">
@@ -74,10 +86,11 @@ export default function StaffSideBar({ width = 80, offsetTop = 100 }) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className={`rounded-xl size-11 shadow-sm transition-colors mb-2 ${isActive
+                        className={`rounded-xl size-11 shadow-sm transition-colors mb-2 ${
+                          isActive
                             ? "bg-red-50 text-red-600 hover:bg-red-100" // Style khi active
-                            : "text-gray-500 hover:bg-gray-100"    // Style khi không active
-                          }`}
+                            : "text-gray-500 hover:bg-gray-100" // Style khi không active
+                        }`}
                         asChild={Boolean(it.href)}
                       >
                         {it.href ? (
