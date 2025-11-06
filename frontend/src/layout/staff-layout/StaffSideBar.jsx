@@ -10,22 +10,27 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Wrench,
   MessageSquareWarning,
   Package,
   Calendar1,
+  Building2,
+  MessageCircle,
+  LogOut,
 } from "lucide-react";
 
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useClerk } from "@clerk/clerk-react";
+import { toast } from "sonner";
 
 const items = [
   {
     key: "dashboard",
-    label: "Dashboard",
+    label: "Tổng quát",
     icon: LayoutDashboard,
     href: "/staff",
   },
@@ -49,9 +54,21 @@ const items = [
   },
   {
     key: "complaint",
-    label: "Complaints",
+    label: "Xem tồn kho",
     icon: MessageSquareWarning,
     href: "/staff/complaints",
+  },
+  {
+    key: "bays",
+    label: "Quản lý bay",
+    icon: Building2,
+    href: "/staff/bays",
+  },
+  {
+    key: "chat",
+    label: "Chat",
+    icon: MessageCircle,
+    href: "/staff/chat",
   },
 ];
 
@@ -63,6 +80,17 @@ export default function StaffSideBar({
   onExpandToggle = () => {},
 }) {
   const location = useLocation();
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(() => navigate("/"));
+      toast.success("Đăng xuất thành công");
+    } catch {
+      toast.error("Lỗi khi đăng xuất");
+    }
+  };
 
   return (
     <aside
