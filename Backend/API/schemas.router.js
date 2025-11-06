@@ -115,6 +115,23 @@
  *             isAvailable:
  *               type: boolean
  *
+ *     BayDTO:
+ *      type: object
+ *      required:
+ *        - id
+ *        - bayNumber
+ *        - description
+ *      properties:
+ *        id:
+ *          type: string
+ *          description: Bay identifier
+ *        bayNumber:
+ *          type: integer
+ *          description: Bay number
+ *        description:
+ *          type: string
+ *          description: Description of the bay
+ *
  *     BookingDTO:
  *       type: object
  *       required:
@@ -378,7 +395,7 @@
  *       type: object
  *       required:
  *         - comment
- *         - photoUrls
+ *         - media
  *       properties:
  *         comment:
  *           type: string
@@ -387,13 +404,14 @@
  *           type: array
  *           items:
  *             $ref: '#/components/schemas/MediaAsset'
+ *           description: Media assets for the inspection
  *
  *     ServiceTimelineEntry:
  *       type: object
  *       required:
  *         - title
  *         - comment
- *         - photoUrls
+ *         - media
  *       properties:
  *         title:
  *           type: string
@@ -401,11 +419,11 @@
  *         comment:
  *           type: string
  *           description: Comment or notes for the timeline entry
- *         photoUrls:
+ *         media:
  *           type: array
  *           items:
- *             type: string
- *           description: URLs of photos for the timeline entry
+ *             $ref: '#/components/schemas/MediaAsset'
+ *           description: Media assets for the timeline entry
  *
  *     ServiceOrderItemPayload:
  *       type: object
