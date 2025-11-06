@@ -9,8 +9,8 @@ class QuotesController {
    */
   async listQuotes(req, res, next) {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
+      const page = parseInt(req.query.page, 10) || 1;
+      const limit = parseInt(req.query.limit, 10) || 10;
       const serviceOrderId = req.query.serviceOrderId || null;
 
       const result = await QuotesService.listQuotes(page, limit, serviceOrderId);

@@ -60,6 +60,13 @@
  */
 
 /**
+ * @typedef {object} BayDTO
+ * @property {string} id - Bay identifier
+ * @property {string} bayNumber - Bay number (e.g., "Bay 1")
+ * @property {string} [description] - Bay description (optional)
+ */
+
+/**
  * @typedef {object} BookingCustomer
  * @property {string} customerClerkId - Clerk ID of the customer
  * @property {string} customerName - Name of the customer who made the booking

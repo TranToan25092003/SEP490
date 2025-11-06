@@ -47,16 +47,21 @@ const mediaValidation = [
  *           schema:
  *             type: object
  *             required:
- *               - technicians
- *               - expectedDurationInMinutes
+ *               - bayId
+ *               - start
+ *               - end
  *             properties:
- *               technicians:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/TechnicianInfo'
- *               expectedDurationInMinutes:
- *                 type: integer
- *                 minimum: 1
+ *               bayId:
+ *                 type: string
+ *                 description: The ID of the bay to schedule the inspection in
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start time of the inspection
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End time of the inspection
  *     responses:
  *       200:
  *         description: Inspection scheduled successfully
@@ -73,18 +78,21 @@ router.post(
       .withMessage("Service order ID is required")
       .isMongoId()
       .withMessage("Service order ID must be a valid MongoDB ObjectId"),
-    body("technicians")
-      .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
-    body("technicians.*.technicianClerkId")
+    body("bayId")
       .notEmpty()
-      .withMessage("Technician Clerk ID is required"),
-    body("technicians.*.role")
-      .isIn(["lead", "assistant"])
-      .withMessage("Role must be either 'lead' or 'assistant'"),
-    body("expectedDurationInMinutes")
-      .isInt({ min: 1 })
-      .withMessage("Expected duration must be a positive integer"),
+      .withMessage("Bay ID is required")
+      .isMongoId()
+      .withMessage("Bay ID must be a valid MongoDB ObjectId"),
+    body("start")
+      .notEmpty()
+      .withMessage("Start time is required")
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date-time"),
+    body("end")
+      .notEmpty()
+      .withMessage("End time is required")
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date-time"),
   ],
   throwErrors,
   authenticate,
@@ -107,6 +115,19 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the inspection task
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - technicians
+ *             properties:
+ *               technicians:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/TechnicianInfo'
  *     responses:
  *       200:
  *         description: Inspection task started successfully
@@ -121,6 +142,15 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    body("technicians")
+      .isArray({ min: 1 })
+      .withMessage("Technicians array is required and must contain at least one technician"),
+    body("technicians.*.technicianClerkId")
+      .notEmpty()
+      .withMessage("Technician Clerk ID is required"),
+    body("technicians.*.role")
+      .isIn(["lead", "assistant"])
+      .withMessage("Role must be either 'lead' or 'assistant'"),
   ],
   throwErrors,
   authenticate,
@@ -196,16 +226,21 @@ router.post(
  *           schema:
  *             type: object
  *             required:
- *               - technicians
- *               - expectedDurationInMinutes
+ *               - bayId
+ *               - start
+ *               - end
  *             properties:
- *               technicians:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/TechnicianInfo'
- *               expectedDurationInMinutes:
- *                 type: integer
- *                 minimum: 1
+ *               bayId:
+ *                 type: string
+ *                 description: The ID of the bay to schedule the servicing in
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start time of the servicing
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End time of the servicing
  *     responses:
  *       200:
  *         description: Service scheduled successfully
@@ -222,18 +257,21 @@ router.post(
       .withMessage("Service order ID is required")
       .isMongoId()
       .withMessage("Service order ID must be a valid MongoDB ObjectId"),
-    body("technicians")
-      .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
-    body("technicians.*.technicianClerkId")
+    body("bayId")
       .notEmpty()
-      .withMessage("Technician Clerk ID is required"),
-    body("technicians.*.role")
-      .isIn(["lead", "assistant"])
-      .withMessage("Role must be either 'lead' or 'assistant'"),
-    body("expectedDurationInMinutes")
-      .isInt({ min: 1 })
-      .withMessage("Expected duration must be a positive integer"),
+      .withMessage("Bay ID is required")
+      .isMongoId()
+      .withMessage("Bay ID must be a valid MongoDB ObjectId"),
+    body("start")
+      .notEmpty()
+      .withMessage("Start time is required")
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date-time"),
+    body("end")
+      .notEmpty()
+      .withMessage("End time is required")
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date-time"),
   ],
   throwErrors,
   authenticate,
@@ -256,6 +294,19 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the servicing task
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - technicians
+ *             properties:
+ *               technicians:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/TechnicianInfo'
  *     responses:
  *       200:
  *         description: Service started successfully
@@ -270,6 +321,15 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    body("technicians")
+      .isArray({ min: 1 })
+      .withMessage("Technicians array is required and must contain at least one technician"),
+    body("technicians.*.technicianClerkId")
+      .notEmpty()
+      .withMessage("Technician Clerk ID is required"),
+    body("technicians.*.role")
+      .isIn(["lead", "assistant"])
+      .withMessage("Role must be either 'lead' or 'assistant'"),
   ],
   throwErrors,
   authenticate,

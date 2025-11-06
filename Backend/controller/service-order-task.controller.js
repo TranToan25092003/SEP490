@@ -4,12 +4,13 @@ class ServiceOrderTaskController {
   async scheduleInspection(req, res, next) {
     try {
       const { serviceOrderId } = req.params;
-      const { technicians, expectedDurationInMinutes } = req.body;
+      const { bayId, start, end } = req.body;
 
       const result = await serviceOrderTaskService.scheduleInspection(
         serviceOrderId,
-        technicians,
-        expectedDurationInMinutes
+        bayId,
+        new Date(start),
+        new Date(end)
       );
 
       res.status(200).json({
@@ -54,8 +55,9 @@ class ServiceOrderTaskController {
   async beginInspectionTask(req, res, next) {
     try {
       const { taskId } = req.params;
+      const { technicians } = req.body;
 
-      const result = await serviceOrderTaskService.beginInspectionTask(taskId);
+      const result = await serviceOrderTaskService.beginInspectionTask(taskId, technicians);
 
       res.status(200).json({
         data: result,
@@ -88,12 +90,13 @@ class ServiceOrderTaskController {
   async scheduleService(req, res, next) {
     try {
       const { serviceOrderId } = req.params;
-      const { technicians, expectedDurationInMinutes } = req.body;
+      const { bayId, start, end } = req.body;
 
       const result = await serviceOrderTaskService.scheduleService(
         serviceOrderId,
-        technicians,
-        expectedDurationInMinutes
+        bayId,
+        new Date(start),
+        new Date(end)
       );
 
       res.status(200).json({
@@ -108,8 +111,9 @@ class ServiceOrderTaskController {
   async startService(req, res, next) {
     try {
       const { taskId } = req.params;
+      const { technicians } = req.body;
 
-      const result = await serviceOrderTaskService.startService(taskId);
+      const result = await serviceOrderTaskService.startService(taskId, technicians);
 
       res.status(200).json({
         data: result,
