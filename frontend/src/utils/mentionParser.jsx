@@ -7,11 +7,11 @@ import React from "react";
  */
 export const parseMentions = (text) => {
   if (!text) return [];
-  
+
   const mentionRegex = /@\[([^\]]+)\]\(([^)]+)\)/g;
   const mentions = [];
   let match;
-  
+
   while ((match = mentionRegex.exec(text)) !== null) {
     mentions.push({
       fullMatch: match[0],
@@ -21,7 +21,7 @@ export const parseMentions = (text) => {
       length: match[0].length,
     });
   }
-  
+
   return mentions;
 };
 
@@ -31,13 +31,13 @@ export const parseMentions = (text) => {
  */
 export const renderMessageWithMentions = (text, onProductClick) => {
   if (!text) return text;
-  
+
   const mentions = parseMentions(text);
   if (mentions.length === 0) return text;
-  
+
   const parts = [];
   let lastIndex = 0;
-  
+
   mentions.forEach((mention, idx) => {
     // Add text before mention
     if (mention.index > lastIndex) {
@@ -46,29 +46,29 @@ export const renderMessageWithMentions = (text, onProductClick) => {
         parts.push(beforeText);
       }
     }
-    
+
     // Add mention link
     parts.push({
-      type: 'mention',
+      type: "mention",
       name: mention.name,
       productId: mention.productId,
       key: `mention-${idx}`,
     });
-    
+
     lastIndex = mention.index + mention.length;
   });
-  
+
   // Add remaining text
   if (lastIndex < text.length) {
     parts.push(text.substring(lastIndex));
   }
-  
+
   return parts.map((part, idx) => {
-    if (typeof part === 'string') {
+    if (typeof part === "string") {
       return <span key={`text-${idx}`}>{part}</span>;
     }
-    
-    if (part.type === 'mention') {
+
+    if (part.type === "mention") {
       return (
         <span
           key={part.key}
@@ -85,7 +85,7 @@ export const renderMessageWithMentions = (text, onProductClick) => {
         </span>
       );
     }
-    
+
     return null;
   });
 };
@@ -97,4 +97,3 @@ export const renderMessageWithMentions = (text, onProductClick) => {
 export const formatMention = (productName, productId) => {
   return `@[${productName}](${productId})`;
 };
-
