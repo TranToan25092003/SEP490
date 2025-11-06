@@ -51,7 +51,7 @@ import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import StaffBays from "./pages/staff/StaffBays";
+import ManagerBays from "./pages/manager/ManagerBays";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -156,6 +156,10 @@ const router = createBrowserRouter([
         path: "goods-receipt/:id",
         element: <GoodsReceiptDetail />,
       },
+      {
+        path: "bays",
+        element: <ManagerBays />,
+      },
     ],
   },
   {
@@ -191,10 +195,6 @@ const router = createBrowserRouter([
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
-      },
-      {
-        path: "bays",
-        element: <StaffBays />,
       },
       {
         path: "chat",

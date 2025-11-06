@@ -13,7 +13,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronRight, LogOut } from "lucide-react";
+import { ChevronRight, LogOut, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
@@ -32,7 +32,12 @@ const items = [
     icon: imgInvoice,
     href: "/manager/goods-receipt-list",
   },
-  // Only include items that actually have routes
+  {
+    key: "bays",
+    label: "Quản lý bay",
+    icon: Building2,
+    href: "/manager/bays",
+  },
 ];
 
 export default function ManagerSidebar({
@@ -112,10 +117,22 @@ export default function ManagerSidebar({
                               to={it.href}
                               aria-current={isActive ? "page" : undefined}
                             >
-                              <img alt="" src={it.icon} className="size-7" />
+                              {typeof it.icon === "string" ? (
+                                <img alt="" src={it.icon} className="size-7" />
+                              ) : (
+                                (() => {
+                                  const Icon = it.icon;
+                                  return <Icon className="size-7" />;
+                                })()
+                              )}
                             </Link>
-                          ) : (
+                          ) : typeof it.icon === "string" ? (
                             <img alt="" src={it.icon} className="size-7" />
+                          ) : (
+                            (() => {
+                              const Icon = it.icon;
+                              return <Icon className="size-7" />;
+                            })()
                           )}
                         </Button>
                       </div>
