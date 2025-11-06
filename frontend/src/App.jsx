@@ -18,7 +18,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import ChatStaff from "./pages/staff/ChatStaff";
-import AdminLayout from "./layout/admin-layout/AdminLayout";
+import AdminLayout from "./layout/manager-layout/ManagerLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";

@@ -21,7 +21,7 @@ const MentionInput = ({
   const inputRef = useRef(null);
   const suggestionsRef = useRef(null);
   const containerRef = useRef(null);
-  
+
   // Debounce search term
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -42,7 +42,7 @@ const MentionInput = ({
 
         const apiUrl = `/manager/parts?${params.toString()}`;
         console.log("Searching products with URL:", apiUrl);
-        
+
         const response = await customFetch(apiUrl);
 
         console.log("API Response:", response);
@@ -85,7 +85,7 @@ const MentionInput = ({
   const handleInputChange = (e) => {
     const newValue = e.target.value;
     const cursorPosition = e.target.selectionStart;
-    
+
     onChange(e);
 
     // Check if cursor is after @ symbol
@@ -167,9 +167,12 @@ const MentionInput = ({
         return;
       }
     }
-    
+
     // For Enter key, if not selecting a suggestion, allow normal behavior (sending message)
-    if (e.key === "Enter" && (!showSuggestions || suggestions.length === 0 || selectedIndex < 0)) {
+    if (
+      e.key === "Enter" &&
+      (!showSuggestions || suggestions.length === 0 || selectedIndex < 0)
+    ) {
       // Close suggestions if open
       if (showSuggestions) {
         setShowSuggestions(false);
@@ -183,7 +186,7 @@ const MentionInput = ({
       }
       return;
     }
-    
+
     // For other keys, pass through
     if (onKeyDown) {
       onKeyDown(e);
@@ -240,9 +243,7 @@ const MentionInput = ({
               onClick={() => selectSuggestion(product)}
               className={`px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors ${
                 index === selectedIndex ? "bg-blue-50" : ""
-              } ${
-                index === 0 ? "rounded-t-lg" : ""
-              } ${
+              } ${index === 0 ? "rounded-t-lg" : ""} ${
                 index === suggestions.length - 1 ? "rounded-b-lg" : ""
               }`}
             >
@@ -279,4 +280,3 @@ const MentionInput = ({
 };
 
 export default MentionInput;
-

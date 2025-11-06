@@ -1,17 +1,16 @@
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
-import { useState } from "react";
+import TopMenu from "./TopMenu";
+import ManagerSidebar from "./ManagerSidebar";
 
-import TopMenu from "../manager-layout/TopMenu";
-import StaffSideBar from "./StaffSideBar";
-
-export default function StaffLayout() {
+export default function ManagerLayout() {
   const HEADER_HEIGHT = 80;
   const SIDEBAR_WIDTH = 100;
   const SIDEBAR_EXPANDED_WIDTH = 250;
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
   return (
     <div className="relative min-h-screen font-inter bg-white">
-      <StaffSideBar
+      <ManagerSidebar
         width={SIDEBAR_WIDTH}
         expandedWidth={SIDEBAR_EXPANDED_WIDTH}
         offsetTop={HEADER_HEIGHT}
