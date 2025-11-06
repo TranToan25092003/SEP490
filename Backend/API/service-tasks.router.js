@@ -5,6 +5,25 @@ const { throwErrors } = require("../middleware/validate-data/throwErrors.middlew
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
 
+const mediaValidation = [
+  body("media")
+    .isArray()
+    .withMessage("Media must be an array"),
+  body("media.*.url")
+    .notEmpty()
+    .withMessage("Media URL is required")
+    .isURL()
+    .withMessage("Media URL must be a valid URL"),
+  body("media.*.kind")
+    .isIn(["image", "video", "pdf", "other"])
+    .withMessage("Media type must be either 'photo', 'video', 'pdf', or 'other'"),
+  body("media.*.publicId")
+    .notEmpty()
+    .withMessage("Media public ID is required")
+    .isString()
+    .withMessage("Media public ID must be a string"),
+];
+
 /**
  * @swagger
  * /service-tasks/inspection/{serviceOrderId}/schedule:
@@ -147,9 +166,7 @@ router.post(
     body("comment")
       .notEmpty()
       .withMessage("Comment is required"),
-    body("photoUrls")
-      .isArray()
-      .withMessage("Photo URLs must be an array"),
+    ...mediaValidation
   ],
   throwErrors,
   authenticate,
@@ -337,13 +354,39 @@ router.post(
     body("comment")
       .notEmpty()
       .withMessage("Comment is required"),
-    body("photoUrls")
-      .isArray()
-      .withMessage("Photo URLs must be an array"),
+    ...mediaValidation
   ],
   throwErrors,
   authenticate,
   serviceOrderTaskController.updateServiceTaskTimeline
+);
+
+router.get(
+  "/tasks-for-service-order/:serviceOrderId",
+  [
+    param("serviceOrderId")
+      .notEmpty()
+      .withMessage("Service order ID is required")
+      .isMongoId()
+      .withMessage("Service order ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.getAllTasksForServiceOrder
+);
+
+router.get(
+  "/:taskId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.getTaskDetails
 );
 
 module.exports = router;

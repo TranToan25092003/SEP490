@@ -1,6 +1,7 @@
-const { Booking, ServiceOrder, InspectionTask, ServicingTask } = require("../model");
+const { Booking, ServiceOrder, InspectionTask, ServicingTask, ServiceOrderTask } = require("../model");
 const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
+const { MediaAssetService } = require("./media_asset.service");
 
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
@@ -25,6 +26,20 @@ class ServiceOrderTaskService {
     task.status = "in_progress";
     task.actual_start_time = new Date();
     await task.save();
+  }
+
+  async getTaskDetails(taskId) {
+    const task = await ServiceOrderTask.findById(taskId);
+    return task;
+  }
+
+  async getAllTasksForServiceOrder(serviceOrderId) {
+    const tasks = await ServiceOrderTask.find({
+      service_order_id: serviceOrderId,
+    })
+      .populate("media", "publicId url kind")
+      .exec();
+    return tasks;
   }
 
   /**
@@ -123,9 +138,11 @@ class ServiceOrderTaskService {
       );
     }
 
+    const assetIds = await MediaAssetService.saveMediaAsset(payload.media);
+    console.log("Saved media asset IDs:", assetIds);
 
     inspectionTask.comment = payload.comment;
-    inspectionTask.photoUrls = payload.photoUrls;
+    inspectionTask.media = assetIds;
 
     await this.completeTask(inspectionTask);
 
@@ -182,8 +199,8 @@ class ServiceOrderTaskService {
    * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
    */
   async startService(taskId) {
-    const task = await ServicingTask.findById(taskId).exec();
-    if (!task) {
+    const servicingTask = await ServicingTask.findById(taskId).exec();
+    if (!servicingTask) {
       throw new DomainError(
         "Tác vụ dịch vụ không tồn tại",
         ERROR_CODES.SERVICE_TASK_NOT_FOUND,
@@ -191,7 +208,7 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(task.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(servicingTask.service_order_id).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -200,7 +217,7 @@ class ServiceOrderTaskService {
       );
     }
 
-    await this.beginTask(task);
+    await this.beginTask(servicingTask);
 
     serviceOrder.status = "servicing";
     await serviceOrder.save();
@@ -260,10 +277,12 @@ class ServiceOrderTaskService {
       );
     }
 
+    const assetIds = await MediaAssetService.saveMediaAsset(entry.media);
+
     const timelineEntry = {
       title: entry.title,
       comment: entry.comment,
-      photoUrls: entry.photoUrls
+      media: assetIds
     };
 
     servicingTask.timeline.push(timelineEntry);

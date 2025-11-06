@@ -1,11 +1,17 @@
 import Container from "@/components/global/Container";
 import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
+import {
+  Dialog,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogContent,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { Suspense, useState } from "react";
-import { useLoaderData, useParams, Await, Link } from "react-router-dom";
-import { getServiceOrderById } from "@/api/serviceOrders";
+import { useLoaderData, useParams, Await, Link, useRevalidator } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,27 +26,42 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CheckCircle2, Circle, Plus } from "lucide-react";
+import { CheckCircle2, Circle, Wrench, ClipboardCheck } from "lucide-react";
+import { uploadImageToFolderWithProgress } from "@/utils/uploadCloudinary";
+import { completeInspection, completeService, getAllTasksForServiceOrder, scheduleService, startService, updateServiceTaskTimeline } from "@/api/serviceTasks";
+import NiceModal from "@ebay/nice-modal-react";
+import { useModal } from "@ebay/nice-modal-react";
+import { Card } from "antd";
+import { CardContent, CardHeader } from "@/components/ui/card";
+import { H4 } from "@/components/ui/headings";
+import { translateTaskStatus } from "@/utils/enumsTranslator";
+import StatusBadge from "@/components/global/StatusBadge";
+import { toast } from "sonner";
+import EmptyState from "@/components/global/EmptyState";
+import ChooseStaffModal from "@/components/staff/service-order-detail/ChooseStaffModal";
+import { formatDateTime } from "@/lib/utils";
 
 function loader({ params }) {
   return {
-    serviceOrder: getServiceOrderById(params.id),
+    tasks: getAllTasksForServiceOrder(params.id),
   };
 }
 
-// Form schemas
 const inspectionFormSchema = z.object({
   comment: z.string().min(1, "Vui lòng nhập nhận xét"),
-  files: z.array(z.any()).default([]),
+  media: z.array(z.any()).default([]),
 });
 
 const timelineEntrySchema = z.object({
   title: z.string().min(1, "Vui lòng nhập tiêu đề"),
   comment: z.string().min(1, "Vui lòng nhập mô tả"),
-  files: z.array(z.any()).default([]),
+  media: z.array(z.any()).default([]),
 });
 
-const InspectionTaskForm = ({ taskId }) => {
+const MEDIA_FOLDER = "service_tasks_content";
+
+const InspectionTaskModal = NiceModal.create(() => {
+  const modal = useModal();
   const {
     register,
     handleSubmit,
@@ -50,161 +71,131 @@ const InspectionTaskForm = ({ taskId }) => {
     resolver: zodResolver(inspectionFormSchema),
     defaultValues: {
       comment: "",
-      files: [],
+      media: [],
     },
   });
 
   const onSubmit = async (data) => {
-    console.log("Inspection Task Submit:", { taskId, ...data });
-    toast.success("Đã lưu kết quả kiểm tra");
+    modal.resolve(data);
+    modal.hide();
   };
 
+  const handleCancel = () => {
+    modal.reject(new Error("User cancelled"));
+    modal.hide();
+  }
+
   const handleFileUpload = async (file, updateProgress, abortController) => {
-    // Simulate upload
-    for (let i = 0; i <= 100; i += 10) {
-      if (abortController.signal.aborted) {
-        throw new Error("Upload cancelled");
-      }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      updateProgress(i);
-    }
-    return { url: URL.createObjectURL(file), name: file.name };
+    const fileInfo = await uploadImageToFolderWithProgress(
+      file,
+      MEDIA_FOLDER,
+      (progress) => updateProgress(progress),
+      abortController
+    )
+    return fileInfo;
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <FieldGroup>
-        <Field>
-          <FieldLabel htmlFor="inspection-comment">Nhận xét</FieldLabel>
-          <Textarea
-            id="inspection-comment"
-            placeholder="Nhập nhận xét về tình trạng xe..."
-            className="min-h-[100px]"
-            {...register("comment")}
-          />
-          <FieldDescription>
-            Ghi lại tình trạng tổng thể của xe sau khi kiểm tra
-          </FieldDescription>
-          {errors.comment && <FieldError>{errors.comment.message}</FieldError>}
-        </Field>
+    <Dialog open={modal.visible} onOpenChange={(open) => !open && modal.hide()}>
+      <DialogContent className="sm:max-w-4xl">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle>Hoàn thành kiểm tra xe</DialogTitle>
+            <DialogDescription>
+              Ghi lại kết quả kiểm tra ban đầu của xe
+            </DialogDescription>
+          </DialogHeader>
+          <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
+            <Field>
+              <FieldLabel htmlFor="inspection-comment">Nhận xét</FieldLabel>
+              <Textarea
+                id="inspection-comment"
+                placeholder="Nhập nhận xét về tình trạng xe..."
+                className="min-h-[100px]"
+                {...register("comment")}
+              />
+              <FieldDescription>
+                Ghi lại tình trạng tổng thể của xe sau khi kiểm tra
+              </FieldDescription>
+              {errors.comment && (
+                <FieldError>{errors.comment.message}</FieldError>
+              )}
+            </Field>
 
-        <Field>
-          <FieldLabel>Hình ảnh kiểm tra</FieldLabel>
-          <FileUpload
-            acceptedMimeTypes={["image/*"]}
-            maxSizePerFileKB={5120}
-            maxFilesCount={10}
-            onFilesChange={(files) => setValue("files", files)}
-            onFileAdded={handleFileUpload}
-          />
-          <FieldDescription>
-            Tải lên hình ảnh minh họa tình trạng xe (tối đa 10 ảnh, mỗi ảnh 5MB)
-          </FieldDescription>
-        </Field>
-
-        <div className="ml-auto flex gap-2">
-          <Button type="submit">Lưu kết quả</Button>
-          <Button variant="outline" type="button">
-            Hủy
-          </Button>
-        </div>
-      </FieldGroup>
-    </form>
+            <Field>
+              <FieldLabel>Hình ảnh kiểm tra</FieldLabel>
+              <FileUpload
+                acceptedMimeTypes={["image/*"]}
+                maxSizePerFileKB={5120}
+                maxFilesCount={10}
+                onFilesChange={(files) => setValue("media", files)}
+                onFileAdded={handleFileUpload}
+              />
+              <FieldDescription>
+                Tải lên hình ảnh minh họa tình trạng xe (tối đa 10 ảnh, mỗi ảnh
+                5MB)
+              </FieldDescription>
+            </Field>
+          </FieldGroup>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Hủy
+            </Button>
+            <Button type="submit">Lưu kết quả</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
-};
+});
 
-const ServiceTaskTimeline = ({ taskId }) => {
+const ServiceTaskAddModal = NiceModal.create(() => {
+  const modal = useModal();
   const {
     register,
     handleSubmit,
     formState: { errors },
     setValue,
-    reset,
   } = useForm({
     resolver: zodResolver(timelineEntrySchema),
     defaultValues: {
       title: "",
       comment: "",
-      files: [],
+      media: [],
     },
   });
 
-  const mockTimeline = [
-    {
-      id: "1",
-      title: "Thay dầu động cơ",
-      comment: "Đã thay dầu Shell Helix HX7 10W-40",
-      timestamp: "2024-10-31 09:30",
-      photoUrls: [],
-    },
-    {
-      id: "2",
-      title: "Kiểm tra phanh",
-      comment: "Má phanh còn 60%, hoạt động tốt",
-      timestamp: "2024-10-31 10:15",
-      photoUrls: [],
-    },
-    {
-      id: "3",
-      title: "Vệ sinh buồng đốt",
-      comment: "Đã vệ sinh buồng đốt và kim phun",
-      timestamp: "2024-10-31 11:00",
-      photoUrls: [],
-    },
-  ];
-
   const onSubmit = async (data) => {
-    console.log("Service Task Timeline Submit:", { taskId, ...data });
-    toast.success("Đã thêm mục vào tiến trình");
-    reset();
+    modal.resolve(data);
+    modal.hide();
   };
 
+  const handleCancel = () => {
+    modal.reject(new Error("User cancelled"));
+    modal.hide();
+  }
+
   const handleFileUpload = async (file, updateProgress, abortController) => {
-    for (let i = 0; i <= 100; i += 10) {
-      if (abortController.signal.aborted) {
-        throw new Error("Upload cancelled");
-      }
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      updateProgress(i);
-    }
-    return { url: URL.createObjectURL(file), name: file.name };
+    const fileInfo = await uploadImageToFolderWithProgress(
+      file,
+      MEDIA_FOLDER,
+      (progress) => updateProgress(progress),
+      abortController
+    )
+    return fileInfo;
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        <h4 className="font-medium text-sm">Lịch sử công việc</h4>
-        <div className="relative">
-          <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
-
-          <div className="space-y-6">
-            {mockTimeline.map((entry) => (
-              <div key={entry.id} className="relative pl-8">
-                <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-background" />
-
-                <div className="bg-muted/50 rounded-lg px-2 pt-1 space-y-2">
-                  <div className="flex items-start justify-between gap-2">
-                    <h5 className="font-medium text-sm">{entry.title}</h5>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">
-                      {entry.timestamp}
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{entry.comment}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="border-t pt-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Plus className="w-4 h-4" />
-          <h4 className="font-medium text-sm">Thêm công việc mới</h4>
-        </div>
-
+    <Dialog open={modal.visible} onOpenChange={(open) => !open && modal.hide()}>
+      <DialogContent className="sm:max-w-4xl">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <FieldGroup>
+          <DialogHeader>
+            <DialogTitle>Thêm mục tiến trình sửa chữa</DialogTitle>
+            <DialogDescription>
+              Ghi lại các công việc đã thực hiện trong quá trình sửa chữa xe
+            </DialogDescription>
+          </DialogHeader>
+          <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
             <Field>
               <FieldLabel htmlFor="service-title">Tiêu đề công việc</FieldLabel>
               <Textarea
@@ -227,7 +218,9 @@ const ServiceTaskTimeline = ({ taskId }) => {
               <FieldDescription>
                 Chi tiết các bước thực hiện và kết quả công việc
               </FieldDescription>
-              {errors.comment && <FieldError>{errors.comment.message}</FieldError>}
+              {errors.comment && (
+                <FieldError>{errors.comment.message}</FieldError>
+              )}
             </Field>
 
             <Field>
@@ -236,7 +229,7 @@ const ServiceTaskTimeline = ({ taskId }) => {
                 acceptedMimeTypes={["image/*"]}
                 maxSizePerFileKB={5120}
                 maxFilesCount={10}
-                onFilesChange={(files) => setValue("files", files)}
+                onFilesChange={(files) => setValue("media", files)}
                 onFileAdded={handleFileUpload}
               />
               <FieldDescription>
@@ -244,24 +237,252 @@ const ServiceTaskTimeline = ({ taskId }) => {
               </FieldDescription>
             </Field>
 
-            <div className="ml-auto flex gap-2">
-              <Button type="submit">
-                <Plus className="w-4 h-4" />
-                Thêm vào tiến trình
-              </Button>
-              <Button variant="outline" type="button" onClick={() => reset()}>
-                Đặt lại
-              </Button>
-            </div>
+            <div className="ml-auto flex gap-2"></div>
           </FieldGroup>
+          <DialogFooter>
+            <Button variant="outline" type="button" onClick={handleCancel}>
+              Hủy
+            </Button>
+            <Button type="submit">Thêm mục tiến trình</Button>
+          </DialogFooter>
         </form>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const ServiceTaskTimeline = ({ timeline }) => {
+  return (
+    <div className="relative">
+      <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
+      <div className="space-y-6">
+        {timeline.map((entry) => (
+          <div key={entry.id} className="relative pl-8">
+            <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-background" />
+
+            <div className="bg-muted/50 rounded-lg px-2 pt-1 space-y-2">
+              <div className="flex items-start justify-between gap-2">
+                <h5 className="font-medium text-sm">{entry.title}</h5>
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  {formatDateTime(entry.timestamp)}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">{entry.comment}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 };
 
-const ServiceOrderDetailContent = ({ serviceOrder }) => {
+const ServiceTaskInspectionCard = ({ task }) => {
+  const revalidator = useRevalidator();
+
+  function getButton() {
+    if (task.status === "scheduled") {
+      return <Button>Bắt đầu kiểm tra</Button>;
+    } else if (task.status === "in_progress") {
+      return <Button onClick={handleCompleteInspection}>Hoàn thành kiểm tra</Button>;
+    } else if (task.status === "completed") {
+      return <Button>Chỉnh sửa kiểm tra</Button>;
+    }
+  }
+
+  async function handleCompleteInspection() {
+    try {
+      const result = await NiceModal.show(InspectionTaskModal);
+      const completeInspectionPromise = completeInspection(task._id, {
+        comment: result.comment,
+        media: result.media.map((item) => ({
+          publicId: item.publicId,
+          url: item.url,
+          kind: "image"
+        }))
+      });
+
+      await toast.promise(completeInspectionPromise, {
+        loading: "Đang hoàn thành kiểm tra...",
+        success: "Hoàn thành kiểm tra thành công!",
+        error: "Hoàn thành kiểm tra thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Inspection cancelled or failed:", error);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex justify-between items-center px-2">
+        <H4>Kiểm tra xe</H4>
+        {getButton()}
+      </CardHeader>
+      <CardContent className="px-2">
+        <div className="mb-2 text-sm text-muted-foreground">
+          Trạng thái: <StatusBadge status={translateTaskStatus(task.status)} />
+        </div>
+        <p className="mb-4">{task.comment}</p>
+        {task.media && task.media.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {task.media.map((mediaItem) => (
+              <img
+                key={mediaItem.url}
+                src={mediaItem.url}
+                alt={`Media Item`}
+                className="w-full h-auto rounded-md object-cover"
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+const ServiceTaskServicingCard = ({ task }) => {
+  const [loading, setLoading] = useState(false);
+  const revalidator = useRevalidator();
+
+  function getButton() {
+    if (task.status === "scheduled") {
+      return <Button disabled={loading} onClick={handleStartService}>Bắt đầu sửa chữa</Button>;
+    } else if (task.status === "in_progress") {
+      return (
+        <div className="space-x-2">
+          <Button disabled={loading} onClick={handleUpdateTimeline} variant="outline">Cập nhật tiến độ</Button>
+          <Button disabled={loading} onClick={handleCompleteService}>Hoàn thành sửa chữa</Button>
+        </div>
+      )
+    } else if (task.status === "completed") {
+      return null;
+    }
+  }
+
+  const handleCompleteService = async () => {
+    try {
+      setLoading(true);
+
+      const completePromise = completeService(task._id);
+      await toast.promise(completePromise, {
+        loading: "Đang hoàn thành sửa chữa...",
+        success: "Hoàn thành sửa chữa thành công!",
+        error: "Hoàn thành sửa chữa thất bại.",
+      }).unwrap();
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Service completion cancelled or failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleUpdateTimeline = async () => {
+    try {
+      setLoading(true);
+      const result = await NiceModal.show(ServiceTaskAddModal);
+      const updatePromise = updateServiceTaskTimeline(task._id, {
+        title: result.title,
+        comment: result.comment,
+        media: result.media.map((item) => ({
+          publicId: item.publicId,
+          url: item.url,
+          kind: "image",
+        })),
+      });
+
+      await toast.promise(updatePromise, {
+        loading: "Đang cập nhật tiến độ...",
+        success: "Cập nhật tiến độ thành công!",
+        error: "Cập nhật tiến độ thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Timeline update cancelled or failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const handleStartService = async () => {
+    try {
+      setLoading(true);
+      const startPromise = startService(task._id);
+      await toast.promise(startPromise, {
+        loading: "Đang bắt đầu sửa chữa...",
+        success: "Bắt đầu sửa chữa thành công!",
+        error: "Bắt đầu sửa chữa thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Service start cancelled or failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="px-2 flex justify-between items-center">
+        <H4>Sửa chữa</H4>
+        {getButton()}
+      </CardHeader>
+      <CardContent className="px-2">
+        <div className="mb-2 text-sm text-muted-foreground">
+          Trạng thái: <StatusBadge status={translateTaskStatus(task.status)} />
+        </div>
+        <p className="mb-4">{task.comment}</p>
+        {task.media && task.media.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {task.media.map((mediaItem) => (
+              <img
+                key={mediaItem.url}
+                src={mediaItem.url}
+                alt={`Media Item`}
+                className="w-full h-auto rounded-md object-cover"
+              />
+            ))}
+          </div>
+        )}
+        <ServiceTaskTimeline timeline={task.timeline} />
+      </CardContent>
+    </Card>
+  );
+}
+
+const ServiceOrderDetailContent = ({ tasks }) => {
   const [activeTab, setActiveTab] = useState("inspection");
+  const { id } = useParams();
+  const revalidator = useRevalidator();
+
+  const inspectionTasks = tasks.filter((task) => task.__t === "inspection");
+  const serviceTasks = tasks.filter((task) => task.__t === "servicing");
+
+  const handleScheduleService = async () => {
+    try {
+      const technician = await NiceModal.show(ChooseStaffModal, {
+        mode: "single"
+      });
+
+      const task = scheduleService(id, [{
+        technicianClerkId: technician.technicianClerkId,
+        role: "lead"
+      }], 60);
+
+      await toast.promise(task, {
+        loading: "Đang lên lịch sửa chữa...",
+        success: "Lên lịch sửa chữa thành công!",
+        error: "Lên lịch sửa chữa thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Service scheduling cancelled or failed:", error);
+    }
+  }
 
   return (
     <Tabs
@@ -285,44 +506,52 @@ const ServiceOrderDetailContent = ({ serviceOrder }) => {
         >
           <div className="flex items-center gap-2">
             <Circle className="w-4 h-4" />
-            <span>Tiến trình sửa chữa</span>
+            <span>Sửa chữa</span>
           </div>
         </TabsTrigger>
       </TabsList>
 
       <TabsContent value="inspection" className="mt-0">
-        <div className="bg-card border rounded-lg p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold">Kiểm tra xe</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Ghi lại kết quả kiểm tra ban đầu của xe
-            </p>
-          </div>
-          <InspectionTaskForm
-            taskId={serviceOrder?.inspectionTaskId || "mock-inspection-id"}
-          />
-        </div>
+        {inspectionTasks?.map((task) => (
+          <ServiceTaskInspectionCard key={task._id} task={task} />
+        ))}
+
+        {inspectionTasks.length === 0 && (
+          <EmptyState
+            icon={ClipboardCheck}
+            title="Chưa lên lịch kiểm tra"
+            subtitle="Vui lòng thực hiện ở bên dưới"
+          >
+            <Button onClick={() => NiceModal.show(ServiceTaskAddModal)}>
+              Lên lịch kiểm tra
+            </Button>
+          </EmptyState>
+        )}
       </TabsContent>
 
       <TabsContent value="service" className="mt-0">
-        <div className="bg-card border rounded-lg p-6">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold">Tiến trình sửa chữa</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Theo dõi và cập nhật tiến độ sửa chữa
-            </p>
-          </div>
-          <ServiceTaskTimeline
-            taskId={serviceOrder?.serviceTaskId || "mock-service-id"}
-          />
-        </div>
+        {serviceTasks?.map((task) => (
+          <ServiceTaskServicingCard key={task._id} task={task} />
+        ))}
+
+        {serviceTasks.length === 0 && (
+          <EmptyState
+            icon={Wrench}
+            title="Chưa lên lịch sửa chữa"
+            subtitle="Vui lòng thực hiện ở bên dưới"
+          >
+            <Button onClick={handleScheduleService}>
+              Lên lịch sửa chữa
+            </Button>
+          </EmptyState>
+        )}
       </TabsContent>
     </Tabs>
   );
 };
 
 const ServiceOrderDetail = () => {
-  const { serviceOrder } = useLoaderData();
+  const { tasks } = useLoaderData();
   const { id } = useParams();
 
   return (
@@ -357,7 +586,7 @@ const ServiceOrderDetail = () => {
         </div>
       }>
         <Await
-          resolve={serviceOrder}
+          resolve={tasks}
           errorElement={
             <div className="text-center py-8 text-destructive">
               Không thể tải tiến trình
@@ -365,7 +594,7 @@ const ServiceOrderDetail = () => {
           }
         >
           {(data) => (
-            <ServiceOrderDetailContent serviceOrder={data} />
+            <ServiceOrderDetailContent tasks={data} />
           )}
         </Await>
       </Suspense>
