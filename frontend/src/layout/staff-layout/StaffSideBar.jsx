@@ -17,7 +17,6 @@ import {
   MessageSquareWarning,
   Package,
   Calendar1,
-  Building2,
   MessageCircle,
   LogOut,
 } from "lucide-react";
@@ -57,12 +56,6 @@ const items = [
     label: "Xem tồn kho",
     icon: MessageSquareWarning,
     href: "/staff/complaints",
-  },
-  {
-    key: "bays",
-    label: "Quản lý bay",
-    icon: Building2,
-    href: "/staff/bays",
   },
   {
     key: "chat",

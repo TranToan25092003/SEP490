@@ -17,7 +17,6 @@ export default function Staff() {
     { label: "Lệnh dịch vụ", to: "/staff/service-order" },
     { label: "Xem tồn kho", to: "/staff/complaints" },
     { label: "Phụ tùng", to: "/staff/items" },
-    { label: "Quản lý bay", to: "/staff/bays" },
     { label: "Chat", to: "/staff/chat" },
   ];
 
