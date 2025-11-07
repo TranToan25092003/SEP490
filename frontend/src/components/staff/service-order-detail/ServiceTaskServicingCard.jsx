@@ -38,7 +38,7 @@ const ServiceTaskServicingCard = ({ task }) => {
     try {
       setLoading(true);
 
-      const completePromise = completeService(task._id);
+      const completePromise = completeService(task.id);
       await toast.promise(completePromise, {
         loading: "Đang hoàn thành sửa chữa...",
         success: "Hoàn thành sửa chữa thành công!",
@@ -56,7 +56,7 @@ const ServiceTaskServicingCard = ({ task }) => {
     try {
       setLoading(true);
       const result = await NiceModal.show(ServiceTaskAddModal);
-      const updatePromise = updateServiceTaskTimeline(task._id, {
+      const updatePromise = updateServiceTaskTimeline(task.id, {
         title: result.title,
         comment: result.comment,
         media: result.media.map((item) => ({
@@ -80,15 +80,15 @@ const ServiceTaskServicingCard = ({ task }) => {
     }
   }
 
-  const handleEditTimlineEntry = async (entry) => {
+  const handleEditTimelineEntry = async (entry) => {
     try {
       setLoading(true);
-      console.log(entry);
+      console.log(entry, task);
       const result = await NiceModal.show(ServiceTaskAddModal, {
         entryId: entry.id,
-        taskId: task._id,
+        taskId: task.id,
       });
-      const updatePromise = updateServiceTaskTimelineEntry(task._id, entry.id, {
+      const updatePromise = updateServiceTaskTimelineEntry(task.id, entry.id, {
         title: result.title,
         comment: result.comment,
         media: result.media.map((item) => ({
@@ -117,7 +117,7 @@ const ServiceTaskServicingCard = ({ task }) => {
       setLoading(true);
       const technician = await NiceModal.show(ChooseStaffModal);
 
-      const startPromise = startService(task._id, [
+      const startPromise = startService(task.id, [
         {
           technicianClerkId: technician.technicianClerkId,
           role: "lead"
@@ -161,7 +161,7 @@ const ServiceTaskServicingCard = ({ task }) => {
             ))}
           </div>
         )}
-        <ServiceTaskTimeline timeline={task.timeline} onEditEntry={handleEditTimlineEntry} />
+        <ServiceTaskTimeline timeline={task.timeline} onEditEntry={handleEditTimelineEntry} />
         {task.status === "scheduled" && (
           <EmptyState
             icon={Clock}

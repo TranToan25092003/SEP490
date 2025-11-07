@@ -38,7 +38,7 @@ function mapServicingTask(task) {
     status: task.status,
     assignedTechnicians: task.assigned_technicians.map(mapTechnicianInfo),
     assignedBayId: task.assigned_bay_id.toString(),
-    timeline: task.timeline.map(mapTimelineEntry),
+    timeline: task.timeline.map(mapTimelineEntry).reverse(),
   };
 }
 
@@ -80,6 +80,7 @@ class ServiceOrderTaskService {
     const task = await ServiceOrderTask
       .findById(taskId)
       .populate("media", "publicId url kind")
+      .populate("timeline.media", "publicId url kind")
       .exec();
 
     if (task.__t === "inspection") {
@@ -94,6 +95,7 @@ class ServiceOrderTaskService {
       service_order_id: serviceOrderId,
     })
       .populate("media", "publicId url kind")
+      .populate("timeline.media", "publicId url kind")
       .exec();
 
     return tasks.map(task => {
@@ -342,9 +344,13 @@ class ServiceOrderTaskService {
   }
 
   async getServiceTaskTimelineEntry(taskId, entryId) {
-    const servicingTask = await ServicingTask.findById(taskId).exec();
+    const servicingTask = await ServicingTask.findById(taskId)
+      .populate("timeline.media")
+      .exec();
     if (!servicingTask) return null;
-    const timelineEntry = await servicingTask.timeline.id(entryId);
+    const timelineEntry = await servicingTask.timeline
+      .id(entryId);
+
     return timelineEntry ? mapTimelineEntry(timelineEntry) : null;
   }
 

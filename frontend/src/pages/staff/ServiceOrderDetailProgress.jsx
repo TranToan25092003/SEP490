@@ -26,8 +26,8 @@ const ServiceOrderDetailContent = ({ tasks }) => {
   const { id } = useParams();
   const revalidator = useRevalidator();
 
-  const inspectionTasks = tasks.filter((task) => task.__t === "inspection");
-  const serviceTasks = tasks.filter((task) => task.__t === "servicing");
+  const inspectionTasks = tasks.filter((task) => task.type === "inspection");
+  const serviceTasks = tasks.filter((task) => task.type === "servicing");
 
   const handleScheduleService = async () => {
     try {
@@ -94,7 +94,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
 
       <TabsContent value="inspection" className="mt-0">
         {inspectionTasks?.map((task) => (
-          <ServiceTaskInspectionCard key={task._id} task={task} />
+          <ServiceTaskInspectionCard key={task.id} task={task} />
         ))}
 
         {inspectionTasks.length === 0 && (
@@ -112,7 +112,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
 
       <TabsContent value="service" className="mt-0">
         {serviceTasks?.map((task) => (
-          <ServiceTaskServicingCard key={task._id} task={task} />
+          <ServiceTaskServicingCard key={task.id} task={task} />
         ))}
 
         {serviceTasks.length === 0 && (

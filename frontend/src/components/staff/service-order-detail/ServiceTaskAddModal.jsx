@@ -24,6 +24,7 @@ import * as z from "zod";
 import { uploadImageToFolderWithProgress } from "@/utils/uploadCloudinary";
 import { useEffect, useState } from "react";
 import { getServiceTaskTimelineEntry } from "@/api/serviceTasks";
+import { Spinner } from "@/components/ui/spinner";
 
 const timelineEntrySchema = z.object({
   title: z.string().min(1, "Vui lòng nhập tiêu đề"),
@@ -99,7 +100,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
           Ghi lại các công việc đã thực hiện trong quá trình sửa chữa xe
         </DialogDescription>
       </DialogHeader>
-      <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
+      <FieldGroup className="max-h-[70vh] overflow-y-auto p-2 my-3">
         <Field>
           <FieldLabel htmlFor="service-title">Tiêu đề công việc</FieldLabel>
           <Textarea
@@ -153,7 +154,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         <Button variant="outline" type="button" onClick={handleCancel}>
           Hủy
         </Button>
-        <Button type="submit">Thêm mục tiến trình</Button>
+        <Button type="submit">Lưu thay đổi</Button>
       </DialogFooter>
     </form>
   );

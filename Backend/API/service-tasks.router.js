@@ -5,6 +5,25 @@ const { throwErrors } = require("../middleware/validate-data/throwErrors.middlew
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
 
+const mediaValidation = [
+  body("media")
+    .isArray()
+    .withMessage("Media must be an array"),
+  body("media.*.url")
+    .notEmpty()
+    .withMessage("Media URL is required")
+    .isURL()
+    .withMessage("Media URL must be a valid URL"),
+  body("media.*.kind")
+    .isIn(["image", "video", "pdf", "other"])
+    .withMessage("Media type must be either 'photo', 'video', 'pdf', or 'other'"),
+  body("media.*.publicId")
+    .notEmpty()
+    .withMessage("Media public ID is required")
+    .isString()
+    .withMessage("Media public ID must be a string"),
+];
+
 /**
  * @swagger
  * /service-tasks/inspection/{serviceOrderId}/schedule:

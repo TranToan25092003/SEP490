@@ -28,8 +28,8 @@ const ServiceTaskInspectionCard = ({ task }) => {
 
   async function handleEditInspection() {
     try {
-      const result = await NiceModal.show(InspectionTaskModal, { taskId: task._id });
-      const editInspectionPromise = updateInspection(task._id, {
+      const result = await NiceModal.show(InspectionTaskModal, { taskId: task.id });
+      const editInspectionPromise = updateInspection(task.id, {
         comment: result.comment,
         media: result.media.map((item) => ({
           publicId: item.publicId,
@@ -54,7 +54,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
     try {
       const technician = await NiceModal.show(ChooseStaffModal);
 
-      const startPromise = beginInspectionTask(task._id, [
+      const startPromise = beginInspectionTask(task.id, [
         {
           technicianClerkId: technician.technicianClerkId,
           role: "lead"
@@ -76,7 +76,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
   async function handleCompleteInspection() {
     try {
       const result = await NiceModal.show(InspectionTaskModal);
-      const completeInspectionPromise = completeInspection(task._id, {
+      const completeInspectionPromise = completeInspection(task.id, {
         comment: result.comment,
         media: result.media.map((item) => ({
           publicId: item.publicId,

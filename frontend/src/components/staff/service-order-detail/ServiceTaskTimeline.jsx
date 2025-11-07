@@ -19,11 +19,26 @@ const ServiceTaskTimeline = ({ timeline, onEditEntry }) => {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">{entry.comment}</p>
+
+              {entry.media.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {entry.media.map((mediaItem) => (
+                    <img
+                      key={mediaItem.url}
+                      src={mediaItem.url}
+                      alt={mediaItem.kind}
+                      className="w-full object-contain rounded-md"
+                    />
+                  ))}
+                </div>
+              )}
+
+              <Button onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Chỉnh sửa mục
+              </Button>
             </div>
 
-            <Button type="ghost" onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
-              <Pencil className="mr-2 h-4 w-4" />
-            </Button>
           </div>
         ))}
       </div>
