@@ -167,6 +167,15 @@
  */
 
 /**
+ * @typedef {object} ServiceTimelineEntryDTO
+ * @property {string} id - Timeline entry identifier
+ * @property {string} title - Title of the timeline entry
+ * @property {string} comment - Comment or notes for the timeline entry
+ * @property {MediaAsset[]} media - Cloudinary media
+ * @property {string} timestamp - Timestamp of when the entry was created (ISO 8601 format)
+ */
+
+/**
  * @typedef {object} ServiceOrderItemPayload
  * @property {string} type - Type of item: "service", "part", or "custom"
  * @property {string | undefined} serviceId - Service identifier (for service items)

@@ -1,6 +1,8 @@
 import { formatDateTime } from "@/lib/utils";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const ServiceTaskTimeline = ({ timeline }) => {
+const ServiceTaskTimeline = ({ timeline, onEditEntry }) => {
   return (
     <div className="relative">
       <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
@@ -18,6 +20,10 @@ const ServiceTaskTimeline = ({ timeline }) => {
               </div>
               <p className="text-sm text-muted-foreground">{entry.comment}</p>
             </div>
+
+            <Button type="ghost" onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
+              <Pencil className="mr-2 h-4 w-4" />
+            </Button>
           </div>
         ))}
       </div>

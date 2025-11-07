@@ -87,6 +87,25 @@ class ServiceOrderTaskController {
     }
   }
 
+  async updateInspection(req, res, next) {
+    try {
+      const { taskId } = req.params;
+      const { comment, media } = req.body;
+
+      const result = await serviceOrderTaskService.updateInspection(taskId, {
+        comment,
+        media
+      });
+
+      res.status(200).json({
+        data: result,
+        message: "Inspection updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async scheduleService(req, res, next) {
     try {
       const { serviceOrderId } = req.params;
@@ -156,6 +175,54 @@ class ServiceOrderTaskController {
       res.status(200).json({
         data: result,
         message: "Service task timeline updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getServiceTaskTimelineEntry(req, res, next) {
+    try {
+      const { taskId, entryId } = req.params;
+
+      const result = await serviceOrderTaskService.getServiceTaskTimelineEntry(
+        taskId,
+        entryId
+      );
+
+      if (!result) {
+        return res.status(404).json({
+          message: "Service task timeline entry not found",
+        });
+      }
+
+      res.status(200).json({
+        data: result,
+        message: "Service task timeline entry retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateServiceTaskTimelineEntry(req, res, next) {
+    try {
+      const { taskId, entryId } = req.params;
+      const { title, comment, media } = req.body;
+
+      const result = await serviceOrderTaskService.updateServiceTaskTimelineEntry(
+        taskId,
+        entryId,
+        {
+          title,
+          comment,
+          media
+        }
+      );
+
+      res.status(200).json({
+        data: result,
+        message: "Service task timeline entry updated successfully",
       });
     } catch (error) {
       next(error);

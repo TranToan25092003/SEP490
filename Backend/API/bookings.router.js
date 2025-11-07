@@ -12,19 +12,9 @@ const router = new express.Router();
  *     summary: Create a new booking
  *     tags:
  *       - Bookings
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/BookingRequest'
  *     responses:
  *       201:
  *         description: Booking created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BookingDTO'
  *       400:
  *         description: Bad request
  *       409:
@@ -90,12 +80,6 @@ router.post(
  *     responses:
  *       200:
  *         description: A list of bookings
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/BookingSummaryDTO'
  */
 router.get(
   "/all",
@@ -132,12 +116,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Available time slots retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/TimeslotWithAvailability'
  *       400:
  *         description: Bad request - Missing or invalid parameters
  */
@@ -183,10 +161,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Booking retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/BookingDTO'
  *       404:
  *         description: Booking not found
  */
@@ -221,24 +195,8 @@ router.get(
  *     responses:
  *       200:
  *         description: Booking cancelled successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Booking cancelled successfully
  *       409:
  *         description: Conflict - Invalid booking state
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Cannot cancel a booking that is already 'completed' or 'cancelled'
  *       404:
  *         description: Booking not found
  */
@@ -273,30 +231,8 @@ router.post(
  *     responses:
  *       200:
  *         description: Booking checked in successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Booking checked in successfully
- *                 data:
- *                   type: object
- *                   properties:
- *                     serviceOrderId:
- *                       type: string
- *                       description: ID of the created service order
  *       409:
  *         description: Conflict - Invalid booking state
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Cannot check in a booking that is already 'completed' or 'cancelled'
  *       404:
  *         description: Booking not found
  */

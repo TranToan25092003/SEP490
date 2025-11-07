@@ -8,10 +8,12 @@ import { translateTaskStatus } from "@/utils/enumsTranslator";
 import StatusBadge from "@/components/global/StatusBadge";
 import { toast } from "sonner";
 import NiceModal from "@ebay/nice-modal-react";
-import { completeService, startService, updateServiceTaskTimeline } from "@/api/serviceTasks";
+import { completeService, startService, updateServiceTaskTimeline, updateServiceTaskTimelineEntry } from "@/api/serviceTasks";
 import ServiceTaskAddModal from "./ServiceTaskAddModal";
 import ServiceTaskTimeline from "./ServiceTaskTimeline";
 import ChooseStaffModal from "./ChooseStaffModal";
+import { Clock, Image } from "lucide-react";
+import EmptyState from "@/components/global/EmptyState";
 
 const ServiceTaskServicingCard = ({ task }) => {
   const [loading, setLoading] = useState(false);
@@ -78,6 +80,38 @@ const ServiceTaskServicingCard = ({ task }) => {
     }
   }
 
+  const handleEditTimlineEntry = async (entry) => {
+    try {
+      setLoading(true);
+      console.log(entry);
+      const result = await NiceModal.show(ServiceTaskAddModal, {
+        entryId: entry.id,
+        taskId: task._id,
+      });
+      const updatePromise = updateServiceTaskTimelineEntry(task._id, entry.id, {
+        title: result.title,
+        comment: result.comment,
+        media: result.media.map((item) => ({
+          publicId: item.publicId,
+          url: item.url,
+          kind: "image",
+        })),
+      });
+
+      await toast.promise(updatePromise, {
+        loading: "Đang cập nhật mục tiến độ...",
+        success: "Cập nhật mục tiến độ thành công!",
+        error: "Cập nhật mục tiến độ thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Timeline entry update cancelled or failed:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const handleStartService = async () => {
     try {
       setLoading(true);
@@ -127,7 +161,21 @@ const ServiceTaskServicingCard = ({ task }) => {
             ))}
           </div>
         )}
-        <ServiceTaskTimeline timeline={task.timeline} />
+        <ServiceTaskTimeline timeline={task.timeline} onEditEntry={handleEditTimlineEntry} />
+        {task.status === "scheduled" && (
+          <EmptyState
+            icon={Clock}
+            title="Chưa bắt đầu sửa chữa"
+            subtitle="Vui lòng thực hiện bằng nút bên trên"
+          />
+        )}
+        {task.status === "in_progress" && task.timeline.length === 0 && (
+          <EmptyState
+            icon={Image}
+            title="Chưa có tiến độ sửa chữa"
+            subtitle="Vui lòng cập nhật tiến độ sửa chữa bằng nút bên trên"
+          />
+        )}
       </CardContent>
     </Card>
   );

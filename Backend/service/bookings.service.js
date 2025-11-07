@@ -12,34 +12,12 @@ const ERROR_CODES = {
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
 };
 
-/**
- * Utility to convert a time slot object to a Date.
- * @param {import("./types").Timeslot} timeSlot
- * @returns {Date}
- */
 function convertTimeSlotToDate(timeSlot) {
   const { day, month, year, hours, minutes } = timeSlot;
   return new Date(year, month - 1, day, hours, minutes);
 }
 
 class BookingsService {
-  /**
-   * Create a new booking.
-   * @param {string} customerClerkId - ID of the customer creating the booking.
-   * @param {string} vehicleId - ID of the vehicle for the booking.
-   * @param {Array<string>} serviceIds - Array of service IDs to be included in the booking.
-   * @param {import("./types").Timeslot} timeSlot - Object representing the desired time slot for the booking.
-   * @returns {Promise<Booking>} - The created booking object.
-   * @throws {DomainError} - If there is a domain-specific error during booking creation.
-   * @example
-   * const booking = await bookingsService.createBooking(
-   * "user123",
-   * "vehicle123",
-   * ["service1", "service2"],
-   * { day: 15, month: 8, year: 2024, hours: 10, minutes: 30 }
-   * );
-   * console.log(booking);
-   */
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
     const vehicleIdsInUse = await VehiclesService.getVehiclesInUse([vehicleId]);
     if (vehicleIdsInUse.includes(vehicleId)) {
@@ -122,13 +100,6 @@ class BookingsService {
     return count;
   }
 
-  /**
-   * Get available time slots for a specific day.
-   * @param {number} day
-   * @param {number} month
-   * @param {number} year
-   * @returns {Promise<Array<import("./types").TimeslotWithAvailability>>}
-   */
   async getTimeSlotsForDMY(day, month, year) {
     const timeSlots = [];
     const startHour = config.BUSINESS_START_HOUR;
@@ -158,11 +129,6 @@ class BookingsService {
     return timeSlots;
   }
 
-  /**
-   * Get booking by ID.
-   * @param {string} bookingId
-   * @returns {Promise<import("./types").BookingDTO | null>}
-   */
   async getBookingById(bookingId) {
     const booking = await Booking.findById(bookingId)
       .populate("service_ids")
@@ -190,10 +156,6 @@ class BookingsService {
     };
   }
 
-  /**
-   * Get all bookings sorted by start time.
-   * @returns {Promise<Array<import("./types").BookingDTO>>}
-   */
   async getAllBookingsSortedAscending() {
     const bookings = await Booking.find()
       .populate("service_ids")
@@ -215,14 +177,6 @@ class BookingsService {
     }));
   }
 
-  /**
-   * Calls this when customer arrives for their booking
-   * to begin the service.
-   * @param {String} staffId - Clerk ID of the staff checking in the booking
-   * @param {String} bookingId - ID of the booking to check in
-   * @returns {Promise<Booking>} - The updated booking object.
-   * @throws {DomainError} - If booking not found or invalid state.
-   */
   async checkInBooking(staffId, bookingId) {
     const booking = await Booking.findById(bookingId).exec();
     if (!booking) {
@@ -249,11 +203,6 @@ class BookingsService {
     return booking;
   }
 
-  /**
-   * Cancel a booking.
-   * @param {string} bookingId
-   * @returns {Promise<Booking>}
-   */
   async cancelBooking(bookingId) {
     const booking = await Booking.findById(bookingId).exec();
     if (!booking) {

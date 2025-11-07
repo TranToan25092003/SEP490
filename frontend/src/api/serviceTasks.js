@@ -4,6 +4,7 @@ import { customFetch } from "@/utils/customAxios";
  * @typedef {import('./types').TechnicianInfo} TechnicianInfo
  * @typedef {import('./types').CompleteInspectionPayload} CompleteInspectionPayload
  * @typedef {import('./types').ServiceTimelineEntry} ServiceTimelineEntry
+ * @typedef {import('./types').ServiceTimelineEntryDTO} ServiceTimelineEntryDTO
  */
 
 /**
@@ -116,6 +117,41 @@ export const completeInspection = async (taskId, payload) => {
 
   return response.data.data;
 };
+
+/**
+ * Update an inspection task
+ *
+ * @async
+ * @function updateInspection
+ * @param {string} taskId - The ID of the inspection task
+ * @param {CompleteInspectionPayload} payload - The inspection update data (comment and media array)
+ * @returns {Promise<any>} - A promise that resolves to the updated inspection task
+ * @throws {Error} - If the API request fails
+ *
+ * @example
+ * try {
+ *   const result = await updateInspection('task-123', {
+ *     comment: 'Updated inspection comment',
+ *     media: [
+ *       { url: 'https://example.com/photo2.jpg', publicId: 'def456', kind: 'image' }
+ *     ]
+ *   });
+ *   console.log('Inspection updated:', result);
+ * } catch (error) {
+ *   console.error('Failed to update inspection:', error);
+ * }
+ */
+export const updateInspection = async (taskId, payload) => {
+  const response = await customFetch(`/service-tasks/inspection/${taskId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: payload,
+  });
+
+  return response.data.data;
+}
 
 /**
  * Schedule a servicing task for a service order
@@ -245,6 +281,38 @@ export const completeService = async (taskId) => {
 export const updateServiceTaskTimeline = async (taskId, entry) => {
   const response = await customFetch(`/service-tasks/servicing/${taskId}/timeline`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: entry,
+  });
+
+  return response.data.data;
+};
+
+/**
+ * This function retrieves a specific timeline entry for a servicing task.
+ * @param {string} entryId
+ * @returns {Promise<ServiceTimelineEntryDTO>} - The timeline entry data
+ */
+export const getServiceTaskTimelineEntry = async (entryId) => {
+  const response = await customFetch(`/service-tasks/servicing/timeline/${entryId}`, {
+    method: "GET",
+  });
+
+  return response.data.data;
+}
+
+/**
+ *
+ * @param {string} taskId
+ * @param {string} entryId
+ * @param {ServiceTimelineEntry} entry
+ * @returns {Promise<ServiceTimelineEntryDTO>} - The updated timeline entry data
+ */
+export const updateServiceTaskTimelineEntry = async (taskId, entryId, entry) => {
+  const response = await customFetch(`/service-tasks/servicing/${taskId}/timeline/${entryId}`, {
+    method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },

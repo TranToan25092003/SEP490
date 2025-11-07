@@ -5,25 +5,6 @@ const { throwErrors } = require("../middleware/validate-data/throwErrors.middlew
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
 
-const mediaValidation = [
-  body("media")
-    .isArray()
-    .withMessage("Media must be an array"),
-  body("media.*.url")
-    .notEmpty()
-    .withMessage("Media URL is required")
-    .isURL()
-    .withMessage("Media URL must be a valid URL"),
-  body("media.*.kind")
-    .isIn(["image", "video", "pdf", "other"])
-    .withMessage("Media type must be either 'photo', 'video', 'pdf', or 'other'"),
-  body("media.*.publicId")
-    .notEmpty()
-    .withMessage("Media public ID is required")
-    .isString()
-    .withMessage("Media public ID must be a string"),
-];
-
 /**
  * @swagger
  * /service-tasks/inspection/{serviceOrderId}/schedule:
@@ -40,28 +21,6 @@ const mediaValidation = [
  *         schema:
  *           type: string
  *         description: The ID of the service order
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - bayId
- *               - start
- *               - end
- *             properties:
- *               bayId:
- *                 type: string
- *                 description: The ID of the bay to schedule the inspection in
- *               start:
- *                 type: string
- *                 format: date-time
- *                 description: Start time of the inspection
- *               end:
- *                 type: string
- *                 format: date-time
- *                 description: End time of the inspection
  *     responses:
  *       200:
  *         description: Inspection scheduled successfully
@@ -115,19 +74,6 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the inspection task
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - technicians
- *             properties:
- *               technicians:
- *                 type: array
- *                 items:
- *                   $ref: '#/components/schemas/TechnicianInfo'
  *     responses:
  *       200:
  *         description: Inspection task started successfully
@@ -173,12 +119,6 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the inspection task
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CompleteInspectionPayload'
  *     responses:
  *       200:
  *         description: Inspection completed successfully
@@ -205,6 +145,46 @@ router.post(
 
 /**
  * @swagger
+ * /service-tasks/inspection/{taskId}:
+ *   put:
+ *     summary: Update an inspection task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the inspection task
+ *     responses:
+ *       200:
+ *         description: Inspection completed successfully
+ *       404:
+ *         description: Inspection task not found
+ */
+router.put(
+  "/inspection/:taskId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    body("comment")
+      .notEmpty()
+      .withMessage("Comment is required"),
+    ...mediaValidation
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.updateInspection
+);
+
+/**
+ * @swagger
  * /service-tasks/servicing/{serviceOrderId}/schedule:
  *   post:
  *     summary: Schedule a servicing task for a service order
@@ -219,28 +199,6 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the service order
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - bayId
- *               - start
- *               - end
- *             properties:
- *               bayId:
- *                 type: string
- *                 description: The ID of the bay to schedule the servicing in
- *               start:
- *                 type: string
- *                 format: date-time
- *                 description: Start time of the servicing
- *               end:
- *                 type: string
- *                 format: date-time
- *                 description: End time of the servicing
  *     responses:
  *       200:
  *         description: Service scheduled successfully
@@ -419,6 +377,118 @@ router.post(
   throwErrors,
   authenticate,
   serviceOrderTaskController.updateServiceTaskTimeline
+);
+
+/**
+ * @swagger
+ * /service-tasks/servicing/{taskId}/timeline/{entryId}:
+ *  put:
+ *     summary: Update a timeline entry of a servicing task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the servicing task
+ *       - in: path
+ *         name: entryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the timeline entry
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ServiceTimelineEntry'
+ *     responses:
+ *       200:
+ *         description: Service task timeline entry updated successfully
+ *       404:
+ *         description: Servicing task or timeline entry not found
+ *
+ */
+router.put(
+  "/servicing/:taskId/timeline/:entryId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    param("entryId")
+      .notEmpty()
+      .withMessage("Entry ID is required")
+      .isMongoId()
+      .withMessage("Entry ID must be a valid MongoDB ObjectId"),
+    body("title")
+      .notEmpty()
+      .withMessage("Title is required"),
+    body("comment")
+      .notEmpty()
+      .withMessage("Comment is required"),
+    ...mediaValidation
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.updateServiceTaskTimelineEntry
+)
+
+/**
+ * @swagger
+ * /service-tasks/servicing/{taskId}/timeline/{entryId}:
+ *   get:
+ *     summary: Get a timeline entry of a servicing task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the servicing task
+ *       - in: path
+ *         name: entryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the timeline entry
+ *     responses:
+ *       200:
+ *         description: Service task timeline entry retrieved successfully
+ *         content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/ServiceTimelineEntryDTO
+ *       404:
+ *         description: Servicing task or timeline entry not found
+ */
+router.get(
+  "/servicing/:taskId/timeline/:entryId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    param("entryId")
+      .notEmpty()
+      .withMessage("Entry ID is required")
+      .isMongoId()
+      .withMessage("Entry ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.getServiceTaskTimelineEntry
 );
 
 router.get(

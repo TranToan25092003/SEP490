@@ -16,6 +16,8 @@ import {
   ChevronUp,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useEffect } from "react"
+import { Trash } from "lucide-react"
 
 /**
  * @typedef {Object} FileUploadComponentProps
@@ -24,6 +26,9 @@ import { cn } from "@/lib/utils"
  * @property {number} [maxSizePerFileKB=10240] - Maximum file size in kilobytes
  * @property {number} [maxFilesCount=10] - Maximum number of files allowed
  * @property {(data: T[]) => void} onFilesChange - Callback when uploaded files change
+ * @property {(data: T[]) => void} onToBeRemovedChange - Callback when files are marked for deletion
+ * @property {(data: T) => import("react").ReactNode} renderInitial - Callback to render initial uploaded files
+ * @property {T[]} [initial] - Initial uploaded files state
  * @property {(file: File, updateProgress: (progress: number) => void, abortController: AbortController) => Promise<T>} onFileAdded - Callback when a file is added, should return upload result
  */
 
@@ -46,6 +51,7 @@ const translations = {
   maximumReachedInfo: "Bạn đã đạt tối đa {maxFiles} tệp",
   uploads: "Tải lên",
   supportedFormats: "Định dạng được hỗ trợ",
+  previousFiles: "Những tệp đã tải lên trước đó",
   pending: "Đang chờ",
   uploading: "Đang tải lên",
   completed: "Hoàn thành",
@@ -122,9 +128,18 @@ export function FileUpload({
   maxSizePerFileKB = 10240,
   maxFilesCount = 10,
   onFilesChange,
+  onToBeRemovedChange,
   onFileAdded,
+  renderInitial,
+  init = [],
 }) {
   const [uploadedFiles, setUploadedFiles] = useState([])
+  const [initialState, setInitialState] = useState(init.map((state) => {
+    return {
+      data: state,
+      toBeDeleted: false,
+    }
+  }));
   const [validationError, setValidationError] = useState(null)
   const [layout, setLayout] = useState("list")
   const [isExpanded, setIsExpanded] = useState(true)
@@ -132,6 +147,13 @@ export function FileUpload({
   const dragOverRef = useRef(false)
 
   const t = translations
+
+  useEffect(() => {
+    setInitialState(init.map((state) => ({
+      data: state,
+      toBeDeleted: false,
+    })));
+  }, [init]);
 
   /**
    * Validate a file against MIME type and size constraints
@@ -344,8 +366,10 @@ export function FileUpload({
   // Update parent component when files change
   React.useEffect(() => {
     const completedFiles = uploadedFiles.filter((f) => f.status === "completed" && f.data).map((f) => f.data)
-    onFilesChange(completedFiles)
-  }, [uploadedFiles, onFilesChange])
+    const updatedInitial = initialState.filter((f) => !f.toBeDeleted).map((f) => f.data)
+    typeof onFilesChange === "function" && onFilesChange([...completedFiles, ...updatedInitial])
+    typeof onToBeRemovedChange === "function" && onToBeRemovedChange(initialState.filter((f) => f.toBeDeleted).map((f) => f.data))
+  }, [uploadedFiles, onFilesChange, initialState, onToBeRemovedChange])
 
   const acceptString = acceptedMimeTypes === "any" ? "" : acceptedMimeTypes.join(",")
   const canAddMore = uploadedFiles.length < maxFilesCount
@@ -371,27 +395,72 @@ export function FileUpload({
         }
       `}</style>
 
+      {initialState.length > 0 && (
+        <div className="mb-4 p-3 bg-muted/50 rounded-lg border border-border">
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            {t.previousFiles}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {initialState.map((fileWrapper, index) => (
+              <div key={index} className={cn("p-1 relative")}>
+                {fileWrapper.toBeDeleted ? (
+                  <RotateCcw
+                    className="size-6 p-1 z-10 absolute top-0 left-full transform -translate-x-2/3 -translate-y-1/4 bg-white rounded-full border cursor-pointer"
+                    onClick={() => {
+                      const updated = [...initialState];
+                      updated[index].toBeDeleted = false;
+                      setInitialState(updated);
+                    }}
+                  />
+                ) : (
+                  <Trash
+                    className="size-6 p-1 absolute z-10 top-0 left-full transform -translate-x-2/3 -translate-y-1/4 bg-white rounded-full border cursor-pointer"
+                    onClick={() => {
+                      const updated = [...initialState];
+                      updated[index].toBeDeleted = true;
+                      setInitialState(updated);
+                    }}
+                  />
+                )}
+                <div
+                  className={cn(
+                    "relative",
+                    fileWrapper.toBeDeleted && "opacity-50"
+                  )}
+                >
+                  {typeof renderInitial === "function" ? (
+                    renderInitial(fileWrapper.data)
+                  ) : (
+                    <span>{String(fileWrapper.data)}</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div
         className={cn(
           "relative border-2 border-dashed rounded-lg p-8 transition-all duration-300",
           validationError && "shake-animation",
           canAddMore
             ? "border-muted-foreground/25 hover:border-muted-foreground/50 bg-muted/50 hover:bg-muted/75 cursor-pointer"
-            : "border-muted-foreground/10 bg-muted/25 cursor-not-allowed opacity-50",
+            : "border-muted-foreground/10 bg-muted/25 cursor-not-allowed opacity-50"
         )}
         onDragOver={(e) => {
-          if (!canAddMore) return
-          e.preventDefault()
-          dragOverRef.current = true
+          if (!canAddMore) return;
+          e.preventDefault();
+          dragOverRef.current = true;
         }}
         onDragLeave={() => {
-          dragOverRef.current = false
+          dragOverRef.current = false;
         }}
         onDrop={(e) => {
-          if (!canAddMore) return
-          e.preventDefault()
-          dragOverRef.current = false
-          handleFilesSelected(e.dataTransfer.files)
+          if (!canAddMore) return;
+          e.preventDefault();
+          dragOverRef.current = false;
+          handleFilesSelected(e.dataTransfer.files);
         }}
         onClick={() => canAddMore && fileInputRef.current?.click()}
       >
@@ -401,7 +470,9 @@ export function FileUpload({
               <div className="flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                 <div className="flex-1">
-                  <h3 className="font-medium text-red-900 mb-3">{t.genericError}</h3>
+                  <h3 className="font-medium text-red-900 mb-3">
+                    {t.genericError}
+                  </h3>
                   <div className="space-y-2 text-sm text-red-800">
                     {validationError.type.length > 0 && (
                       <div>
@@ -418,7 +489,9 @@ export function FileUpload({
                     )}
                     {validationError.size.length > 0 && (
                       <div>
-                        <p className="font-medium flex items-center gap-2 mb-2">{t.fileSizeTooLarge}</p>
+                        <p className="font-medium flex items-center gap-2 mb-2">
+                          {t.fileSizeTooLarge}
+                        </p>
                         <ul className="space-y-1">
                           {validationError.size.map((fileInfo, i) => (
                             <li key={i}>{fileInfo}</li>
@@ -453,13 +526,18 @@ export function FileUpload({
         <div className="flex flex-col items-center justify-center gap-2">
           <Upload className="w-8 h-8 text-muted-foreground" />
           <div className="text-center">
-            <p className="font-medium text-foreground">{canAddMore ? t.clickToUpload : t.maximumReached}</p>
+            <p className="font-medium text-foreground">
+              {canAddMore ? t.clickToUpload : t.maximumReached}
+            </p>
             <p className="text-sm text-muted-foreground">
               {canAddMore
                 ? t.maxFileInfo
                     .replace("{maxSize}", maxSizePerFileKB.toString())
                     .replace("{maxFiles}", maxFilesCount.toString())
-                : t.maximumReachedInfo.replace("{maxFiles}", maxFilesCount.toString())}
+                : t.maximumReachedInfo.replace(
+                    "{maxFiles}",
+                    maxFilesCount.toString()
+                  )}
             </p>
           </div>
         </div>
@@ -467,7 +545,9 @@ export function FileUpload({
 
       {acceptedMimeTypes !== "any" && (
         <div className="mt-4 p-3 bg-muted/50 rounded-lg border border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">{t.supportedFormats}</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">
+            {t.supportedFormats}
+          </p>
           <div className="flex flex-wrap gap-2">
             {acceptedMimeTypes.map((mimeType) => (
               <div
@@ -511,7 +591,7 @@ export function FileUpload({
                     "p-2 rounded-md transition-colors",
                     layout === "list"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
                   title="List view"
                 >
@@ -524,7 +604,7 @@ export function FileUpload({
                     "p-2 rounded-md transition-colors",
                     layout === "grid"
                       ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
                   )}
                   title="Grid view"
                 >
@@ -545,7 +625,13 @@ export function FileUpload({
           </div>
 
           {isExpanded && (
-            <div className={layout === "grid" ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3" : "space-y-2"}>
+            <div
+              className={
+                layout === "grid"
+                  ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"
+                  : "space-y-2"
+              }
+            >
               {uploadedFiles.map((uploadedFile) => (
                 <FileUploadItem
                   key={uploadedFile.id}
@@ -561,7 +647,7 @@ export function FileUpload({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 /**

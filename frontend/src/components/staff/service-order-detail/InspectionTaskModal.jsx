@@ -22,6 +22,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { uploadImageToFolderWithProgress } from "@/utils/uploadCloudinary";
+import { useEffect, useState } from "react";
+import { Spinner } from "@/components/ui/spinner";
+import { getServiceTaskById } from "@/api/serviceTasks";
+import { set } from "date-fns";
 
 const inspectionFormSchema = z.object({
   comment: z.string().min(1, "Vui lòng nhập nhận xét"),
@@ -30,8 +34,10 @@ const inspectionFormSchema = z.object({
 
 const MEDIA_FOLDER = "service_tasks_content";
 
-const InspectionTaskModal = NiceModal.create(() => {
+const InspectionTaskModal = NiceModal.create(({ taskId }) => {
   const modal = useModal();
+  const [loading, setLoading] = useState(!!taskId);
+
   const {
     register,
     handleSubmit,
@@ -45,14 +51,33 @@ const InspectionTaskModal = NiceModal.create(() => {
     },
   });
 
+  const [initialMedia, setInitialMedia] = useState([]);
+
+  useEffect(() => {
+    if (taskId) {
+      const fetchTaskDetails = async () => {
+        try {
+          const taskDetails = await getServiceTaskById(taskId);
+          setValue("comment", taskDetails.comment || "");
+          setInitialMedia(taskDetails.media || []);
+        } catch (error) {
+          console.error("Failed to fetch task details:", error);
+        }
+        setLoading(false);
+      }
+
+      fetchTaskDetails();
+    }
+  }, [taskId]);
+
   const onSubmit = async (data) => {
     modal.resolve(data);
-    modal.hide();
+    modal.remove();
   };
 
   const handleCancel = () => {
     modal.reject(new Error("User cancelled"));
-    modal.hide();
+    modal.remove();
   }
 
   const handleFileUpload = async (file, updateProgress, abortController) => {
@@ -65,55 +90,73 @@ const InspectionTaskModal = NiceModal.create(() => {
     return fileInfo;
   };
 
+  const renderForm = () => (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <DialogHeader>
+        <DialogTitle>Hoàn thành kiểm tra xe</DialogTitle>
+        <DialogDescription>
+          Ghi lại kết quả kiểm tra ban đầu của xe
+        </DialogDescription>
+      </DialogHeader>
+      <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
+        <Field>
+          <FieldLabel htmlFor="inspection-comment">Nhận xét</FieldLabel>
+          <Textarea
+            id="inspection-comment"
+            placeholder="Nhập nhận xét về tình trạng xe..."
+            className="min-h-[100px]"
+            {...register("comment")}
+          />
+          <FieldDescription>
+            Ghi lại tình trạng tổng thể của xe sau khi kiểm tra
+          </FieldDescription>
+          {errors.comment && <FieldError>{errors.comment.message}</FieldError>}
+        </Field>
+
+        <Field>
+          <FieldLabel>Hình ảnh kiểm tra</FieldLabel>
+          <FileUpload
+            acceptedMimeTypes={["image/*"]}
+            maxSizePerFileKB={5120}
+            maxFilesCount={10}
+            onFilesChange={(files) => setValue("media", files)}
+            onFileAdded={handleFileUpload}
+            renderInitial={(file) => (
+              <img
+                src={file.url}
+                alt="Initial Uploaded"
+                className="size-40 rounded-md object-cover"
+              />
+            )}
+            init={initialMedia}
+          />
+          <FieldDescription>
+            Tải lên hình ảnh minh họa tình trạng xe (tối đa 10 ảnh, mỗi ảnh 5MB)
+          </FieldDescription>
+        </Field>
+      </FieldGroup>
+      <DialogFooter>
+        <Button variant="outline" onClick={handleCancel}>
+          Hủy
+        </Button>
+        <Button type="submit">Lưu kết quả</Button>
+      </DialogFooter>
+    </form>
+  );
+
   return (
     <Dialog open={modal.visible} onOpenChange={(open) => !open && modal.hide()}>
       <DialogContent className="sm:max-w-4xl">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <DialogHeader>
-            <DialogTitle>Hoàn thành kiểm tra xe</DialogTitle>
-            <DialogDescription>
-              Ghi lại kết quả kiểm tra ban đầu của xe
-            </DialogDescription>
-          </DialogHeader>
-          <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
-            <Field>
-              <FieldLabel htmlFor="inspection-comment">Nhận xét</FieldLabel>
-              <Textarea
-                id="inspection-comment"
-                placeholder="Nhập nhận xét về tình trạng xe..."
-                className="min-h-[100px]"
-                {...register("comment")}
-              />
-              <FieldDescription>
-                Ghi lại tình trạng tổng thể của xe sau khi kiểm tra
-              </FieldDescription>
-              {errors.comment && (
-                <FieldError>{errors.comment.message}</FieldError>
-              )}
-            </Field>
-
-            <Field>
-              <FieldLabel>Hình ảnh kiểm tra</FieldLabel>
-              <FileUpload
-                acceptedMimeTypes={["image/*"]}
-                maxSizePerFileKB={5120}
-                maxFilesCount={10}
-                onFilesChange={(files) => setValue("media", files)}
-                onFileAdded={handleFileUpload}
-              />
-              <FieldDescription>
-                Tải lên hình ảnh minh họa tình trạng xe (tối đa 10 ảnh, mỗi ảnh
-                5MB)
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCancel}>
-              Hủy
-            </Button>
-            <Button type="submit">Lưu kết quả</Button>
-          </DialogFooter>
-        </form>
+        {!loading ? (
+          renderForm()
+        ) : (
+          <div className="flex flex-col items-center max-h-[70vh] overflow-y-auto p-2 justify-center py-8 space-y-2">
+            <Spinner className="h-6 w-6" />
+            <p className="text-sm text-muted-foreground">
+              Đang tải...
+            </p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

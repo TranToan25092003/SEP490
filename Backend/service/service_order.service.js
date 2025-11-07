@@ -9,10 +9,6 @@ const ERROR_CODES = {
 };
 
 class ServiceOrderService {
-  /**
-   * Get all service orders with summary information
-   * @returns {Promise<Array<ServiceOrderSummaryDTO>>}
-   */
   async getAllServiceOrdersByCreatedDateAscending() {
     const serviceOrders = await ServiceOrder.find()
       .populate({
@@ -36,12 +32,6 @@ class ServiceOrderService {
     }));
   }
 
-  /**
-   * Update items in a service order
-   * @param {string} serviceOrderId
-   * @param {import("./types").ServiceOrderItemPayload[]} items
-   * @returns {Promise<ServiceOrder>}
-   */
   async updateServiceOrderItems(serviceOrderId, items) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
     if (!serviceOrder) {
@@ -65,11 +55,6 @@ class ServiceOrderService {
     return serviceOrder;
   }
 
-  /**
-   * Get service order by ID with detailed information
-   * @param {string} serviceOrderId
-   * @returns {Promise<import("./types").ServiceOrderDetailDTO | null>}
-   */
   async getServiceOrderById(serviceOrderId) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)
       .populate({
@@ -109,11 +94,6 @@ class ServiceOrderService {
     };
   }
 
-  /**
-   * Create a service order from a booking
-   * @param {string} staffId
-   * @param {string} bookingId
-   */
   async _createServiceOrderFromBooking(staffId, bookingId) {
     const existingOrder = await ServiceOrder.findOne({ booking_id: bookingId }).exec();
     if (existingOrder) {
@@ -142,12 +122,6 @@ class ServiceOrderService {
     await booking.save();
   }
 
-  /**
-   * Convert service IDs to service order items, check out the db models
-   * to see the structure of service order items.
-   * @param {string[]} serviceIds
-   * @returns
-   */
   async convertServiceIdsToServiceItems(serviceIds) {
     const nonDuplicateServiceIds = [...new Set(serviceIds.map(String))];
     const validServiceIds = await ServicesService.getValidServiceIds(nonDuplicateServiceIds);

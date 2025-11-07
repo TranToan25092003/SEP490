@@ -7,14 +7,6 @@ const ERROR_CODES = {
 };
 
 class BaySchedulingService {
-  /**
-   * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
-   * @param {string} serviceOrderId
-   * @param {Date} start
-   * @param {Date} end
-   * @param {string} bayId
-   * @returns {Promise<InspectionTask>}
-   */
   async scheduleInspectionTask(serviceOrderId, start, end, bayId) {
     const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
     if (overlappingTasks.length > 0) {
@@ -46,14 +38,6 @@ class BaySchedulingService {
     return inspectionTask;
   }
 
-  /**
-   * Schedule a servicing task as soon as possible, assigning a bay and timeslot.
-   * @param {string} serviceOrderId
-   * @param {Date} start
-   * @param {Date} end
-   * @param {string} bayId
-   * @returns {Promise<ServicingTask>}
-   */
   async scheduleServicingTask(serviceOrderId, start, end, bayId) {
     const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
     if (overlappingTasks.length > 0) {
@@ -150,19 +134,6 @@ class BaySchedulingService {
     return slots;
   }
 
-  // UNUSED
-
-  /**
-   * Greedy find next available timeslot for duration
-   * @param {Number} durationInMinutes - duration needed
-   * @param {Date | undefined} starting - starting time to search from
-   * @param {Date | undefined} maxCutOffDate - maximum date to search until
-   * @returns {{
-   *  start: Date,
-   *  end: Date,
-   *  candidateBays: Bay[]
-   * } | null}
-   */
   async findNextAvailableSlotGlobally(
     durationInMinutes,
     starting = new Date(),
@@ -214,12 +185,6 @@ class BaySchedulingService {
     return null;
   }
 
-  /**
-   * Find available bays for the given time slot.
-   * @param {Date} expectedStartTime
-   * @param {Date} expectedEndTime
-   * @returns {Promise<[Bay[], { [bayId: string]: ServiceOrderTask[] }]>} List of available bays and map of conflicting tasks.
-   */
   async findAvailableBayGlobally(expectedStartTime, expectedEndTime) {
     const bays = await Bay.find({});
     const availableBays = [];

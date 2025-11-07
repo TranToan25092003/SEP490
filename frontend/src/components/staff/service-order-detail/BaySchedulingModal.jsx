@@ -36,7 +36,9 @@ import { Calendar, MapPin } from "lucide-react";
 
 const baySchedulingSchema = z.object({
   bayId: z.string().min(1, "Vui lòng chọn một bay"),
-  duration: z.number()
+  duration: z.number({
+    invalid_type_error: "Thời gian phải là số"
+  })
     .int("Thời gian phải là số nguyên")
     .min(1, "Thời gian phải lớn hơn 0")
     .max(1440, "Thời gian không được vượt quá 1440 phút (24 giờ)"),
@@ -61,7 +63,8 @@ const BaySchedulingModal = NiceModal.create(() => {
     watch,
     setValue,
     formState: { errors },
-    trigger
+    trigger,
+    register
   } = useForm({
     resolver: zodResolver(baySchedulingSchema),
     defaultValues: {
@@ -140,7 +143,9 @@ const BaySchedulingModal = NiceModal.create(() => {
         {isLoadingBays ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-2">
             <Spinner className="h-6 w-6" />
-            <p className="text-sm text-muted-foreground">Đang tải danh sách bay...</p>
+            <p className="text-sm text-muted-foreground">
+              Đang tải danh sách bay...
+            </p>
           </div>
         ) : bays.length === 0 ? (
           <div className="text-center py-4 text-muted-foreground">
@@ -191,22 +196,15 @@ const BaySchedulingModal = NiceModal.create(() => {
 
       <Field>
         <FieldLabel htmlFor="duration">Thời Gian Dự Kiến (phút)</FieldLabel>
-        <Controller
-          name="duration"
-          control={control}
-          render={({ field }) => (
-            <div className="flex items-center gap-2">
-              <Input
-                id="duration"
-                type="number"
-                min="1"
-                {...field}
-                onChange={(e) => field.onChange(parseInt(e.target.value, 10) || 0)}
-                placeholder="Nhập thời gian dự kiến"
-              />
-            </div>
-          )}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            id="duration"
+            type="number"
+            min="1"
+            {...register("duration", { valueAsNumber: true })}
+            placeholder="Nhập thời gian dự kiến"
+          />
+        </div>
         {errors.duration && <FieldError>{errors.duration.message}</FieldError>}
         <FieldDescription>
           Thời gian dự kiến để hoàn thành công việc (tính bằng phút)
@@ -317,14 +315,14 @@ const BaySchedulingModal = NiceModal.create(() => {
         </div>
 
         <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
+            Hủy
+          </Button>
           {step === 2 && (
             <Button variant="outline" onClick={handleBack}>
               Quay Lại
             </Button>
           )}
-          <Button variant="outline" onClick={handleCancel}>
-            Hủy
-          </Button>
           {step === 1 ? (
             <Button
               onClick={handleNext}

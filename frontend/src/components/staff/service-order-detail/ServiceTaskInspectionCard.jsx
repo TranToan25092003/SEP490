@@ -7,9 +7,11 @@ import { translateTaskStatus } from "@/utils/enumsTranslator";
 import StatusBadge from "@/components/global/StatusBadge";
 import { toast } from "sonner";
 import NiceModal from "@ebay/nice-modal-react";
-import { beginInspectionTask, completeInspection } from "@/api/serviceTasks";
+import { beginInspectionTask, completeInspection, updateInspection } from "@/api/serviceTasks";
 import InspectionTaskModal from "./InspectionTaskModal";
 import ChooseStaffModal from "./ChooseStaffModal";
+import EmptyState from "@/components/global/EmptyState";
+import { Clock } from "lucide-react";
 
 const ServiceTaskInspectionCard = ({ task }) => {
   const revalidator = useRevalidator();
@@ -20,7 +22,31 @@ const ServiceTaskInspectionCard = ({ task }) => {
     } else if (task.status === "in_progress") {
       return <Button onClick={handleCompleteInspection}>Hoàn thành kiểm tra</Button>;
     } else if (task.status === "completed") {
-      return <Button>Chỉnh sửa kiểm tra</Button>;
+      return <Button onClick={handleEditInspection}>Chỉnh sửa kiểm tra</Button>;
+    }
+  }
+
+  async function handleEditInspection() {
+    try {
+      const result = await NiceModal.show(InspectionTaskModal, { taskId: task._id });
+      const editInspectionPromise = updateInspection(task._id, {
+        comment: result.comment,
+        media: result.media.map((item) => ({
+          publicId: item.publicId,
+          url: item.url,
+          kind: "image"
+        }))
+      });
+
+      await toast.promise(editInspectionPromise, {
+        loading: "Đang cập nhật kiểm tra...",
+        success: "Cập nhật kiểm tra thành công!",
+        error: "Cập nhật kiểm tra thất bại.",
+      }).unwrap();
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Inspection edit cancelled or failed:", error);
     }
   }
 
@@ -93,6 +119,21 @@ const ServiceTaskInspectionCard = ({ task }) => {
               />
             ))}
           </div>
+        )}
+        {task.status === "in_progress" && (
+          <EmptyState
+            icon={Clock}
+            title="Đang chờ kiểm tra"
+            subtitle="Khi hoàn tất, nhấn nút hoàn thành kiểm tra để cập nhật trạng thái"
+          />
+        )}
+
+        {task.status === "scheduled" && (
+          <EmptyState
+            icon={Clock}
+            title="Chưa bắt đầu kiểm tra"
+            subtitle="Vui lòng thực hiện bằng nút bên trên"
+          />
         )}
       </CardContent>
     </Card>
