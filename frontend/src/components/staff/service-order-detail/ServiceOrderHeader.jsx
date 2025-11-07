@@ -49,6 +49,7 @@ const ServiceOrderHeader = ({
           <CardTitle>Thông tin chung</CardTitle>
         </div>
         <div className="space-x-2">
+          {serviceOrder.status !== "cancelled" && serviceOrder.status !== "completed" && (
           <Button
             type="button"
             className="text-destructive"
@@ -58,7 +59,7 @@ const ServiceOrderHeader = ({
             aria-busy={disabled}
           >
             Hủy lệnh
-          </Button>
+          </Button>)}
           {getButton(serviceOrder)}
         </div>
       </CardHeader>

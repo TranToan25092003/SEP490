@@ -2,7 +2,7 @@ import { formatDateTime } from "@/lib/utils";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ServiceTaskTimeline = ({ timeline, onEditEntry }) => {
+const ServiceTaskTimeline = ({ task, timeline, onEditEntry }) => {
   return (
     <div className="relative">
       <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
@@ -33,10 +33,12 @@ const ServiceTaskTimeline = ({ timeline, onEditEntry }) => {
                 </div>
               )}
 
-              <Button onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Chỉnh sửa mục
-              </Button>
+              {task.serviceOrderStatus !== "completed" && (
+                <Button onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Chỉnh sửa mục
+                </Button>
+              )}
             </div>
 
           </div>

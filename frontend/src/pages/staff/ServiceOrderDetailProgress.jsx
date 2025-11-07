@@ -14,10 +14,12 @@ import EmptyState from "@/components/global/EmptyState";
 import ServiceTaskInspectionCard from "@/components/staff/service-order-detail/ServiceTaskInspectionCard";
 import ServiceTaskServicingCard from "@/components/staff/service-order-detail/ServiceTaskServicingCard";
 import BaySchedulingModal from "@/components/staff/service-order-detail/BaySchedulingModal";
+import { getServiceOrderById } from "@/api/serviceOrders";
 
 function loader({ params }) {
   return {
     tasks: getAllTasksForServiceOrder(params.id),
+    serviceOrder: getServiceOrderById(params.id)
   };
 }
 

@@ -21,7 +21,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
       return <Button onClick={handleStartInspection}>Bắt đầu kiểm tra</Button>;
     } else if (task.status === "in_progress") {
       return <Button onClick={handleCompleteInspection}>Hoàn thành kiểm tra</Button>;
-    } else if (task.status === "completed") {
+    } else if (task.status === "completed" && task.serviceOrderStatus !== "completed") {
       return <Button onClick={handleEditInspection}>Chỉnh sửa kiểm tra</Button>;
     }
   }

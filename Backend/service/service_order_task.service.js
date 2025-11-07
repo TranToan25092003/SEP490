@@ -31,6 +31,7 @@ function mapServicingTask(task) {
     id: task._id.toString(),
     type: task.__t,
     serviceOrderId: task.service_order_id.toString(),
+    serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
     actualStartTime: task.actual_start_time ? task.actual_start_time.toISOString() : null,
@@ -47,6 +48,7 @@ function mapInspectionTask(task) {
     id: task._id.toString(),
     type: task.__t,
     serviceOrderId: task.service_order_id.toString(),
+    serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
     actualStartTime: task.actual_start_time ? task.actual_start_time.toISOString() : null,
@@ -79,6 +81,7 @@ class ServiceOrderTaskService {
   async getTaskDetails(taskId) {
     const task = await ServiceOrderTask
       .findById(taskId)
+      .populate("service_order_id")
       .populate("media", "publicId url kind")
       .populate("timeline.media", "publicId url kind")
       .exec();
@@ -94,8 +97,10 @@ class ServiceOrderTaskService {
     const tasks = await ServiceOrderTask.find({
       service_order_id: serviceOrderId,
     })
+
       .populate("media", "publicId url kind")
       .populate("timeline.media", "publicId url kind")
+      .populate("service_order_id")
       .exec();
 
     return tasks.map(task => {

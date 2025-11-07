@@ -161,7 +161,7 @@ const ServiceTaskServicingCard = ({ task }) => {
             ))}
           </div>
         )}
-        <ServiceTaskTimeline timeline={task.timeline} onEditEntry={handleEditTimelineEntry} />
+        <ServiceTaskTimeline task={task} timeline={task.timeline} onEditEntry={handleEditTimelineEntry} />
         {task.status === "scheduled" && (
           <EmptyState
             icon={Clock}
