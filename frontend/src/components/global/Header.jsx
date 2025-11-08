@@ -21,7 +21,7 @@ import { LuAlignLeft } from "react-icons/lu";
 import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
 import NotificationAlertIcon from "../icons/NotificationAlertIcon";
-import { ArrowUpDown, ChevronsUpDown } from 'lucide-react';
+import { ArrowUpDown, ChevronsUpDown } from "lucide-react";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -71,16 +71,37 @@ const Header = () => {
             {isSignedIn ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant={"outline"} className="flex max-w-[100px] gap-4">
-                    <LuAlignLeft className="h-6 w-6"></LuAlignLeft>
-                    <img src={profileImage} className="h-7 w-7 rounded object-cover"></img>
+                  <Button
+                    variant={"ghost"}
+                    className="flex max-w-[100px] gap-4"
+                  >
+                    <img
+                      src={profileImage}
+                      className="h-8 w-8 rounded-2xl object-cover"
+                    ></img>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-40" align="center" sideOffset={10}>
+                <DropdownMenuContent
+                  className="w-60"
+                  align="start"
+                  sideOffset={10}
+                >
                   <SignedIn>
                     <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
                     <DropdownMenuItem>
-                      <a href="/profile">Profile</a>
+                      <a href="/profile" className="capitalize">
+                        thông tin
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <a href="/#" className="capitalize">
+                        lịch sử mua hàng
+                      </a>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <a href="/#" className="capitalize">
+                        theo dõi tiến độ
+                      </a>
                     </DropdownMenuItem>
                     <DropdownMenuItem>
                       <SignOutLink></SignOutLink>
@@ -103,19 +124,29 @@ const Header = () => {
         {/* Lower section with Navigation */}
         <div className="flex items-end gap-0">
           <div className="relative hidden h-[124px] w-[340px] overflow-hidden rounded-tr-[36px] lg:block xl:w-[500px] xl:rounded-tr-[68px]">
-            <img src={headerImg} alt="decorative" className="h-full w-full object-cover" />
+            <img
+              src={headerImg}
+              alt="decorative"
+              className="h-full w-full object-cover"
+            />
             <div className="absolute inset-0 bg-[rgba(255,28,28,0.2)]" />
           </div>
 
           <nav className="h-[62px] flex-1">
             <ul className="relative flex h-full items-stretch gap-0">
               <li className="shrink-0">
-                <Link to="/" className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]">
+                <Link
+                  to="/"
+                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                >
                   Trang Chủ
                 </Link>
               </li>
               <li className="shrink-0">
-                <Link to="/booking" className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]">
+                <Link
+                  to="/booking"
+                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                >
                   Đặt Lịch
                 </Link>
               </li>
@@ -125,24 +156,33 @@ const Header = () => {
                 onMouseEnter={() => setIsPartsMenuOpen(true)}
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
-                <button className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${isPartsMenuOpen ? 'bg-[#3a454f]' : ''}`}>
-                  Phụ Tùng <ChevronsUpDown className="ml-2"/>
+                <button
+                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${
+                    isPartsMenuOpen ? "bg-[#3a454f]" : ""
+                  }`}
+                >
+                  Phụ Tùng <ChevronsUpDown className="ml-2" />
                 </button>
                 {isPartsMenuOpen && (
                   <div className="absolute top-full left-0 w-full bg-zinc-800 shadow-lg border-t border-zinc-700">
                     <div className="mx-auto max-w-7xl p-6 columns-2 md:columns-3 lg:columns-4 gap-x-8">
                       {groupedModels.map((group) => (
-                        <div key={group.brand} className="break-inside-avoid mb-6">
+                        <div
+                          key={group.brand}
+                          className="break-inside-avoid mb-6"
+                        >
                           <h3 className="mb-3 text-sm font-bold uppercase text-red-500">
                             <Link to={`/items?brand=${group.brand}`}>
                               Phụ Tùng {group.brand}
                             </Link>
-
                           </h3>
                           <ul className="space-y-2">
                             {group.models.map((model) => (
                               <li key={model._id}>
-                                <Link to={`/items?vehicleModel=${model._id}&brand=${group.brand}`} className="text-sm text-slate-300 hover:text-white hover:underline">
+                                <Link
+                                  to={`/items?vehicleModel=${model._id}&brand=${group.brand}`}
+                                  className="text-sm text-slate-300 hover:text-white hover:underline"
+                                >
                                   {model.name}
                                 </Link>
                               </li>
@@ -156,7 +196,10 @@ const Header = () => {
               </li>
 
               <li className="shrink-0">
-                <Link to="/about" className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]">
+                <Link
+                  to="/about"
+                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                >
                   Giới Thiệu
                 </Link>
               </li>

@@ -49,6 +49,7 @@ import {
   complaintDetailStaffLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
+import { viVN } from "@clerk/localizations";
 import Staff from "./pages/staff/Staff";
 import LayoutProfile, {
   layoutProfileLoader,
@@ -59,6 +60,8 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
+import { authenTicationLoader } from "./utils/authentication.loader";
+import StaffPage from "./pages/manager/Staff";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -133,6 +136,7 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <AdminLayout />,
+    loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
       {
@@ -157,6 +161,11 @@ const router = createBrowserRouter([
       {
         path: "goods-receipt/:id",
         element: <GoodsReceiptDetail />,
+      },
+
+      {
+        path: "staff",
+        element: <StaffPage></StaffPage>,
       },
     ],
   },
@@ -231,7 +240,11 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        afterSignOutUrl="/"
+        localization={viVN}
+      >
         <NiceModal.Provider>
           <Toaster></Toaster>
           <RouterProvider router={router} />

@@ -3,6 +3,7 @@ import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { customFetch } from "@/utils/customAxios";
 
 const UserProfile = () => {
   const { user, isLoaded: authLoaded } = useUser();
@@ -20,13 +21,11 @@ const UserProfile = () => {
   React.useEffect(() => {
     if (user) {
       setForm({
-        fullName:
-          `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-          "Chưa cập nhật",
-        phone: user.unsafeMetadata?.phone || "",
+        fullName: user.publicMetadata?.fullName || "",
+        phone: user.publicMetadata?.phone || "",
         email: user.emailAddresses?.[0]?.emailAddress || "",
-        address: user.unsafeMetadata?.address || "",
-        gender: user.unsafeMetadata?.gender || "",
+        address: user.publicMetadata?.address || "",
+        gender: user.publicMetadata?.gender || "",
       });
     }
   }, [user]);
@@ -35,30 +34,16 @@ const UserProfile = () => {
     try {
       if (!user) return;
 
-      // Tách fullName thành firstName và lastName
-      const nameParts = form.fullName.trim().split(" ");
-      const lastName = nameParts.pop() || "";
-      const firstName = nameParts.join(" ") || "";
+      const publicMetadataPayload = {
+        fullName: form.fullName || undefined,
+        address: form.address || undefined,
+        gender: form.gender || undefined,
+        phone: form.phone || undefined,
+      };
 
-      // Update basic info trước
-      if (firstName || lastName) {
-        await user.update({
-          firstName: firstName || undefined,
-          lastName: lastName || undefined,
-        });
-      }
-
-      // Update metadata sau
-      if (form.address || form.gender) {
-        await user.update({
-          unsafeMetadata: {
-            ...user.unsafeMetadata, // Giữ lại metadata cũ
-            address: form.address || undefined,
-            gender: form.gender || undefined,
-            phone: form.phone || undefined,
-          },
-        });
-      }
+      await customFetch.patch("/profile/public-metadata", {
+        publicMetadata: publicMetadataPayload,
+      });
 
       toast.success("Cập nhật thông tin thành công");
     } catch (error) {
