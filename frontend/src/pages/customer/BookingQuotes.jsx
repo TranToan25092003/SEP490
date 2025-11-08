@@ -1,0 +1,202 @@
+import Container from "@/components/global/Container";
+import { H3 } from "@/components/ui/headings";
+import { Suspense } from "react";
+import { useLoaderData, useParams, Await, Link, useRevalidator } from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
+import CRUDTable from "@/components/global/CRUDTable";
+import { AdminPagination } from "@/components/global/AdminPagination";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { formatDateTime, formatPrice } from "@/lib/utils";
+import NiceModal from "@ebay/nice-modal-react";
+import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
+import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
+import { getBookingById } from "@/api/bookings";
+import { approveQuote, getQuotesForServiceOrder } from "@/api/quotes";
+import { toast } from "sonner";
+
+function loader({ params, request }) {
+  const url = new URL(request.url);
+  const page = parseInt(url.searchParams.get("page"), 10) || 1;
+  const limit = 10;
+
+  return {
+    bookingPromise: getBookingById(params.id).then(async (booking) => {
+      if (booking.serviceOrderId) {
+        const quotesData = await getQuotesForServiceOrder(booking.serviceOrderId, page, limit);
+        return { booking, quotesData };
+      }
+      return { booking, quotesData: null };
+    })
+  };
+}
+
+const quotesTableDefinition = [
+  {
+    header: "Mã báo giá",
+    accessorKey: "id",
+    cell: ({ row }) => (
+      <span className="font-mono text-sm">
+        {row.original.id.slice(-8)}
+      </span>
+    ),
+  },
+  {
+    header: "Tổng tiền",
+    accessorKey: "grandTotal",
+    cell: ({ row }) => (
+      <span className="font-semibold">
+        {formatPrice(row.original.grandTotal)}
+      </span>
+    ),
+  },
+  {
+    header: "Trạng thái",
+    accessorKey: "status",
+    cell: ({ row }) => (
+      <Badge className="rounded-full" variant={getQuoteStatusBadgeVariant(row.original.status)}>
+        {translateQuoteStatus(row.original.status)}
+      </Badge>
+    ),
+  },
+  {
+    header: "Ngày tạo",
+    accessorKey: "createdAt",
+    cell: ({ row }) => {
+      return formatDateTime(row.original.createdAt);
+    },
+  },
+];
+
+const BookingQuotesContent = ({ data }) => {
+  const { quotesData } = data;
+  const revalidator = useRevalidator();
+
+  const handleViewDetail = async (quote) => {
+    try {
+      const result = await NiceModal.show(ViewQuoteDetailModal, {
+        quoteId: quote.id,
+        allowAcceptReject: true,
+      });
+
+      if (result.action === "accept") {
+        const confirmPromise = approveQuote(quote.id);
+        await toast.promise(
+          confirmPromise,
+          {
+            loading: "Đang phê duyệt báo giá...",
+            success: "Phê duyệt báo giá thành công!",
+            error: "Phê duyệt báo giá thất bại.",
+          }
+        ).unwrap();
+      } else if (result.action === "reject") {
+        const rejectPromise = rejectQuote(quote.id, result.reason);
+
+        await toast.promise(
+          rejectPromise,
+          {
+            loading: "Đang từ chối báo giá...",
+            success: "Từ chối báo giá thành công!",
+            error: "Từ chối báo giá thất bại.",
+          }
+        ).unwrap();
+      }
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.log("Modal closed:", error);
+    }
+  };
+
+  if (!quotesData) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Lệnh sửa chữa chưa được tạo. Báo giá sẽ có sẵn sau khi xe được kiểm tra.
+      </div>
+    );
+  }
+
+  if (!quotesData.quotes || quotesData.quotes.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Chưa có báo giá nào cho lệnh sửa chữa này.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <CRUDTable
+        columns={quotesTableDefinition}
+        data={quotesData.quotes}
+      >
+        {(row) => {
+          return (
+            <Button onClick={() => handleViewDetail(row)}>
+              Xem chi tiết
+            </Button>
+          )
+        }}
+      </CRUDTable>
+
+      {quotesData.pagination && quotesData.pagination.totalPages > 0 && (
+        <AdminPagination pagination={quotesData.pagination} />
+      )}
+    </div>
+  );
+};
+
+const BookingQuotes = () => {
+  const { bookingPromise } = useLoaderData();
+  const { id } = useParams();
+
+  return (
+    <Container className="space-y-4 my-8">
+      <div className="flex justify-between items-center">
+        <H3>CHI TIẾT ĐƠN - BÁO GIÁ</H3>
+        <Tabs value="quotes">
+          <TabsList>
+            <TabsTrigger value="progress">
+              <Link to={`/booking/${id}`}>
+                Tiến độ
+              </Link>
+            </TabsTrigger>
+            <TabsTrigger value="quotes">
+              <Link to={`/booking/${id}/quotes`}>
+                Báo giá
+              </Link>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      <Suspense fallback={
+        <div className="flex justify-center items-center py-8">
+          <Spinner className="h-8 w-8" />
+        </div>
+      }>
+        <Await
+          resolve={bookingPromise}
+          errorElement={
+            <div className="text-center py-8 text-destructive">
+              Không thể tải thông tin báo giá
+            </div>
+          }
+        >
+          {(data) => (
+            <BookingQuotesContent data={data} />
+          )}
+        </Await>
+      </Suspense>
+    </Container>
+  );
+};
+
+BookingQuotes.loader = loader;
+
+export default BookingQuotes;

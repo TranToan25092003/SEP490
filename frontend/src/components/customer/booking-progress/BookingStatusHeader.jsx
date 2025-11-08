@@ -1,5 +1,6 @@
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { cn, formatDateTime } from "@/lib/utils";
+import { translateBookingStatus } from "@/utils/enumsTranslator";
 
 /** @typedef {import("./index").BookingStatusHeaderProps} BookingStatusHeaderProps */
 
@@ -23,7 +24,7 @@ const BookingStatusHeader = ({
     <Card className={className} {...props}>
       <CardTitle className="px-6">
         <h2 className="text-xl font-bold text-foreground mb-2">
-          Hóa đơn - {orderId}
+          Thông tin chung
         </h2>
       </CardTitle>
       <CardContent>
@@ -51,28 +52,9 @@ const BookingStatusHeader = ({
           </div>
 
           <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">Chi Nhánh</div>
-            <div className="font-semibold text-foreground">Hà Nội</div>
-          </div>
-
-          <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">Kỹ Thuật Viên</div>
-            <div className="font-semibold text-foreground">{technicianName}</div>
-          </div>
-
-          <div className="space-y-1">
             <div className="text-sm text-muted-foreground">Trạng Thái</div>
-            <div className="font-semibold text-foreground">{status}</div>
+            <div className="font-semibold text-foreground rounded bg-accent text-foreground-accent px-3 inline-block rounded-full">{translateBookingStatus(status)}</div>
           </div>
-
-          {estimatedTime && (
-            <div className="space-y-1">
-              <div className="text-sm text-muted-foreground">ETA</div>
-              <div className="font-semibold text-foreground">
-                {formatDateTime(estimatedTime)}
-              </div>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>

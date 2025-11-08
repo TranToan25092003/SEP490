@@ -61,6 +61,15 @@ class QuotesService {
       );
     }
 
+    const serviceOrder = await ServiceOrder.findById(quote.so_id).exec();
+    if (!serviceOrder) {
+      throw new DomainError(
+        "Lệnh sửa chữa liên quan không tồn tại",
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+        404
+      );
+    }
+
     if (quote.status !== "pending") {
       throw new DomainError(
         "Chỉ có thể phê duyệt báo giá ở trạng thái 'pending'",
@@ -71,6 +80,9 @@ class QuotesService {
 
     quote.status = "approved";
     await quote.save();
+
+    serviceOrder.status = "approved";
+    await serviceOrder.save();
 
     return this._mapToQuoteDTO(quote);
   }
