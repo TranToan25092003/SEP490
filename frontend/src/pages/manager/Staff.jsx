@@ -1,6 +1,5 @@
-// frontend/src/pages/manager/Staff.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useOrganization } from "@clerk/clerk-react";
+import { useOrganization, OrganizationProfile } from "@clerk/clerk-react";
 
 const ROLE_LABELS = {
   mechanic: "Thợ",
@@ -17,6 +16,7 @@ const StaffPage = () => {
   const [memberships, setMemberships] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showOrgManager, setShowOrgManager] = useState(false); // 🟢 nút bật/tắt
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -142,8 +142,18 @@ const StaffPage = () => {
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Danh sách nhân viên</h1>
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Danh sách nhân viên</h1>
+        <div className="text-center">
+          <button
+            onClick={() => setShowOrgManager(!showOrgManager)}
+            className="rounded-lg bg-green-600 px-5 py-2 text-white font-medium shadow hover:bg-green-700 transition"
+          >
+            {showOrgManager ? "Ẩn quản lý tổ chức" : "Hiện quản lý tổ chức"}
+          </button>
+        </div>
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border bg-white p-4 shadow-sm">
@@ -178,6 +188,38 @@ const StaffPage = () => {
         </div>
       </div>
 
+      {/* 🟢 Nút bật/tắt trang quản lý tổ chức */}
+
+      {showOrgManager && organization && (
+        <div className="rounded-xl border bg-white p-4 shadow-sm space-y-3 w-full">
+          <div className="text-center">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Quản lý tổ chức
+            </h2>
+            <p className="text-sm text-gray-500">
+              Cập nhật vai trò hoặc mời nhân viên mới ngay trong trang này.
+            </p>
+          </div>
+          <div className="w-full flex items-center justify-center ">
+            <OrganizationProfile
+              routing="hash"
+              appearance={{
+                elements: {
+                  rootBox: "w-full",
+                  card: "shadow-none p-0 border-0 w-full",
+                  headerTitle: "text-center",
+                  headerSubtitle: "text-center text-gray-500",
+                  profileSection__danger: "hidden", // Ẩn phần xoá tổ chức
+                },
+                variables: {
+                  colorPrimary: "#2563eb",
+                },
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       <div className="overflow-x-auto rounded-xl border bg-white shadow-sm">
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
@@ -195,7 +237,7 @@ const StaffPage = () => {
           <tbody className="divide-y divide-gray-200">
             {rows.map((member) => (
               <tr key={member.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 whitespace-nowrap font-medium text-gray-900">
+                <td className="px-4 py-3 font-medium text-gray-900">
                   {member.employeeCode}
                 </td>
                 <td className="px-4 py-3">
@@ -241,7 +283,7 @@ const StaffPage = () => {
                   className="px-4 py-10 text-center text-sm text-gray-500"
                   colSpan={8}
                 >
-                  Không tìm thấy nhân viên nào có vai trò “staff”.
+                  Không tìm thấy nhân viên nào có vai trò “nhân viên”.
                 </td>
               </tr>
             )}

@@ -48,6 +48,7 @@ import {
   complaintDetailStaffLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
+import { viVN } from "@clerk/localizations";
 import Staff from "./pages/staff/Staff";
 import LayoutProfile, {
   layoutProfileLoader,
@@ -232,7 +233,11 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light" storageKey="motormate-theme">
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <ClerkProvider
+        publishableKey={PUBLISHABLE_KEY}
+        afterSignOutUrl="/"
+        localization={viVN}
+      >
         <NiceModal.Provider>
           <Toaster></Toaster>
           <RouterProvider router={router} />
