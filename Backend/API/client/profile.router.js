@@ -99,4 +99,6 @@ router.get("/models/get", controller.getModels);
  */
 router.get("/vehicles/get", controller.getVehicles);
 
+router.patch("/public-metadata", controller.updatePublicMetadata);
+
 module.exports = router;

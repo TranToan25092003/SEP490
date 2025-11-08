@@ -436,7 +436,7 @@ const LayoutProfile = () => {
         {/* bar */}
         <div className="w-fit ml-10 bg-[#DBDBDB] mt-10 p-1 flex items-center justify-center gap-3 [&>*]:cursor-pointer [&>*]:hover:bg-white">
           <div
-            className={`flex items-center justify-center gap-1 ${
+            className={`flex items-center justify-center gap-1 rounded ${
               select === 1 ? "text-[#DF1D01] bg-[#FFFFFF] font-bold" : ""
             }`}
             onClick={() => {
@@ -444,13 +444,13 @@ const LayoutProfile = () => {
             }}
           >
             <img src={home} alt="" />
-            <p>Thông tin cá nhân</p>
+            <p className="px-1 ">Thông tin cá nhân</p>
           </div>
 
           <p
             className={`${
               select === 2 ? "text-[#DF1D01] bg-[#FFFFFF] font-bold" : ""
-            }  `}
+            }  px-1 rounded`}
             onClick={() => {
               setSelect(2);
             }}
