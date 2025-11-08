@@ -35,6 +35,27 @@ const taskStatusMap = {
   completed: "Đã hoàn thành",
 };
 
+export function getBookingStatusOptions() {
+  return Object.entries(bookingStatusMap).map(([value, label]) => ({
+    value,
+    label,
+  }));
+}
+
+export function getServiceOrderStatusOptions() {
+  return Object.entries(serviceOrderStatusMap).map(([value, label]) => ({
+    value,
+    label,
+  }));
+}
+
+export function getQuoteStatusOptions() {
+  return Object.entries(statusText).map(([value, label]) => ({
+    value,
+    label,
+  }));
+}
+
 export function translateQuoteStatus(status) {
   return statusText[status] || "Không xác định";
 }
