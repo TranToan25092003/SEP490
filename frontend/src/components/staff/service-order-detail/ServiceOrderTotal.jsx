@@ -130,7 +130,8 @@ const ServiceOrderTotal = ({
                       ]);
                     }}
                     disabled={
-                      serviceOrder.status !== "inspection_completed" ||
+                      !(serviceOrder.status === "inspection_completed" ||
+                      serviceOrder.status === "waiting_customer_approval") ||
                       !hasServices ||
                       disabled
                     }
@@ -143,7 +144,7 @@ const ServiceOrderTotal = ({
                   {serviceOrder.status !== "inspection_completed" ? (
                     <span>
                       Chỉ có thể gửi báo giá khi lệnh sửa chữa ở trạng thái
-                      "Hoàn tất kiểm tra"
+                      Đã kiểm tra hoặc Chờ phê duyệt của khách hàng
                     </span>
                   ) : null}
                 </TooltipContent>

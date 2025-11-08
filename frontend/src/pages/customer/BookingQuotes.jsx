@@ -17,7 +17,7 @@ import NiceModal from "@ebay/nice-modal-react";
 import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
 import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
 import { getBookingById } from "@/api/bookings";
-import { approveQuote, getQuotesForServiceOrder } from "@/api/quotes";
+import { approveQuote, getQuotesForServiceOrder, rejectQuote } from "@/api/quotes";
 import { toast } from "sonner";
 
 function loader({ params, request }) {

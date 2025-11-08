@@ -81,7 +81,6 @@ const RejectionReasonModal = NiceModal.create(() => {
             />
             {errors.reason && (
               <p className="text-sm text-red-500 flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
                 {errors.reason.message}
               </p>
             )}
@@ -101,8 +100,6 @@ const RejectionReasonModal = NiceModal.create(() => {
             </Button>
             <Button
               type="submit"
-              variant="destructive"
-              disabled={isSubmitting}
             >
               {isSubmitting ? "Đang xử lý..." : "Xác Nhận Từ Chối"}
             </Button>
@@ -182,7 +179,6 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) =
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Quote Header Info */}
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
@@ -211,21 +207,19 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) =
                   )}
                 </div>
 
-                {quote.status === "rejected" && quote.rejected_reason && (
+                {quote.status === "rejected" && quote.rejectedReason && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
                     <p className="text-sm text-gray-600 mb-1">Lý do từ chối</p>
-                    <p className="text-sm text-red-700">{quote.rejected_reason}</p>
+                    <p className="text-sm text-red-700">{quote.rejectedReason}</p>
                   </div>
                 )}
               </div>
 
               <Separator />
 
-              {/* Items List */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-lg">Hạng mục báo giá</h4>
 
-                {/* Services Section */}
                 {groupedItems.service && groupedItems.service.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-700">

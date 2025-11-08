@@ -11,7 +11,7 @@ const ERROR_CODES = {
 
 class QuotesService {
   async createQuote(serviceOrderId) {
-    const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId).populate("items.part_id").exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh sửa chữa không tồn tại",
@@ -30,7 +30,7 @@ class QuotesService {
 
     const items = serviceOrder.items.map(item => ({
       type: item.item_type,
-      name: item.name,
+      name: item.item_type === "service" ? item.name : item.part_id.name,
       quantity: item.quantity,
       price: item.price,
     }));
