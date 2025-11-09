@@ -1,6 +1,12 @@
 const { clerkClient } = require("../../config/clerk");
 const { Complain, ServiceOrder, Booking, Vehicle, ModelVehicle, Model } = require("../../model");
 
+const USER_ID_TO_UPDATE = "user_34TCUNQspbdhExUc1J8MB1gjnJV";
+const NEW_METADATA = {
+  role: "staff",
+  // Bạn có thể thêm các metadata khác ở đây nếu muốn
+};
+
 class ComplaintService {
     async getAllComplaints(query = {}) {
         const {
@@ -49,6 +55,7 @@ class ComplaintService {
             if (clerkIds.length > 0) {
                 try {
                     const clerkUsersResult = await clerkClient.users.getUserList({ userId: clerkIds });
+                    console.log(clerkUsersResult.data)
                     for (const user of clerkUsersResult.data) {
                         clerkUserMap[user.id] = {
                             fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
@@ -91,14 +98,19 @@ class ComplaintService {
         try {
             const complaint = await Complain.findById(complaintId)
                 .populate({
-                    path: 'so_id',
-                    select: 'createdAt staff_id vehicle_id',
+                    path: 'so_id', 
+                    select: 'createdAt staff_clerk_id booking_id', 
                     populate: {
-                        path: 'vehicle_id',
-                        select: 'license_plate model_id',
+                        path: 'booking_id', 
+                        select: 'vehicle_id customer_clerk_id', 
                         populate: {
-                            path: 'model_id',
-                            select: 'name',
+                            path: 'vehicle_id', 
+                            select: 'license_plate model_id',
+                            populate: {
+                                path: 'model_id',
+                                model: 'ModelVehicle', 
+                                select: 'name'
+                            }
                         }
                     }
                 })
@@ -112,6 +124,7 @@ class ComplaintService {
             if (complaint.clerkId) {
                 try {
                     const user = await clerkClient.users.getUser(complaint.clerkId);
+
                     customerInfo = {
                         fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
                         phoneNumbers: (user.phoneNumbers || []).map(pn => pn.phoneNumber)
@@ -126,15 +139,18 @@ class ComplaintService {
             }
 
             let staffNames = [];
-            if (complaint.so_id && complaint.so_id.staff_id && complaint.so_id.staff_id.length > 0) {
+           
+            if (complaint.so_id && complaint.so_id.staff_clerk_id) {
                 try {
-                    const staffUsersResult = await clerkClient.users.getUserList({ userId: complaint.so_id.staff_id });
-                    staffNames = staffUsersResult.data.map(user =>
-                        user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "Staff N/A"
-                    );
+                    const staffUser = await clerkClient.users.getUser(complaint.so_id.staff_clerk_id);
+                    staffNames = [ 
+                        staffUser.firstName
+                            ? `${staffUser.firstName} ${staffUser.lastName || ''}`.trim()
+                            : staffUser.username || "Staff N/A"
+                    ];
                 } catch (clerkError) {
                     console.error(`Failed to fetch staff Clerk data:`, clerkError);
-                    staffNames = complaint.so_id.staff_id.map(id => `Staff ID: ${id.slice(-4)}`);
+                    staffNames = [`Staff ID: ${complaint.so_id.staff_clerk_id.slice(-4)}`];
                 }
             }
 
@@ -173,8 +189,8 @@ class ComplaintService {
                 createdAt: complaint.createdAt,
                 so_id: complaint.so_id?._id || null,
                 serviceDate: complaint.so_id?.createdAt || null,
-                license_plate: complaint.so_id?.vehicle_id?.license_plate || 'N/A',
-                model: complaint.so_id?.vehicle_id?.model_id?.name || 'N/A',
+                license_plate: complaint.so_id?.booking_id?.vehicle_id?.license_plate || 'N/A',
+                model: complaint.so_id?.booking_id?.vehicle_id?.model_id?.name || 'N/A',
                 customerName: customerInfo.fullName,
                 customerPhone: primaryPhoneNumber,
                 staffNames: staffNames,
