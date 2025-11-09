@@ -1,11 +1,6 @@
 const { clerkClient } = require("../../config/clerk");
 const { Complain, ServiceOrder, Booking, Vehicle, ModelVehicle, Model } = require("../../model");
-
-const USER_ID_TO_UPDATE = "user_34TCUNQspbdhExUc1J8MB1gjnJV";
-const NEW_METADATA = {
-  role: "staff",
-  // Bạn có thể thêm các metadata khác ở đây nếu muốn
-};
+const notificationService = require("../notification.service")
 
 class ComplaintService {
     async getAllComplaints(query = {}) {
@@ -229,6 +224,12 @@ class ComplaintService {
             complaint.status = "resolved";
 
             const updatedComplaint = await complaint.save();
+
+            notificationService.notifyCustomerOnReply(updatedComplaint)
+                            .catch(err => {
+                                console.error("Failed to send notification on reply:", err.message);
+                            });
+
             return updatedComplaint;
 
         } catch (error) {

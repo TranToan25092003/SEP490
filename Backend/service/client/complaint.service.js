@@ -15,8 +15,6 @@ class ComplaintService {
                 select: 'customer_clerk_id'
             });
 
-            console.log(serviceOrder)
-
             if (!serviceOrder) {
                 throw new Error(`Service Order with ID ${so_id} not found.`);
             }

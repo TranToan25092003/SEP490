@@ -59,7 +59,7 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
-import { authenTicationLoader } from "./utils/authentication.loader";
+import { authenTicationForStaffLoader, authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -165,6 +165,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
+    loader: authenTicationForStaffLoader,
     children: [
       { index: true, element: <StaffDashboardPage /> },
       {
