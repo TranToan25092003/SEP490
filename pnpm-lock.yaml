@@ -111,6 +111,9 @@ importers:
       '@clerk/clerk-react':
         specifier: ^5.28.1
         version: 5.51.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@clerk/localizations':
+        specifier: ^3.27.0
+        version: 3.27.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@ebay/nice-modal-react':
         specifier: ^1.2.13
         version: 1.2.13(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -542,8 +545,8 @@ packages:
     peerDependencies:
       express: ^4.17.0 || ^5.0.0
 
-  '@clerk/localizations@3.25.7':
-    resolution: {integrity: sha512-vGS5WBS+s5OivPI6bwjctkjyrznRe4/v/AIlo0RBoyUup5nPDWmk7a0O0l4pOhRfe9e5qhZQ1+lYDGlWjUbjRQ==}
+  '@clerk/localizations@3.27.0':
+    resolution: {integrity: sha512-XQrzOtON32dXlTHEUwL0utTro6MePSM1gljCjRcY6RKh36I2BcuuG2XVu6K2HIvBL+Ef+nWF8+aU4+zc14nVcQ==}
     engines: {node: '>=18.17.0'}
 
   '@clerk/shared@1.4.2':
@@ -566,12 +569,28 @@ packages:
       react-dom:
         optional: true
 
+  '@clerk/shared@3.31.1':
+    resolution: {integrity: sha512-mqxZqlzLJYJxA+ryLzhwFR0eO73teAvRd+wvA8bLUZLYvCRFvaiHsB9dEvbo9Z5bMYdq3NPwnx2uljMuu/tiQw==}
+    engines: {node: '>=18.17.0'}
+    peerDependencies:
+      react: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+      react-dom: ^18.0.0 || ^19.0.0 || ^19.0.0-0
+    peerDependenciesMeta:
+      react:
+        optional: true
+      react-dom:
+        optional: true
+
   '@clerk/types@3.65.5':
     resolution: {integrity: sha512-RGO8v2a52Ybo1jwVj42UWT8VKyxAk/qOxrkA3VNIYBNEajPSmZNa9r9MTgqSgZRyz1XTlQHdVb7UK7q78yAGfA==}
     engines: {node: '>=14'}
 
   '@clerk/types@4.92.0':
     resolution: {integrity: sha512-+bUiHjqVXEHJIOOhshIy3uYDF/c4/yNc2BPfgPTXxxsbz/2wG0XUx0PL+mxUPiruPZOD+D63AtmORuFW3yBa2w==}
+    engines: {node: '>=18.17.0'}
+
+  '@clerk/types@4.97.2':
+    resolution: {integrity: sha512-xnJq3xzpmuuDnNnWuUMKJLPPkaEaLDM0kiv2Hm0gKIcL1+1P3VaGf2vL9roIhmhLswB2PUwtVvZKBmGjT5yOVw==}
     engines: {node: '>=18.17.0'}
 
   '@coinbase/wallet-sdk@4.3.0':
@@ -4874,7 +4893,7 @@ snapshots:
   '@clerk/clerk-js@5.99.0(@types/react@19.2.2)(immer@10.1.3)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@3.25.76)':
     dependencies:
       '@base-org/account': 2.0.1(@types/react@19.2.2)(immer@10.1.3)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.6.0(react@19.2.0))(zod@3.25.76)
-      '@clerk/localizations': 3.25.7
+      '@clerk/localizations': 3.27.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@clerk/shared': 3.27.3(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@clerk/types': 4.92.0
       '@coinbase/wallet-sdk': 4.3.0
@@ -4942,9 +4961,12 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/localizations@3.25.7':
+  '@clerk/localizations@3.27.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
-      '@clerk/types': 4.92.0
+      '@clerk/types': 4.97.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@clerk/shared@1.4.2(react@19.2.0)':
     dependencies:
@@ -4966,6 +4988,18 @@ snapshots:
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
 
+  '@clerk/shared@3.31.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      csstype: 3.1.3
+      dequal: 2.0.3
+      glob-to-regexp: 0.4.1
+      js-cookie: 3.0.5
+      std-env: 3.9.0
+      swr: 2.3.4(react@19.2.0)
+    optionalDependencies:
+      react: 19.2.0
+      react-dom: 19.2.0(react@19.2.0)
+
   '@clerk/types@3.65.5':
     dependencies:
       csstype: 3.1.1
@@ -4973,6 +5007,13 @@ snapshots:
   '@clerk/types@4.92.0':
     dependencies:
       csstype: 3.1.3
+
+  '@clerk/types@4.97.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+    dependencies:
+      '@clerk/shared': 3.31.1(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+    transitivePeerDependencies:
+      - react
+      - react-dom
 
   '@coinbase/wallet-sdk@4.3.0':
     dependencies:

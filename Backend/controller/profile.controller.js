@@ -1,5 +1,6 @@
 const { Vehicle } = require("../model");
 const { ModelVehicle } = require("../model");
+const { clerkClient } = require("../config/clerk");
 
 // this controller is for testing do not write any logic code here please
 module.exports.checkHealth = async (req, res) => {
@@ -114,5 +115,38 @@ module.exports.getVehicles = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Lỗi khi lấy danh sách xe" });
+  }
+};
+
+module.exports.updatePublicMetadata = async (req, res) => {
+  try {
+    const payload = req.body?.publicMetadata;
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return res
+        .status(400)
+        .json({ message: "publicMetadata must be an object" });
+    }
+
+    const sanitized = Object.entries(payload).reduce((acc, [key, value]) => {
+      if (value !== undefined) acc[key] = value;
+      return acc;
+    }, {});
+
+    const existing = req.user?.publicMetadata || {};
+
+    const updated = await clerkClient.users.updateUser(req.userId, {
+      publicMetadata: {
+        ...existing,
+        ...sanitized,
+      },
+    });
+
+    res.status(200).json({
+      message: "Public metadata updated successfully",
+      data: { publicMetadata: updated.publicMetadata },
+    });
+  } catch (error) {
+    console.error("Failed to update public metadata:", error);
+    res.status(500).json({ message: "Failed to update public metadata" });
   }
 };

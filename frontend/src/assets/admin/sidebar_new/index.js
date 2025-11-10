@@ -9,4 +9,4 @@ export { default as iconKanban } from "./f259a1431363f5348803380a1bc3ceec8a30454
 export { default as iconInvoice } from "./0ae75b1e70ab26fe844af2aac0733f94c3f0a12a.svg";
 export { default as iconBanking } from "./34d14104843ed4fd90b72868e8bbaed1f467d090.svg";
 export { default as iconTickets } from "./749faadd34100bc9820e4e354e82804b23480385.svg";
-
+export { default as iconStaff } from "./staff.png";
