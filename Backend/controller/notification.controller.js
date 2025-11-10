@@ -11,7 +11,7 @@ class NotificationController {
 
             // Lấy page và limit từ query params
             const { page, limit, isRead } = req.query;
-            
+
             const result = await notificationService.getNotificationsByRecipient(recipientClerkId, { page, limit, isRead });
 
             res.status(200).json({
@@ -75,6 +75,29 @@ class NotificationController {
             res.status(500).json({
                 success: false,
                 message: error.message || "Failed to mark notifications as read.",
+            });
+        }
+    }
+
+    async markAllAsRead(req, res) {
+        try {
+            const recipientClerkId = req.userId;
+            if (!recipientClerkId) {
+                return res.status(401).json({ success: false, message: "Unauthorized: User ID not found." });
+            }
+
+            const result = await notificationService.markAllAsRead(recipientClerkId);
+
+            res.status(200).json({
+                success: true,
+                message: `${result.modifiedCount} notifications marked as read.`,
+                data: result,
+            });
+        } catch (error) {
+            console.error("Error marking all notifications as read:", error);
+            res.status(500).json({
+                success: false,
+                message: error.message || "Failed to mark all notifications as read.",
             });
         }
     }

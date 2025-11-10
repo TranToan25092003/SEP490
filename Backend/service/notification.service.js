@@ -91,7 +91,7 @@ async function getNotificationsByRecipient(recipientClerkId, query = {}) {
     if (isRead === 'false') {
       filter.isRead = false;
     }
-  
+
     const notifications = await Notification.find(filter)
       .sort(sort)
       .skip((page - 1) * limit)
@@ -149,6 +149,25 @@ async function markNotificationsAsRead(recipientClerkId, notificationIds) {
   }
 }
 
+async function markAllAsRead(recipientClerkId) {
+  if (!recipientClerkId) {
+    throw new Error("Recipient Clerk ID is required.");
+  }
+
+  try {
+    const result = await Notification.updateMany(
+      {
+        recipientClerkId: recipientClerkId, 
+        isRead: false 
+      },
+      { $set: { isRead: true } }
+    );
+    return result;
+  } catch (error) {
+    throw new Error(`Failed to mark all notifications as read: ${error.message}`);
+  }
+}
+
 
 module.exports = {
   notifyAllStaffOfNewComplaint,
@@ -156,4 +175,5 @@ module.exports = {
   getNotificationsByRecipient,
   getUnreadNotificationCount,
   markNotificationsAsRead,
+  markAllAsRead
 };

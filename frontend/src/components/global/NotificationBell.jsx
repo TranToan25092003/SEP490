@@ -1,8 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import { customFetch } from '@/utils/customAxios';
-import { useNavigate } from 'react-router-dom';
-import { Bell, BellRing, Check } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Bell,
+  BellRing,
+  Check,
+  CalendarCheck,
+  MessageSquareWarning,
+  Wrench,
+  DollarSign,
+  Flag,
+  Megaphone,
+  Info
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { io } from "socket.io-client";
+
 
 function timeAgo(date) {
   const seconds = Math.floor((new Date() - new Date(date)) / 1000);
@@ -33,8 +45,61 @@ function timeAgo(date) {
 }
 
 const socket = io(import.meta.env.VITE_API_URL, {
-  autoConnect: false 
+  autoConnect: false
 });
+
+const NotificationIcon = ({ type }) => {
+  let IconComponent;
+  let iconColor;
+
+  switch (type) {
+    case "BOOKING_CONFIRMED":
+    case "BOOKING_COMPLETED":
+    case "BOOKING_REMINDER":
+    case "NEW_BOOKING_CREATED":
+    case "SERVICE_ORDER_ASSIGNED":
+      IconComponent = CalendarCheck;
+      iconColor = "bg-blue-500";
+      break;
+
+    case "COMPLAINT_REPLIED":
+    case "NEW_COMPLAINT_RECEIVED":
+      IconComponent = MessageSquareWarning;
+      iconColor = "bg-red-500";
+      break;
+
+    case "MAINTENANCE_REMINDER":
+      IconComponent = Wrench;
+      iconColor = "bg-yellow-500";
+      break;
+
+    case "PAYMENT_SUCCESSFUL":
+      IconComponent = DollarSign;
+      iconColor = "bg-green-500";
+      break;
+
+    case "STOCK_LEVEL_LOW":
+      IconComponent = Flag;
+      iconColor = "bg-orange-500";
+      break;
+
+    case "GENERAL_ANNOUNCEMENT":
+      IconComponent = Megaphone;
+      iconColor = "bg-indigo-500";
+      break;
+
+    default:
+      IconComponent = Info;
+      iconColor = "bg-gray-500";
+  }
+
+  return (
+    <div className={`h-12 w-12 rounded-full flex-shrink-0 flex items-center justify-center ${iconColor}`}>
+      <IconComponent className="h-6 w-6 text-white" />
+    </div>
+  );
+};
+
 
 // Component con cho danh sách thông báo
 const NotificationList = ({ notifications, isLoading, onNotificationClick }) => {
@@ -47,9 +112,11 @@ const NotificationList = ({ notifications, isLoading, onNotificationClick }) => 
   return notifications.map((noti) => (
     <DropdownMenuItem
       key={noti._id}
-      className={`flex items-start gap-3 p-3 cursor-pointer ${!noti.isRead ? 'bg-blue-50' : 'bg-white'}`}
+      className={`flex items-center gap-3 p-3 cursor-pointer ${!noti.isRead ? 'bg-blue-50' : 'bg-white'}`}
       onClick={() => onNotificationClick(noti)}
     >
+      <NotificationIcon type={noti.type} />
+
       <div className="flex-1">
         <p className="text-sm leading-snug" style={{ whiteSpace: 'normal' }}>
           <span className="font-bold">{noti.title}</span> - {noti.message}
@@ -71,21 +138,22 @@ function NotificationBell() {
   const navigate = useNavigate();
   const [allNotifications, setAllNotifications] = useState({ list: [], page: 1, totalPages: 1 });
   const [unreadNotifications, setUnreadNotifications] = useState({ list: [], page: 1, totalPages: 1 });
-  
+
   const [activeTab, setActiveTab] = useState('all');
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  
+
+
   const initialFetchDone = useRef(false);
 
   useEffect(() => {
     if (userId) {
       if (!socket.connected) socket.connect();
-      
+
       const onConnect = () => {
         console.log("Socket connected, joining room:", userId);
-        socket.emit("joinRoomNoti", userId); 
+        socket.emit("joinRoomNotification", userId);
       };
       socket.on("connect", onConnect);
 
@@ -94,10 +162,10 @@ function NotificationBell() {
         setUnreadNotifications(prev => ({ ...prev, list: [newNotification, ...prev.list] }));
         setUnreadCount(prev => prev + 1);
         toast.info("Bạn có thông báo mới!", {
-            description: newNotification.title,
+          description: newNotification.title,
         });
       };
-      
+
       socket.on("new_notification", handleNewNotification);
 
       return () => {
@@ -107,9 +175,10 @@ function NotificationBell() {
       };
     }
   }, [userId]);
-  
+
   useEffect(() => {
     if (!userId || initialFetchDone.current) return;
+
     const fetchInitialData = async () => {
       try {
         const res = await customFetch.get('/notifications/unread-count');
@@ -120,8 +189,9 @@ function NotificationBell() {
         console.error("Failed to fetch unread count:", error);
       }
     };
+
     fetchInitialData();
-    initialFetchDone.current = true; 
+    initialFetchDone.current = true;
   }, [userId]);
 
   const fetchNotifications = async (tab, pageNum = 1) => {
@@ -142,7 +212,7 @@ function NotificationBell() {
           page: pagination.currentPage,
           totalPages: pagination.totalPages,
         };
-        
+
         if (tab === 'all') {
           setAllNotifications(newState);
         } else {
@@ -190,14 +260,12 @@ function NotificationBell() {
         await customFetch.patch('/notifications/mark-as-read', {
           notificationIds: [notification._id]
         });
-        setAllNotifications(prev => ({
-            ...prev,
-            list: prev.list.map(n => n._id === notification._id ? { ...n, isRead: true } : n)
-        }));
-         setUnreadNotifications(prev => ({
-            ...prev,
-            list: prev.list.filter(n => n._id !== notification._id)
-        }));
+        setAllNotifications(prev =>
+          prev.list.map(n => n._id === notification._id ? { ...n, isRead: true } : n)
+        );
+        setUnreadNotifications(prev =>
+          prev.list.filter(n => n._id !== notification._id)
+        );
         setUnreadCount(prev => Math.max(0, prev - 1));
       } catch (error) {
         console.error("Failed to mark as read:", error);
@@ -226,25 +294,33 @@ function NotificationBell() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80 md:w-96" align="end" sideOffset={10}>
-        <DropdownMenuLabel className="text-xl font-bold">Thông báo</DropdownMenuLabel>
-        
+        <DropdownMenuLabel className="flex justify-between items-center">
+          <span className="text-xl font-bold">Thông báo</span>
+          <Link
+            to="/notifications"
+            className="text-sm font-medium text-blue-600 hover:underline"
+            onClick={() => setIsOpen(false)}
+          >
+            Xem tất cả
+          </Link>
+        </DropdownMenuLabel>
+
         <Tabs defaultValue="all" onValueChange={handleTabChange} className="p-2">
-          {/* Tùy chỉnh TabsList để giống hình ảnh */}
           <TabsList className="grid w-full grid-cols-2 bg-transparent p-0">
-            <TabsTrigger 
-              value="all" 
+            <TabsTrigger
+              value="all"
               className="rounded-full data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
             >
               Tất cả
             </TabsTrigger>
-            <TabsTrigger 
-              value="unread" 
+            <TabsTrigger
+              value="unread"
               className="rounded-full data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
             >
               Chưa đọc
             </TabsTrigger>
           </TabsList>
-          
+
           <div className="max-h-96 overflow-y-auto mt-2">
             <TabsContent value="all" className="m-0">
               <NotificationList
@@ -254,7 +330,7 @@ function NotificationBell() {
               />
             </TabsContent>
             <TabsContent value="unread" className="m-0">
-               <NotificationList
+              <NotificationList
                 notifications={unreadNotifications.list}
                 isLoading={isLoading && unreadNotifications.list.length === 0}
                 onNotificationClick={handleNotificationClick}
@@ -262,13 +338,13 @@ function NotificationBell() {
             </TabsContent>
           </div>
         </Tabs>
-        
+
         {currentPage < currentTotalPages && (
-            <div className="p-2 border-t mt-2">
-                <Button variant="link" className="w-full" onClick={handleLoadMore} disabled={isLoading}>
-                    {isLoading ? "Đang tải..." : "Xem thêm"}
-                </Button>
-            </div>
+          <div className="p-2 border-t mt-2">
+            <Button variant="link" className="w-full" onClick={handleLoadMore} disabled={isLoading}>
+              {isLoading ? "Đang tải..." : "Xem thêm"}
+            </Button>
+          </div>
         )}
 
       </DropdownMenuContent>
