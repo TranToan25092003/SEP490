@@ -60,10 +60,8 @@ import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import { authenTicationLoader } from "./utils/authentication.loader";
-import StaffPage from "./pages/manager/Staff";
-import StaffBays from "./pages/staff/StaffBays";
+
 import ManagerBays from "./pages/manager/ManagerBays";
-import NiceModal from "@ebay/nice-modal-react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -164,21 +162,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-  {
-    path: "/staff",
-    element: <AdminLayout />,
-    children: [
-      { path: "booking/:id", element: <BookingDetail /> },
-      { path: "booking/", element: <BookingList /> },
-    ],
-  },
 
-      {
-        path: "staff",
-        element: <StaffPage></StaffPage>,
-      },
-    ],
-  },
   {
     path: "/staff",
     element: <StaffLayout />,
