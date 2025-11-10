@@ -56,6 +56,7 @@ import ManagerBays from "./pages/manager/ManagerBays";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
+import NiceModal from "@ebay/nice-modal-react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
