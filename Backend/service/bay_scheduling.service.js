@@ -6,47 +6,39 @@ const ERROR_CODES = {
   BAYS_UNAVAILABLE: "BAYS_UNAVAILABLE"
 };
 
-function randomSelectFromArray(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// ASSUMPTION: The number of clerks available at any moment
-// is more or equal to the number of bays.
-
 class BaySchedulingService {
   /**
    * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
    * @param {string} serviceOrderId
-   * @param {Number} durationToHoldForMinutes
-   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
+   * @param {Date} start
+   * @param {Date} end
+   * @param {string} bayId
    * @returns {Promise<InspectionTask>}
    */
-  async scheduleInspectionTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
-    // TODO: VERY IMPORTANT: VALIDATE TECHNICIANS AVAILABILITY
-
-    const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
-    if (!slot) {
+  async scheduleInspectionTask(serviceOrderId, start, end, bayId) {
+    const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
+    if (overlappingTasks.length > 0) {
       throw new DomainError(
-        "Không có khoảng thời gian trống phù hợp trong khung thời gian cho phép.",
-        ERROR_CODES.BAYS_UNAVAILABLE,
-        409
+        "The selected bay is not available for the requested time slot.",
+        ERROR_CODES.BAYS_UNAVAILABLE
       );
     }
 
-    // TODO: implement better bay selection strategy (e.g., least utilized)
-    const bay = randomSelectFromArray(slot.candidateBays);
+    if (end.getHours() > serviceConfig.BUSINESS_END_HOUR || start.getHours() < serviceConfig.BUSINESS_START_HOUR) {
+      throw new DomainError(
+        "The requested time slot is outside business hours.",
+        ERROR_CODES.BAYS_UNAVAILABLE
+      );
+    }
 
     const inspectionTask = new InspectionTask({
       service_order_id: serviceOrderId,
-      expected_start_time: slot.start,
-      expected_end_time: slot.end,
+      expected_start_time: start,
+      expected_end_time: end,
       actual_start_time: null,
       actual_end_time: null,
-      assigned_technicians: techniciansInfoArray.map(ti => ({
-        technician_clerk_id: ti.technicianClerkId,
-        role: ti.role
-      })),
-      assigned_bay_id: bay._id
+      assigned_technicians: [],
+      assigned_bay_id: bayId,
     });
 
     await inspectionTask.save();
@@ -57,35 +49,35 @@ class BaySchedulingService {
   /**
    * Schedule a servicing task as soon as possible, assigning a bay and timeslot.
    * @param {string} serviceOrderId
-   * @param {number} durationToHoldForMinutes
-   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
+   * @param {Date} start
+   * @param {Date} end
+   * @param {string} bayId
    * @returns {Promise<ServicingTask>}
    */
-  async scheduleServicingTask(serviceOrderId, durationToHoldForMinutes, techniciansInfoArray) {
-    // TODO: VERY IMPORTANT: VALIDATE TECHNICIANS AVAILABILITY
-
-    const slot = await this.findNextAvailableSlot(durationToHoldForMinutes);
-    if (!slot) {
+  async scheduleServicingTask(serviceOrderId, start, end, bayId) {
+    const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
+    if (overlappingTasks.length > 0) {
       throw new DomainError(
-        "Không có khoảng thời gian trống phù hợp trong khung thời gian cho phép.",
-        ERROR_CODES.BAYS_UNAVAILABLE,
-        409
+        "The selected bay is not available for the requested time slot.",
+        ERROR_CODES.BAYS_UNAVAILABLE
       );
     }
 
-    const bay = randomSelectFromArray(slot.candidateBays);
+    if (end.getHours() > serviceConfig.BUSINESS_END_HOUR || start.getHours() < serviceConfig.BUSINESS_START_HOUR) {
+      throw new DomainError(
+        "The requested time slot is outside business hours.",
+        ERROR_CODES.BAYS_UNAVAILABLE
+      );
+    }
 
     const servicingTask = new ServicingTask({
       service_order_id: serviceOrderId,
-      expected_start_time: slot.start,
-      expected_end_time: slot.end,
+      expected_start_time: start,
+      expected_end_time: end,
       actual_start_time: null,
       actual_end_time: null,
-      assigned_technicians: techniciansInfoArray.map(ti => ({
-        technician_clerk_id: ti.technicianClerkId,
-        role: ti.role
-      })),
-      assigned_bay_id: bay._id,
+      assigned_technicians: [],
+      assigned_bay_id: bayId,
       timeline: []
     });
 
@@ -93,6 +85,72 @@ class BaySchedulingService {
     return servicingTask;
   }
 
+  async findOverlappingTasksForBayId(bayId, start, end) {
+    const conflictingTasks = await ServiceOrderTask.find({
+      assigned_bay_id: bayId,
+      status: { $ne: "completed" },
+      expected_start_time: { $lt: end },
+      expected_end_time: { $gt: start },
+    }).exec();
+
+    return conflictingTasks;
+  }
+
+  async findNextNSlotsForBayId(
+    bayId,
+    n,
+    durationInMinutes,
+    startOfDayHours = serviceConfig.BUSINESS_START_HOUR,
+    endOfDayHours = serviceConfig.BUSINESS_END_HOUR,
+    starting = new Date(),
+    maxCutOffDate = new Date(
+      Date.now() + (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
+    )
+  ) {
+    const slots = [];
+
+    let startTime = new Date(starting);
+
+    // Clamp starting time to business hours
+    if (starting.getHours() < startOfDayHours) {
+      startTime.setHours(startOfDayHours, 0, 0, 0);
+    } else if (starting.getHours() >= endOfDayHours) {
+      startTime.setDate(startTime.getDate() + 1);
+      startTime.setHours(startOfDayHours, 0, 0, 0);
+    }
+
+    while (slots.length < n && startTime < maxCutOffDate) {
+      const startOfNextDay = new Date(startTime);
+      startOfNextDay.setDate(startOfNextDay.getDate() + 1);
+      startOfNextDay.setHours(startOfDayHours, 0, 0, 0);
+
+      const endOfDay = new Date(startTime);
+      endOfDay.setHours(endOfDayHours, 0, 0, 0);
+
+      const endTime = new Date(startTime.getTime() + durationInMinutes * 60_000);
+
+      if (endTime > endOfDay) {
+        startTime = startOfNextDay;
+        continue;
+      }
+
+      const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, startTime, endTime);
+      if (overlappingTasks.length === 0) {
+        slots.push({ start: startTime, end: endTime });
+        startTime = new Date(startTime.getTime() + durationInMinutes * 60_000);
+      } else {
+        const maxEndTime = overlappingTasks.reduce((max, task) => {
+          return task.expected_end_time > max ? task.expected_end_time : max;
+        }, startTime);
+
+        startTime = new Date(maxEndTime);
+      }
+    }
+
+    return slots;
+  }
+
+  // UNUSED
 
   /**
    * Greedy find next available timeslot for duration
@@ -105,7 +163,7 @@ class BaySchedulingService {
    *  candidateBays: Bay[]
    * } | null}
    */
-  async findNextAvailableSlot(
+  async findNextAvailableSlotGlobally(
     durationInMinutes,
     starting = new Date(),
     maxCutOffDate = new Date(
@@ -162,29 +220,13 @@ class BaySchedulingService {
    * @param {Date} expectedEndTime
    * @returns {Promise<[Bay[], { [bayId: string]: ServiceOrderTask[] }]>} List of available bays and map of conflicting tasks.
    */
-  async findAvailableBay(expectedStartTime, expectedEndTime) {
+  async findAvailableBayGlobally(expectedStartTime, expectedEndTime) {
     const bays = await Bay.find({});
     const availableBays = [];
     const conflictingTasksMap = {};
 
     for (const bay of bays) {
-      // Finding tasks that conflict with the given time slot (state is not 'completed')
-      let conflictingTasks = await ServiceOrderTask.find({
-        assigned_bay_id: bay._id,
-        $or: [
-          {
-            expected_start_time: { $lt: expectedEndTime, $gte: expectedStartTime },
-          },
-          {
-            expected_end_time: { $gt: expectedStartTime, $lte: expectedEndTime },
-          },
-          {
-            expected_start_time: { $lte: expectedStartTime },
-            expected_end_time: { $gte: expectedEndTime },
-          },
-        ],
-      }).exec();
-      conflictingTasks = conflictingTasks.filter(task => task.status !== "completed");
+      const conflictingTasks = await this.findOverlappingTasksForBayId(bay._id, expectedStartTime, expectedEndTime);
 
       if (conflictingTasks.length === 0) {
         availableBays.push(bay);

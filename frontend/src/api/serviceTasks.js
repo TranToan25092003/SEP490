@@ -12,8 +12,9 @@ import { customFetch } from "@/utils/customAxios";
  * @async
  * @function scheduleInspection
  * @param {string} serviceOrderId - The ID of the service order
- * @param {TechnicianInfo[]} technicians - Array of technicians to assign
- * @param {number} expectedDurationInMinutes - Expected duration of the inspection
+ * @param {string} bayId - The ID of the bay to schedule the inspection in
+ * @param {string|Date} start - Start time of the inspection (ISO 8601 date-time string or Date object)
+ * @param {string|Date} end - End time of the inspection (ISO 8601 date-time string or Date object)
  * @returns {Promise<{ serviceOrder: any, inspectionTask: any }>} A promise that resolves to the scheduled inspection details
  * @throws {Error} If the API request fails
  *
@@ -21,23 +22,25 @@ import { customFetch } from "@/utils/customAxios";
  * try {
  *   const result = await scheduleInspection(
  *     'order-123',
- *     [{ technicianClerkId: 'clerk_1', role: 'lead' }],
- *     30
+ *     'bay-456',
+ *     '2025-11-06T09:00:00Z',
+ *     '2025-11-06T10:00:00Z'
  *   );
  *   console.log('Inspection scheduled:', result);
  * } catch (error) {
  *   console.error('Failed to schedule inspection:', error);
  * }
  */
-export const scheduleInspection = async (serviceOrderId, technicians, expectedDurationInMinutes) => {
+export const scheduleInspection = async (serviceOrderId, bayId, start, end) => {
   const response = await customFetch(`/service-tasks/inspection/${serviceOrderId}/schedule`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     data: {
-      technicians,
-      expectedDurationInMinutes,
+      bayId,
+      start: start instanceof Date ? start.toISOString() : start,
+      end: end instanceof Date ? end.toISOString() : end,
     },
   });
 
@@ -50,20 +53,30 @@ export const scheduleInspection = async (serviceOrderId, technicians, expectedDu
  * @async
  * @function beginInspectionTask
  * @param {string} taskId - The ID of the inspection task
+ * @param {TechnicianInfo[]} technicians - Array of technicians to assign
  * @returns {Promise<{ serviceOrder: any, inspectionTask: any }>} A promise that resolves to the started inspection details
  * @throws {Error} If the API request fails
  *
  * @example
  * try {
- *   const result = await beginInspectionTask('task-123');
+ *   const result = await beginInspectionTask('task-123', [
+ *     { technicianClerkId: 'clerk_1', role: 'lead' },
+ *     { technicianClerkId: 'clerk_2', role: 'assistant' }
+ *   ]);
  *   console.log('Inspection started:', result);
  * } catch (error) {
  *   console.error('Failed to start inspection:', error);
  * }
  */
-export const beginInspectionTask = async (taskId) => {
+export const beginInspectionTask = async (taskId, technicians) => {
   const response = await customFetch(`/service-tasks/inspection/${taskId}/begin`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: {
+      technicians,
+    },
   });
 
   return response.data.data;
@@ -75,7 +88,7 @@ export const beginInspectionTask = async (taskId) => {
  * @async
  * @function completeInspection
  * @param {string} taskId - The ID of the inspection task
- * @param {CompleteInspectionPayload} payload - The inspection completion data
+ * @param {CompleteInspectionPayload} payload - The inspection completion data (comment and media array)
  * @returns {Promise<{ serviceOrder: any, inspectionTask: any }>} A promise that resolves to the completed inspection details
  * @throws {Error} If the API request fails
  *
@@ -83,7 +96,9 @@ export const beginInspectionTask = async (taskId) => {
  * try {
  *   const result = await completeInspection('task-123', {
  *     comment: 'Inspection completed successfully',
- *     photoUrls: ['https://example.com/photo1.jpg']
+ *     media: [
+ *       { url: 'https://example.com/photo1.jpg', publicId: 'abc123', kind: 'image' }
+ *     ]
  *   });
  *   console.log('Inspection completed:', result);
  * } catch (error) {
@@ -108,8 +123,9 @@ export const completeInspection = async (taskId, payload) => {
  * @async
  * @function scheduleService
  * @param {string} serviceOrderId - The ID of the service order
- * @param {TechnicianInfo[]} technicians - Array of technicians to assign
- * @param {number} expectedDurationInMinutes - Expected duration of the service
+ * @param {string} bayId - The ID of the bay to schedule the servicing in
+ * @param {string|Date} start - Start time of the servicing (ISO 8601 date-time string or Date object)
+ * @param {string|Date} end - End time of the servicing (ISO 8601 date-time string or Date object)
  * @returns {Promise<{ serviceOrder: any, servicingTask: any }>} A promise that resolves to the scheduled service details
  * @throws {Error} If the API request fails
  *
@@ -117,23 +133,25 @@ export const completeInspection = async (taskId, payload) => {
  * try {
  *   const result = await scheduleService(
  *     'order-123',
- *     [{ technicianClerkId: 'clerk_1', role: 'lead' }],
- *     120
+ *     'bay-456',
+ *     '2025-11-06T09:00:00Z',
+ *     '2025-11-06T11:00:00Z'
  *   );
  *   console.log('Service scheduled:', result);
  * } catch (error) {
  *   console.error('Failed to schedule service:', error);
  * }
  */
-export const scheduleService = async (serviceOrderId, technicians, expectedDurationInMinutes) => {
+export const scheduleService = async (serviceOrderId, bayId, start, end) => {
   const response = await customFetch(`/service-tasks/servicing/${serviceOrderId}/schedule`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
     data: {
-      technicians,
-      expectedDurationInMinutes,
+      bayId,
+      start: start instanceof Date ? start.toISOString() : start,
+      end: end instanceof Date ? end.toISOString() : end,
     },
   });
 
@@ -146,20 +164,30 @@ export const scheduleService = async (serviceOrderId, technicians, expectedDurat
  * @async
  * @function startService
  * @param {string} taskId - The ID of the servicing task
+ * @param {TechnicianInfo[]} technicians - Array of technicians to assign
  * @returns {Promise<{ serviceOrder: any, servicingTask: any }>} A promise that resolves to the started service details
  * @throws {Error} If the API request fails
  *
  * @example
  * try {
- *   const result = await startService('task-123');
+ *   const result = await startService('task-123', [
+ *     { technicianClerkId: 'clerk_1', role: 'lead' },
+ *     { technicianClerkId: 'clerk_2', role: 'assistant' }
+ *   ]);
  *   console.log('Service started:', result);
  * } catch (error) {
  *   console.error('Failed to start service:', error);
  * }
  */
-export const startService = async (taskId) => {
+export const startService = async (taskId, technicians) => {
   const response = await customFetch(`/service-tasks/servicing/${taskId}/start`, {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: {
+      technicians,
+    },
   });
 
   return response.data.data;
@@ -171,7 +199,7 @@ export const startService = async (taskId) => {
  * @async
  * @function completeService
  * @param {string} taskId - The ID of the servicing task
- * @returns {Promise<any>} A promise that resolves to the completed service details
+ * @returns {Promise<{ serviceOrder: any, servicingTask: any }>} A promise that resolves to the completed service details
  * @throws {Error} If the API request fails
  *
  * @example
@@ -196,7 +224,7 @@ export const completeService = async (taskId) => {
  * @async
  * @function updateServiceTaskTimeline
  * @param {string} taskId - The ID of the servicing task
- * @param {ServiceTimelineEntry} entry - The timeline entry to add
+ * @param {ServiceTimelineEntry} entry - The timeline entry to add (title, comment, and media array)
  * @returns {Promise<any>} A promise that resolves to the updated servicing task
  * @throws {Error} If the API request fails
  *
@@ -205,7 +233,9 @@ export const completeService = async (taskId) => {
  *   const result = await updateServiceTaskTimeline('task-123', {
  *     title: 'Oil Change Complete',
  *     comment: 'Changed oil and filter',
- *     photoUrls: ['https://example.com/photo.jpg']
+ *     media: [
+ *       { url: 'https://example.com/photo.jpg', publicId: 'xyz789', kind: 'image' }
+ *     ]
  *   });
  *   console.log('Timeline updated:', result);
  * } catch (error) {

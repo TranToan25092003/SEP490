@@ -131,8 +131,8 @@ class BookingsService {
    */
   async getTimeSlotsForDMY(day, month, year) {
     const timeSlots = [];
-    const startHour = 8;
-    const endHour = 17;
+    const startHour = config.BUSINESS_START_HOUR;
+    const endHour = config.BUSINESS_END_HOUR;
 
     const interval = config.TIMESLOT_INTERVAL_MINUTES;
     for (let hour = startHour; hour <= endHour; hour++) {
