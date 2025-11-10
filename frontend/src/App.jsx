@@ -63,6 +63,7 @@ import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import StaffBays from "./pages/staff/StaffBays";
 import ManagerBays from "./pages/manager/ManagerBays";
+import NiceModal from "@ebay/nice-modal-react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
