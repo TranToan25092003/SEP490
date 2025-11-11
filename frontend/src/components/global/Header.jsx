@@ -22,6 +22,7 @@ import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
 import NotificationAlertIcon from "../icons/NotificationAlertIcon";
 import { ArrowUpDown, ChevronsUpDown } from "lucide-react";
+import NotificationBell from "./NotificationBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -66,49 +67,51 @@ const Header = () => {
           </div>
           <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px]">
             <SearchIcon />
-            <NotificationAlertIcon />
 
             {isSignedIn ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant={"ghost"}
-                    className="flex max-w-[100px] gap-4"
+              <>
+                <NotificationBell />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant={"ghost"}
+                      className="flex max-w-[100px] gap-4"
+                    >
+                      <img
+                        src={profileImage}
+                        className="h-8 w-8 rounded-2xl object-cover"
+                      ></img>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className="w-60"
+                    align="start"
+                    sideOffset={10}
                   >
-                    <img
-                      src={profileImage}
-                      className="h-8 w-8 rounded-2xl object-cover"
-                    ></img>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className="w-60"
-                  align="start"
-                  sideOffset={10}
-                >
-                  <SignedIn>
-                    <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
-                    <DropdownMenuItem>
-                      <a href="/profile" className="capitalize">
-                        thông tin
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <a href="/#" className="capitalize">
-                        lịch sử mua hàng
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <a href="/#" className="capitalize">
-                        theo dõi tiến độ
-                      </a>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <SignOutLink></SignOutLink>
-                    </DropdownMenuItem>
-                  </SignedIn>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <SignedIn>
+                      <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
+                      <DropdownMenuItem>
+                        <a href="/profile" className="capitalize">
+                          thông tin
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <a href="/#" className="capitalize">
+                          lịch sử mua hàng
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <a href="/#" className="capitalize">
+                          theo dõi tiến độ
+                        </a>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem>
+                        <SignOutLink></SignOutLink>
+                      </DropdownMenuItem>
+                    </SignedIn>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <button
                 onClick={() => navigate("/login")}
@@ -157,9 +160,8 @@ const Header = () => {
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
                 <button
-                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${
-                    isPartsMenuOpen ? "bg-[#3a454f]" : ""
-                  }`}
+                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${isPartsMenuOpen ? "bg-[#3a454f]" : ""
+                    }`}
                 >
                   Phụ Tùng <ChevronsUpDown className="ml-2" />
                 </button>
