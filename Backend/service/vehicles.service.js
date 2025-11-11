@@ -12,11 +12,6 @@ function mapToVehicleDTO(vehicle) {
 }
 
 class VehiclesService {
-  /**
-   * Get all vehicles for a user along with their availability status
-   * @param {string} userId
-   * @returns {Promise<import("./types").VehicleWithAvailabilityDTO[]>}
-   */
   async getUserVehiclesWithAvailability(userId) {
     const vehicles = await Vehicle.find({ OwnerClerkId: userId })
       .populate("model_id")
@@ -31,11 +26,6 @@ class VehiclesService {
     }));
   }
 
-  /**
-   * Get vehicle by ID
-   * @param {string} vehicleId
-   * @returns {import("./types").VehicleDTO | null}
-   */
   async getVehicleById(vehicleId) {
     const vehicle = await Vehicle.findById(vehicleId).populate("model_id").lean();
     if (!vehicle) {
@@ -44,12 +34,6 @@ class VehiclesService {
     return mapToVehicleDTO(vehicle);
   }
 
-  /**
-   * Filters the given vehicle IDs to find which ones are currently in use
-   * in active service orders.
-   * @param {Array<string>} vehicleIds
-   * @returns {Array<string>} - Array of vehicle IDs that are currently in use.
-   */
   async getVehiclesInUse(vehicleIds) {
     const bookings = await Booking.find({
       vehicle_id: { $in: vehicleIds },

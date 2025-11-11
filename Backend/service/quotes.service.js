@@ -10,16 +10,8 @@ const ERROR_CODES = {
 };
 
 class QuotesService {
-  /**
-   * Create a quote from a service order
-   * @param {string} serviceOrderId - ID of the service order
-   * @returns {Promise<import("./types").QuoteDTO>}
-   * @throws {DomainError} If service order not found or quote already exists
-   * @example
-   * const quote = await quotesService.createQuote("507f1f77bcf86cd799439011");
-   */
   async createQuote(serviceOrderId) {
-    const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId).populate("items.part_id").exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh sửa chữa không tồn tại",
@@ -38,7 +30,7 @@ class QuotesService {
 
     const items = serviceOrder.items.map(item => ({
       type: item.item_type,
-      name: item.name,
+      name: item.item_type === "service" ? item.name : item.part_id.name,
       quantity: item.quantity,
       price: item.price,
     }));
@@ -59,20 +51,21 @@ class QuotesService {
     return this._mapToQuoteDTO(quote);
   }
 
-  /**
-   * Approve a quote
-   * @param {string} quoteId - ID of the quote to approve
-   * @returns {Promise<import("./types").QuoteDTO>}
-   * @throws {DomainError} If quote not found or invalid state transition
-   * @example
-   * const approvedQuote = await quotesService.approveQuote("507f1f77bcf86cd799439011");
-   */
   async approveQuote(quoteId) {
     const quote = await Quote.findById(quoteId).exec();
     if (!quote) {
       throw new DomainError(
         "Báo giá không tồn tại",
         ERROR_CODES.QUOTE_NOT_FOUND,
+        404
+      );
+    }
+
+    const serviceOrder = await ServiceOrder.findById(quote.so_id).exec();
+    if (!serviceOrder) {
+      throw new DomainError(
+        "Lệnh sửa chữa liên quan không tồn tại",
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
         404
       );
     }
@@ -88,21 +81,12 @@ class QuotesService {
     quote.status = "approved";
     await quote.save();
 
+    serviceOrder.status = "approved";
+    await serviceOrder.save();
+
     return this._mapToQuoteDTO(quote);
   }
 
-  /**
-   * Reject a quote with a reason
-   * @param {string} quoteId - ID of the quote to reject
-   * @param {string} reason - Reason for rejection
-   * @returns {Promise<import("./types").QuoteDTO>}
-   * @throws {DomainError} If quote not found or invalid state transition
-   * @example
-   * const rejectedQuote = await quotesService.rejectQuote(
-   *   "507f1f77bcf86cd799439011",
-   *   "Giá quá cao"
-   * );
-   */
   async rejectQuote(quoteId, reason) {
     const quote = await Quote.findById(quoteId).exec();
     if (!quote) {
@@ -136,17 +120,6 @@ class QuotesService {
     return this._mapToQuoteDTO(quote);
   }
 
-  /**
-   * List quotes with pagination
-   * @param {number} page - Page number (1-indexed)
-   * @param {number} limit - Number of items per page
-   * @param {string} [serviceOrderId] - Optional service order ID to filter by
-   * @returns {Promise<{quotes: Array<import("./types").QuoteSummaryDTO>, pagination: {currentPage: number, totalPages: number, totalItems: number, itemsPerPage: number}}>}
-   * @example
-   * const result = await quotesService.listQuotes(1, 10);
-   * console.log(result.quotes);
-   * console.log(result.pagination);
-   */
   async listQuotes(page = 1, limit = 10, serviceOrderId = null) {
     const skip = (page - 1) * limit;
     const query = serviceOrderId ? { so_id: serviceOrderId } : {};
@@ -173,13 +146,6 @@ class QuotesService {
     };
   }
 
-  /**
-   * Get quote by ID
-   * @param {string} quoteId - ID of the quote
-   * @returns {Promise<import("./types").QuoteDTO | null>}
-   * @example
-   * const quote = await quotesService.getQuoteById("507f1f77bcf86cd799439011");
-   */
   async getQuoteById(quoteId) {
     const quote = await Quote.findById(quoteId).exec();
     if (!quote) {
@@ -188,12 +154,6 @@ class QuotesService {
     return this._mapToQuoteDTO(quote);
   }
 
-  /**
-   * Map quote model to QuoteDTO
-   * @private
-   * @param {Quote} quote
-   * @returns {import("./types").QuoteDTO}
-   */
   _mapToQuoteDTO(quote) {
     return {
       id: quote._id.toString(),
@@ -214,12 +174,6 @@ class QuotesService {
     };
   }
 
-  /**
-   * Map quote model to QuoteSummaryDTO
-   * @private
-   * @param {Quote} quote
-   * @returns {import("./types").QuoteSummaryDTO}
-   */
   _mapToQuoteSummaryDTO(quote) {
     return {
       id: quote._id.toString(),

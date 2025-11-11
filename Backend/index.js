@@ -4,10 +4,10 @@ const { createServer } = require("http");
 const app = express();
 const server = createServer(app);
 
+
 //end create server
 
 require("dotenv").config(); // .env
-
 // database
 const database = require("./config/database");
 const port = process.env.PORT;

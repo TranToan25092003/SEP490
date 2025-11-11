@@ -12,12 +12,105 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { getQuoteById } from "@/api/quotes";
 import { formatDate, formatDateTime, formatPrice } from "@/lib/utils";
-import { Package, Wrench } from "lucide-react";
+import { Package, Wrench, AlertCircle } from "lucide-react";
 import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
-const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
+// Rejection Reason Schema
+const rejectionReasonSchema = z.object({
+  reason: z.string()
+    .min(10, "Lý do từ chối phải có ít nhất 10 ký tự")
+    .max(500, "Lý do từ chối không được vượt quá 500 ký tự")
+    .trim()
+});
+
+// Rejection Reason Modal Component
+const RejectionReasonModal = NiceModal.create(() => {
+  const modal = useModal();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset
+  } = useForm({
+    resolver: zodResolver(rejectionReasonSchema),
+    defaultValues: {
+      reason: ""
+    }
+  });
+
+  const onSubmit = async (data) => {
+    modal.resolve(data.reason);
+    modal.remove();
+  };
+
+  const handleClose = () => {
+    reset();
+    modal.resolve(null);
+    modal.remove();
+  };
+
+  return (
+    <Dialog open={modal.visible} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Từ Chối Báo Giá
+          </DialogTitle>
+          <DialogDescription>
+            Vui lòng nhập lý do từ chối báo giá này
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="reason">
+              Lý do từ chối
+            </Label>
+            <Textarea
+              id="reason"
+              placeholder="Nhập lý do từ chối báo giá..."
+              className={`min-h-[120px] resize-none ${errors.reason ? "border-red-500" : ""}`}
+              {...register("reason")}
+            />
+            {errors.reason && (
+              <p className="text-sm text-red-500 flex items-center gap-1">
+                {errors.reason.message}
+              </p>
+            )}
+            <p className="text-xs text-gray-500">
+              Tối thiểu 10 ký tự, tối đa 500 ký tự
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="submit"
+            >
+              {isSubmitting ? "Đang xử lý..." : "Xác Nhận Từ Chối"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+});
+
+const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) => {
   const modal = useModal();
   const [quote, setQuote] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -86,7 +179,6 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
             </div>
           ) : (
             <div className="space-y-6">
-              {/* Quote Header Info */}
               <div className="bg-gray-50 p-4 rounded-lg space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
@@ -115,21 +207,19 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
                   )}
                 </div>
 
-                {quote.status === "rejected" && quote.rejected_reason && (
+                {quote.status === "rejected" && quote.rejectedReason && (
                   <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded">
                     <p className="text-sm text-gray-600 mb-1">Lý do từ chối</p>
-                    <p className="text-sm text-red-700">{quote.rejected_reason}</p>
+                    <p className="text-sm text-red-700">{quote.rejectedReason}</p>
                   </div>
                 )}
               </div>
 
               <Separator />
 
-              {/* Items List */}
               <div className="space-y-4">
                 <h4 className="font-semibold text-lg">Hạng mục báo giá</h4>
 
-                {/* Services Section */}
                 {groupedItems.service && groupedItems.service.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -159,7 +249,6 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
                   </div>
                 )}
 
-                {/* Parts Section */}
                 {groupedItems.part && groupedItems.part.length > 0 && (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
@@ -189,7 +278,6 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
                   </div>
                 )}
 
-                {/* Empty state */}
                 {(!quote.items || quote.items.length === 0) && (
                   <div className="text-center py-8 text-gray-500 border rounded-lg">
                     <p>Báo giá chưa có hạng mục nào</p>
@@ -199,7 +287,6 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
 
               <Separator />
 
-              {/* Totals Summary */}
               <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Tổng cộng</span>
@@ -222,9 +309,38 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId }) => {
         </div>
 
         <DialogFooter>
-          <Button onClick={handleClose}>
-            Đóng
-          </Button>
+          {allowAcceptReject && quote && quote.status === "pending" && (
+            <div className="space-x-2">
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  const reason = await NiceModal.show(RejectionReasonModal);
+                  if (reason) {
+                    modal.resolve({ action: "reject", reason });
+                    handleClose();
+                  }
+                }}
+              >
+                Từ Chối
+              </Button>
+              <Button
+                onClick={() => {
+                  modal.resolve({ action: "accept" });
+                  handleClose();
+                }}
+              >
+                Chấp Nhận
+              </Button>
+            </div>
+          )}
+          {!allowAcceptReject && (
+            <Button onClick={() => {
+              modal.resolve({ action: "close" });
+              handleClose();
+            }}>
+              Đóng
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

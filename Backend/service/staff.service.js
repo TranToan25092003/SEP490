@@ -1,14 +1,5 @@
 const { ServiceOrderTask } = require("../model");
 
-/**
- * Use this function to get all technicians in the system.
- * Right now it is a stub that returns some mock data.
- * Replace this will calls to actual Clerk API.
- * @returns {{
- *   technicianClerkId: string,
- *   technicianName: string
- * }[]}
- */
 async function getAllTechnicians() {
   return [
     {
@@ -31,12 +22,6 @@ async function getAllTechnicians() {
 }
 
 class StaffService {
-  /**
-   * List all technicians in the system along with their status
-   * whether they are currently assigned to any tasks.
-   *
-   * @return {import("./types").TechnicianInfoWithAvailabilityDTO[]}
-   */
   async getTechniciansWithStatusAtThisMoment() {
     const technicians = await getAllTechnicians();
 

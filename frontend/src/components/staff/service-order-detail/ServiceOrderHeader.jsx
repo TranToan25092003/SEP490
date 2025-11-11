@@ -8,12 +8,13 @@ import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
 import { useFormContext } from "react-hook-form";
 import { Link } from "react-router-dom";
 
-
-const ServiceOrderHeader = ({
-  className,
-  ...props
-}) => {
-  const { serviceOrder, disabled, handleCancelServiceOrder, handleStartServiceOrder } = useServiceOrder();
+const ServiceOrderHeader = ({ className, ...props }) => {
+  const {
+    serviceOrder,
+    disabled,
+    handleCancelServiceOrder,
+    handleStartServiceOrder,
+  } = useServiceOrder();
   const { watch } = useFormContext();
   const items = watch();
   const hasServices = items.services.length + items.parts.length > 0;
@@ -22,21 +23,19 @@ const ServiceOrderHeader = ({
     const status = serviceOrder.status;
     if (status === "created") {
       return (
-      <Button
-        type="submit"
-        onClick={() => handleStartServiceOrder(serviceOrder)}
-        disabled={disabled || !hasServices}
-        aria-busy={disabled || !hasServices}
-      >
-        Bắt đầu
-      </Button>
+        <Button
+          type="submit"
+          onClick={() => handleStartServiceOrder(serviceOrder)}
+          disabled={disabled || !hasServices}
+          aria-busy={disabled || !hasServices}
+        >
+          Bắt đầu
+        </Button>
       );
     } else {
       return (
         <Link to={`/staff/service-order/${serviceOrder.id}/progress`}>
-          <Button>
-            Xem tiến độ
-          </Button>
+          <Button>Xem tiến độ</Button>
         </Link>
       );
     }
@@ -49,16 +48,19 @@ const ServiceOrderHeader = ({
           <CardTitle>Thông tin chung</CardTitle>
         </div>
         <div className="space-x-2">
-          <Button
-            type="button"
-            className="text-destructive"
-            variant="outline"
-            onClick={() => handleCancelServiceOrder(serviceOrder)}
-            disabled={disabled}
-            aria-busy={disabled}
-          >
-            Hủy lệnh
-          </Button>
+          {serviceOrder.status !== "cancelled" &&
+            serviceOrder.status !== "completed" && (
+              <Button
+                type="button"
+                className="text-destructive"
+                variant="outline"
+                onClick={() => handleCancelServiceOrder(serviceOrder)}
+                disabled={disabled}
+                aria-busy={disabled}
+              >
+                Hủy lệnh
+              </Button>
+            )}
           {getButton(serviceOrder)}
         </div>
       </CardHeader>
@@ -75,7 +77,9 @@ const ServiceOrderHeader = ({
 
         <div className="space-y-2">
           <Label>Trạng thái</Label>
-          <StatusBadge status={translateServiceOrderStatus(serviceOrder.status)} />
+          <StatusBadge
+            status={translateServiceOrderStatus(serviceOrder.status)}
+          />
         </div>
       </CardContent>
     </Card>

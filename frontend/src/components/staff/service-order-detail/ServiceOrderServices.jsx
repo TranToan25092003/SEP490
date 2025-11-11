@@ -55,18 +55,17 @@ const PartItemRow = ({
       <Controller
         name={`parts.${index}.price`}
         control={control}
-        render={({ field: { onChange, value } }) => {
+        render={({ field: { value } }) => {
           console.log(value);
           return (
             <NumericFormat
               customInput={Input}
               value={value}
-              onValueChange={(v) => onChange(v.value)}
               id={`parts.${index}.price`}
               placeholder="Giá"
               thousandSeparator=","
               suffix=" ₫"
-              disabled={disabled}
+              disabled={true}
               className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
             />
           );
@@ -94,6 +93,7 @@ const PartItemRow = ({
         type="number"
         {...register(`parts.${index}.quantity`)}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+        disabled={disabled}
         min={1}
       />
       {errors?.parts?.[index]?.quantity && (
@@ -141,6 +141,7 @@ const ServiceItemRow = ({
         placeholder="Nhập tên dịch vụ"
         {...register(`services.${index}.name`)}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+        disabled={disabled}
       />
       {errors?.services?.[index]?.serviceId && (
         <p className="text-sm text-red-500 mt-1">
@@ -200,6 +201,7 @@ const ServiceItemRow = ({
         type="number"
         {...register(`services.${index}.quantity`)}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+        disabled={disabled}
         min={1}
       />
       {errors?.services?.[index]?.quantity && (

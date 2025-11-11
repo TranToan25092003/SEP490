@@ -141,7 +141,7 @@ const ServiceOrderEditForm = ({
     handleStartServiceOrder,
     handleCancelServiceOrder,
     handleSendInvoice,
-    disabled,
+    disabled: disabled || (serviceOrder.status === "completed" || serviceOrder.status === "cancelled"),
     getTotalPrice,
   };
 

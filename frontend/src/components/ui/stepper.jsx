@@ -32,6 +32,7 @@ const Stepper = React.forwardRef(
               {step}
               {index < totalSteps - 1 && (
                 <StepperSeparator
+                  step={step}
                   completed={currentStep > index}
                 />
               )}
@@ -44,9 +45,13 @@ const Stepper = React.forwardRef(
 );
 Stepper.displayName = "Stepper";
 
-const StepperSeparator = ({ completed }) => {
+const StepperSeparator = ({ completed, step }) => {
+  console.log(step);
   return (
-    <div className="flex-1 mx-1 h-[2px] bg-gray-200 dark:bg-gray-700 relative bottom-6">
+    <div className={cn("flex-1 mx-1 h-[2px] bg-gray-200 dark:bg-gray-700 relative", {
+      "bottom-6": !!step.props.description,
+      "bottom-4": !step.props.description,
+    })}>
       <div
         className={cn(
           "h-full transition-all duration-300",

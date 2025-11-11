@@ -97,49 +97,60 @@ const ServiceOrderTotal = ({
           </div>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => {
-            handleUpdateServiceOrder(serviceOrder, [
-              ...items.services,
-              ...items.parts,
-            ]);
-          }}
-          disabled={disabled || !hasServices}
-          aria-busy={disabled || !hasServices}
-        >
-          Cập nhật thông tin
-        </Button>
+        {serviceOrder.status !== "completed" && (
+          serviceOrder.status !== "cancelled" && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                handleUpdateServiceOrder(serviceOrder, [
+                  ...items.services,
+                  ...items.parts,
+                ]);
+              }}
+              disabled={disabled || !hasServices}
+              aria-busy={disabled || !hasServices}
+            >
+              Cập nhật thông tin
+            </Button>
+          ))}
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger className="m-0">
-              <Button
-                className="w-full"
-                type="button"
-                onClick={() => {
-                  handleSendInvoice(serviceOrder, [
-                    ...items.services,
-                    ...items.parts,
-                  ]);
-                }}
-                disabled={serviceOrder.status !== "inspection_completed" || !hasServices || disabled}
-                aria-busy={disabled || !hasServices}
-              >
-                Gửi báo giá
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              {serviceOrder.status !== "inspection_completed" ? (
-                <span>
-                  Chỉ có thể gửi báo giá khi lệnh sửa chữa ở trạng thái "Hoàn tất
-                  kiểm tra"
-                </span>
-              ) : null}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {serviceOrder.status !== "completed" &&
+          serviceOrder.status !== "cancelled" && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger className="m-0">
+                  <Button
+                    className="w-full"
+                    type="button"
+                    onClick={() => {
+                      handleSendInvoice(serviceOrder, [
+                        ...items.services,
+                        ...items.parts,
+                      ]);
+                    }}
+                    disabled={
+                      !(serviceOrder.status === "inspection_completed" ||
+                      serviceOrder.status === "waiting_customer_approval") ||
+                      !hasServices ||
+                      disabled
+                    }
+                    aria-busy={disabled || !hasServices}
+                  >
+                    Gửi báo giá
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                  {serviceOrder.status !== "inspection_completed" ? (
+                    <span>
+                      Chỉ có thể gửi báo giá khi lệnh sửa chữa ở trạng thái
+                      Đã kiểm tra hoặc Chờ phê duyệt của khách hàng
+                    </span>
+                  ) : null}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
       </CardContent>
 
       {loading && (
