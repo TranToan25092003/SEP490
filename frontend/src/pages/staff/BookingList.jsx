@@ -168,11 +168,18 @@ const BookingList = () => {
     filters.status = searchParams.get("status");
   }
 
-  if (searchParams.get("startTimestamp") || searchParams.get("endTimestamp")) {
-    filters.dateRange = {
-      start: new Date(parseInt(searchParams.get("startTimestamp"), 10)),
-      end: new Date(parseInt(searchParams.get("endTimestamp"), 10)),
-    };
+  if (searchParams.get("startTimestamp")) {
+    if (!filters.dateRange) {
+      filters.dateRange = {};
+    }
+    filters.dateRange.start = new Date(parseInt(searchParams.get("startTimestamp"), 10));
+  }
+
+  if (searchParams.get("endTimestamp")) {
+    if (!filters.dateRange) {
+      filters.dateRange = {};
+    }
+    filters.dateRange.end = new Date(parseInt(searchParams.get("endTimestamp"), 10));
   }
 
   return (
