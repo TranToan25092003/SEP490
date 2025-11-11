@@ -143,6 +143,7 @@ const router = createBrowserRouter([
     loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
+      { path: "staff", element: <StaffPage /> },
       {
         path: "items",
         element: <ManagerItems />,

@@ -4,6 +4,7 @@ import {
   iconHome as imgHome,
   iconInvoice as imgInvoice,
   iconBanking as imgMoney,
+  iconStaff as imgStaff,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +39,7 @@ const items = [
     icon: Building2,
     href: "/manager/bays",
   },
+  { key: "staff", label: "Staff", icon: imgStaff, href: "/manager/staff" },
 ];
 
 export default function ManagerSidebar({
