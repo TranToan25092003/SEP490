@@ -187,6 +187,12 @@ const handleConnection = (socket) => {
     });
   });
 
+  //Handle join room for notification
+  socket.on("joinRoomNotification", (roomName) => {
+    console.log(`Socket ${socket.id} joining notification room: ${roomName}`);
+    socket.join(roomName);
+  });
+
   // Handle disconnection
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);

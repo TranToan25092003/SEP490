@@ -1,20 +1,68 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// Notifications Schema
-// Represents notifications sent to users
+
+const NotificationType = [
+    "BOOKING_CONFIRMED",   
+    "BOOKING_COMPLETED",     
+    "BOOKING_REMINDER",       
+    "COMPLAINT_REPLIED",     
+    "MAINTENANCE_REMINDER",  
+
+    "NEW_BOOKING_CREATED",   
+    "NEW_COMPLAINT_RECEIVED",
+    "SERVICE_ORDER_ASSIGNED",
+    "STOCK_LEVEL_LOW",       
+
+    "GENERAL_ANNOUNCEMENT",  
+    "OTHER"                  
+];
+
 const NotificationSchema = new Schema(
-  {
-    clerkId: { type: String, required: true }, // Clerk user ID (recipient)
-    type: {
-      type: String,
-      enum: ["booking", "invoice", "complaint", "other"],
-      required: true,
-    }, // Notification type
-    title: { type: String, required: true }, // Notification title
-    message: { type: String, required: true }, // Notification message
-  },
-  { timestamps: true }
+    {
+        recipientClerkId: { 
+            type: String, 
+            required: true,
+            index: true 
+        }, 
+        recipientType: {
+            type: String,
+            enum: ['customer', 'staff'],
+            required: [true, "Recipient type (customer or staff) is required"],
+            index: true
+        },
+        type: {
+            type: String,
+            enum: NotificationType,
+            required: true,
+        },
+        title: { 
+            type: String, 
+            required: true 
+        }, 
+        message: { 
+            type: String, 
+            required: true 
+        }, 
+        
+        isRead: {
+            type: Boolean,
+            default: false,
+            required: true
+        },
+
+        linkTo: {
+            type: String,
+            required: false 
+        },
+        
+        actorClerkId: {
+            type: String,
+            required: false
+        }
+    },
+    { timestamps: true }
 );
+
 const Notification = mongoose.model("Notification", NotificationSchema);
 module.exports = Notification;

@@ -46,6 +46,7 @@ import {
   partDetailStaffLoader,
   complaintsStaffLoader,
   complaintDetailStaffLoader,
+  notificationsPageLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -59,9 +60,13 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
-import { authenTicationLoader } from "./utils/authentication.loader";
-
 import ManagerBays from "./pages/manager/ManagerBays";
+import {
+  authenTicationForStaffLoader,
+  authenTicationLoader,
+} from "./utils/authentication.loader";
+import StaffPage from "./pages/manager/Staff";
+import NotificationListPage from "./pages/NotificationListPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -115,6 +120,11 @@ const router = createBrowserRouter([
 
         element: <LayoutProfile></LayoutProfile>,
       },
+      {
+        path: "/notifications",
+        loader: notificationsPageLoader,
+        element: <NotificationListPage />,
+      },
     ],
   },
   {
@@ -166,6 +176,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
+    loader: authenTicationForStaffLoader,
     children: [
       { index: true, element: <StaffDashboardPage /> },
       {
