@@ -24,7 +24,7 @@ import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import NiceModal from "@ebay/nice-modal-react";
 import ChatStaff from "./pages/staff/ChatStaff";
-import AdminLayout from "./layout/admin-layout/AdminLayout";
+import AdminLayout from "./layout/manager-layout/ManagerLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
@@ -60,7 +60,11 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
-import { authenTicationForStaffLoader, authenTicationLoader } from "./utils/authentication.loader";
+import ManagerBays from "./pages/manager/ManagerBays";
+import {
+  authenTicationForStaffLoader,
+  authenTicationLoader,
+} from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import NotificationListPage from "./pages/NotificationListPage";
 
@@ -120,7 +124,7 @@ const router = createBrowserRouter([
         path: "/notifications",
         loader: notificationsPageLoader,
         element: <NotificationListPage />,
-      }
+      },
     ],
   },
   {
@@ -162,13 +166,13 @@ const router = createBrowserRouter([
         path: "goods-receipt/:id",
         element: <GoodsReceiptDetail />,
       },
-
       {
-        path: "staff",
-        element: <StaffPage></StaffPage>,
+        path: "bays",
+        element: <ManagerBays />,
       },
     ],
   },
+
   {
     path: "/staff",
     element: <StaffLayout />,

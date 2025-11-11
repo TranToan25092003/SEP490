@@ -4,12 +4,13 @@ class ServiceOrderTaskController {
   async scheduleInspection(req, res, next) {
     try {
       const { serviceOrderId } = req.params;
-      const { technicians, expectedDurationInMinutes } = req.body;
+      const { bayId, start, end } = req.body;
 
       const result = await serviceOrderTaskService.scheduleInspection(
         serviceOrderId,
-        technicians,
-        expectedDurationInMinutes
+        bayId,
+        new Date(start),
+        new Date(end)
       );
 
       res.status(200).json({
@@ -21,11 +22,42 @@ class ServiceOrderTaskController {
     }
   }
 
-  async beginInspectionTask(req, res, next) {
+  async getTaskDetails(req, res, next) {
     try {
       const { taskId } = req.params;
 
-      const result = await serviceOrderTaskService.beginInspectionTask(taskId);
+      const result = await serviceOrderTaskService.getTaskDetails(taskId);
+
+      res.status(200).json({
+        data: result,
+        message: "Task details retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getAllTasksForServiceOrder(req, res, next) {
+    try {
+      const { serviceOrderId } = req.params;
+
+      const result = await serviceOrderTaskService.getAllTasksForServiceOrder(serviceOrderId);
+
+      res.status(200).json({
+        data: result,
+        message: "All tasks for service order retrieved successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async beginInspectionTask(req, res, next) {
+    try {
+      const { taskId } = req.params;
+      const { technicians } = req.body;
+
+      const result = await serviceOrderTaskService.beginInspectionTask(taskId, technicians);
 
       res.status(200).json({
         data: result,
@@ -39,11 +71,11 @@ class ServiceOrderTaskController {
   async completeInspection(req, res, next) {
     try {
       const { taskId } = req.params;
-      const { comment, photoUrls } = req.body;
+      const { comment, media } = req.body;
 
       const result = await serviceOrderTaskService.completeInspection(taskId, {
         comment,
-        photoUrls,
+        media,
       });
 
       res.status(200).json({
@@ -58,12 +90,13 @@ class ServiceOrderTaskController {
   async scheduleService(req, res, next) {
     try {
       const { serviceOrderId } = req.params;
-      const { technicians, expectedDurationInMinutes } = req.body;
+      const { bayId, start, end } = req.body;
 
       const result = await serviceOrderTaskService.scheduleService(
         serviceOrderId,
-        technicians,
-        expectedDurationInMinutes
+        bayId,
+        new Date(start),
+        new Date(end)
       );
 
       res.status(200).json({
@@ -78,8 +111,9 @@ class ServiceOrderTaskController {
   async startService(req, res, next) {
     try {
       const { taskId } = req.params;
+      const { technicians } = req.body;
 
-      const result = await serviceOrderTaskService.startService(taskId);
+      const result = await serviceOrderTaskService.startService(taskId, technicians);
 
       res.status(200).json({
         data: result,
@@ -108,14 +142,14 @@ class ServiceOrderTaskController {
   async updateServiceTaskTimeline(req, res, next) {
     try {
       const { taskId } = req.params;
-      const { title, comment, photoUrls } = req.body;
+      const { title, comment, media } = req.body;
 
       const result = await serviceOrderTaskService.updateServiceTaskTimeline(
         taskId,
         {
           title,
           comment,
-          photoUrls,
+          media
         }
       );
 

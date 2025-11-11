@@ -2,6 +2,24 @@
  * @swagger
  * components:
  *   schemas:
+ *     MediaAsset:
+ *       type: object
+ *       required:
+ *         - publicId
+ *         - url
+ *         - kind
+ *       properties:
+ *         publicId:
+ *           type: string
+ *           description: The public ID of the Cloudinary resource
+ *         url:
+ *           type: string
+ *           description: The public url of the Cloudinary resource
+ *         kind:
+ *           type: string
+ *           description: The public url of the Cloudinary resource
+ *           enum: [image, video, pdf, other]
+ *
  *     Timeslot:
  *       type: object
  *       required:
@@ -96,6 +114,23 @@
  *           properties:
  *             isAvailable:
  *               type: boolean
+ *
+ *     BayDTO:
+ *      type: object
+ *      required:
+ *        - id
+ *        - bayNumber
+ *        - description
+ *      properties:
+ *        id:
+ *          type: string
+ *          description: Bay identifier
+ *        bayNumber:
+ *          type: integer
+ *          description: Bay number
+ *        description:
+ *          type: string
+ *          description: Description of the bay
  *
  *     BookingDTO:
  *       type: object
@@ -360,23 +395,23 @@
  *       type: object
  *       required:
  *         - comment
- *         - photoUrls
+ *         - media
  *       properties:
  *         comment:
  *           type: string
  *           description: Comment or notes about the inspection
- *         photoUrls:
+ *         media:
  *           type: array
  *           items:
- *             type: string
- *           description: URLs of photos taken during the inspection
+ *             $ref: '#/components/schemas/MediaAsset'
+ *           description: Media assets for the inspection
  *
  *     ServiceTimelineEntry:
  *       type: object
  *       required:
  *         - title
  *         - comment
- *         - photoUrls
+ *         - media
  *       properties:
  *         title:
  *           type: string
@@ -384,11 +419,11 @@
  *         comment:
  *           type: string
  *           description: Comment or notes for the timeline entry
- *         photoUrls:
+ *         media:
  *           type: array
  *           items:
- *             type: string
- *           description: URLs of photos for the timeline entry
+ *             $ref: '#/components/schemas/MediaAsset'
+ *           description: Media assets for the timeline entry
  *
  *     ServiceOrderItemPayload:
  *       type: object

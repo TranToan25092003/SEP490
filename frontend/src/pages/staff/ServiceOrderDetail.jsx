@@ -15,6 +15,9 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
+import NiceModal from "@ebay/nice-modal-react";
+import ChooseStaffModal from "@/components/staff/service-order-detail/ChooseStaffModal";
+import { beginInspectionTask, scheduleInspection } from "@/api/serviceTasks";
 
 function loader({ params }) {
   return {
@@ -26,7 +29,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
   const handleUpdateServiceOrder = async (serviceOrder, items) => {
     try {
       const task = updateServiceOrderItems(serviceOrder.id, items);
-      await toast.promise(() => task, {
+      await toast.promise(task, {
         loading: "Đang cập nhật lệnh sửa chữa...",
         success: "Cập nhật lệnh sửa chữa thành công",
         error: "Cập nhật lệnh sửa chữa thất bại"
@@ -37,18 +40,14 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     }
   };
 
-  const handleConfirmServiceOrder = async (serviceOrderData) => {
-    await new Promise((resolve, _) => setTimeout(resolve, 4000));
-    console.log("Confirming service order:", serviceOrderData);
-    revalidator.revalidate();
-  };
+
 
   const handleSendInvoice = async (serviceOrderData, items) => {
     try {
       const task = updateServiceOrderItems(serviceOrderData.id, items).then(() => {
         createQuote(serviceOrderData.id);
       });
-      await toast.promise(() => task, {
+      await toast.promise(task, {
         loading: "Đang cập nhật và gửi báo giá...",
         success: "Gửi báo giá thành công",
         error: "Gửi báo giá thất bại"
@@ -56,6 +55,42 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
       revalidator.revalidate();
     } catch (error) {
       console.error("Failed to send invoice:", error);
+      return;
+    }
+  };
+
+  const handleCancelServiceOrder = async (serviceOrderData) => {
+    toast.error("This feature is not implemented");
+  };
+
+  const handleStartServiceOrder = async (serviceOrderData) => {
+    const result = await NiceModal.show(ChooseStaffModal, {
+      mode: "single"
+    });
+
+    try {
+      const scheduleTask = scheduleInspection(serviceOrderData.id, [{
+        technicianClerkId: result.technicianClerkId,
+        role: "lead"
+      }], 30);
+
+      const { inspectionTask } = await toast.promise(scheduleTask, {
+        success: "Lên lịch kiểm tra thành công",
+        error: "Không thể lên lịch kiểm tra",
+        loading: "Đang lên lịch kiểm tra..."
+      }).unwrap();
+
+      const startTask = beginInspectionTask(inspectionTask._id);
+
+      await toast.promise(startTask, {
+        success: "Đã bắt đầu kiểm tra",
+        error: "Không thể bắt đầu kiểm tra",
+        loading: "Không thể bắt đầu kiểm tra"
+      })
+
+      revalidator.revalidate();
+    } catch (error) {
+      console.error("Failed to schedule inspection", error);
       return;
     }
   };
@@ -72,7 +107,8 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
           total: 1.1 * sum
         };
       }}
-      onConfirmServiceOrder={handleConfirmServiceOrder}
+      onStartServiceOrder={handleStartServiceOrder}
+      onCancelServiceOrder={handleCancelServiceOrder}
       onUpdateServiceOrder={handleUpdateServiceOrder}
       onSendInvoice={handleSendInvoice}
     />

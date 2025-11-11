@@ -1,7 +1,9 @@
-import React from "react";
 import {
   sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
+  iconHome as imgHome,
+  iconInvoice as imgInvoice,
+  iconBanking as imgMoney,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,60 +13,34 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Wrench,
-  MessageSquareWarning,
-  Package,
-  Calendar1,
-  MessageCircle,
-  LogOut,
-} from "lucide-react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LogOut, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 const items = [
-  {
-    key: "dashboard",
-    label: "Tổng quát",
-    icon: LayoutDashboard,
-    href: "/staff",
-  },
-  {
-    key: "bookings",
-    label: "Quản lý đặt lịch",
-    icon: Calendar1,
-    href: "/staff/booking",
-  },
-  {
-    key: "orders",
-    label: "Quản lý lệnh",
-    icon: Package,
-    href: "/staff/service-order",
-  },
+  { key: "home", label: "Dashboard", icon: imgHome, href: "/manager" },
   {
     key: "parts",
     label: "Quản lý phụ tùng",
-    icon: Wrench,
-    href: "/staff/items",
+    icon: imgMoney,
+    href: "/manager/items",
   },
   {
-    key: "complaint",
-    label: "Xem tồn kho",
-    icon: MessageSquareWarning,
-    href: "/staff/complaints",
+    key: "goodReceipts",
+    label: "Quản lý phiếu nhập ",
+    icon: imgInvoice,
+    href: "/manager/goods-receipt-list",
   },
   {
-    key: "chat",
-    label: "Chat",
-    icon: MessageCircle,
-    href: "/staff/chat",
+    key: "bays",
+    label: "Quản lý bay",
+    icon: Building2,
+    href: "/manager/bays",
   },
 ];
 
-export default function StaffSideBar({
+export default function ManagerSidebar({
   width = 80,
   offsetTop = 100,
   expanded = true,
@@ -77,8 +53,8 @@ export default function StaffSideBar({
 
   const handleLogout = async () => {
     try {
-      await signOut(() => navigate("/"));
       toast.success("Đăng xuất thành công");
+      await signOut(() => navigate("/"));
     } catch {
       toast.error("Lỗi khi đăng xuất");
     }
@@ -86,8 +62,11 @@ export default function StaffSideBar({
 
   return (
     <aside
-      className="fixed left-0 z-40 bg-white transition-all"
-      style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
+      className={cn(
+        "fixed left-0 z-40 bg-white transition-all",
+        expanded ? `w-[${expandedWidth}px]` : `w-[${width}px]`
+      )}
+      style={{ top: 0, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
         <img alt="" src={imgLine} className="w-px h-full" />
@@ -101,11 +80,10 @@ export default function StaffSideBar({
           >
             <div className="flex flex-col gap-3">
               {items.map((it) => {
-                const Icon = it.icon;
                 // Kiểm tra xem mục này có đang hoạt động không
                 // Xử lý trường hợp đặc biệt cho trang chủ dashboard
                 const isActive =
-                  it.href === "/staff"
+                  it.href === "/manager"
                     ? location.pathname === it.href
                     : location.pathname.startsWith(it.href);
 
@@ -139,10 +117,22 @@ export default function StaffSideBar({
                               to={it.href}
                               aria-current={isActive ? "page" : undefined}
                             >
-                              <Icon className="size-7" />
+                              {typeof it.icon === "string" ? (
+                                <img alt="" src={it.icon} className="size-7" />
+                              ) : (
+                                (() => {
+                                  const Icon = it.icon;
+                                  return <Icon className="size-7" />;
+                                })()
+                              )}
                             </Link>
+                          ) : typeof it.icon === "string" ? (
+                            <img alt="" src={it.icon} className="size-7" />
                           ) : (
-                            <Icon className="size-7" />
+                            (() => {
+                              const Icon = it.icon;
+                              return <Icon className="size-7" />;
+                            })()
                           )}
                         </Button>
                       </div>
