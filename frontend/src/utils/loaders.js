@@ -65,7 +65,7 @@ export const partsClientLoader = async ({ request }) => {
 
     const [partsResponse, groupedModelsResponse] = await Promise.all([
       customFetch(`/parts?${queryParams.toString()}`),
-      customFetch('/models/grouped-by-brand') 
+      customFetch("/models/grouped-by-brand"),
     ]);
 
     const partsApiResponse = partsResponse.data;
@@ -75,7 +75,9 @@ export const partsClientLoader = async ({ request }) => {
 
     const groupedModelsApiResponse = groupedModelsResponse.data;
     if (!groupedModelsApiResponse.success) {
-      throw new Error(groupedModelsApiResponse.message || "Failed to load filter data");
+      throw new Error(
+        groupedModelsApiResponse.message || "Failed to load filter data"
+      );
     }
 
     return {
@@ -83,7 +85,6 @@ export const partsClientLoader = async ({ request }) => {
       pagination: partsApiResponse.pagination,
       groupedModels: groupedModelsApiResponse.data,
     };
-
   } catch (error) {
     console.error("Parts loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
@@ -203,21 +204,26 @@ export const partLoaderByClient = async ({ params }) => {
     const mainProductApiResponse = mainProductResponse.data;
 
     if (!mainProductApiResponse.success) {
-      throw new Error(mainProductApiResponse.message || "Failed to load part details");
+      throw new Error(
+        mainProductApiResponse.message || "Failed to load part details"
+      );
     }
     const product = mainProductApiResponse.data;
 
-    // Fetch related products based on the brand 
+    // Fetch related products based on the brand
     let relatedProducts = [];
     if (product && product.brand) {
-      const relatedResponse = await customFetch(`/parts?brand=${product.brand}`);
+      const relatedResponse = await customFetch(
+        `/parts?brand=${product.brand}`
+      );
       const relatedApiResponse = relatedResponse.data;
       if (relatedApiResponse.success) {
-        relatedProducts = relatedApiResponse.data.filter(p => p._id !== product._id);
+        relatedProducts = relatedApiResponse.data.filter(
+          (p) => p._id !== product._id
+        );
       }
     }
     return { product, relatedProducts };
-
   } catch (error) {
     console.error("Part detail loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
@@ -496,12 +502,12 @@ export const complaintsStaffLoader = async ({ request }) => {
 };
 
 export const complaintDetailStaffLoader = async ({ params }) => {
-  const complaintId = params.id; 
+  const complaintId = params.id;
 
   if (!complaintId) {
     console.error("Complaint ID is missing in loader params.");
     toast.error("Lỗi tải dữ liệu", {
-        description: "Không tìm thấy ID khiếu nại.",
+      description: "Không tìm thấy ID khiếu nại.",
     });
     return null;
   }
@@ -511,17 +517,45 @@ export const complaintDetailStaffLoader = async ({ params }) => {
     const apiResponse = response.data;
 
     if (!apiResponse.success) {
-      throw new Error(apiResponse.message || "Failed to load complaint details");
+      throw new Error(
+        apiResponse.message || "Failed to load complaint details"
+      );
     }
     return apiResponse.data;
-
   } catch (error) {
     console.error("Complaint detail loader error:", error);
     toast.error("Lỗi tải dữ liệu chi tiết", {
-      description: error.message || "Không thể tải thông tin chi tiết khiếu nại",
+      description:
+        error.message || "Không thể tải thông tin chi tiết khiếu nại",
     });
     return null;
   }
 };
 
-
+export const activityLogsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    const { data } = await customFetch(`/manager/activity-logs?${query}`);
+    if (!data.success) {
+      throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+    }
+    return {
+      logs: data.items,
+      pagination: data.pagination,
+    };
+  } catch (error) {
+    toast.error("Lỗi tải nhật ký", {
+      description: error.message,
+    });
+    return {
+      logs: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+      },
+    };
+  }
+};

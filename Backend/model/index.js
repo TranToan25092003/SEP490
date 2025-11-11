@@ -15,13 +15,23 @@ const Quote = require("./quote.model");
 const MediaAsset = require("./media_asset.model");
 const RecallVehicles = require("./recall_vehicles.model");
 const Recall = require("./recall.model");
-const { ServiceOrder, CustomOrderItem, PartOrderItem, ServiceOrderItem } = require("./service_order.model");
-const { InspectionTask, ServicingTask, ServiceOrderTask } = require("./service_order_task.model");
+const {
+  ServiceOrder,
+  CustomOrderItem,
+  PartOrderItem,
+  ServiceOrderItem,
+} = require("./service_order.model");
+const {
+  InspectionTask,
+  ServicingTask,
+  ServiceOrderTask,
+} = require("./service_order_task.model");
 const Booking = require("./booking.model");
 const Service = require("./service.model");
 const ModelVehicle = require("./vehicle_model.model");
 const Vehicle = require("./vehicle.model");
 const Warranty = require("./warranty.model");
+const ActivityLog = require("./activity_log.model");
 
 module.exports = {
   Test,
@@ -52,4 +62,5 @@ module.exports = {
   Vehicle,
   Warranty,
   Booking,
+  ActivityLog,
 };

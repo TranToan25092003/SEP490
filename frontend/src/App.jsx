@@ -61,7 +61,9 @@ import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
-
+import ActivityLogs from "./pages/manager/ActivityLogs";
+import { activityLogsLoader } from "./utils/loaders";
+import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
@@ -160,6 +162,11 @@ const router = createBrowserRouter([
         path: "staff",
         element: <StaffPage></StaffPage>,
       },
+      {
+        path: "activity-logs",
+        element: <ActivityLogs />,
+        loader: activityLogsLoader,
+      },
     ],
   },
   {
@@ -240,6 +247,7 @@ function App() {
       >
         <NiceModal.Provider>
           <Toaster></Toaster>
+          <GlobalLoginLogger />
           <RouterProvider router={router} />
         </NiceModal.Provider>
       </ClerkProvider>
