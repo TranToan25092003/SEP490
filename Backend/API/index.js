@@ -6,6 +6,7 @@ const serviceTaskRouter = require("./service-tasks.router");
 const technicianRouter = require("./technicians.router");
 const quotesRouter = require("./quotes.router");
 const baysRouter = require("./bays.router");
+const notificationRouter = require("./notification.router");
 
 module.exports = (app) => {
   app.use("/services", servicesRouter);
@@ -16,4 +17,5 @@ module.exports = (app) => {
   app.use("/technicians", technicianRouter);
   app.use("/quotes", quotesRouter);
   app.use("/bays", baysRouter);
+  app.use("/notifications", notificationRouter);
 }
