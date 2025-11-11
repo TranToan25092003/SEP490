@@ -18,6 +18,7 @@ import {
   Package,
   Calendar1,
   MessageCircle,
+  FileText,
   LogOut,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
@@ -43,6 +44,12 @@ const items = [
     label: "Quản lý lệnh",
     icon: Package,
     href: "/staff/service-order",
+  },
+  {
+    key: "invoices",
+    label: "Hóa đơn",
+    icon: FileText,
+    href: "/staff/invoices",
   },
   {
     key: "parts",

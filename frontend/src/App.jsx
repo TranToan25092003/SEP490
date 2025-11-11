@@ -1,10 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import {
-  ClerkProvider,
-  GoogleOneTap,
-  SignedIn,
-  useUser,
-} from "@clerk/clerk-react";
+import { ClerkProvider, GoogleOneTap, SignedIn } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
@@ -62,10 +57,9 @@ import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
-import {
-  authenTicationForStaffLoader,
-  authenTicationLoader,
-} from "./utils/authentication.loader";
+import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
+import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
+import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import NotificationListPage from "./pages/NotificationListPage";
 
@@ -184,7 +178,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
-    loader: authenTicationForStaffLoader,
+    // loader: authenTicationForStaffLoader,
     children: [
       { index: true, element: <StaffDashboardPage /> },
       {
@@ -237,6 +231,14 @@ const router = createBrowserRouter([
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "invoices",
+        element: <StaffInvoicesPage />,
+      },
+      {
+        path: "invoices/:id",
+        element: <StaffInvoiceDetail />,
       },
       {
         path: "chat",

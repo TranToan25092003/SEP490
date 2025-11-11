@@ -3,15 +3,23 @@ const serviceOrderService = require("../service/service_order.service");
 class ServiceOrderController {
   async getAllServiceOrders(req, res, next) {
     try {
-      const { page, limit, customerName, status, startTimestamp, endTimestamp } = req.query;
-      const serviceOrders = await serviceOrderService.getAllServiceOrdersByCreatedDateAscending({
-        page: parseInt(page, 10) || 1,
-        limit: parseInt(limit, 10) || 20,
-        customerName: customerName || null,
-        status: status || null,
-        startTimestamp: startTimestamp ? parseInt(startTimestamp, 10) : null,
-        endTimestamp: endTimestamp ? parseInt(endTimestamp, 10) : null,
-      });
+      const {
+        page,
+        limit,
+        customerName,
+        status,
+        startTimestamp,
+        endTimestamp,
+      } = req.query;
+      const serviceOrders =
+        await serviceOrderService.getAllServiceOrdersByCreatedDateAscending({
+          page: parseInt(page, 10) || 1,
+          limit: parseInt(limit, 10) || 20,
+          customerName: customerName || null,
+          status: status || null,
+          startTimestamp: startTimestamp ? parseInt(startTimestamp, 10) : null,
+          endTimestamp: endTimestamp ? parseInt(endTimestamp, 10) : null,
+        });
 
       res.status(200).json({
         data: serviceOrders,
@@ -24,13 +32,15 @@ class ServiceOrderController {
   async getServiceOrderById(req, res, next) {
     try {
       const serviceOrderId = req.params.id;
-      const serviceOrder = await serviceOrderService.getServiceOrderById(serviceOrderId);
+      const serviceOrder = await serviceOrderService.getServiceOrderById(
+        serviceOrderId
+      );
       if (!serviceOrder) {
         return res.status(404).json({ message: "Service order not found" });
       }
 
       res.status(200).json({
-        data: serviceOrder
+        data: serviceOrder,
       });
     } catch (error) {
       next(error);

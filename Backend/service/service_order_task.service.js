@@ -8,6 +8,7 @@ const {
 const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
 const { MediaAssetService } = require("./media_asset.service");
+const { InvoiceService } = require("./invoice.service");
 
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
@@ -376,6 +377,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "completed";
     serviceOrder.completed_at = servicingTask.actual_end_time;
     await serviceOrder.save();
+
+    await InvoiceService.ensureInvoiceForServiceOrder(serviceOrder._id);
 
     if (serviceOrder.booking_id) {
       await Booking.updateOne(

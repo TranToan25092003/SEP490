@@ -538,7 +538,7 @@ router.put(
  *         content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/ServiceTimelineEntryDTO
+ *              $ref: '#/components/schemas/ServiceTimelineEntryDTO'
  *       404:
  *         description: Servicing task or timeline entry not found
  */

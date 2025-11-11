@@ -68,9 +68,6 @@ router.get("/", authenticate, throwErrors, baysController.getAllBays);
  *                   end:
  *                     type: string
  *                     format: date-time
- *     responses:
- *       200:
- *         description: A list of available slots for the specified bay
  */
 router.get(
   "/:id/slots",
