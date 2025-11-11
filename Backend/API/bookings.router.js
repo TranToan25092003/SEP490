@@ -84,7 +84,51 @@ router.post(
 router.get(
   "/all",
   authenticate,
+  [
+    query("page")
+      .optional()
+      .isInt({ min: 1 })
+      .withMessage("Page must be a positive integer"),
+    query("limit")
+      .optional()
+      .isInt({ min: 1, max: 100 })
+      .withMessage("Limit must be between 1 and 100"),
+    query("customerName")
+      .optional()
+      .isString()
+      .withMessage("Customer name must be a string"),
+    query("status")
+      .optional()
+      .isIn(["booked", "in_progress", "cancelled", "completed", "checked_in"])
+      .withMessage("Status must be one of: booked, in_progress, cancelled, completed, checked_in"),
+    query("startTimestamp")
+      .optional()
+      .isInt({ min: 0 })
+      .withMessage("Start timestamp must be a valid integer"),
+    query("endTimestamp")
+      .optional()
+      .isInt({ min: 0 })
+      .withMessage("End timestamp must be a valid integer")
+  ],
+  throwErrors,
   bookingsController.getAllBookings
+);
+
+/**
+ * @swagger
+ * /bookings/me:
+ *   get:
+ *     summary: Get bookings for the authenticated user
+ *     tags:
+ *       - Bookings
+ *     responses:
+ *       200:
+ *         description: A list of user's bookings
+ */
+router.get(
+  "/me",
+  authenticate,
+  bookingsController.getUserBookings
 );
 
 /**

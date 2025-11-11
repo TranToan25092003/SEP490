@@ -13,6 +13,7 @@ import { useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import Filters from "@/components/global/Filter";
 import { useEffect } from "react";
+import { formatDateTime } from "@/lib/utils";
 
 const formatTimeSlot = (startTime, endTime) => {
   try {
@@ -80,6 +81,17 @@ const bookingListColumnDefinitions = [
     },
   },
   {
+    accessorKey: "createdAt",
+    header: "Ngày tạo",
+    cell: (info) => {
+      if (!info.getValue()) {
+        return "N/A";
+      }
+      const date = new Date(info.getValue());
+      return formatDateTime(date);
+    },
+  },
+  {
     accessorKey: "status",
     header: "Trạng thái",
     cell: (info) => {
@@ -90,16 +102,19 @@ const bookingListColumnDefinitions = [
   },
 ];
 
-function loader({ params }) {
+function loader({ request }) {
+  const url = new URL(request.url);
+  const params = {
+    customerName: url.searchParams.get("customerName"),
+    status: url.searchParams.get("status"),
+    startTimestamp: url.searchParams.get("startTimestamp"),
+    endTimestamp: url.searchParams.get("endTimestamp"),
+    page: parseInt(url.searchParams.get("page"), 10) || 1,
+    limit: parseInt(url.searchParams.get("limit"), 10) || 10,
+  };
+
   return {
-    bookingList: getAllBookings({
-      customerName: params.customerName,
-      status: params.status,
-      startTimestamp: params.startTimestamp,
-      endTimestamp: params.endTimestamp,
-      page: parseInt(params.page, 10) || 1,
-      limit: parseInt(params.limit, 10) || 20,
-    })
+    bookingList: getAllBookings(params)
   };
 }
 
@@ -204,7 +219,7 @@ const BookingList = () => {
                 />
               </Filters>
 
-              <CRUDTable data={data} columns={bookingListColumnDefinitions}>
+              <CRUDTable data={data.bookings} columns={bookingListColumnDefinitions}>
                 {(row) => {
                   return (
                     <div className="flex justify-center">
@@ -221,13 +236,9 @@ const BookingList = () => {
                 }}
               </CRUDTable>
 
-              <AdminPagination
-                pagination={{
-                  totalPages: 10,
-                  itemsPerPage: 50,
-                  totalItems: 1000,
-                }}
-              />
+              {data.pagination.totalItems > 0 && <AdminPagination
+                pagination={data.pagination}
+              />}
             </>
           )}
         </Await>

@@ -9,27 +9,106 @@ const ERROR_CODES = {
 };
 
 class ServiceOrderService {
-  async getAllServiceOrdersByCreatedDateAscending() {
-    const serviceOrders = await ServiceOrder.find()
-      .populate({
-        path: "booking_id",
-        populate: { path: "vehicle_id" }
-      })
-      .sort({ createdAt: 1 })
-      .exec();
+  async getAllServiceOrdersByCreatedDateAscending({
+    page = 1,
+    limit = 20,
+    customerName = null,
+    status = null,
+    startTimestamp = null,
+    endTimestamp = null
+  }) {
+    const filters = {};
 
-    const customerIds = serviceOrders.map(so => so.booking_id.customer_clerk_id.toString());
+    if (status) {
+      filters.status = status;
+    }
+
+    if (startTimestamp) {
+      filters.createdAt = { $gte: new Date(startTimestamp) };
+    }
+
+    if (endTimestamp) {
+      if (filters.createdAt) {
+        filters.createdAt.$lte = new Date(endTimestamp);
+      } else {
+        filters.createdAt = { $lte: new Date(endTimestamp) };
+      }
+    }
+
+    let customerIdsToMatch = [];
+    if (customerName) {
+      customerIdsToMatch = await UsersService.getUserIdsByFullName(customerName);
+      if (customerIdsToMatch.length === 0) {
+        return {
+          serviceOrders: [],
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: limit,
+          },
+        };
+      }
+    }
+
+    const [serviceOrders, totalItems] = await Promise.all([
+      ServiceOrder.aggregate([
+        { $match: filters },
+        {
+          $lookup: {
+            from: "bookings",
+            localField: "booking_id",
+            foreignField: "_id",
+            as: "booking"
+          }
+        },
+        { $unwind: "$booking" },
+        {
+          $lookup: {
+            from: "vehicles",
+            localField: "booking.vehicle_id",
+            foreignField: "_id",
+            as: "vehicle"
+          }
+        },
+        { $unwind: "$vehicle" },
+        ...(customerName ? [{
+          $match: {
+            "booking.customer_clerk_id": { $in: customerIdsToMatch }
+          }
+        }] : [])
+      ])
+        .sort({ createdAt: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      ServiceOrder.countDocuments(filters).exec()
+    ]);
+
+    console.log(JSON.stringify(serviceOrders, null, 2));
+
+    const totalPages = Math.ceil(totalItems / limit);
+    const customerIds = serviceOrders.map(so => so.booking.customer_clerk_id.toString());
     const userMap = await UsersService.getFullNamesByIds(customerIds);
-    return serviceOrders.map(so => ({
-      id: so._id.toString(),
-      bookingId: so.booking_id._id.toString(),
-      licensePlate: so.booking_id.vehicle_id.license_plate,
-      customerName: userMap[so.booking_id.customer_clerk_id.toString()],
-      status: so.status,
-      createdAt: so.createdAt,
-      completedAt: so.completed_at,
-      estimatedCompletedAt: so.expected_completion_time
-    }));
+
+    return {
+      serviceOrders: serviceOrders.map(so => ({
+        id: so._id.toString(),
+        bookingId: so.booking._id.toString(),
+        licensePlate: so.vehicle.license_plate,
+        customerName: userMap[so.booking.customer_clerk_id.toString()],
+        status: so.status,
+        createdAt: so.createdAt,
+        completedAt: so.completed_at,
+        estimatedCompletedAt: so.expected_completion_time
+      })),
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+      },
+    };
   }
 
   async updateServiceOrderItems(serviceOrderId, items) {

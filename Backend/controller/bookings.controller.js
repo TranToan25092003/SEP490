@@ -22,6 +22,20 @@ class BookingsController {
     }
   }
 
+  async getUserBookings(req, res, next) {
+    try {
+      const customerId = req.userId;
+
+      const bookings = await bookingsService.getBookingsByCustomerId(customerId);
+
+      res.status(200).json({
+        data: bookings,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async cancelBooking(req, res, next) {
     try {
       const { id } = req.params;
@@ -74,7 +88,15 @@ class BookingsController {
 
   async getAllBookings(req, res, next) {
     try {
-      const bookings = await bookingsService.getAllBookingsSortedAscending();
+      const { page, limit, customerName, status, startTimestamp, endTimestamp } = req.query;
+      const bookings = await bookingsService.getAllBookingsSortedAscending({
+        page: parseInt(page, 10) || 1,
+        limit: parseInt(limit, 10) || 20,
+        customerName: customerName || null,
+        status: status || null,
+        startTimestamp: startTimestamp ? parseInt(startTimestamp, 10) : null,
+        endTimestamp: endTimestamp ? parseInt(endTimestamp, 10) : null,
+      });
 
       res.status(200).json({
         data: bookings,

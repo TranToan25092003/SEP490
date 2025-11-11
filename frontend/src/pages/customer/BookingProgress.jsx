@@ -31,7 +31,7 @@ const BookingProgressContent = ({ data }) => {
   return (
     <>
       <BookingStatusHeader
-        orderId={booking.id || "N/A"}
+        bookingId={booking.id || "N/A"}
         customerName={booking.customer.customerName || "N/A"}
         licensePlate={booking.vehicle.licensePlate || "N/A"}
         technicianName="Đang cập nhật"

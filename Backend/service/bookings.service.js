@@ -133,6 +133,7 @@ class BookingsService {
     const booking = await Booking.findById(bookingId)
       .populate("service_ids")
       .populate("vehicle_id")
+      .populate("service_order_id")
       .exec();
 
     if (!booking) {
@@ -152,29 +153,105 @@ class BookingsService {
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
-      serviceOrderId: booking.service_order_id,
+      serviceOrderStatus: booking.service_order_id?.status || null,
+      serviceOrderId: booking.service_order_id?._id || null,
     };
   }
 
-  async getAllBookingsSortedAscending() {
-    const bookings = await Booking.find()
+  async getUserBookings(customerClerkId) {
+    const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
       .populate("service_ids")
       .populate("vehicle_id")
-      .sort({ slot_start_time: 1 })
+      .sort({ slot_start_time: -1 })
       .exec();
-
-    const customerIds = bookings.map(b => b.customer_clerk_id.toString());
-    const userMap = await UsersService.getFullNamesByIds(customerIds);
 
     return bookings.map(booking => ({
       id: booking._id,
-      customerName: userMap[booking.customer_clerk_id.toString()],
-      services: booking.service_ids.map(s => s.name),
+      vehicle: mapToVehicleDTO(booking.vehicle_id),
+      services: booking.service_ids.map(mapServiceToDTO),
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
       serviceOrderId: booking.service_order_id,
     }));
+  }
+
+  async getAllBookingsSortedAscending({
+    page = 1,
+    limit = 20,
+    customerName = null,
+    status = null,
+    startTimestamp = null,
+    endTimestamp = null
+  }) {
+    const filters = {};
+
+    if (customerName) {
+      console.log("Searching bookings for customer name:", customerName);
+      const customerIds = await UsersService.getUserIdsByFullName(customerName);
+      if (customerIds.length === 0) {
+        return {
+          bookings: [],
+          pagination: {
+            currentPage: page,
+            totalPages: 0,
+            totalItems: 0,
+            itemsPerPage: limit,
+          },
+        };
+      }
+      filters.customer_clerk_id = { $in: customerIds };
+    }
+
+    if (status) {
+      filters.status = status;
+    }
+
+    if (startTimestamp) {
+      filters.createdAt = { $gte: new Date(startTimestamp) };
+    }
+
+    if (endTimestamp) {
+      if (filters.createdAt) {
+        filters.createdAt.$lte = new Date(endTimestamp);
+      } else {
+        filters.createdAt = { $lte: new Date(endTimestamp) };
+      }
+    }
+
+    const [bookings, totalItems] = await Promise.all([
+      Booking.find(filters)
+        .populate("service_ids")
+        .populate("vehicle_id")
+        .sort({ slot_start_time: 1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec(),
+      Booking.countDocuments(filters).exec()
+    ]);
+
+    const totalPages = Math.ceil(totalItems / limit);
+    const customerIds = bookings.map(b => b.customer_clerk_id.toString());
+    const userMap = await UsersService.getFullNamesByIds(customerIds);
+
+    return {
+      bookings: bookings.map(booking => ({
+        id: booking._id,
+        customerName: userMap[booking.customer_clerk_id.toString()],
+        services: booking.service_ids.map(s => s.name),
+        slotStartTime: booking.slot_start_time,
+        slotEndTime: booking.slot_end_time,
+        status: booking.status,
+        serviceOrderId: booking.service_order_id,
+        createdAt: booking.createdAt
+      })),
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalItems,
+        itemsPerPage: limit,
+      },
+    };
   }
 
   async checkInBooking(staffId, bookingId) {
@@ -199,6 +276,9 @@ class BookingsService {
       staffId,
       bookingId
     );
+
+    booking.status = "checked_in";
+    await booking.save();
 
     return booking;
   }

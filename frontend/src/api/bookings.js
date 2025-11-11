@@ -12,6 +12,14 @@ export const createBooking = async (bookingData) => {
   return response.data;
 };
 
+export const getUserBookings = async () => {
+  const response = await customFetch("/bookings/me", {
+    method: "GET",
+  });
+
+  return response.data.data;
+}
+
 export const getAvailableTimeSlots = async (day, month, year) => {
   const response = await customFetch("/bookings/available-time-slots", {
     method: "GET",
@@ -29,9 +37,24 @@ export const getBookingById = async (bookingId) => {
   return response.data.data;
 };
 
-export const getAllBookings = async () => {
+export const getAllBookings = async ({
+  page = 1,
+  limit = 20,
+  customerName = null,
+  status = null,
+  startTimestamp = null,
+  endTimestamp = null,
+}) => {
   const response = await customFetch("/bookings/all", {
     method: "GET",
+    params: {
+      page,
+      limit,
+      customerName,
+      status,
+      startTimestamp,
+      endTimestamp,
+    },
   });
 
   return response.data.data;

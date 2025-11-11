@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { cn } from "@/lib/utils";
-import { formatDateTime } from "@/lib/utils";
-import { translateTaskStatus } from "@/utils/enumsTranslator";
 import { Clock } from "lucide-react";
 import { Check } from "lucide-react";
 import EmptyState from "@/components/global/EmptyState";
 import { MousePointer } from "lucide-react";
-import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
+import { XCircle } from "lucide-react";
 
 /**
  * BookingStatusTimeline component to display progress timeline
@@ -38,6 +38,10 @@ const BookingStatusTimeline = ({
       task: inspectionTask,
     },
     {
+      id: "waiting_approval",
+      label: "Chờ duyệt báo giá"
+    },
+    {
       id: "servicing",
       label: "Sửa chữa",
       task: servicingTask,
@@ -49,8 +53,9 @@ const BookingStatusTimeline = ({
   ];
 
   const getCurrentStepIndex = () => {
-    if (booking.status === "completed") return 4;
-    else if (servicingTask) return 2;
+    if (booking.status === "completed") return 5;
+    else if (booking.serviceOrderStatus === "waiting_customer_approval" || booking.serviceOrderStatus === "approved") return 2;
+    else if (servicingTask) return 3;
     else if (inspectionTask) return 1;
 
     return 0;
@@ -93,11 +98,18 @@ const BookingStatusTimeline = ({
               subtitle="Xe chưa được tiếp nhận, vui lòng đến gara đúng thời gian đã hẹn."
             />
           )}
-          {booking.status !== "booked" && (
+          {booking.status === "checked_in" && (
             <EmptyState
               icon={Check}
               title="Đã tiếp nhận"
               subtitle="Xe đã được tiếp nhận"
+            />
+          )}
+          {booking.status === "cancelled" && (
+            <EmptyState
+              icon={XCircle}
+              title="Đã hủy"
+              subtitle="Đơn đặt lịch đã bị hủy trước khi tiếp nhận"
             />
           )}
         </div>
@@ -181,6 +193,32 @@ const BookingStatusTimeline = ({
           )}
         </div>
       );
+    }
+
+    if (selectedStep.id === "waiting_approval") {
+      if (booking.serviceOrderStatus === "waiting_customer_approval") {
+        return (
+          <div className="flex flex-col items-center">
+            <EmptyState
+              icon={Clock}
+              title="Chờ phê duyệt báo giá"
+              subtitle="Vui lòng xem chi tiết báo giá và phê duyệt để tiếp tục quá trình sửa chữa."
+            />
+
+            <Link to={`/booking/${booking.id}/quotes`}>
+              <Button>Chi tiết báo giá</Button>
+            </Link>
+          </div>
+        );
+      } else {
+        return (
+          <EmptyState
+            icon={Check}
+            title="Hiện tại không có báo giá chờ phê duyệt"
+            subtitle="Tất cả báo giá đã được phê duyệt hoặc không có báo giá nào được tạo."
+          />
+        );
+      }
     }
 
     if (selectedStep.id === "servicing") {

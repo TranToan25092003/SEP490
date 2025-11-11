@@ -1,6 +1,7 @@
 const bookingStatusMap = {
   booked: "Đã đặt",
   cancelled: "Đã hủy",
+  checked_in: "Đã tiếp nhận",
   "in_progress": "Đang thực hiện",
   completed: "Hoàn thành",
 };
@@ -23,7 +24,7 @@ const statusBadgeVariant = {
   rejected: "destructive",
 };
 
-const statusText = {
+const quoteStatusText = {
   pending: "Chờ duyệt",
   approved: "Đã duyệt",
   rejected: "Đã từ chối",
@@ -50,14 +51,14 @@ export function getServiceOrderStatusOptions() {
 }
 
 export function getQuoteStatusOptions() {
-  return Object.entries(statusText).map(([value, label]) => ({
+  return Object.entries(quoteStatusText).map(([value, label]) => ({
     value,
     label,
   }));
 }
 
 export function translateQuoteStatus(status) {
-  return statusText[status] || "Không xác định";
+  return quoteStatusText[status] || "Không xác định";
 }
 
 export function getQuoteStatusBadgeVariant(status) {

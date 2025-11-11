@@ -1,6 +1,6 @@
 /**
  * @typedef {import("react").ComponentPropsWithRef<typeof import("@/components/ui/card").Card> & {
- *   orderId: string;
+ *   bookingId: string;
  *   customerName: string;
  *   status: string;
  *   licensePlate: string;

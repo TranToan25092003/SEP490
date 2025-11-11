@@ -27,7 +27,7 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["booked", "in_progress", "cancelled", "completed"],
+    enum: ["booked", "in_progress", "cancelled", "completed", "checked_in"],
     default: "booked",
     required: true,
   },
@@ -36,7 +36,7 @@ const bookingSchema = new mongoose.Schema({
     ref: "ServiceOrder",
     required: false,
   },
-});
+}, { timestamps: true });
 
 const Booking = mongoose.model("Booking", bookingSchema, "bookings");
 module.exports = Booking;

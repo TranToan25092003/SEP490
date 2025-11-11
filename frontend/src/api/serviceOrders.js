@@ -1,8 +1,23 @@
 import { customFetch } from "@/utils/customAxios";
 
-export const getAllServiceOrders = async () => {
+export const getAllServiceOrders = async ({
+  page = 1,
+  limit = 20,
+  customerName = null,
+  status = null,
+  startTimestamp = null,
+  endTimestamp = null,
+}) => {
   const response = await customFetch("/service-orders", {
     method: "GET",
+    params: {
+      page,
+      limit,
+      customerName,
+      status,
+      startTimestamp,
+      endTimestamp,
+    },
   });
 
   return response.data.data;

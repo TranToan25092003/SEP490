@@ -45,16 +45,19 @@ const serviceOrderListColumnDefinitions = [
   },
 ];
 
-function loader({ params }) {
+function loader({ request }) {
+  const url = new URL(request.url);
+  const params = {
+    customerName: url.searchParams.get("customerName"),
+    status: url.searchParams.get("status"),
+    startTimestamp: url.searchParams.get("startTimestamp"),
+    endTimestamp: url.searchParams.get("endTimestamp"),
+    page: parseInt(url.searchParams.get("page"), 10) || 1,
+    limit: parseInt(url.searchParams.get("limit"), 10) || 20,
+  };
+
   return {
-    serviceOrders: getAllServiceOrders({
-      customerName: params.customerName,
-      status: params.status,
-      startTimestamp: params.startTimestamp,
-      endTimestamp: params.endTimestamp,
-      page: parseInt(params.page, 10) || 1,
-      limit: parseInt(params.limit, 10) || 20,
-    }),
+    serviceOrders: getAllServiceOrders(params),
   };
 }
 
@@ -166,7 +169,7 @@ const ServiceOrderList = () => {
               </Filters>
 
               <CRUDTable
-                data={data}
+                data={data.serviceOrders}
                 columns={serviceOrderListColumnDefinitions}
                 getRowId={(row) => row.id}
               >
@@ -184,13 +187,9 @@ const ServiceOrderList = () => {
                 )}
               </CRUDTable>
 
-              <AdminPagination
-                pagination={{
-                  totalPages: 1,
-                  itemsPerPage: data.length,
-                  totalItems: data.length,
-                }}
-              />
+              {data.pagination.totalItems > 0 && <AdminPagination
+                pagination={data.pagination}
+              />}
             </>
           )}
         </Await>

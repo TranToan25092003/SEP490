@@ -20,6 +20,14 @@ class UsersService {
 
     return idToFullNameMap;
   }
+
+  async getUserIdsByFullName(fullName) {
+    const users = await clerkClient.users.getUserList({
+      query: fullName
+    });
+
+    return users.data.map(user => user.id);
+  }
 }
 
 module.exports = {
