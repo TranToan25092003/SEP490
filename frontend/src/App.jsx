@@ -61,7 +61,11 @@ import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
 import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
+import ActivityLogs from "./pages/manager/ActivityLogs";
+import { activityLogsLoader } from "./utils/loaders";
+import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
+import AttendanceTracking from "./pages/manager/AttendanceTracking";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -172,6 +176,15 @@ const router = createBrowserRouter([
         path: "bays",
         element: <ManagerBays />,
       },
+      {
+        path: "activity-logs",
+        element: <ActivityLogs />,
+        loader: activityLogsLoader,
+      },
+      {
+        path: "attendance-tracking",
+        element: <AttendanceTracking />,
+      },
     ],
   },
 
@@ -262,6 +275,7 @@ function App() {
       >
         <NiceModal.Provider>
           <Toaster></Toaster>
+          <GlobalLoginLogger />
           <RouterProvider router={router} />
         </NiceModal.Provider>
       </ClerkProvider>

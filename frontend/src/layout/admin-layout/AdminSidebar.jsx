@@ -39,6 +39,12 @@ const items = [
   { key: "bank", label: "Banking", icon: imgEmail },
   { key: "ticket", label: "Tickets", icon: imgTicket },
   { key: "staff", label: "Staff", icon: imgStaff, href: "/manager/staff" },
+  {
+    key: "activityLogs",
+    label: "Activity Logs",
+    icon: imgTicket,
+    href: "/manager/activity-logs",
+  },
 ];
 
 export default function Sidebar({ width = 80, offsetTop = 100 }) {
