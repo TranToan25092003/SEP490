@@ -80,6 +80,7 @@ const AttendanceTracking = () => {
       return;
     }
     setAttendanceData(hydrateEntries(payload.entries || []));
+    console.log(attendanceData);
   }, []);
 
   const fetchAttendance = useCallback(

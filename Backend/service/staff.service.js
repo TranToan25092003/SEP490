@@ -6,9 +6,6 @@ const TECHNICIAN_PAGE_SIZE =
 const ORG_MEMBERSHIP_PAGE_SIZE =
   Number(process.env.CLERK_ORG_MEMBERSHIP_PAGE_SIZE) || 100;
 const CLERK_ORGANIZATION_ID = "org_32tzUd7dUcFW7Te5gxEO4VcgkX1";
-const STAFF_ROLE_KEYWORD = (process.env.CLERK_STAFF_ROLE_KEYWORD || "staff")
-  .trim()
-  .toLowerCase();
 
 function resolveFullName(user) {
   if (user.fullName) return user.fullName;
@@ -18,13 +15,9 @@ function resolveFullName(user) {
   return primaryEmail || "Chưa cập nhật";
 }
 
-function resolvePosition(user) {
-  console.log(user);
-  const metadataPosition =
-    user.publicMetadata?.position ||
-    user.publicMetadata?.jobTitle ||
-    user.privateMetadata?.position;
-  return metadataPosition || "staff";
+function resolvePosition(user, orgRole) {
+  const roleName = orgRole.includes("staff") ? "staff" : "technician";
+  return roleName;
 }
 
 async function fetchStaffUserIds() {
@@ -35,6 +28,7 @@ async function fetchStaffUserIds() {
   }
 
   const staffIds = new Set();
+  const staffRolesById = new Map();
   let offset = 0;
   let hasMore = true;
 
@@ -49,8 +43,15 @@ async function fetchStaffUserIds() {
     const memberships = response?.data || [];
     memberships.forEach((membership) => {
       const role = membership.role?.toLowerCase() || "";
-      if (role.includes(STAFF_ROLE_KEYWORD)) {
-        staffIds.add(membership.publicUserData.userId);
+      const userId = membership.publicUserData?.userId;
+
+      if (!userId) {
+        return;
+      }
+
+      if (role.includes("staff") || role.includes("technician")) {
+        staffIds.add(userId);
+        staffRolesById.set(userId, role);
       }
     });
 
@@ -58,13 +59,11 @@ async function fetchStaffUserIds() {
     offset += memberships.length;
   }
 
-  console.log(staffIds);
-
-  return staffIds;
+  return { staffIds, staffRolesById };
 }
 
 async function fetchTechniciansFromClerk() {
-  const staffIds = await fetchStaffUserIds();
+  const { staffIds, staffRolesById } = await fetchStaffUserIds();
 
   if (!staffIds.size) {
     return [];
@@ -84,16 +83,16 @@ async function fetchTechniciansFromClerk() {
     const chunkUsers = response?.data || [];
 
     chunkUsers.forEach((user) => {
+      const orgRole = staffRolesById.get(user.id);
       technicians.push({
         technicianClerkId: user.id,
         technicianName: resolveFullName(user),
-        position: resolvePosition(user),
+        position: resolvePosition(user, orgRole),
         email: user.emailAddresses?.[0]?.emailAddress || null,
         avatar: user.profileImageUrl || null,
       });
     });
   }
-  console.log(technicians);
 
   return technicians;
 }
