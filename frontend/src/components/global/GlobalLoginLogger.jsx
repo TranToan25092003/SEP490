@@ -23,9 +23,14 @@ const GlobalLoginLogger = () => {
     // Đánh dấu đã log và lưu vào localStorage
     hasLogged.current = true;
     localStorage.setItem("loginLogged", user.id);
-
     customFetch
-      .post("/activity-logs/login")
+      .post("/activity-logs/login", {
+        metadata: {
+          pathname: window.location.pathname,
+          locale: navigator.language,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        },
+      })
       .catch((err) =>
         console.error("❌ Ghi log login thất bại:", err?.response?.data || err)
       );

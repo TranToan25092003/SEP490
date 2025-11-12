@@ -66,6 +66,9 @@ import {
   authenTicationLoader,
 } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
+import ActivityLogs from "./pages/manager/ActivityLogs";
+import { activityLogsLoader } from "./utils/loaders";
+import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
 import AttendanceTracking from "./pages/manager/AttendanceTracking";
 
@@ -173,6 +176,11 @@ const router = createBrowserRouter([
         element: <ManagerBays />,
       },
       {
+        path: "activity-logs",
+        element: <ActivityLogs />,
+        loader: activityLogsLoader,
+      },
+      {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
       },
@@ -258,6 +266,7 @@ function App() {
       >
         <NiceModal.Provider>
           <Toaster></Toaster>
+          <GlobalLoginLogger />
           <RouterProvider router={router} />
         </NiceModal.Provider>
       </ClerkProvider>

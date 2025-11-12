@@ -5,6 +5,8 @@ import {
   iconInvoice as imgInvoice,
   iconBanking as imgMoney,
   iconStaff as imgStaff,
+  iconLog as iconLog,
+  iconAttendance as iconAttendance,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -43,8 +45,15 @@ const items = [
   {
     key: "attendance",
     label: "Điểm danh",
-    icon: imgStaff,
+    icon: iconAttendance,
     href: "/manager/attendance-tracking",
+  },
+
+  {
+    key: "log",
+    label: "Log",
+    icon: iconLog,
+    href: "/manager/activity-logs",
   },
 ];
 
