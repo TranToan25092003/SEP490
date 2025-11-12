@@ -103,7 +103,7 @@ const BookingDetailContent = ({ booking, revalidator }) => {
               <CardTitle>Thông Tin Đặt Lịch</CardTitle>
             </div>
             <div className="space-x-2">
-              {booking.status === "in_progress" && booking.serviceOrderId ? (
+              {booking.status === "in_progress" || booking.status === "checked_in" && booking.serviceOrderId ? (
                 <Link to={`/staff/service-order/${booking.serviceOrderId}`}>
                   <Button type="button">
                     Xem lệnh sửa chữa

@@ -58,7 +58,6 @@ const ServiceOrderEditForm = ({
   serviceOrder,
   onUpdateServiceOrder,
   onCancelServiceOrder,
-  onStartServiceOrder,
   onSendInvoice,
   getTotalPrice
 }) => {
@@ -114,15 +113,6 @@ const ServiceOrderEditForm = ({
     }
   };
 
-  const handleStartServiceOrder = async (serviceOrder) => {
-    try {
-      setDisabled(true);
-      await onStartServiceOrder(serviceOrder);
-    } finally {
-      setDisabled(false);
-    }
-  }
-
   const handleSendInvoice = (serviceOrder, items) => {
     methods.handleSubmit(async () => {
       try {
@@ -138,7 +128,6 @@ const ServiceOrderEditForm = ({
   const contextValue = {
     serviceOrder,
     handleUpdateServiceOrder,
-    handleStartServiceOrder,
     handleCancelServiceOrder,
     handleSendInvoice,
     disabled: disabled || (serviceOrder.status === "completed" || serviceOrder.status === "cancelled"),
