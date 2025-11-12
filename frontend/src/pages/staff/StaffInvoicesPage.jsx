@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchStaffInvoices, confirmInvoicePayment } from "@/api/invoices";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { formatPrice, formatDateTime } from "@/lib/utils";
@@ -19,7 +32,10 @@ const STATUS_OPTIONS = [
 export default function StaffInvoicesPage() {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
-  const [pagination, setPagination] = useState({ currentPage: 1, totalPages: 1 });
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+  });
   const [statusFilter, setStatusFilter] = useState("unpaid");
   const [loading, setLoading] = useState(true);
   const [confirmingId, setConfirmingId] = useState(null);
@@ -34,7 +50,9 @@ export default function StaffInvoicesPage() {
         });
 
         setInvoices(response.data || []);
-        setPagination(response.pagination || { currentPage: page, totalPages: page });
+        setPagination(
+          response.pagination || { currentPage: page, totalPages: page }
+        );
       } catch (error) {
         console.error(error);
         toast.error("Không thể tải danh sách hóa đơn");
@@ -141,27 +159,40 @@ export default function StaffInvoicesPage() {
                   <TableBody>
                     {invoices.map((invoice) => (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">{invoice.id}</TableCell>
+                        <TableCell className="font-medium">
+                          {invoice.id}
+                        </TableCell>
                         <TableCell>{invoice.serviceOrderId}</TableCell>
                         <TableCell>{invoice.customerName || "-"}</TableCell>
                         <TableCell>{invoice.licensePlate || "-"}</TableCell>
-                        <TableCell>{formatDateTime(invoice.createdAt)}</TableCell>
-                        <TableCell>{formatPrice(invoice.totalAmount)}</TableCell>
+                        <TableCell>
+                          {formatDateTime(invoice.createdAt)}
+                        </TableCell>
+                        <TableCell>
+                          {formatPrice(invoice.totalAmount)}
+                        </TableCell>
                         <TableCell>{statusBadge(invoice.status)}</TableCell>
                         <TableCell className="text-right space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => navigate(`/staff/invoices/${invoice.id}`)}
+                            onClick={() =>
+                              navigate(`/staff/invoices/${invoice.id}`)
+                            }
                           >
                             Chi tiết
                           </Button>
                           <Button
                             size="sm"
-                            disabled={invoice.status === "paid" || confirmingId === invoice.id}
+                            disabled={
+                              invoice.status === "paid" ||
+                              confirmingId === invoice.id
+                            }
                             onClick={() => handleConfirmPayment(invoice.id)}
                           >
-                            {confirmingId === invoice.id ? "Đang xác nhận..." : "Xác nhận thanh toán"}
+                            {confirmingId === invoice.id
+                              ? "Đang xác nhận..."
+                              : "Xác nhận thanh toán"}
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -186,7 +217,8 @@ export default function StaffInvoicesPage() {
                     variant="outline"
                     onClick={() => handleChangePage(1)}
                     disabled={
-                      pagination.currentPage === pagination.totalPages || loading
+                      pagination.currentPage === pagination.totalPages ||
+                      loading
                     }
                   >
                     Sau
