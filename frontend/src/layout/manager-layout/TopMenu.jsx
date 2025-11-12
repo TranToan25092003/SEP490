@@ -2,6 +2,7 @@ import imgMagnifier from "@/assets/admin/topmenu_new/8a2d8145df476a9fdf886c05966
 import imgChat from "@/assets/admin/topmenu_new/045d5cdd34e8f0d2b281ed53c31c07f5e6838cd5.svg";
 import imgBell from "@/assets/admin/topmenu_new/8e41a0c6b43a442b8bdbb9cd30564fb44ca6089e.svg";
 import { Input } from "@/components/ui/input";
+import NotificationBell from "@/components/global/NotificationBell";
 
 export default function TopMenu({ height = 40, sidebarWidth = 80 }) {
   return (
@@ -26,17 +27,8 @@ export default function TopMenu({ height = 40, sidebarWidth = 80 }) {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <div className="relative size-[32px]">
-            <img alt="" className="block max-w-none size-full" src={imgChat} />
-            <span className="absolute -top-2 -right-2 bg-primary text-white text-[12px] rounded px-1 leading-none">
-              2
-            </span>
-          </div>
-          <div className="relative size-[32px]">
-            <img alt="" className="block max-w-none size-full" src={imgBell} />
-            <span className="absolute -top-2 -right-2 bg-primary text-white text-[12px] rounded px-1 leading-none">
-              2
-            </span>
+          <div className="relative size-[32px] mb-2 mr-6">
+            <NotificationBell />
           </div>
           <p
             className="font-bold"

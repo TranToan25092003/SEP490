@@ -52,7 +52,7 @@ const items = [
   },
   {
     key: "complaint",
-    label: "Xem tồn kho",
+    label: "Khiếu nại",
     icon: MessageSquareWarning,
     href: "/staff/complaints",
   },

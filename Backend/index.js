@@ -57,7 +57,9 @@ staffRouter(app);
 // manager router
 const managerRouter = require("./API/manager/index.router");
 managerRouter(app);
-// manager router
+
+const adminRouter = require("./API/admin/index.router");
+adminRouter(app);
 
 const separationMakesNoSense = require("./API");
 separationMakesNoSense(app);

@@ -567,4 +567,54 @@ export const notificationsPageLoader = async ({ request }) => {
   }
 };
 
+export const adminServicesLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/services?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load services");
+    }
+
+    return {
+      services: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Services loader error:", error);
+    toast.error("Lỗi tải dữ liệu dịch vụ", {
+      description: error.message || "Không thể tải danh sách dịch vụ",
+    });
+
+    return {
+      services: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
 

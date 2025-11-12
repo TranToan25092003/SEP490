@@ -24,7 +24,7 @@ import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import NiceModal from "@ebay/nice-modal-react";
 import ChatStaff from "./pages/staff/ChatStaff";
-import AdminLayout from "./layout/manager-layout/ManagerLayout";
+import ManagerLayout from "./layout/manager-layout/ManagerLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
@@ -47,6 +47,7 @@ import {
   complaintsStaffLoader,
   complaintDetailStaffLoader,
   notificationsPageLoader,
+  adminServicesLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -67,6 +68,9 @@ import {
 } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import NotificationListPage from "./pages/NotificationListPage";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminLayout from "./layout/admin-layout/AdminLayout";
+import AdminServicesPage from "./pages/admin/AdminServicesPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -139,7 +143,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/manager",
-    element: <AdminLayout />,
+    element: <ManagerLayout />,
     loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
@@ -235,6 +239,23 @@ const router = createBrowserRouter([
         path: "chat",
         element: <ChatStaff />,
       },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    // loader: authenTicationForAdminLoader,   //Add later 
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />
+      },
+      {
+        path: "services",
+        element: <AdminServicesPage />,
+        loader: adminServicesLoader,
+      }
+
     ],
   },
 ]);
