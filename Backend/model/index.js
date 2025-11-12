@@ -13,6 +13,7 @@ const Notification = require("./notification.model");
 const Part = require("./part.model");
 const Quote = require("./quote.model");
 const MediaAsset = require("./media_asset.model");
+const Attendance = require("./attendance.model");
 const RecallVehicles = require("./recall_vehicles.model");
 const Recall = require("./recall.model");
 const { ServiceOrder, CustomOrderItem, PartOrderItem, ServiceOrderItem } = require("./service_order.model");
@@ -38,6 +39,7 @@ module.exports = {
   Part,
   Quote,
   MediaAsset,
+  Attendance,
   RecallVehicles,
   Recall,
   ServiceOrder,

@@ -67,6 +67,7 @@ import {
 } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import NotificationListPage from "./pages/NotificationListPage";
+import AttendanceTracking from "./pages/manager/AttendanceTracking";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -170,6 +171,10 @@ const router = createBrowserRouter([
       {
         path: "bays",
         element: <ManagerBays />,
+      },
+      {
+        path: "attendance-tracking",
+        element: <AttendanceTracking />,
       },
     ],
   },
