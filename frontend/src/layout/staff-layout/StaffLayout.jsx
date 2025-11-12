@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { useState } from "react";
 
-import TopMenu from "../admin-layout/TopMenu";
+import TopMenu from "../manager-layout/TopMenu";
 import StaffSideBar from "./StaffSideBar";
 
 export default function StaffLayout() {
@@ -19,13 +19,17 @@ export default function StaffLayout() {
         onExpandToggle={() => setIsSidebarExpanded(!isSidebarExpanded)}
       />
       <TopMenu
-        sidebarWidth={isSidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_WIDTH}
+        sidebarWidth={
+          isSidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_WIDTH
+        }
         height={HEADER_HEIGHT}
       />
       <div
         style={{
           paddingTop: `${HEADER_HEIGHT}px`,
-          paddingLeft: `${isSidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_WIDTH}px`,
+          paddingLeft: `${
+            isSidebarExpanded ? SIDEBAR_EXPANDED_WIDTH : SIDEBAR_WIDTH
+          }px`,
         }}
       >
         <Outlet />

@@ -2,10 +2,20 @@ import Container from "@/components/global/Container";
 import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
 import { Suspense, useState } from "react";
-import { useLoaderData, useParams, Await, Link, useRevalidator } from "react-router-dom";
+import {
+  useLoaderData,
+  useParams,
+  Await,
+  Link,
+  useRevalidator,
+} from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { getAllTasksForServiceOrder, scheduleInspection, scheduleService } from "@/api/serviceTasks";
+import {
+  getAllTasksForServiceOrder,
+  scheduleInspection,
+  scheduleService,
+} from "@/api/serviceTasks";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Circle, Wrench, ClipboardCheck } from "lucide-react";
 import { toast } from "sonner";
@@ -19,7 +29,7 @@ import { getServiceOrderById } from "@/api/serviceOrders";
 function loader({ params }) {
   return {
     tasks: getAllTasksForServiceOrder(params.id),
-    serviceOrder: getServiceOrderById(params.id)
+    serviceOrder: getServiceOrderById(params.id),
   };
 }
 
@@ -37,17 +47,19 @@ const ServiceOrderDetailContent = ({ tasks }) => {
 
       const task = scheduleService(id, bay.id, slot.start, slot.end);
 
-      await toast.promise(task, {
-        loading: "Đang lên lịch sửa chữa...",
-        success: "Lên lịch sửa chữa thành công!",
-        error: "Lên lịch sửa chữa thất bại.",
-      }).unwrap();
+      await toast
+        .promise(task, {
+          loading: "Đang lên lịch sửa chữa...",
+          success: "Lên lịch sửa chữa thành công!",
+          error: "Lên lịch sửa chữa thất bại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
       console.log("Service scheduling cancelled or failed:", error);
     }
-  }
+  };
 
   const handleScheduleInspection = async () => {
     try {
@@ -55,17 +67,19 @@ const ServiceOrderDetailContent = ({ tasks }) => {
 
       const task = scheduleInspection(id, bay.id, slot.start, slot.end);
 
-      await toast.promise(task, {
-        loading: "Đang lên lịch kiểm tra...",
-        success: "Lên lịch kiểm tra thành công!",
-        error: "Lên lịch kiểm tra thất bại.",
-      }).unwrap();
+      await toast
+        .promise(task, {
+          loading: "Đang lên lịch kiểm tra...",
+          success: "Lên lịch kiểm tra thành công!",
+          error: "Lên lịch kiểm tra thất bại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
       console.log("Inspection scheduling cancelled or failed:", error);
     }
-  }
+  };
 
   return (
     <Tabs
@@ -123,9 +137,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
             title="Chưa lên lịch sửa chữa"
             subtitle="Vui lòng thực hiện ở bên dưới"
           >
-            <Button onClick={handleScheduleService}>
-              Lên lịch sửa chữa
-            </Button>
+            <Button onClick={handleScheduleService}>Lên lịch sửa chữa</Button>
           </EmptyState>
         )}
       </TabsContent>
@@ -139,20 +151,19 @@ const ServiceOrderDetail = () => {
 
   return (
     <Container pageContext="admin">
-      <BackButton to="/staff/service-order" label="Quay lại trang quản lý lệnh" />
+      <BackButton
+        to="/staff/service-order"
+        label="Quay lại trang quản lý lệnh"
+      />
       <div className="flex justify-between">
         <H3>Chi Tiết Lệnh Sửa Chữa</H3>
         <Tabs value="progress">
           <TabsList>
             <TabsTrigger value="main">
-              <Link to={`/staff/service-order/${id}`}>
-                Thông tin chung
-              </Link>
+              <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
             </TabsTrigger>
             <TabsTrigger value="quotes">
-              <Link to={`/staff/service-order/${id}/quotes`}>
-                Báo giá
-              </Link>
+              <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
             </TabsTrigger>
             <TabsTrigger value="progress">
               <Link to={`/staff/service-order/${id}/progress`}>
@@ -163,11 +174,13 @@ const ServiceOrderDetail = () => {
         </Tabs>
       </div>
 
-      <Suspense fallback={
-        <div className="flex justify-center items-center py-8">
-          <Spinner className="h-8 w-8" />
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
+      >
         <Await
           resolve={tasks}
           errorElement={
@@ -176,9 +189,7 @@ const ServiceOrderDetail = () => {
             </div>
           }
         >
-          {(data) => (
-            <ServiceOrderDetailContent tasks={data} />
-          )}
+          {(data) => <ServiceOrderDetailContent tasks={data} />}
         </Await>
       </Suspense>
     </Container>

@@ -2,7 +2,7 @@ const bookingStatusMap = {
   booked: "Đã đặt",
   cancelled: "Đã hủy",
   checked_in: "Đã tiếp nhận",
-  "in_progress": "Đang thực hiện",
+  in_progress: "Đang thực hiện",
   completed: "Hoàn thành",
 };
 

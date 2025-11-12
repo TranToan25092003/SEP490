@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogContent,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,7 +64,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
           console.error("Failed to fetch task details:", error);
         }
         setLoading(false);
-      }
+      };
 
       fetchTaskDetails();
     }
@@ -78,7 +78,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
   const handleCancel = () => {
     modal.reject(new Error("User cancelled"));
     modal.remove();
-  }
+  };
 
   const handleFileUpload = async (file, updateProgress, abortController) => {
     const fileInfo = await uploadImageToFolderWithProgress(
@@ -86,7 +86,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
       MEDIA_FOLDER,
       (progress) => updateProgress(progress),
       abortController
-    )
+    );
     return fileInfo;
   };
 
@@ -152,9 +152,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
         ) : (
           <div className="flex flex-col items-center max-h-[70vh] overflow-y-auto p-2 justify-center py-8 space-y-2">
             <Spinner className="h-6 w-6" />
-            <p className="text-sm text-muted-foreground">
-              Đang tải...
-            </p>
+            <p className="text-sm text-muted-foreground">Đang tải...</p>
           </div>
         )}
       </DialogContent>

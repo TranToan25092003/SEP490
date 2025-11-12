@@ -18,4 +18,4 @@ module.exports = (app) => {
   app.use("/quotes", quotesRouter);
   app.use("/bays", baysRouter);
   app.use("/notifications", notificationRouter);
-}
+};

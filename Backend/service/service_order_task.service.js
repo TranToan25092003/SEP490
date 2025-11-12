@@ -1,7 +1,14 @@
-const { Booking, ServiceOrder, InspectionTask, ServicingTask, ServiceOrderTask } = require("../model");
+const {
+  Booking,
+  ServiceOrder,
+  InspectionTask,
+  ServicingTask,
+  ServiceOrderTask,
+} = require("../model");
 const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
 const { MediaAssetService } = require("./media_asset.service");
+const { InvoiceService } = require("./invoice.service");
 
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
@@ -34,8 +41,12 @@ function mapServicingTask(task) {
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
-    actualStartTime: task.actual_start_time ? task.actual_start_time.toISOString() : null,
-    actualEndTime: task.actual_end_time ? task.actual_end_time.toISOString() : null,
+    actualStartTime: task.actual_start_time
+      ? task.actual_start_time.toISOString()
+      : null,
+    actualEndTime: task.actual_end_time
+      ? task.actual_end_time.toISOString()
+      : null,
     status: task.status,
     assignedTechnicians: task.assigned_technicians.map(mapTechnicianInfo),
     assignedBayId: task.assigned_bay_id.toString(),
@@ -51,8 +62,12 @@ function mapInspectionTask(task) {
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
-    actualStartTime: task.actual_start_time ? task.actual_start_time.toISOString() : null,
-    actualEndTime: task.actual_end_time ? task.actual_end_time.toISOString() : null,
+    actualStartTime: task.actual_start_time
+      ? task.actual_start_time.toISOString()
+      : null,
+    actualEndTime: task.actual_end_time
+      ? task.actual_end_time.toISOString()
+      : null,
     status: task.status,
     assignedTechnicians: task.assigned_technicians.map(mapTechnicianInfo),
     assignedBayId: task.assigned_bay_id.toString(),
@@ -68,10 +83,15 @@ class ServiceOrderTaskService {
     await task.save();
   }
 
+  /**
+   * Function to transition state consistently
+   * @param {ServiceOrderTask} task
+   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
+   */
   async beginTask(task, techniciansInfoArray) {
-    task.assigned_technicians = techniciansInfoArray.map(ti => ({
+    task.assigned_technicians = techniciansInfoArray.map((ti) => ({
       technician_clerk_id: ti.technicianClerkId,
-      role: ti.role
+      role: ti.role,
     }));
     task.status = "in_progress";
     task.actual_start_time = new Date();
@@ -79,8 +99,7 @@ class ServiceOrderTaskService {
   }
 
   async getTaskDetails(taskId) {
-    const task = await ServiceOrderTask
-      .findById(taskId)
+    const task = await ServiceOrderTask.findById(taskId)
       .populate("service_order_id")
       .populate("media", "publicId url kind")
       .populate("timeline.media", "publicId url kind")
@@ -103,15 +122,17 @@ class ServiceOrderTaskService {
       .populate("service_order_id")
       .exec();
 
-    return tasks.map(task => {
-      if (task.__t === "inspection") {
-        return mapInspectionTask(task);
-      } else if (task.__t === "servicing") {
-        return mapServicingTask(task);
-      } else {
-        return null;
-      }
-    }).filter(t => t !== null);
+    return tasks
+      .map((task) => {
+        if (task.__t === "inspection") {
+          return mapInspectionTask(task);
+        } else if (task.__t === "servicing") {
+          return mapServicingTask(task);
+        } else {
+          return null;
+        }
+      })
+      .filter((t) => t !== null);
   }
 
   async getOngoingTasksForBayId(bayId) {
@@ -122,6 +143,14 @@ class ServiceOrderTaskService {
     return tasks;
   }
 
+  /**
+   * Schedule inspection for a service order by creating an inspection task
+   * @param {string} serviceOrderId
+   * @param {string} bayId
+   * @param {Date} start
+   * @param {Date} end
+   * @returns {Promise<{ serviceOrder: ServiceOrder, inspectionTask: InspectionTask }>}
+   */
   async scheduleInspection(serviceOrderId, bayId, start, end) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
     if (!serviceOrder) {
@@ -153,6 +182,12 @@ class ServiceOrderTaskService {
     return mapInspectionTask(inspectionTask);
   }
 
+  /**
+   * Start the inspection task
+   * @param {string} taskId
+   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
+   * @returns {Promise<{ serviceOrder: ServiceOrder, inspectionTask: InspectionTask }>}task
+   */
   async beginInspectionTask(taskId, techniciansInfoArray) {
     const inspectionTask = await InspectionTask.findById(taskId).exec();
     if (!inspectionTask) {
@@ -163,7 +198,9 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(inspectionTask.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(
+      inspectionTask.service_order_id
+    ).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -211,7 +248,9 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(inspectionTask.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(
+      inspectionTask.service_order_id
+    ).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -234,6 +273,16 @@ class ServiceOrderTaskService {
     return mapInspectionTask(inspectionTask);
   }
 
+  /**
+   * Schedule servicing for a service order by creating a servicing task
+   * and moving order status to 'scheduled'.
+   * @param {string} serviceOrderId
+   * @param {string} bayId
+   * @param {Date} start
+   * @param {Date} end
+   *
+   * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
+   */
   async scheduleService(serviceOrderId, bayId, start, end) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
     if (!serviceOrder) {
@@ -265,6 +314,14 @@ class ServiceOrderTaskService {
     return mapServicingTask(servicingTask);
   }
 
+  /**
+   * Start the servicing task for the order, moving to 'servicing'.
+   * @param {string} taskId
+   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
+   * @return {Promise<ServiceOrder>}
+   *
+   * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
+   */
   async startService(taskId, techniciansInfoArray) {
     const servicingTask = await ServicingTask.findById(taskId).exec();
     if (!servicingTask) {
@@ -275,7 +332,9 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(servicingTask.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(
+      servicingTask.service_order_id
+    ).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -302,7 +361,9 @@ class ServiceOrderTaskService {
       );
     }
 
-    const serviceOrder = await ServiceOrder.findById(servicingTask.service_order_id).exec();
+    const serviceOrder = await ServiceOrder.findById(
+      servicingTask.service_order_id
+    ).exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -317,8 +378,13 @@ class ServiceOrderTaskService {
     serviceOrder.completed_at = servicingTask.actual_end_time;
     await serviceOrder.save();
 
+    await InvoiceService.ensureInvoiceForServiceOrder(serviceOrder._id);
+
     if (serviceOrder.booking_id) {
-      await Booking.updateOne({ _id: serviceOrder.booking_id }, { status: "completed" }).exec();
+      await Booking.updateOne(
+        { _id: serviceOrder.booking_id },
+        { status: "completed" }
+      ).exec();
     }
 
     return mapServicingTask(servicingTask);
@@ -339,7 +405,7 @@ class ServiceOrderTaskService {
     const timelineEntry = {
       title: entry.title,
       comment: entry.comment,
-      media: assetIds
+      media: assetIds,
     };
 
     servicingTask.timeline.push(timelineEntry);
@@ -353,8 +419,7 @@ class ServiceOrderTaskService {
       .populate("timeline.media")
       .exec();
     if (!servicingTask) return null;
-    const timelineEntry = await servicingTask.timeline
-      .id(entryId);
+    const timelineEntry = await servicingTask.timeline.id(entryId);
 
     return timelineEntry ? mapTimelineEntry(timelineEntry) : null;
   }

@@ -1,14 +1,31 @@
-const { Bay, ServiceOrderTask, InspectionTask, ServicingTask } = require("../model");
+const {
+  Bay,
+  ServiceOrderTask,
+  InspectionTask,
+  ServicingTask,
+} = require("../model");
 const DomainError = require("../errors/domainError");
 const serviceConfig = require("./config");
 
 const ERROR_CODES = {
-  BAYS_UNAVAILABLE: "BAYS_UNAVAILABLE"
+  BAYS_UNAVAILABLE: "BAYS_UNAVAILABLE",
 };
 
 class BaySchedulingService {
+  /**
+   * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
+   * @param {string} serviceOrderId
+   * @param {Date} start
+   * @param {Date} end
+   * @param {string} bayId
+   * @returns {Promise<InspectionTask>}
+   */
   async scheduleInspectionTask(serviceOrderId, start, end, bayId) {
-    const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
+    const overlappingTasks = await this.findOverlappingTasksForBayId(
+      bayId,
+      start,
+      end
+    );
     if (overlappingTasks.length > 0) {
       throw new DomainError(
         "The selected bay is not available for the requested time slot.",
@@ -16,7 +33,10 @@ class BaySchedulingService {
       );
     }
 
-    if (end.getHours() > serviceConfig.BUSINESS_END_HOUR || start.getHours() < serviceConfig.BUSINESS_START_HOUR) {
+    if (
+      end.getHours() > serviceConfig.BUSINESS_END_HOUR ||
+      start.getHours() < serviceConfig.BUSINESS_START_HOUR
+    ) {
       throw new DomainError(
         "The requested time slot is outside business hours.",
         ERROR_CODES.BAYS_UNAVAILABLE
@@ -38,8 +58,20 @@ class BaySchedulingService {
     return inspectionTask;
   }
 
+  /**
+   * Schedule a servicing task as soon as possible, assigning a bay and timeslot.
+   * @param {string} serviceOrderId
+   * @param {Date} start
+   * @param {Date} end
+   * @param {string} bayId
+   * @returns {Promise<ServicingTask>}
+   */
   async scheduleServicingTask(serviceOrderId, start, end, bayId) {
-    const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, start, end);
+    const overlappingTasks = await this.findOverlappingTasksForBayId(
+      bayId,
+      start,
+      end
+    );
     if (overlappingTasks.length > 0) {
       throw new DomainError(
         "The selected bay is not available for the requested time slot.",
@@ -47,7 +79,10 @@ class BaySchedulingService {
       );
     }
 
-    if (end.getHours() > serviceConfig.BUSINESS_END_HOUR || start.getHours() < serviceConfig.BUSINESS_START_HOUR) {
+    if (
+      end.getHours() > serviceConfig.BUSINESS_END_HOUR ||
+      start.getHours() < serviceConfig.BUSINESS_START_HOUR
+    ) {
       throw new DomainError(
         "The requested time slot is outside business hours.",
         ERROR_CODES.BAYS_UNAVAILABLE
@@ -62,7 +97,7 @@ class BaySchedulingService {
       actual_end_time: null,
       assigned_technicians: [],
       assigned_bay_id: bayId,
-      timeline: []
+      timeline: [],
     });
 
     await servicingTask.save();
@@ -88,7 +123,8 @@ class BaySchedulingService {
     endOfDayHours = serviceConfig.BUSINESS_END_HOUR,
     starting = new Date(),
     maxCutOffDate = new Date(
-      Date.now() + (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
+      Date.now() +
+        (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
     )
   ) {
     const slots = [];
@@ -111,14 +147,20 @@ class BaySchedulingService {
       const endOfDay = new Date(startTime);
       endOfDay.setHours(endOfDayHours, 0, 0, 0);
 
-      const endTime = new Date(startTime.getTime() + durationInMinutes * 60_000);
+      const endTime = new Date(
+        startTime.getTime() + durationInMinutes * 60_000
+      );
 
       if (endTime > endOfDay) {
         startTime = startOfNextDay;
         continue;
       }
 
-      const overlappingTasks = await this.findOverlappingTasksForBayId(bayId, startTime, endTime);
+      const overlappingTasks = await this.findOverlappingTasksForBayId(
+        bayId,
+        startTime,
+        endTime
+      );
       if (overlappingTasks.length === 0) {
         slots.push({ start: startTime, end: endTime });
         startTime = new Date(startTime.getTime() + durationInMinutes * 60_000);
@@ -138,12 +180,16 @@ class BaySchedulingService {
     durationInMinutes,
     starting = new Date(),
     maxCutOffDate = new Date(
-      Date.now() + (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
+      Date.now() +
+        (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
     )
   ) {
     while (starting < maxCutOffDate) {
       const end = new Date(starting.getTime() + durationInMinutes * 60_000);
-      const [availableBays, conflictingTasksMap] = await this.findAvailableBay(starting, end);
+      const [availableBays, conflictingTasksMap] = await this.findAvailableBay(
+        starting,
+        end
+      );
 
       if (availableBays.length > 0) {
         return {
@@ -154,7 +200,9 @@ class BaySchedulingService {
       } else {
         // Preprocess: Finding the maximum endtime of conflicting tasks per bay
         const maxEndTimePerBay = [];
-        for (const conflictingTasksPerBay of Object.values(conflictingTasksMap)) {
+        for (const conflictingTasksPerBay of Object.values(
+          conflictingTasksMap
+        )) {
           let maxEndTime = null;
           for (const task of conflictingTasksPerBay) {
             if (maxEndTime === null || task.expected_end_time > maxEndTime) {
@@ -172,7 +220,6 @@ class BaySchedulingService {
           return min;
         }, null);
 
-
         //Defensive programming: bump by duration
         if (nextTime === null) {
           starting = new Date(starting.getTime() + durationInMinutes * 60_000);
@@ -185,13 +232,23 @@ class BaySchedulingService {
     return null;
   }
 
+  /**
+   * Find available bays for the given time slot.
+   * @param {Date} expectedStartTime
+   * @param {Date} expectedEndTime
+   * @returns {Promise<[Bay[], { [bayId: string]: ServiceOrderTask[] }]>} List of available bays and map of conflicting tasks.
+   */
   async findAvailableBayGlobally(expectedStartTime, expectedEndTime) {
     const bays = await Bay.find({});
     const availableBays = [];
     const conflictingTasksMap = {};
 
     for (const bay of bays) {
-      const conflictingTasks = await this.findOverlappingTasksForBayId(bay._id, expectedStartTime, expectedEndTime);
+      const conflictingTasks = await this.findOverlappingTasksForBayId(
+        bay._id,
+        expectedStartTime,
+        expectedEndTime
+      );
 
       if (conflictingTasks.length === 0) {
         availableBays.push(bay);
@@ -204,8 +261,7 @@ class BaySchedulingService {
   }
 }
 
-
 module.exports = {
   BaySchedulingService: new BaySchedulingService(),
-  ERROR_CODES
-}
+  ERROR_CODES,
+};

@@ -65,7 +65,7 @@ export const partsClientLoader = async ({ request }) => {
 
     const [partsResponse, groupedModelsResponse] = await Promise.all([
       customFetch(`/parts?${queryParams.toString()}`),
-      customFetch('/models/grouped-by-brand')
+      customFetch("/models/grouped-by-brand"),
     ]);
 
     const partsApiResponse = partsResponse.data;
@@ -75,7 +75,9 @@ export const partsClientLoader = async ({ request }) => {
 
     const groupedModelsApiResponse = groupedModelsResponse.data;
     if (!groupedModelsApiResponse.success) {
-      throw new Error(groupedModelsApiResponse.message || "Failed to load filter data");
+      throw new Error(
+        groupedModelsApiResponse.message || "Failed to load filter data"
+      );
     }
 
     return {
@@ -83,7 +85,6 @@ export const partsClientLoader = async ({ request }) => {
       pagination: partsApiResponse.pagination,
       groupedModels: groupedModelsApiResponse.data,
     };
-
   } catch (error) {
     console.error("Parts loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
@@ -203,21 +204,26 @@ export const partLoaderByClient = async ({ params }) => {
     const mainProductApiResponse = mainProductResponse.data;
 
     if (!mainProductApiResponse.success) {
-      throw new Error(mainProductApiResponse.message || "Failed to load part details");
+      throw new Error(
+        mainProductApiResponse.message || "Failed to load part details"
+      );
     }
     const product = mainProductApiResponse.data;
 
-    // Fetch related products based on the brand 
+    // Fetch related products based on the brand
     let relatedProducts = [];
     if (product && product.brand) {
-      const relatedResponse = await customFetch(`/parts?brand=${product.brand}`);
+      const relatedResponse = await customFetch(
+        `/parts?brand=${product.brand}`
+      );
       const relatedApiResponse = relatedResponse.data;
       if (relatedApiResponse.success) {
-        relatedProducts = relatedApiResponse.data.filter(p => p._id !== product._id);
+        relatedProducts = relatedApiResponse.data.filter(
+          (p) => p._id !== product._id
+        );
       }
     }
     return { product, relatedProducts };
-
   } catch (error) {
     console.error("Part detail loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
@@ -511,14 +517,16 @@ export const complaintDetailStaffLoader = async ({ params }) => {
     const apiResponse = response.data;
 
     if (!apiResponse.success) {
-      throw new Error(apiResponse.message || "Failed to load complaint details");
+      throw new Error(
+        apiResponse.message || "Failed to load complaint details"
+      );
     }
     return apiResponse.data;
-
   } catch (error) {
     console.error("Complaint detail loader error:", error);
     toast.error("Lỗi tải dữ liệu chi tiết", {
-      description: error.message || "Không thể tải thông tin chi tiết khiếu nại",
+      description:
+        error.message || "Không thể tải thông tin chi tiết khiếu nại",
     });
     return null;
   }
@@ -526,8 +534,6 @@ export const complaintDetailStaffLoader = async ({ params }) => {
 
 export const notificationsPageLoader = async ({ request }) => {
   try {
-    const url = new URL(request.url);
-
     // Luôn lấy trang đầu tiên của "Tất cả" khi tải trang
     const queryParams = new URLSearchParams({
       page: "1",
@@ -537,7 +543,7 @@ export const notificationsPageLoader = async ({ request }) => {
     // Gọi API lấy thông báo và số lượng chưa đọc song song
     const [notifResponse, unreadCountResponse] = await Promise.all([
       customFetch(`/notifications?${queryParams.toString()}`),
-      customFetch('/notifications/unread-count')
+      customFetch("/notifications/unread-count"),
     ]);
 
     const notifApiResponse = notifResponse.data;
@@ -552,7 +558,6 @@ export const notificationsPageLoader = async ({ request }) => {
       pagination: notifApiResponse.pagination,
       unreadCount: unreadCountApiResponse.data.unreadCount,
     };
-
   } catch (error) {
     console.error("Notifications loader error:", error);
     toast.error("Lỗi tải dữ liệu", {
@@ -561,10 +566,191 @@ export const notificationsPageLoader = async ({ request }) => {
 
     return {
       initialNotifications: [],
-      pagination: { currentPage: 1, totalPages: 1, totalItems: 0, itemsPerPage: 10 },
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
       unreadCount: 0,
     };
   }
 };
 
+export const activityLogsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    const { data } = await customFetch(`/manager/activity-logs?${query}`);
+    if (!data.success) {
+      throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+    }
+    return {
+      logs: data.items,
+      pagination: data.pagination,
+    };
+  } catch (error) {
+    toast.error("Lỗi tải nhật ký", {
+      description: error.message,
+    });
+    return {
+      logs: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+      },
+    };
+  }
+};
 
+export const adminServicesLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/services?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load services");
+    }
+
+    return {
+      services: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Services loader error:", error);
+    toast.error("Lỗi tải dữ liệu dịch vụ", {
+      description: error.message || "Không thể tải danh sách dịch vụ",
+    });
+
+    return {
+      services: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
+export const adminModelsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/models?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load models");
+    }
+
+    return {
+      models: apiResponse.data, 
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Models loader error:", error);
+    toast.error("Lỗi tải dữ liệu mẫu xe", {
+      description: error.message || "Không thể tải danh sách mẫu xe",
+    });
+
+    return {
+      models: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
+export const adminBannersLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/banners?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load banners");
+    }
+
+    return {
+      banners: apiResponse.data, 
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Banners loader error:", error);
+    toast.error("Lỗi tải dữ liệu banner", {
+      description: error.message || "Không thể tải danh sách banner",
+    });
+
+    return {
+      banners: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};

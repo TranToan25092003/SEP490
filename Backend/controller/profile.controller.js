@@ -1,6 +1,7 @@
 const { Vehicle } = require("../model");
 const { ModelVehicle } = require("../model");
 const { clerkClient } = require("../config/clerk");
+const { logActivity } = require("./activityLog.controller");
 
 // this controller is for testing do not write any logic code here please
 module.exports.checkHealth = async (req, res) => {
@@ -47,7 +48,6 @@ module.exports.createVehicle = async (req, res) => {
       .json({ message: "Biển số xe đã tồn tại trong hệ thống." });
   }
 
-  // 4️⃣ Tạo mới vehicle
   const vehicle = await Vehicle.create({
     OwnerClerkId,
     model_id: model._id,
@@ -57,7 +57,19 @@ module.exports.createVehicle = async (req, res) => {
     images: image ? [image] : [],
   });
 
-  // 5️⃣ Trả về kết quả
+  await logActivity({
+    actorClerkId: req.userId,
+    actorEmail: req.user?.emailAddresses?.[0]?.emailAddress,
+    actorName: req.user?.fullName,
+    action: "vehicle.create",
+    targetType: "Vehicle",
+    targetId: vehicle._id,
+    description: `Tạo vehicle #${vehicle._id}`,
+    metadata: {},
+    ipAddress: req.ip,
+    userAgent: req.get("user-agent"),
+  });
+
   return res.status(201).json({
     message: "Tạo phương tiện thành công!",
     vehicle,

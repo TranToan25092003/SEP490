@@ -51,7 +51,9 @@ const ServiceOrderHeader = ({
 
         <div className="space-y-2">
           <Label>Trạng thái</Label>
-          <StatusBadge status={translateServiceOrderStatus(serviceOrder.status)} />
+          <StatusBadge
+            status={translateServiceOrderStatus(serviceOrder.status)}
+          />
         </div>
       </CardContent>
     </Card>

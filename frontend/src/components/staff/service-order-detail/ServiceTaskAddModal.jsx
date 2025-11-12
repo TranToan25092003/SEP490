@@ -6,7 +6,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogContent,
-  DialogFooter
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -80,7 +80,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
   const handleCancel = () => {
     modal.reject(new Error("User cancelled"));
     modal.remove();
-  }
+  };
 
   const handleFileUpload = async (file, updateProgress, abortController) => {
     const fileInfo = await uploadImageToFolderWithProgress(
@@ -88,7 +88,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
       MEDIA_FOLDER,
       (progress) => updateProgress(progress),
       abortController
-    )
+    );
     return fileInfo;
   };
 

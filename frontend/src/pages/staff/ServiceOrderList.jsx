@@ -5,12 +5,21 @@ import { StatusBadge } from "@/components/global/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
 import { Plus } from "lucide-react";
-import { Link, useLoaderData, Await, useSearchParams, useRevalidator } from "react-router-dom";
+import {
+  Link,
+  useLoaderData,
+  Await,
+  useSearchParams,
+  useRevalidator,
+} from "react-router-dom";
 import { H3 } from "@/components/ui/headings";
 import { formatDateTime } from "@/lib/utils";
 import { getAllServiceOrders } from "@/api/serviceOrders";
 import { Suspense } from "react";
-import { translateServiceOrderStatus, getServiceOrderStatusOptions } from "@/utils/enumsTranslator";
+import {
+  translateServiceOrderStatus,
+  getServiceOrderStatusOptions,
+} from "@/utils/enumsTranslator";
 import { Spinner } from "@/components/ui/spinner";
 import Filters from "@/components/global/Filter";
 
@@ -115,14 +124,18 @@ const ServiceOrderList = () => {
     if (!filters.dateRange) {
       filters.dateRange = {};
     }
-    filters.dateRange.start = new Date(parseInt(searchParams.get("startTimestamp"), 10));
+    filters.dateRange.start = new Date(
+      parseInt(searchParams.get("startTimestamp"), 10)
+    );
   }
 
   if (searchParams.get("endTimestamp")) {
     if (!filters.dateRange) {
       filters.dateRange = {};
     }
-    filters.dateRange.end = new Date(parseInt(searchParams.get("endTimestamp"), 10));
+    filters.dateRange.end = new Date(
+      parseInt(searchParams.get("endTimestamp"), 10)
+    );
   }
 
   return (
@@ -194,9 +207,9 @@ const ServiceOrderList = () => {
                 )}
               </CRUDTable>
 
-              {data.pagination.totalItems > 0 && <AdminPagination
-                pagination={data.pagination}
-              />}
+              {data.pagination.totalItems > 0 && (
+                <AdminPagination pagination={data.pagination} />
+              )}
             </>
           )}
         </Await>

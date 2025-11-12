@@ -8,7 +8,12 @@ import { translateTaskStatus } from "@/utils/enumsTranslator";
 import StatusBadge from "@/components/global/StatusBadge";
 import { toast } from "sonner";
 import NiceModal from "@ebay/nice-modal-react";
-import { completeService, startService, updateServiceTaskTimeline, updateServiceTaskTimelineEntry } from "@/api/serviceTasks";
+import {
+  completeService,
+  startService,
+  updateServiceTaskTimeline,
+  updateServiceTaskTimelineEntry,
+} from "@/api/serviceTasks";
 import ServiceTaskAddModal from "./ServiceTaskAddModal";
 import ServiceTaskTimeline from "./ServiceTaskTimeline";
 import ChooseStaffModal from "./ChooseStaffModal";
@@ -21,14 +26,26 @@ const ServiceTaskServicingCard = ({ task }) => {
 
   function getButton() {
     if (task.status === "scheduled") {
-      return <Button disabled={loading} onClick={handleStartService}>Bắt đầu sửa chữa</Button>;
+      return (
+        <Button disabled={loading} onClick={handleStartService}>
+          Bắt đầu sửa chữa
+        </Button>
+      );
     } else if (task.status === "in_progress") {
       return (
         <div className="space-x-2">
-          <Button disabled={loading} onClick={handleUpdateTimeline} variant="outline">Cập nhật tiến độ</Button>
-          <Button disabled={loading} onClick={handleCompleteService}>Hoàn thành sửa chữa</Button>
+          <Button
+            disabled={loading}
+            onClick={handleUpdateTimeline}
+            variant="outline"
+          >
+            Cập nhật tiến độ
+          </Button>
+          <Button disabled={loading} onClick={handleCompleteService}>
+            Hoàn thành sửa chữa
+          </Button>
         </div>
-      )
+      );
     } else if (task.status === "completed") {
       return null;
     }
@@ -39,18 +56,20 @@ const ServiceTaskServicingCard = ({ task }) => {
       setLoading(true);
 
       const completePromise = completeService(task.id);
-      await toast.promise(completePromise, {
-        loading: "Đang hoàn thành sửa chữa...",
-        success: "Hoàn thành sửa chữa thành công!",
-        error: "Hoàn thành sửa chữa thất bại.",
-      }).unwrap();
+      await toast
+        .promise(completePromise, {
+          loading: "Đang hoàn thành sửa chữa...",
+          success: "Hoàn thành sửa chữa thành công!",
+          error: "Hoàn thành sửa chữa thất bại.",
+        })
+        .unwrap();
       revalidator.revalidate();
     } catch (error) {
       console.log("Service completion cancelled or failed:", error);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleUpdateTimeline = async () => {
     try {
@@ -66,11 +85,13 @@ const ServiceTaskServicingCard = ({ task }) => {
         })),
       });
 
-      await toast.promise(updatePromise, {
-        loading: "Đang cập nhật tiến độ...",
-        success: "Cập nhật tiến độ thành công!",
-        error: "Cập nhật tiến độ thất bại.",
-      }).unwrap();
+      await toast
+        .promise(updatePromise, {
+          loading: "Đang cập nhật tiến độ...",
+          success: "Cập nhật tiến độ thành công!",
+          error: "Cập nhật tiến độ thất bại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
@@ -78,7 +99,7 @@ const ServiceTaskServicingCard = ({ task }) => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleEditTimelineEntry = async (entry) => {
     try {
@@ -98,11 +119,13 @@ const ServiceTaskServicingCard = ({ task }) => {
         })),
       });
 
-      await toast.promise(updatePromise, {
-        loading: "Đang cập nhật mục tiến độ...",
-        success: "Cập nhật mục tiến độ thành công!",
-        error: "Cập nhật mục tiến độ thất bại.",
-      }).unwrap();
+      await toast
+        .promise(updatePromise, {
+          loading: "Đang cập nhật mục tiến độ...",
+          success: "Cập nhật mục tiến độ thành công!",
+          error: "Cập nhật mục tiến độ thất bại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
@@ -110,7 +133,7 @@ const ServiceTaskServicingCard = ({ task }) => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const handleStartService = async () => {
     try {
@@ -120,15 +143,17 @@ const ServiceTaskServicingCard = ({ task }) => {
       const startPromise = startService(task.id, [
         {
           technicianClerkId: technician.technicianClerkId,
-          role: "lead"
-        }
+          role: "lead",
+        },
       ]);
 
-      await toast.promise(startPromise, {
-        loading: "Đang bắt đầu sửa chữa...",
-        success: "Bắt đầu sửa chữa thành công!",
-        error: "Bắt đầu sửa chữa thất bại.",
-      }).unwrap();
+      await toast
+        .promise(startPromise, {
+          loading: "Đang bắt đầu sửa chữa...",
+          success: "Bắt đầu sửa chữa thành công!",
+          error: "Bắt đầu sửa chữa thất bại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
@@ -136,7 +161,7 @@ const ServiceTaskServicingCard = ({ task }) => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -161,7 +186,11 @@ const ServiceTaskServicingCard = ({ task }) => {
             ))}
           </div>
         )}
-        <ServiceTaskTimeline task={task} timeline={task.timeline} onEditEntry={handleEditTimelineEntry} />
+        <ServiceTaskTimeline
+          task={task}
+          timeline={task.timeline}
+          onEditEntry={handleEditTimelineEntry}
+        />
         {task.status === "scheduled" && (
           <EmptyState
             icon={Clock}
@@ -179,6 +208,6 @@ const ServiceTaskServicingCard = ({ task }) => {
       </CardContent>
     </Card>
   );
-}
+};
 
 export default ServiceTaskServicingCard;

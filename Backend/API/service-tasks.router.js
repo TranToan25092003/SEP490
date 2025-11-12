@@ -1,14 +1,14 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const serviceOrderTaskController = require("../controller/service-order-task.controller");
-const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
+const {
+  throwErrors,
+} = require("../middleware/validate-data/throwErrors.middleware");
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
 
 const mediaValidation = [
-  body("media")
-    .isArray()
-    .withMessage("Media must be an array"),
+  body("media").isArray().withMessage("Media must be an array"),
   body("media.*.url")
     .notEmpty()
     .withMessage("Media URL is required")
@@ -16,7 +16,9 @@ const mediaValidation = [
     .withMessage("Media URL must be a valid URL"),
   body("media.*.kind")
     .isIn(["image", "video", "pdf", "other"])
-    .withMessage("Media type must be either 'photo', 'video', 'pdf', or 'other'"),
+    .withMessage(
+      "Media type must be either 'photo', 'video', 'pdf', or 'other'"
+    ),
   body("media.*.publicId")
     .notEmpty()
     .withMessage("Media public ID is required")
@@ -40,6 +42,28 @@ const mediaValidation = [
  *         schema:
  *           type: string
  *         description: The ID of the service order
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bayId
+ *               - start
+ *               - end
+ *             properties:
+ *               bayId:
+ *                 type: string
+ *                 description: The ID of the bay to schedule the inspection in
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start time of the inspection
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End time of the inspection
  *     responses:
  *       200:
  *         description: Inspection scheduled successfully
@@ -93,6 +117,19 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the inspection task
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - technicians
+ *             properties:
+ *               technicians:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/TechnicianInfo'
  *     responses:
  *       200:
  *         description: Inspection task started successfully
@@ -109,7 +146,9 @@ router.post(
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
     body("technicians")
       .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
+      .withMessage(
+        "Technicians array is required and must contain at least one technician"
+      ),
     body("technicians.*.technicianClerkId")
       .notEmpty()
       .withMessage("Technician Clerk ID is required"),
@@ -152,10 +191,8 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
@@ -192,10 +229,8 @@ router.put(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
@@ -218,6 +253,28 @@ router.put(
  *         schema:
  *           type: string
  *         description: The ID of the service order
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bayId
+ *               - start
+ *               - end
+ *             properties:
+ *               bayId:
+ *                 type: string
+ *                 description: The ID of the bay to schedule the servicing in
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start time of the servicing
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: End time of the servicing
  *     responses:
  *       200:
  *         description: Service scheduled successfully
@@ -300,7 +357,9 @@ router.post(
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
     body("technicians")
       .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
+      .withMessage(
+        "Technicians array is required and must contain at least one technician"
+      ),
     body("technicians.*.technicianClerkId")
       .notEmpty()
       .withMessage("Technician Clerk ID is required"),
@@ -385,13 +444,9 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
-    body("title")
-      .notEmpty()
-      .withMessage("Title is required"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("title").notEmpty().withMessage("Title is required"),
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
@@ -446,18 +501,14 @@ router.put(
       .withMessage("Entry ID is required")
       .isMongoId()
       .withMessage("Entry ID must be a valid MongoDB ObjectId"),
-    body("title")
-      .notEmpty()
-      .withMessage("Title is required"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("title").notEmpty().withMessage("Title is required"),
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
   serviceOrderTaskController.updateServiceTaskTimelineEntry
-)
+);
 
 /**
  * @swagger
@@ -487,7 +538,7 @@ router.put(
  *         content:
  *          application/json:
  *            schema:
- *              $ref: '#/components/schemas/ServiceTimelineEntryDTO
+ *              $ref: '#/components/schemas/ServiceTimelineEntryDTO'
  *       404:
  *         description: Servicing task or timeline entry not found
  */

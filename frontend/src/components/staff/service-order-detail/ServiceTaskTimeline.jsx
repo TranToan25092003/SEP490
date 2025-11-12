@@ -34,13 +34,16 @@ const ServiceTaskTimeline = ({ task, timeline, onEditEntry }) => {
               )}
 
               {task.serviceOrderStatus !== "completed" && (
-                <Button onClick={() => typeof onEditEntry === "function" && onEditEntry(entry)}>
+                <Button
+                  onClick={() =>
+                    typeof onEditEntry === "function" && onEditEntry(entry)
+                  }
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   Chỉnh sửa mục
                 </Button>
               )}
             </div>
-
           </div>
         ))}
       </div>
