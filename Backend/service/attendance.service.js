@@ -27,7 +27,9 @@ class AttendanceService {
 
   computeStats(entries) {
     const presentMorning = entries.filter((entry) => entry.morningShift).length;
-    const presentAfternoon = entries.filter((entry) => entry.afternoonShift).length;
+    const presentAfternoon = entries.filter(
+      (entry) => entry.afternoonShift
+    ).length;
     const fullDay = entries.filter(
       (entry) => entry.morningShift && entry.afternoonShift
     ).length;
@@ -67,7 +69,10 @@ class AttendanceService {
       const desiredName = staff.technicianName;
       const desiredPosition = staff.position || existing.position;
 
-      if (existing.staffName !== desiredName || existing.position !== desiredPosition) {
+      if (
+        existing.staffName !== desiredName ||
+        existing.position !== desiredPosition
+      ) {
         existing.staffName = desiredName;
         existing.position = desiredPosition;
         mutated = true;
@@ -90,16 +95,16 @@ class AttendanceService {
         return;
       }
 
-      const target =
-        entryMap.get(update.staffId) ||
-        {
-          staffId: update.staffId,
-          staffName: update.staffName || "Chưa xác định",
-          position: update.position || "Technician",
-          morningShift: false,
-          afternoonShift: false,
-          totalWork: 0,
-        };
+      console.log(update.staffId);
+
+      const target = entryMap.get(update.staffId) || {
+        staffId: update.staffId,
+        staffName: update.staffName || "Chưa xác định",
+        position: update.position || "Technician",
+        morningShift: false,
+        afternoonShift: false,
+        totalWork: 0,
+      };
 
       if (typeof update.staffName === "string" && update.staffName.trim()) {
         target.staffName = update.staffName.trim();
@@ -122,7 +127,7 @@ class AttendanceService {
       }
 
       target.totalWork = this.calculateTotalWork(target);
-      entryMap.set(target.staffId, target);
+      entryMap.set(update.staffId, target);
     });
 
     return Array.from(entryMap.values());
@@ -130,11 +135,16 @@ class AttendanceService {
 
   async ensureAttendanceDocument(dateInput) {
     const { start, end } = this.getDateRange(dateInput);
-    let attendance = await Attendance.findOne({ date: { $gte: start, $lt: end } });
+    let attendance = await Attendance.findOne({
+      date: { $gte: start, $lt: end },
+    });
+
     const staffList = await StaffService.getAllTechnicians();
 
     if (!attendance) {
-      const entries = staffList.map((staff) => this.mapTechnicianToEntry(staff));
+      const entries = staffList.map((staff) =>
+        this.mapTechnicianToEntry(staff)
+      );
       attendance = await Attendance.create({
         date: start,
         entries,
@@ -171,11 +181,18 @@ class AttendanceService {
     }
 
     const attendance = await this.ensureAttendanceDocument(payload.date);
-    const mergedEntries = this.mergeEntries(attendance.entries, payload.entries || []);
-    const recalculatedEntries = mergedEntries.map((entry) => ({
-      ...entry,
-      totalWork: this.calculateTotalWork(entry),
-    }));
+
+    const mergedEntries = this.mergeEntries(
+      attendance.entries,
+      payload.entries || []
+    );
+
+    const recalculatedEntries = mergedEntries.map((entry) => {
+      return {
+        ...entry,
+        totalWork: this.calculateTotalWork(entry),
+      };
+    });
 
     attendance.entries = recalculatedEntries;
     attendance.stats = this.computeStats(recalculatedEntries);
@@ -244,11 +261,19 @@ class AttendanceService {
     end.setHours(23, 59, 59, 999);
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-      throw new DomainError("Khoảng ngày không hợp lệ", "INVALID_DATE_RANGE", 400);
+      throw new DomainError(
+        "Khoảng ngày không hợp lệ",
+        "INVALID_DATE_RANGE",
+        400
+      );
     }
 
     if (start > end) {
-      throw new DomainError("Ngày bắt đầu phải nhỏ hơn ngày kết thúc", "INVALID_DATE_RANGE", 400);
+      throw new DomainError(
+        "Ngày bắt đầu phải nhỏ hơn ngày kết thúc",
+        "INVALID_DATE_RANGE",
+        400
+      );
     }
 
     const history = await Attendance.find({
