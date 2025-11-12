@@ -5,7 +5,6 @@ class AttendanceController {
     try {
       const { date } = req.query;
       const attendance = await AttendanceService.getDailyAttendance(date);
-
       return res.status(200).json({
         data: attendance,
       });
@@ -56,7 +55,10 @@ class AttendanceController {
   async getHistory(req, res, next) {
     try {
       const { startDate, endDate } = req.query;
-      const history = await AttendanceService.getHistory({ startDate, endDate });
+      const history = await AttendanceService.getHistory({
+        startDate,
+        endDate,
+      });
 
       return res.status(200).json({
         data: history,
