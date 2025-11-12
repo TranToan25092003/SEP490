@@ -73,6 +73,68 @@ class InvoiceService {
     return this._mapInvoiceSummary(invoice, serviceOrder);
   }
 
+  async listInvoicesForCustomer(customerClerkId) {
+    const invoices = await Invoice.find({})
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "service_order_id",
+        populate: [
+          { path: "booking_id", populate: { path: "vehicle_id" } },
+          { path: "items.part_id" },
+        ],
+      })
+      .exec();
+
+    const customerInvoices = invoices.filter((invoice) => {
+      const booking = invoice.service_order_id?.booking_id;
+      return booking?.customer_clerk_id === customerClerkId;
+    });
+
+    if (customerInvoices.length === 0) {
+      return [];
+    }
+
+    const customerMap = await UsersService.getFullNamesByIds([customerClerkId]);
+
+    return customerInvoices.map((invoice) =>
+      this._mapInvoiceSummary(
+        invoice,
+        invoice.service_order_id,
+        customerMap[customerClerkId] || null
+      )
+    );
+  }
+
+  async getInvoiceByIdForCustomer(invoiceId, customerClerkId) {
+    const invoice = await Invoice.findById(invoiceId)
+      .populate({
+        path: "service_order_id",
+        populate: [
+          { path: "booking_id", populate: { path: "vehicle_id" } },
+          { path: "items.part_id" },
+        ],
+      })
+      .exec();
+
+    if (!invoice) {
+      return null;
+    }
+
+    const booking = invoice.service_order_id?.booking_id;
+    if (booking?.customer_clerk_id !== customerClerkId) {
+      return null;
+    }
+
+    const customerMap = await UsersService.getFullNamesByIds([customerClerkId]);
+
+    return this._mapInvoiceDetail(
+      invoice,
+      invoice.service_order_id,
+      booking,
+      customerMap[customerClerkId] || null
+    );
+  }
+
   async listInvoices({ page = 1, limit = 10, status = null } = {}) {
     const filters = {};
     if (status) {

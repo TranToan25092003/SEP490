@@ -19,6 +19,21 @@ class InvoiceController {
     }
   }
 
+  async listForCustomer(req, res, next) {
+    try {
+      const customerClerkId = req.userId;
+      const invoices = await InvoiceService.listInvoicesForCustomer(
+        customerClerkId
+      );
+
+      res.status(200).json({
+        data: invoices,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getById(req, res, next) {
     try {
       const { id } = req.params;
@@ -26,6 +41,28 @@ class InvoiceController {
 
       if (!invoice) {
         return res.status(404).json({ message: "Hóa đơn không tồn tại" });
+      }
+
+      res.status(200).json({ data: invoice });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getByIdForCustomer(req, res, next) {
+    try {
+      const { id } = req.params;
+      const customerClerkId = req.userId;
+
+      const invoice = await InvoiceService.getInvoiceByIdForCustomer(
+        id,
+        customerClerkId
+      );
+
+      if (!invoice) {
+        return res
+          .status(404)
+          .json({ message: "Hóa đơn không tồn tại hoặc không thuộc về bạn" });
       }
 
       res.status(200).json({ data: invoice });

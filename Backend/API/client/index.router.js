@@ -4,6 +4,7 @@ const partRouter = require("./part.router");
 const profileRouter = require("./profile.router");
 const vehicleModelRouter = require("./vehicle-model.router");
 const complaintRouter = require("./complaint.router");
+const invoiceRouter = require("./invoice.router");
 const activityLogRouter = require("./activity-log.router");
 
 module.exports = (app) => {
@@ -14,5 +15,6 @@ module.exports = (app) => {
   app.use("/models", vehicleModelRouter);
   app.use("/complaints", complaintRouter);
   app.use("/activity-logs", authenticate, activityLogRouter);
+  app.use("/invoices", authenticate, invoiceRouter);
   // ----------------------------------------------
 };
