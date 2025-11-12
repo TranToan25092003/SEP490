@@ -3,7 +3,8 @@ import { useLoaderData, Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Star, Send, Loader2 } from 'lucide-react';
+import { ArrowLeft, Star, Send, Loader2, Trash2 } from 'lucide-react'; 
+import { useAuth } from '@clerk/clerk-react'; 
 import { customFetch } from '@/utils/customAxios';
 import { toast } from 'sonner';
 
@@ -15,12 +16,16 @@ const DetailField = ({ label, children }) => (
 );
 
 export default function StaffComplaintDetailPage() {
+    
     const complaint = useLoaderData();
+    const { userId: staffClerkId } = useAuth(); 
     const navigate = useNavigate();
 
     const [responseText, setResponseText] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false); // State cho việc xóa
 
+    // Xử lý trường hợp loader trả về null (có lỗi xảy ra)
     if (!complaint) {
         return (
             <div className="flex h-screen flex-col items-center justify-center gap-4 p-6">
@@ -56,7 +61,7 @@ export default function StaffComplaintDetailPage() {
     const getStatusBadge = (status) => {
         switch (status) {
             case "resolved":
-                return <Badge variant="secondary" className="bg-green-500 text-white dark:bg-blue-600">Đã giải quyết</Badge>;
+                return <Badge variant="success">Đã giải quyết</Badge>;
             case "pending":
                 return <Badge variant="warning">Chờ xử lý</Badge>;
             case "rejected":
@@ -66,6 +71,7 @@ export default function StaffComplaintDetailPage() {
         }
     };
 
+    // 3. Hàm xử lý gửi phản hồi
     const handleResponseSubmit = async () => {
         if (!responseText.trim()) {
             toast.error("Nội dung phản hồi không được để trống.");
@@ -73,14 +79,15 @@ export default function StaffComplaintDetailPage() {
         }
         setIsSubmitting(true);
         try {
+            // Sử dụng POST theo controller đã định nghĩa
             const response = await customFetch.patch(
-                `/staff/complaints/${complaint._id}/reply`,
+                `/staff/complaints/${complaint._id}/reply`, 
                 { content: responseText }
             );
 
             if (response.data.success) {
                 toast.success("Đã gửi phản hồi thành công!");
-                navigate(0);
+                navigate(0); // Tải lại trang để xem cập nhật
             } else {
                 throw new Error(response.data.message);
             }
@@ -93,17 +100,59 @@ export default function StaffComplaintDetailPage() {
         }
     };
 
+    // 4. Hàm xử lý xóa khiếu nại
+    const handleDeleteComplaint = async () => {
+        if (!window.confirm("Bạn có chắc chắn muốn xóa khiếu nại này? Hành động này không thể hoàn tác.")) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const response = await customFetch.delete(`/staff/complaints/${complaint._id}`);
+
+            if (response.data.success) {
+                toast.success("Xóa khiếu nại thành công!");
+                navigate("/staff/complaints"); // Quay lại trang danh sách
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Xóa thất bại", {
+                description: error.message || "Đã có lỗi xảy ra."
+            });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+
     return (
         <div className="p-6 space-y-6">
             {/* Header */}
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <Link to="/staff/complaints">
+                     <Link to="/staff/complaints">
                         <Button variant="outline" size="icon" className="h-10 w-10">
                             <ArrowLeft className="h-5 w-5" />
                         </Button>
                     </Link>
                     <h1 className="text-3xl font-bold text-gray-800">Chi Tiết Khiếu Nại #{complaint._id.slice(-6)}</h1>
+                </div>
+                <div className="flex items-center gap-4">
+                    {/* TODO: Thêm logic cho các nút Duyệt/Từ chối */}
+                    <Button 
+                        variant="destructive" 
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={handleDeleteComplaint}
+                        disabled={isDeleting}
+                    >
+                        {isDeleting ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="mr-2 h-4 w-4" />
+                        )}
+                        {isDeleting ? "Đang xóa..." : "Xóa"}
+                    </Button>
                 </div>
             </div>
 
@@ -127,7 +176,7 @@ export default function StaffComplaintDetailPage() {
 
             {/* Complaint Content */}
             <div className="rounded-xl border bg-white p-6 shadow-sm">
-                <h2 className="text-2xl font-medium mb-4">Nội dung khiếu nại</h2>
+                 <h2 className="text-2xl font-medium mb-4">Nội dung khiếu nại</h2>
                 <p className="text-base text-gray-800 whitespace-pre-wrap">{complaint.content}</p>
             </div>
 
@@ -145,13 +194,15 @@ export default function StaffComplaintDetailPage() {
                 </div>
             )}
 
+            {/* Response Section - Logic updated */}
             <div className="rounded-xl border bg-white p-6 shadow-sm space-y-6">
                 <div>
                     <h2 className="text-2xl font-medium text-stone-700">Ghi chú / Phản hồi cho khách</h2>
-
+                    
                     {complaint.reply && complaint.reply.content ? (
+                        // 4. Nếu đã có phản hồi, hiển thị ở chế độ chỉ đọc
                         <div className="mt-3 space-y-2">
-                            <Textarea
+                             <Textarea
                                 className="mt-3 bg-neutral-100"
                                 value={complaint.reply.content}
                                 readOnly
@@ -166,6 +217,7 @@ export default function StaffComplaintDetailPage() {
                             </p>
                         </div>
                     ) : (
+                        // 5. Nếu chưa có, hiển thị form để gửi
                         <>
                             <Textarea
                                 className="mt-3 bg-neutral-100"

@@ -6,15 +6,41 @@ import { cn } from "@/lib/utils";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
 import { useFormContext } from "react-hook-form";
+import { Link } from "react-router-dom";
+
 
 const ServiceOrderHeader = ({
   className,
   ...props
 }) => {
-  const { serviceOrder, disabled } = useServiceOrder();
+  const { serviceOrder, disabled, handleCancelServiceOrder, handleStartServiceOrder } = useServiceOrder();
   const { watch } = useFormContext();
   const items = watch();
   const hasServices = items.services.length + items.parts.length > 0;
+
+  function getButton() {
+    const status = serviceOrder.status;
+    if (status === "created") {
+      return (
+      <Button
+        type="submit"
+        onClick={() => handleStartServiceOrder(serviceOrder)}
+        disabled={disabled || !hasServices}
+        aria-busy={disabled || !hasServices}
+      >
+        Bắt đầu
+      </Button>
+      );
+    } else {
+      return (
+        <Link to={`/staff/service-order/${serviceOrder.id}/progress`}>
+          <Button>
+            Xem tiến độ
+          </Button>
+        </Link>
+      );
+    }
+  }
 
   return (
     <Card className={cn(className)} {...props}>
@@ -27,20 +53,13 @@ const ServiceOrderHeader = ({
             type="button"
             className="text-destructive"
             variant="outline"
-            onClick={() => onCancelServiceOrder(serviceOrder)}
+            onClick={() => handleCancelServiceOrder(serviceOrder)}
             disabled={disabled}
             aria-busy={disabled}
           >
             Hủy lệnh
           </Button>
-          <Button
-            type="submit"
-            onClick={() => onStartServiceOrder(serviceOrder)}
-            disabled={disabled || !hasServices}
-            aria-busy={disabled || !hasServices}
-          >
-            Bắt đầu
-          </Button>
+          {getButton(serviceOrder)}
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">

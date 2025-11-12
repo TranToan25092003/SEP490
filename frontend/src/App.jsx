@@ -24,7 +24,7 @@ import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import NiceModal from "@ebay/nice-modal-react";
 import ChatStaff from "./pages/staff/ChatStaff";
-import AdminLayout from "./layout/admin-layout/AdminLayout";
+import AdminLayout from "./layout/manager-layout/ManagerLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
@@ -46,6 +46,7 @@ import {
   partDetailStaffLoader,
   complaintsStaffLoader,
   complaintDetailStaffLoader,
+  notificationsPageLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -59,11 +60,17 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
-import { authenTicationLoader } from "./utils/authentication.loader";
+import ManagerBays from "./pages/manager/ManagerBays";
+import {
+  authenTicationForStaffLoader,
+  authenTicationLoader,
+} from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import ActivityLogs from "./pages/manager/ActivityLogs";
 import { activityLogsLoader } from "./utils/loaders";
 import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
+import NotificationListPage from "./pages/NotificationListPage";
+
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 const router = createBrowserRouter([
@@ -116,6 +123,11 @@ const router = createBrowserRouter([
 
         element: <LayoutProfile></LayoutProfile>,
       },
+      {
+        path: "/notifications",
+        loader: notificationsPageLoader,
+        element: <NotificationListPage />,
+      },
     ],
   },
   {
@@ -134,6 +146,7 @@ const router = createBrowserRouter([
     loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
+      { path: "staff", element: <StaffPage /> },
       {
         path: "items",
         element: <ManagerItems />,
@@ -157,10 +170,14 @@ const router = createBrowserRouter([
         path: "goods-receipt/:id",
         element: <GoodsReceiptDetail />,
       },
-
       {
-        path: "staff",
-        element: <StaffPage></StaffPage>,
+        path: "bays",
+        element: <ManagerBays />,
+      },
+      {
+        path: "activity-logs",
+        element: <ActivityLogs />,
+        loader: activityLogsLoader,
       },
       {
         path: "activity-logs",
@@ -169,9 +186,11 @@ const router = createBrowserRouter([
       },
     ],
   },
+
   {
     path: "/staff",
     element: <StaffLayout />,
+    loader: authenTicationForStaffLoader,
     children: [
       { index: true, element: <StaffDashboardPage /> },
       {

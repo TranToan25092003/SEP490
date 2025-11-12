@@ -1,4 +1,5 @@
 const { ServiceOrder, Complain } = require("../../model");
+const notificationService = require("../notification.service")
 
 class ComplaintService {
     async createComplaint(complaintData) {
@@ -11,14 +12,15 @@ class ComplaintService {
         try {
             const serviceOrder = await ServiceOrder.findById(so_id).populate({
                 path: 'booking_id',
-                select: 'clerkId'
+                select: 'customer_clerk_id'
             });
 
             if (!serviceOrder) {
                 throw new Error(`Service Order with ID ${so_id} not found.`);
             }
+            
 
-            if (serviceOrder.booking_id.clerkId !== clerkId) {
+            if (serviceOrder.booking_id.customer_clerk_id !== clerkId) {
                 throw new Error(`User ${clerkId} is not authorized to complain about Service Order ${so_id}.`);
             }
 
@@ -34,6 +36,11 @@ class ComplaintService {
             });
 
             const savedComplaint = await newComplaint.save();
+
+            notificationService.notifyAllStaffOfNewComplaint(savedComplaint)
+                .catch(err => {
+                    console.error("Failed to send staff notification (non-critical):", err.message);
+                });
 
             return savedComplaint;
         } catch (error) {

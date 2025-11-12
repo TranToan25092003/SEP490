@@ -4,7 +4,14 @@
  */
 
 /**
- * @typedef {Object} Timeslot
+ * @typedef {object} MediaAsset
+ * @property {string} publicId - The public id of the cloudinary resource
+ * @property {string} url - The url of the cloudinary resource
+ * @property {"image" | "video" | "pdf" | "other"} kind - The kind of the resource
+ */
+
+/**
+ * @typedef {object} Timeslot
  * @property {number} day - Day of the week (0-6, where 0 is Sunday)
  * @property {number} month - Month of the year (1-12)
  * @property {number} year - Full year (e.g., 2024)
@@ -13,7 +20,7 @@
  */
 
 /**
- * @typedef {Object} TimeslotWithAvailability
+ * @typedef {object} TimeslotWithAvailability
  * @property {number} day - Day of the week (0-6, where 0 is Sunday)
  * @property {number} month - Month of the year (1-12)
  * @property {number} year - Full year (e.g., 2024)
@@ -23,7 +30,7 @@
  */
 
 /**
- * @typedef {Object} ServiceDTO
+ * @typedef {object} ServiceDTO
  * @property {string} id - Service identifier
  * @property {string} name - Name of the service
  * @property {number} basePrice - Base price of the service
@@ -32,7 +39,7 @@
  */
 
 /**
- * @typedef {Object} VehicleDTO
+ * @typedef {object} VehicleDTO
  * @property {string} id - Vehicle identifier
  * @property {string} licensePlate - License plate number of the vehicle
  * @property {number} odoReading - Odometer reading of the vehicle
@@ -42,7 +49,7 @@
  */
 
 /**
- * @typedef {Object} VehicleWithAvailabilityDTO
+ * @typedef {object} VehicleWithAvailabilityDTO
  * @property {string} id - Vehicle identifier
  * @property {string} licensePlate - License plate number of the vehicle
  * @property {number} odoReading - Odometer reading of the vehicle
@@ -53,13 +60,20 @@
  */
 
 /**
- * @typedef {Object} BookingCustomer
+ * @typedef {object} BayDTO
+ * @property {string} id - Bay identifier
+ * @property {string} bayNumber - Bay number (e.g., "Bay 1")
+ * @property {string} [description] - Bay description (optional)
+ */
+
+/**
+ * @typedef {object} BookingCustomer
  * @property {string} customerClerkId - Clerk ID of the customer
  * @property {string} customerName - Name of the customer who made the booking
  */
 
 /**
- * @typedef {Object} BookingDTO
+ * @typedef {object} BookingDTO
  * @property {string} id - Booking identifier
  * @property {BookingCustomer} customer - Customer information
  * @property {VehicleDTO} vehicle - Vehicle information
@@ -71,7 +85,7 @@
  */
 
 /**
- * @typedef {Object} BookingSummaryDTO
+ * @typedef {object} BookingSummaryDTO
  * @property {string} id - Booking identifier
  * @property {string} customerName - Name of the customer who made the booking
  * @property {string[]} services - Array of service names included in the booking
@@ -82,14 +96,14 @@
  */
 
 /**
- * @typedef {Object} BookingRequest
+ * @typedef {object} BookingRequest
  * @property {string} vehicleId - ID of the vehicle to book (MongoDB ObjectId)
  * @property {string[]} serviceIds - Array of service IDs (each must be valid MongoDB ObjectId)
  * @property {Timeslot} timeSlot - The booking time slot
  */
 
 /**
- * @typedef {Object} ServiceOrderSummaryDTO
+ * @typedef {object} ServiceOrderSummaryDTO
  * @property {string} id - Service order identifier
  * @property {string} bookingId - Associated booking identifier
  * @property {string} licensePlate - Vehicle license plate
@@ -101,7 +115,7 @@
  */
 
 /**
- * @typedef {Object} ServiceOrderItemDTO
+ * @typedef {object} ServiceOrderItemDTO
  * @property {string} type - Type of item: "service", "part", or "custom"
  * @property {string | undefined} serviceId - Service identifier (for service items)
  * @property {string | undefined} partId - Part identifier (for part items)
@@ -112,7 +126,7 @@
  */
 
 /**
- * @typedef {Object} ServiceOrderDetailDTO
+ * @typedef {object} ServiceOrderDetailDTO
  * @property {string} id - Service order identifier
  * @property {string} customerName - Name of the customer
  * @property {string} customerClerkId - Clerk ID of the customer
@@ -123,17 +137,16 @@
  * @property {string} createdAt - Date when the service order was created (ISO 8601 format)
  * @property {string} [completedAt] - Date when the service order was completed (ISO 8601 format)
  * @property {string} [estimatedCompletedAt] - Estimated completion date (ISO 8601 format)
- * @property {string} comment - Additional comments or notes
  */
 
 /**
- * @typedef {Object} TechnicianInfo
+ * @typedef {object} TechnicianInfo
  * @property {string} technicianClerkId - Clerk ID of the technician
  * @property {"lead" | "assistant"} role - Role of the technician in the task
  */
 
 /**
- * @typedef {Object} TechnicianInfoWithAvailabilityDTO
+ * @typedef {object} TechnicianInfoWithAvailabilityDTO
  * @property {string} technicianClerkId - Clerk ID of the technician
  * @property {string} technicianName - Name of the technician
  * @property {boolean} isBusy - Whether the technician is currently assigned to a task
@@ -141,20 +154,20 @@
  */
 
 /**
- * @typedef {Object} CompleteInspectionPayload
+ * @typedef {object} CompleteInspectionPayload
  * @property {string} comment - Comment or notes about the inspection
- * @property {string[]} photoUrls - URLs of photos taken during the inspection
+ * @property {MediaAsset[]} media - Cloudinary media
  */
 
 /**
- * @typedef {Object} ServiceTimelineEntry
+ * @typedef {object} ServiceTimelineEntry
  * @property {string} title - Title of the timeline entry
  * @property {string} comment - Comment or notes for the timeline entry
- * @property {string[]} photoUrls - URLs of photos for the timeline entry
+ * @property {MediaAsset[]} media - Cloudinary media
  */
 
 /**
- * @typedef {Object} ServiceOrderItemPayload
+ * @typedef {object} ServiceOrderItemPayload
  * @property {string} type - Type of item: "service", "part", or "custom"
  * @property {string | undefined} serviceId - Service identifier (for service items)
  * @property {string | undefined} partId - Part identifier (for part items)
@@ -164,7 +177,7 @@
  */
 
 /**
- * @typedef {Object} QuoteItemDTO
+ * @typedef {object} QuoteItemDTO
  * @property {"part" | "service"} type - Type of item: "part" or "service"
  * @property {string} name - Name or description of the item
  * @property {number} quantity - Quantity of the item
@@ -172,7 +185,7 @@
  */
 
 /**
- * @typedef {Object} QuoteDTO
+ * @typedef {object} QuoteDTO
  * @property {string} id - Quote identifier
  * @property {string} serviceOrderId - Associated service order identifier
  * @property {QuoteItemDTO[]} items - Array of quote items (parts and services)
@@ -186,7 +199,7 @@
  */
 
 /**
- * @typedef {Object} QuoteSummaryDTO
+ * @typedef {object} QuoteSummaryDTO
  * @property {string} id - Quote identifier
  * @property {string} serviceOrderId - Associated service order identifier
  * @property {number} grandTotal - Grand total amount
@@ -195,7 +208,7 @@
  */
 
 /**
- * @typedef {Object} PaginationInfo
+ * @typedef {object} PaginationInfo
  * @property {number} currentPage - Current page number (1-indexed)
  * @property {number} totalPages - Total number of pages
  * @property {number} totalItems - Total number of items
@@ -203,7 +216,7 @@
  */
 
 /**
- * @typedef {Object} QuotesListResponse
+ * @typedef {object} QuotesListResponse
  * @property {QuoteSummaryDTO[]} quotes - List of quote summaries
  * @property {PaginationInfo} pagination - Pagination information
  */

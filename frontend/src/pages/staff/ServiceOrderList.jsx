@@ -65,12 +65,21 @@ const ServiceOrderList = () => {
         </Link>
       </div>
 
-      <Suspense fallback={
-        <div className="flex justify-center items-center py-8">
-          <Spinner className="h-8 w-8" />
-        </div>
-      }>
-        <Await resolve={serviceOrders}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
+      >
+        <Await errorElement={
+            <CRUDTable
+              isLoading={false}
+              isError={true}
+              columns={serviceOrderListColumnDefinitions}
+              onRetry={() => revalidator.revalidate()}
+            />
+        } resolve={serviceOrders}>
           {(data) => (
             <>
               <CRUDTable
@@ -81,7 +90,10 @@ const ServiceOrderList = () => {
                 {(row) => (
                   <div className="flex justify-center">
                     <Link to={`/staff/service-order/${row.id}`}>
-                      <Button variant="outline" className="flex-1 cursor-pointer">
+                      <Button
+                        variant="outline"
+                        className="flex-1 cursor-pointer"
+                      >
                         <EyeIcon />
                       </Button>
                     </Link>

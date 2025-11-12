@@ -1,3 +1,4 @@
+import axios from "axios";
 // Upload single file to Cloudinary
 export const uploadFile = async (file, options = {}) => {
   const {
@@ -177,4 +178,97 @@ export const validateFile = (file, options = {}) => {
     isValid: errors.length === 0,
     errors,
   };
+};
+
+/**
+ * Upload file to Cloudinary with progress tracking using axios
+ * @param {File} file - The file to upload
+ * @param {Function} onProgress - Callback function for progress updates
+ * @param {AbortController} abortController - For cancelling the upload
+ * @param {Object} options - Upload options
+ * @returns {Promise<Object>} Upload result with file info
+ *
+ * @example
+ * const abortController = new AbortController();
+ * try {
+ *   const result = await uploadFileWithProgress(
+ *     file,
+ *     (progress) => console.log(`Upload progress: ${progress}%`),
+ *     abortController,
+ *     { resourceType: "image" }
+ *   );
+ *   console.log('Uploaded:', result);
+ * } catch (error) {
+ *   console.error('Upload failed:', error);
+ * }
+ */
+export const uploadFileWithProgress = async (
+  file,
+  onProgress = () => {},
+  abortController = new AbortController(),
+  options = {}
+) => {
+  const {
+    uploadPreset = "huynt7104",
+    cloudName = "djo2yviru",
+    folder = "motormate",
+    resourceType = "auto",
+  } = options;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+  formData.append("folder", folder);
+
+  const response = await axios(
+    `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`,
+    {
+      method: "POST",
+      data: formData,
+      signal: abortController.signal,
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        onProgress(percentCompleted);
+      },
+    }
+  );
+
+  const data = response.data;
+
+  return {
+    publicId: data.public_id,
+    url: data.secure_url,
+    kind: getFileKind(data.resource_type, file.type),
+    originalName: file.name,
+    size: file.size,
+  };
+};
+
+/**
+ * Upload image to specific folder with progress tracking
+ * @param {File} file - Image file
+ * @param {string} subfolder - Target subfolder
+ * @param {Function} onProgress - Progress callback
+ * @param {AbortController} abortController - Abort controller
+ * @returns {Promise<Object>} Upload result
+ */
+export const uploadImageToFolderWithProgress = async (
+  file,
+  subfolder = "general",
+  onProgress = () => {},
+  abortController = new AbortController()
+) => {
+  const result = await uploadFileWithProgress(
+    file,
+    onProgress,
+    abortController,
+    {
+      resourceType: "image",
+      folder: `motormate/img/${subfolder}`,
+      uploadPreset: "huynt7104",
+    }
+  );
+  return result;
 };

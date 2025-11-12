@@ -58,34 +58,49 @@ export default function Sidebar({ width = 80, offsetTop = 100 }) {
         <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4 mb-2" />
         <TooltipProvider>
           <nav
-            className="flex flex-col items-center gap-3.5"
+            className="flex flex-col items-center w-full"
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
           >
-            {items.map((it) => (
-              <Tooltip key={it.key}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="rounded-xl size-11 shadow-sm"
-                    asChild={Boolean(it.href)}
-                  >
-                    {it.href ? (
-                      <Link
-                        to={it.href}
-                        aria-current={
-                          location.pathname === it.href ? "page" : undefined
-                        }
-                      >
-                        <img alt="" src={it.icon} className="size-7" />
-                      </Link>
-                    ) : (
-                      <img alt="" src={it.icon} className="size-7" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">{it.label}</TooltipContent>
-              </Tooltip>
+            {items.map((it, index) => (
+              <div key={it.key} className="w-full flex flex-col items-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="rounded-xl size-11 shadow-sm mb-2"
+                      asChild={Boolean(it.href)}
+                    >
+                      {it.href ? (
+                        <Link
+                          to={it.href}
+                          aria-current={
+                            location.pathname === it.href ? "page" : undefined
+                          }
+                        >
+                          <div className="flex flex-col items-center gap-1">
+                            <img alt="" src={it.icon} className="size-7" />
+                            <span className="text-[10px] leading-none text-gray-700">
+                              {it.label}
+                            </span>
+                          </div>
+                        </Link>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1">
+                          <img alt="" src={it.icon} className="size-7" />
+                          <span className="text-[10px] leading-none text-gray-700">
+                            {it.label}
+                          </span>
+                        </div>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">{it.label}</TooltipContent>
+                </Tooltip>
+                {index < items.length - 1 && (
+                  <div className="w-3/4 border-b border-gray-200 my-2"></div>
+                )}
+              </div>
             ))}
           </nav>
         </TooltipProvider>

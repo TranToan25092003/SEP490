@@ -532,6 +532,51 @@ export const complaintDetailStaffLoader = async ({ params }) => {
   }
 };
 
+export const notificationsPageLoader = async ({ request }) => {
+  try {
+    // Luôn lấy trang đầu tiên của "Tất cả" khi tải trang
+    const queryParams = new URLSearchParams({
+      page: "1",
+      limit: "10", // Lấy 10 thông báo mỗi trang
+    });
+
+    // Gọi API lấy thông báo và số lượng chưa đọc song song
+    const [notifResponse, unreadCountResponse] = await Promise.all([
+      customFetch(`/notifications?${queryParams.toString()}`),
+      customFetch("/notifications/unread-count"),
+    ]);
+
+    const notifApiResponse = notifResponse.data;
+    const unreadCountApiResponse = unreadCountResponse.data;
+
+    if (!notifApiResponse.success || !unreadCountApiResponse.success) {
+      throw new Error("Failed to load notifications data");
+    }
+
+    return {
+      initialNotifications: notifApiResponse.data,
+      pagination: notifApiResponse.pagination,
+      unreadCount: unreadCountApiResponse.data.unreadCount,
+    };
+  } catch (error) {
+    console.error("Notifications loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải thông báo",
+    });
+
+    return {
+      initialNotifications: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+      unreadCount: 0,
+    };
+  }
+};
+
 export const activityLogsLoader = async ({ request }) => {
   try {
     const url = new URL(request.url);
