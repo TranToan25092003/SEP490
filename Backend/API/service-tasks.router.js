@@ -1,14 +1,14 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const serviceOrderTaskController = require("../controller/service-order-task.controller");
-const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
+const {
+  throwErrors,
+} = require("../middleware/validate-data/throwErrors.middleware");
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
 
 const mediaValidation = [
-  body("media")
-    .isArray()
-    .withMessage("Media must be an array"),
+  body("media").isArray().withMessage("Media must be an array"),
   body("media.*.url")
     .notEmpty()
     .withMessage("Media URL is required")
@@ -16,7 +16,9 @@ const mediaValidation = [
     .withMessage("Media URL must be a valid URL"),
   body("media.*.kind")
     .isIn(["image", "video", "pdf", "other"])
-    .withMessage("Media type must be either 'photo', 'video', 'pdf', or 'other'"),
+    .withMessage(
+      "Media type must be either 'photo', 'video', 'pdf', or 'other'"
+    ),
   body("media.*.publicId")
     .notEmpty()
     .withMessage("Media public ID is required")
@@ -144,7 +146,9 @@ router.post(
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
     body("technicians")
       .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
+      .withMessage(
+        "Technicians array is required and must contain at least one technician"
+      ),
     body("technicians.*.technicianClerkId")
       .notEmpty()
       .withMessage("Technician Clerk ID is required"),
@@ -173,12 +177,6 @@ router.post(
  *         schema:
  *           type: string
  *         description: The ID of the inspection task
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             $ref: '#/components/schemas/CompleteInspectionPayload'
  *     responses:
  *       200:
  *         description: Inspection completed successfully
@@ -193,14 +191,50 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
   serviceOrderTaskController.completeInspection
+);
+
+/**
+ * @swagger
+ * /service-tasks/inspection/{taskId}:
+ *   put:
+ *     summary: Update an inspection task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the inspection task
+ *     responses:
+ *       200:
+ *         description: Inspection completed successfully
+ *       404:
+ *         description: Inspection task not found
+ */
+router.put(
+  "/inspection/:taskId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.updateInspection
 );
 
 /**
@@ -323,7 +357,9 @@ router.post(
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
     body("technicians")
       .isArray({ min: 1 })
-      .withMessage("Technicians array is required and must contain at least one technician"),
+      .withMessage(
+        "Technicians array is required and must contain at least one technician"
+      ),
     body("technicians.*.technicianClerkId")
       .notEmpty()
       .withMessage("Technician Clerk ID is required"),
@@ -408,17 +444,121 @@ router.post(
       .withMessage("Task ID is required")
       .isMongoId()
       .withMessage("Task ID must be a valid MongoDB ObjectId"),
-    body("title")
-      .notEmpty()
-      .withMessage("Title is required"),
-    body("comment")
-      .notEmpty()
-      .withMessage("Comment is required"),
-    ...mediaValidation
+    body("title").notEmpty().withMessage("Title is required"),
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
   ],
   throwErrors,
   authenticate,
   serviceOrderTaskController.updateServiceTaskTimeline
+);
+
+/**
+ * @swagger
+ * /service-tasks/servicing/{taskId}/timeline/{entryId}:
+ *  put:
+ *     summary: Update a timeline entry of a servicing task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the servicing task
+ *       - in: path
+ *         name: entryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the timeline entry
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ServiceTimelineEntry'
+ *     responses:
+ *       200:
+ *         description: Service task timeline entry updated successfully
+ *       404:
+ *         description: Servicing task or timeline entry not found
+ *
+ */
+router.put(
+  "/servicing/:taskId/timeline/:entryId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    param("entryId")
+      .notEmpty()
+      .withMessage("Entry ID is required")
+      .isMongoId()
+      .withMessage("Entry ID must be a valid MongoDB ObjectId"),
+    body("title").notEmpty().withMessage("Title is required"),
+    body("comment").notEmpty().withMessage("Comment is required"),
+    ...mediaValidation,
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.updateServiceTaskTimelineEntry
+);
+
+/**
+ * @swagger
+ * /service-tasks/servicing/{taskId}/timeline/{entryId}:
+ *   get:
+ *     summary: Get a timeline entry of a servicing task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the servicing task
+ *       - in: path
+ *         name: entryId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the timeline entry
+ *     responses:
+ *       200:
+ *         description: Service task timeline entry retrieved successfully
+ *         content:
+ *          application/json:
+ *            schema:
+ *              $ref: '#/components/schemas/ServiceTimelineEntryDTO'
+ *       404:
+ *         description: Servicing task or timeline entry not found
+ */
+router.get(
+  "/servicing/:taskId/timeline/:entryId",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    param("entryId")
+      .notEmpty()
+      .withMessage("Entry ID is required")
+      .isMongoId()
+      .withMessage("Entry ID must be a valid MongoDB ObjectId"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.getServiceTaskTimelineEntry
 );
 
 router.get(

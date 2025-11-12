@@ -17,12 +17,11 @@ import {
 import headerImg from "@/assets/header-img.jpg";
 import MotorcycleIcon from "../icons/MotorcycleIcon";
 import avatarImg from "../../assets/avatar.png";
-import { LuAlignLeft } from "react-icons/lu";
+import { LuAlignLeft } from "react-icons/lu"; // Giữ lại import nếu bạn dùng ở nơi khác, nhưng đã xóa khỏi nút
 import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
-import NotificationAlertIcon from "../icons/NotificationAlertIcon";
+import NotificationBell from "./NotificationBell"; // Đổi tên import
 import { ArrowUpDown, ChevronsUpDown } from "lucide-react";
-import NotificationBell from "./NotificationBell";
 
 const Header = () => {
   const navigate = useNavigate();
@@ -79,33 +78,38 @@ const Header = () => {
                     >
                       <img
                         src={profileImage}
-                        className="h-8 w-8 rounded-2xl object-cover"
+                        className="h-8 w-8 rounded-2xl object-cover" 
+                        alt={user?.firstName || 'User Avatar'}
                       ></img>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     className="w-60"
-                    align="start"
+                    align="end" 
                     sideOffset={10}
                   >
                     <SignedIn>
-                      <DropdownMenuSeparator></DropdownMenuSeparator>{" "}
-                      <DropdownMenuItem>
-                        <a href="/profile" className="capitalize">
-                          thông tin
-                        </a>
+                      {/* Thêm thông tin người dùng ở đây nếu muốn */}
+                      <DropdownMenuItem className="focus:bg-transparent">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">{user?.fullName || "Người dùng"}</p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user?.primaryEmailAddress?.emailAddress}
+                          </p>
+                        </div>
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <a href="/#" className="capitalize">
-                          lịch sử mua hàng
-                        </a>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onSelect={() => navigate('/profile')}>
+                        Thông tin
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <a href="/#" className="capitalize">
-                          theo dõi tiến độ
-                        </a>
+                      <DropdownMenuItem onSelect={() => navigate('/history')}>
+                        Lịch sử mua hàng
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => navigate('/service-progress')}>
+                        Theo dõi tiến độ
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
                         <SignOutLink></SignOutLink>
                       </DropdownMenuItem>
                     </SignedIn>
@@ -163,7 +167,7 @@ const Header = () => {
                   className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${isPartsMenuOpen ? "bg-[#3a454f]" : ""
                     }`}
                 >
-                  Phụ Tùng <ChevronsUpDown className="ml-2" />
+                  Phụ Tùng <ChevronsUpDown className="ml-2 h-4 w-4" />
                 </button>
                 {isPartsMenuOpen && (
                   <div className="absolute top-full left-0 w-full bg-zinc-800 shadow-lg border-t border-zinc-700">
@@ -174,7 +178,7 @@ const Header = () => {
                           className="break-inside-avoid mb-6"
                         >
                           <h3 className="mb-3 text-sm font-bold uppercase text-red-500">
-                            <Link to={`/items?brand=${group.brand}`}>
+                            <Link to={`/items?brand=${group.brand}`} className="hover:text-red-400">
                               Phụ Tùng {group.brand}
                             </Link>
                           </h3>

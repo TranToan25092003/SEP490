@@ -4,10 +4,10 @@ const { createServer } = require("http");
 const app = express();
 const server = createServer(app);
 
+
 //end create server
 
 require("dotenv").config(); // .env
-
 // database
 const database = require("./config/database");
 const port = process.env.PORT;
@@ -57,7 +57,10 @@ staffRouter(app);
 // manager router
 const managerRouter = require("./API/manager/index.router");
 managerRouter(app);
-// manager router
+
+//admin router
+const adminRouter = require("./API/admin/index.router");
+adminRouter(app);
 
 const separationMakesNoSense = require("./API");
 separationMakesNoSense(app);

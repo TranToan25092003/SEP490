@@ -33,13 +33,6 @@ const router = new express.Router();
  *     responses:
  *       200:
  *         description: List of quotes with pagination
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/QuotesListResponse'
  *       400:
  *         description: Bad request - Invalid parameters
  */
@@ -81,13 +74,6 @@ router.get(
  *     responses:
  *       200:
  *         description: Quote details
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 data:
- *                   $ref: '#/components/schemas/QuoteDTO'
  *       404:
  *         description: Quote not found
  */
@@ -122,16 +108,6 @@ router.get(
  *     responses:
  *       201:
  *         description: Quote created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Tạo báo giá thành công
- *                 data:
- *                   $ref: '#/components/schemas/QuoteDTO'
  *       400:
  *         description: Bad request - Service order has no items
  *       404:
@@ -170,16 +146,6 @@ router.post(
  *     responses:
  *       200:
  *         description: Quote approved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Phê duyệt báo giá thành công
- *                 data:
- *                   $ref: '#/components/schemas/QuoteDTO'
  *       400:
  *         description: Bad request - Invalid state transition
  *       404:
@@ -213,32 +179,9 @@ router.post(
  *         schema:
  *           type: string
  *         description: Quote ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - reason
- *             properties:
- *               reason:
- *                 type: string
- *                 description: Reason for rejection
- *                 example: Giá quá cao
  *     responses:
  *       200:
  *         description: Quote rejected successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Từ chối báo giá thành công
- *                 data:
- *                   $ref: '#/components/schemas/QuoteDTO'
  *       400:
  *         description: Bad request - Invalid state transition or missing reason
  *       404:

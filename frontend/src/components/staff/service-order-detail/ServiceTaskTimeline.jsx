@@ -1,6 +1,8 @@
 import { formatDateTime } from "@/lib/utils";
+import { Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const ServiceTaskTimeline = ({ timeline }) => {
+const ServiceTaskTimeline = ({ task, timeline, onEditEntry }) => {
   return (
     <div className="relative">
       <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
@@ -17,6 +19,30 @@ const ServiceTaskTimeline = ({ timeline }) => {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">{entry.comment}</p>
+
+              {entry.media.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {entry.media.map((mediaItem) => (
+                    <img
+                      key={mediaItem.url}
+                      src={mediaItem.url}
+                      alt={mediaItem.kind}
+                      className="w-full object-contain rounded-md"
+                    />
+                  ))}
+                </div>
+              )}
+
+              {task.serviceOrderStatus !== "completed" && (
+                <Button
+                  onClick={() =>
+                    typeof onEditEntry === "function" && onEditEntry(entry)
+                  }
+                >
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Chỉnh sửa mục
+                </Button>
+              )}
             </div>
           </div>
         ))}

@@ -1,10 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import {
-  ClerkProvider,
-  GoogleOneTap,
-  SignedIn,
-  useUser,
-} from "@clerk/clerk-react";
+import { ClerkProvider, GoogleOneTap, SignedIn } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 // import ErrorPage from "./components/global/Error";
@@ -15,6 +10,7 @@ import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
+import BookingQuotes from "./pages/customer/BookingQuotes";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
 import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
@@ -24,7 +20,7 @@ import BookingDetail from "./pages/staff/BookingDetail";
 import BookingList from "./pages/staff/BookingList";
 import NiceModal from "@ebay/nice-modal-react";
 import ChatStaff from "./pages/staff/ChatStaff";
-import AdminLayout from "./layout/manager-layout/ManagerLayout";
+import ManagerLayout from "./layout/manager-layout/ManagerLayout";
 import Manager from "./pages/manager/Manager";
 import ManagerItems from "./pages/manager/Items";
 import AddItem from "./pages/manager/AddItem";
@@ -47,6 +43,9 @@ import {
   complaintsStaffLoader,
   complaintDetailStaffLoader,
   notificationsPageLoader,
+  adminServicesLoader,
+  adminModelsLoader,
+  adminBannersLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -61,16 +60,20 @@ import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
-import {
-  authenTicationForStaffLoader,
-  authenTicationLoader,
-} from "./utils/authentication.loader";
+import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
+import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
+import { authenTicationForStaffLoader, authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import ActivityLogs from "./pages/manager/ActivityLogs";
 import { activityLogsLoader } from "./utils/loaders";
 import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
 import AttendanceTracking from "./pages/manager/AttendanceTracking";
+import AdminLayout from "./layout/admin-layout/AdminLayout";
+import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
+import AdminServicesPage from "./pages/admin/AdminServicesPage";
+import AdminModelsPage from "./pages/admin/AdminModelsPage";
+import AdminBannersPage from "./pages/admin/AdminBannersPage";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -93,6 +96,12 @@ const router = createBrowserRouter([
       {
         path: "/booking/:id",
         element: <BookingProgress />,
+        loader: BookingProgress.loader,
+      },
+      {
+        path: "/booking/:id/quotes",
+        element: <BookingQuotes />,
+        loader: BookingQuotes.loader,
       },
       {
         path: "/about",
@@ -143,7 +152,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/manager",
-    element: <AdminLayout />,
+    element: <ManagerLayout />,
     loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
@@ -245,9 +254,44 @@ const router = createBrowserRouter([
         loader: complaintDetailStaffLoader,
       },
       {
+        path: "invoices",
+        element: <StaffInvoicesPage />,
+      },
+      {
+        path: "invoices/:id",
+        element: <StaffInvoiceDetail />,
+      },
+      {
         path: "chat",
         element: <ChatStaff />,
       },
+    ],
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    // loader: authenTicationForAdminLoader,   //Add later 
+    children: [
+      {
+        index: true,
+        element: <AdminDashboardPage />
+      },
+      {
+        path: "services",
+        element: <AdminServicesPage />,
+        loader: adminServicesLoader,
+      },
+      {
+        path: "models",
+        element: <AdminModelsPage />,
+        loader: adminModelsLoader
+      },
+      {
+        path: "banners",
+        element: <AdminBannersPage />,
+        loader: adminBannersLoader
+      }
+
     ],
   },
 ]);

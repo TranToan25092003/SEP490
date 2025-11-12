@@ -1,7 +1,6 @@
 const { Part, ModelVehicle, MediaAsset } = require("../model");
 
 class PartService {
-  // Get all parts with pagination and filtering
   async getAllParts(query = {}) {
     const {
       page = 1,
@@ -13,7 +12,6 @@ class PartService {
       sortOrder = "desc",
     } = query;
 
-    // Build filter object
     const filter = {};
 
     if (search) {
@@ -32,7 +30,6 @@ class PartService {
       filter.compatible_model_ids = { $in: [vehicleModel] };
     }
 
-    // Build sort object
     const sort = {};
     sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
@@ -60,7 +57,6 @@ class PartService {
     }
   }
 
-  // Get single part by ID
   async getPartById(id) {
     try {
       const part = await Part.findById(id)
@@ -77,10 +73,8 @@ class PartService {
     }
   }
 
-  // Create new part
   async createPart(partData) {
     try {
-      // Validate required fields
       if (!partData.name || !partData.name.trim()) {
         throw new Error("Name is required");
       }
@@ -91,7 +85,6 @@ class PartService {
         throw new Error("Cost price must be greater than 0");
       }
 
-      // Generate code if not provided
       if (!partData.code) {
         partData.code = `PART-${Date.now()}-${Math.random()
           .toString(36)
@@ -99,7 +92,6 @@ class PartService {
           .toUpperCase()}`;
       }
 
-      // Create media assets if provided
       if (partData.media && partData.media.length > 0) {
         const mediaAssets = await MediaAsset.insertMany(partData.media);
         partData.media = mediaAssets.map((asset) => asset._id);
@@ -114,10 +106,8 @@ class PartService {
     }
   }
 
-  // Update part
   async updatePart(id, updateData) {
     try {
-      // Handle media assets update
       if (updateData.media && updateData.media.length > 0) {
         const mediaAssets = await MediaAsset.insertMany(updateData.media);
         updateData.media = mediaAssets.map((asset) => asset._id);
@@ -140,7 +130,6 @@ class PartService {
     }
   }
 
-  // Delete part
   async deletePart(id) {
     try {
       console.log("=== DELETE DEBUG ===");
@@ -154,7 +143,6 @@ class PartService {
         throw new Error("Part not found");
       }
 
-      // Clean up associated media assets
       if (part.media && part.media.length > 0) {
         await MediaAsset.deleteMany({ _id: { $in: part.media } });
       }
@@ -168,7 +156,6 @@ class PartService {
     }
   }
 
-  // Get all vehicle models (replaces categories)
   async getAllVehicleModels() {
     try {
       const models = await ModelVehicle.find().sort({ brand: 1, name: 1 });
@@ -178,7 +165,6 @@ class PartService {
     }
   }
 
-  // Get parts by vehicle model
   async getPartsByVehicleModel(modelId, query = {}) {
     const { page = 1, limit = 10 } = query;
 
@@ -210,7 +196,6 @@ class PartService {
     }
   }
 
-  // Get parts by brand
   async getPartsByBrand(brand, query = {}) {
     const { page = 1, limit = 10 } = query;
 
@@ -240,12 +225,10 @@ class PartService {
     }
   }
 
-  // Bulk delete parts
   async bulkDeleteParts(partIds) {
     try {
       const result = await Part.deleteMany({ _id: { $in: partIds } });
 
-      // Clean up associated media assets
       await MediaAsset.deleteMany({ _id: { $in: partIds } });
 
       return {
@@ -257,7 +240,6 @@ class PartService {
     }
   }
 
-  // Search parts by name or code
   async searchParts(query, limit = 10) {
     try {
       const parts = await Part.find({
@@ -265,7 +247,7 @@ class PartService {
           { name: { $regex: query, $options: "i" } },
           { code: { $regex: query, $options: "i" } },
         ],
-        status: "active", // Only search active parts
+        status: "active",
       })
         .select("_id name code brand quantity sellingPrice costPrice")
         .limit(parseInt(limit))
