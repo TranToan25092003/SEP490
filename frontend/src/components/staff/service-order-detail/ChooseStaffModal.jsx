@@ -33,12 +33,13 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
     fetchStaff();
   }, []);
 
-  const availableTechnicians = staffList.filter(tech => !tech.isBusy);
+  const availableTechnicians = staffList.filter(tech => tech.isPresent && !tech.isBusy);
   const busyTechnicians = staffList.filter(tech => tech.isBusy);
+  const absentTechnicians = staffList.filter(tech => !tech.isPresent);
 
   const handleStaffToggle = (staff) => {
     if (mode === "single") {
-      setSelectedStaff([staff]);
+      setSelectedStaff((prev) => prev.length > 0 ? [] : [staff]);
     } else {
       setSelectedStaff((prev) => {
         const isSelected = prev.some((s) => s.technicianClerkId === staff.technicianClerkId);
@@ -62,7 +63,7 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
           : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
       }`}
     >
-      {!technician.isBusy ? (
+      {!technician.isBusy && technician.isPresent ? (
         <Checkbox
           id={technician.technicianClerkId}
           checked={isSelected(technician.technicianClerkId)}
@@ -112,7 +113,7 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
             </div>
           ) : (
             <Tabs defaultValue="available" className="w-full">
-              <TabsList className="w-full grid grid-cols-2">
+              <TabsList className="w-full grid grid-cols-3">
                 <TabsTrigger value="available" className="relative">
                   Rảnh
                   {availableTechnicians.length > 0 && (
@@ -126,6 +127,14 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
                   {busyTechnicians.length > 0 && (
                     <Badge variant="secondary" className="ml-2 text-xs">
                       {busyTechnicians.length}
+                    </Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="absent" className="relative">
+                  Vắng
+                  {absentTechnicians.length > 0 && (
+                    <Badge variant="warning" className="ml-2 text-xs">
+                      {absentTechnicians.length}
                     </Badge>
                   )}
                 </TabsTrigger>
@@ -143,7 +152,7 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
                 </div>
               </TabsContent>
 
-              <TabsContent value="busy" className="mt-4">
+              <TabsContent value="busy">
                 <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                   {busyTechnicians.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
@@ -151,6 +160,18 @@ const ChooseStaffModal = NiceModal.create(({ mode = "single", initialSelected = 
                     </div>
                   ) : (
                     busyTechnicians.map(renderTechnicianRow)
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="absent">
+                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                  {absentTechnicians.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p className="text-sm">Không có kỹ thuật viên vắng</p>
+                    </div>
+                  ) : (
+                    absentTechnicians.map(renderTechnicianRow)
                   )}
                 </div>
               </TabsContent>
