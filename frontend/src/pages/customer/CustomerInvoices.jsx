@@ -135,14 +135,16 @@ const CustomerInvoices = () => {
               {invoices.map((invoice) => (
                 <TableRow key={invoice.id} className="hover:bg-muted/30">
                   <TableCell className="font-mono text-sm font-medium">
-                    {invoice.id}
+                    {invoice.invoiceNumber || invoice.id}
                   </TableCell>
                   <TableCell>{getStatusBadge(invoice.status)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDateTime(invoice.createdAt)}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {invoice.serviceOrderId || "—"}
+                    {invoice.serviceOrderNumber ||
+                      invoice.serviceOrderId ||
+                      "—"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {invoice.licensePlate || "—"}

@@ -9,6 +9,46 @@ const ERROR_CODES = {
 };
 
 class InvoiceService {
+  async _ensureInvoiceNumber(invoice) {
+    if (!invoice.invoiceNumber) {
+      const lastInvoice = await Invoice.findOne({
+        invoiceNumber: new RegExp("^HD"),
+      })
+        .sort({ invoiceNumber: -1 })
+        .exec();
+
+      let nextNumber = 1;
+      if (lastInvoice && lastInvoice.invoiceNumber) {
+        const lastNumber = parseInt(lastInvoice.invoiceNumber.slice(2));
+        nextNumber = lastNumber + 1;
+      }
+
+      invoice.invoiceNumber = `HD${String(nextNumber).padStart(6, "0")}`;
+      await invoice.save();
+    }
+    return invoice.invoiceNumber;
+  }
+
+  async _ensureOrderNumber(serviceOrder) {
+    if (serviceOrder && !serviceOrder.orderNumber) {
+      const lastOrder = await ServiceOrder.findOne({
+        orderNumber: new RegExp("^SC"),
+      })
+        .sort({ orderNumber: -1 })
+        .exec();
+
+      let nextNumber = 1;
+      if (lastOrder && lastOrder.orderNumber) {
+        const lastNumber = parseInt(lastOrder.orderNumber.slice(2));
+        nextNumber = lastNumber + 1;
+      }
+
+      serviceOrder.orderNumber = `SC${String(nextNumber).padStart(6, "0")}`;
+      await serviceOrder.save();
+    }
+    return serviceOrder?.orderNumber;
+  }
+
   async ensureInvoiceForServiceOrder(serviceOrderId) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)
       .populate({
@@ -96,6 +136,14 @@ class InvoiceService {
 
     const customerMap = await UsersService.getFullNamesByIds([customerClerkId]);
 
+    // Đảm bảo tất cả invoice và serviceOrder đều có số format
+    for (const invoice of customerInvoices) {
+      await this._ensureInvoiceNumber(invoice);
+      if (invoice.service_order_id) {
+        await this._ensureOrderNumber(invoice.service_order_id);
+      }
+    }
+
     return customerInvoices.map((invoice) =>
       this._mapInvoiceSummary(
         invoice,
@@ -125,13 +173,31 @@ class InvoiceService {
       return null;
     }
 
-    const customerMap = await UsersService.getFullNamesByIds([customerClerkId]);
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    const userIds = [customerClerkId];
+    const userMap = await UsersService.getFullNamesByIds(userIds);
 
     return this._mapInvoiceDetail(
       invoice,
       invoice.service_order_id,
       booking,
-      customerMap[customerClerkId] || null
+      userMap[customerClerkId] || null,
+      confirmedByName
     );
   }
 
@@ -168,6 +234,16 @@ class InvoiceService {
       .filter(Boolean);
 
     const customerMap = await UsersService.getFullNamesByIds(customerClerkIds);
+
+    // Đảm bảo tất cả invoice và serviceOrder đều có số format
+    await Promise.all(
+      invoices.map(async (invoice) => {
+        await this._ensureInvoiceNumber(invoice);
+        if (invoice.service_order_id) {
+          await this._ensureOrderNumber(invoice.service_order_id);
+        }
+      })
+    );
 
     const data = invoices.map((invoice) => {
       const serviceOrder = invoice.service_order_id;
@@ -206,18 +282,38 @@ class InvoiceService {
       return null;
     }
 
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
     const serviceOrder = invoice.service_order_id;
     const booking = serviceOrder?.booking_id;
     const customerClerkId = booking?.customer_clerk_id;
-    const customerMap = customerClerkId
-      ? await UsersService.getFullNamesByIds([customerClerkId])
-      : {};
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    const userIds = [];
+    if (customerClerkId) userIds.push(customerClerkId);
+
+    const userMap =
+      userIds.length > 0 ? await UsersService.getFullNamesByIds(userIds) : {};
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      customerMap[customerClerkId] || null
+      userMap[customerClerkId] || null,
+      confirmedByName
     );
   }
 
@@ -258,18 +354,38 @@ class InvoiceService {
 
     await invoice.save();
 
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
     const serviceOrder = invoice.service_order_id;
     const booking = serviceOrder?.booking_id;
     const customerClerkId = booking?.customer_clerk_id;
-    const customerMap = customerClerkId
-      ? await UsersService.getFullNamesByIds([customerClerkId])
-      : {};
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    const userIds = [];
+    if (customerClerkId) userIds.push(customerClerkId);
+
+    const userMap =
+      userIds.length > 0 ? await UsersService.getFullNamesByIds(userIds) : {};
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      customerMap[customerClerkId] || null
+      userMap[customerClerkId] || null,
+      confirmedByName
     );
   }
 
@@ -279,7 +395,10 @@ class InvoiceService {
 
     return {
       id: invoice._id.toString(),
+      invoiceNumber: invoice.invoiceNumber || invoice._id.toString(),
       serviceOrderId: serviceOrder?._id?.toString() || null,
+      serviceOrderNumber:
+        serviceOrder?.orderNumber || serviceOrder?._id?.toString() || null,
       status: invoice.status,
       totalAmount: invoice.amount,
       subtotal: invoice.subtotal,
@@ -290,7 +409,13 @@ class InvoiceService {
     };
   }
 
-  _mapInvoiceDetail(invoice, serviceOrder, booking, customerName = null) {
+  _mapInvoiceDetail(
+    invoice,
+    serviceOrder,
+    booking,
+    customerName = null,
+    confirmedByName = null
+  ) {
     const vehicle = booking?.vehicle_id;
 
     const items = (serviceOrder?.items || []).map((item) => ({
@@ -304,13 +429,16 @@ class InvoiceService {
 
     return {
       id: invoice._id.toString(),
+      invoiceNumber: invoice.invoiceNumber || invoice._id.toString(),
       serviceOrderId: serviceOrder?._id?.toString() || null,
+      serviceOrderNumber:
+        serviceOrder?.orderNumber || serviceOrder?._id?.toString() || null,
       status: invoice.status,
       subtotal: invoice.subtotal,
       tax: invoice.tax,
       totalAmount: invoice.amount,
       paymentMethod: invoice.payment_method || null,
-      confirmedBy: invoice.confirmed_by || null,
+      confirmedBy: confirmedByName || invoice.confirmed_by || null,
       confirmedAt: invoice.confirmed_at || null,
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
