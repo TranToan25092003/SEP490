@@ -28,7 +28,9 @@ class InvoiceService {
     const tax = serviceOrder.getTaxAmount();
     const total = serviceOrder.getAmountAfterTax();
 
-    let invoice = await Invoice.findOne({ service_order_id: serviceOrderId }).exec();
+    let invoice = await Invoice.findOne({
+      service_order_id: serviceOrderId,
+    }).exec();
     if (!invoice) {
       invoice = new Invoice({
         service_order_id: serviceOrderId,
@@ -43,15 +45,35 @@ class InvoiceService {
       invoice.amount = total;
     }
 
-    await invoice.save();
+    try {
+      await invoice.save();
+    } catch (error) {
+      if (error?.code === 11000 && error?.keyPattern?.quote_id === 1) {
+        try {
+          await Invoice.collection.dropIndex("quote_id_1");
+        } catch (dropError) {
+          if (dropError?.codeName !== "IndexNotFound") {
+            throw dropError;
+          }
+        }
+
+        await Invoice.collection.createIndex(
+          { quote_id: 1 },
+          {
+            unique: true,
+            partialFilterExpression: { quote_id: { $type: "objectId" } },
+          }
+        );
+
+        await invoice.save();
+      } else {
+        throw error;
+      }
+    }
     return this._mapInvoiceSummary(invoice, serviceOrder);
   }
 
-  async listInvoices({
-    page = 1,
-    limit = 10,
-    status = null,
-  } = {}) {
+  async listInvoices({ page = 1, limit = 10, status = null } = {}) {
     const filters = {};
     if (status) {
       filters.status = status;
@@ -212,9 +234,7 @@ class InvoiceService {
     const items = (serviceOrder?.items || []).map((item) => ({
       type: item.item_type,
       name:
-        item.item_type === "part"
-          ? item.part_id?.name || item.name
-          : item.name,
+        item.item_type === "part" ? item.part_id?.name || item.name : item.name,
       quantity: item.quantity,
       price: item.price,
       lineTotal: item.price * item.quantity,

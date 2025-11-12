@@ -11,21 +11,30 @@ const ItemsSchema = new Schema(
     quantity: {
       type: Number,
       required: true,
-      default: 1
-    }
+      default: 1,
+    },
   },
   { discriminatorKey: "item_type", _id: false }
 );
 
-const ServiceItemSchema = new Schema({
-  service_id: { type: Schema.Types.ObjectId, ref: "Service", required: false },
-  name: { type: String, required: true },
-}, { _id: false });
+const ServiceItemSchema = new Schema(
+  {
+    service_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Service",
+      required: false,
+    },
+    name: { type: String, required: true },
+  },
+  { _id: false }
+);
 
-const PartItemSchema = new Schema({
-  part_id: { type: Schema.Types.ObjectId, ref: "Part", required: true },
-}, { _id: false });
-
+const PartItemSchema = new Schema(
+  {
+    part_id: { type: Schema.Types.ObjectId, ref: "Part", required: true },
+  },
+  { _id: false }
+);
 
 // Service_Orders Schema
 // The main data model
@@ -69,14 +78,14 @@ ServiceOrderSchema.methods.getTotalCostBeforeTax = function () {
 ServiceOrderSchema.methods.getTaxAmount = function () {
   const totalBeforeTax = this.getTotalCostBeforeTax();
   return totalBeforeTax * 0.1;
-}
+};
 
 ServiceOrderSchema.methods.getAmountAfterTax = function () {
   return this.getTotalCostBeforeTax() + this.getTaxAmount();
-}
+};
 
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 
 module.exports = {
-  ServiceOrder
+  ServiceOrder,
 };

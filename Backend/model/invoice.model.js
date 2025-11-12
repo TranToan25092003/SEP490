@@ -9,8 +9,6 @@ const InvoiceSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Quote",
       required: false,
-      unique: true,
-      sparse: true,
     }, // Optional link to a quote
     service_order_id: {
       type: Schema.Types.ObjectId,
@@ -44,6 +42,14 @@ const InvoiceSchema = new Schema(
     confirmed_at: { type: Date, required: false }, // Confirmation timestamp
   },
   { timestamps: true }
+);
+
+InvoiceSchema.index(
+  { quote_id: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { quote_id: { $type: "objectId" } },
+  }
 );
 const Invoice = mongoose.model("Invoice", InvoiceSchema);
 module.exports = Invoice;
