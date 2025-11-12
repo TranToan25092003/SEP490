@@ -40,6 +40,12 @@ const items = [
     href: "/manager/bays",
   },
   { key: "staff", label: "Staff", icon: imgStaff, href: "/manager/staff" },
+  {
+    key: "attendance",
+    label: "Điểm danh",
+    icon: imgStaff,
+    href: "/manager/attendance-tracking",
+  },
 ];
 
 export default function ManagerSidebar({
