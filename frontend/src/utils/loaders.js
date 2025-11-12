@@ -604,3 +604,153 @@ export const activityLogsLoader = async ({ request }) => {
     };
   }
 };
+
+export const adminServicesLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/services?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load services");
+    }
+
+    return {
+      services: apiResponse.data,
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Services loader error:", error);
+    toast.error("Lỗi tải dữ liệu dịch vụ", {
+      description: error.message || "Không thể tải danh sách dịch vụ",
+    });
+
+    return {
+      services: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
+export const adminModelsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/models?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load models");
+    }
+
+    return {
+      models: apiResponse.data, 
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Models loader error:", error);
+    toast.error("Lỗi tải dữ liệu mẫu xe", {
+      description: error.message || "Không thể tải danh sách mẫu xe",
+    });
+
+    return {
+      models: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};
+
+export const adminBannersLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+
+    const queryParams = new URLSearchParams();
+
+    if (searchParams.get("page"))
+      queryParams.append("page", searchParams.get("page"));
+    if (searchParams.get("limit"))
+      queryParams.append("limit", searchParams.get("limit"));
+    if (searchParams.get("search"))
+      queryParams.append("search", searchParams.get("search"));
+    if (searchParams.get("sortBy"))
+      queryParams.append("sortBy", searchParams.get("sortBy"));
+    if (searchParams.get("sortOrder"))
+      queryParams.append("sortOrder", searchParams.get("sortOrder"));
+
+    const response = await customFetch(
+      `/admin/banners?${queryParams.toString()}`
+    );
+
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load banners");
+    }
+
+    return {
+      banners: apiResponse.data, 
+      pagination: apiResponse.pagination,
+    };
+  } catch (error) {
+    console.error("Admin Banners loader error:", error);
+    toast.error("Lỗi tải dữ liệu banner", {
+      description: error.message || "Không thể tải danh sách banner",
+    });
+
+    return {
+      banners: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 0,
+        totalItems: 0,
+        itemsPerPage: 10,
+      },
+    };
+  }
+};

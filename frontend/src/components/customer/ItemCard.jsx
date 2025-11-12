@@ -23,7 +23,7 @@ function ItemCard({ product }) {
   return (
     <Link to={`/items/${_id}`} className="group block h-full">
       <div className="w-full h-[28rem] p-6 bg-white rounded-3xl shadow-[0px_4px_10px_0px_rgba(0,0,0,0.10)] flex flex-col gap-4 overflow-hidden transition-shadow duration-300 group-hover:shadow-xl">
-        <div className="self-stretch h-60 relative rounded-[10px] flex items-center justify-center overflow-hidden bg-gray-50">
+        <div className="self-stretch h-60 relative rounded-[10px] flex items-center justify-center overflow-hidden">
           <img
             src={image || partImage}
             alt={name || "Product Image"}
