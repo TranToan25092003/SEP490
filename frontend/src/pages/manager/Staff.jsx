@@ -1,22 +1,38 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useOrganization, OrganizationProfile } from "@clerk/clerk-react";
+import { getAttendanceByDate } from "@/api/attendance";
 
 const ROLE_LABELS = {
-  mechanic: "Thợ",
-  staff: "Nhân viên",
+  technician: "thợ",
+  staff: "nhân viên",
 };
 
-const STATUS_LABELS = {
-  active: { text: "Đang làm", classes: "bg-green-100 text-green-700" },
-  inactive: { text: "Đã nghỉ", classes: "bg-red-100 text-red-700" },
+const ATTENDANCE_STATUS_LABELS = {
+  full: { text: "đang làm", classes: "bg-green-100 text-green-700" },
+  partial: {
+    text: "đang làm",
+    classes: "bg-yellow-100 text-yellow-700",
+  },
+  absent: { text: "nghỉ", classes: "bg-red-100 text-red-700" },
+  unknown: { text: "chưa điểm danh", classes: "bg-gray-100 text-gray-600" },
+};
+
+const deriveAttendanceStatusKey = (entry) => {
+  if (!entry) return "unknown";
+  const { morningShift, afternoonShift } = entry;
+  if (morningShift && afternoonShift) return "full";
+  if (morningShift || afternoonShift) return "partial";
+  return "absent";
 };
 
 const StaffPage = () => {
   const { organization, isLoaded } = useOrganization();
+  const today = useMemo(() => new Date().toISOString().split("T")[0], []);
   const [memberships, setMemberships] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [showOrgManager, setShowOrgManager] = useState(false); // 🟢 nút bật/tắt
+  const [showOrgManager, setShowOrgManager] = useState(false);
+  const [attendanceMap, setAttendanceMap] = useState({});
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -35,10 +51,11 @@ const StaffPage = () => {
 
         if (cancelled) return;
 
+        console.log(data);
         const staffOnly = data.filter(
           (membership) =>
             membership.roleName === "staff" ||
-            membership.publicMetadata?.role === "staff"
+            membership.roleName === "technician"
         );
 
         setMemberships(staffOnly);
@@ -60,12 +77,42 @@ const StaffPage = () => {
     };
   }, [organization, isLoaded]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const data = await getAttendanceByDate(today);
+        if (cancelled) return;
+
+        const entries = data?.entries || [];
+        const mapped = entries.reduce((acc, entry) => {
+          if (entry?.staffId) {
+            acc[entry.staffId] = entry;
+          }
+          return acc;
+        }, {});
+
+        setAttendanceMap(mapped);
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load attendance for staff table", err);
+          setAttendanceMap({});
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [today]);
+
   const rows = useMemo(
     () =>
       memberships.map((membership) => {
         const publicUserData = membership.publicUserData ?? {};
         const memberMetadata = {
-          ...(publicUserData.publicMetadata ?? {}),
+          ...(membership.publicMetadata ?? {}),
           ...(membership.publicMetadata ?? {}),
         };
 
@@ -74,14 +121,22 @@ const StaffPage = () => {
           .join(" ")
           .trim();
 
-        const jobType = memberMetadata.jobType ?? "staff";
-        const status = memberMetadata.employmentStatus ?? "active";
+        const jobType = membership.roleName ?? "staff";
+        const clerkUserId = publicUserData.userId;
+        const attendanceEntry = clerkUserId
+          ? attendanceMap[clerkUserId]
+          : undefined;
+        const attendanceStatusKey = deriveAttendanceStatusKey(attendanceEntry);
+
+        const attendanceStatus =
+          ATTENDANCE_STATUS_LABELS[attendanceStatusKey] ||
+          ATTENDANCE_STATUS_LABELS.unknown;
 
         return {
           id: membership.id,
           employeeCode:
             memberMetadata.employeeCode ?? publicUserData.userId ?? "—",
-          role: membership.roleName ?? memberMetadata.role ?? "staff",
+          role: membership.roleName ?? membership.roleName ?? "staff",
           fullName: fullName || publicUserData.identifier || "Không rõ",
           avatar: publicUserData.imageUrl,
           gender: memberMetadata.gender ?? "—",
@@ -95,12 +150,11 @@ const StaffPage = () => {
             "Chưa cập nhật",
           address: memberMetadata.address ?? "Chưa cập nhật",
           jobTypeLabel: ROLE_LABELS[jobType] ?? "Nhân viên",
-          statusLabel: STATUS_LABELS[status]?.text ?? "Đang làm",
-          statusClasses:
-            STATUS_LABELS[status]?.classes ?? "bg-green-100 text-green-700",
+          statusLabel: attendanceStatus.text,
+          statusClasses: attendanceStatus.classes,
         };
       }),
-    [memberships]
+    [memberships, attendanceMap]
   );
 
   const stats = useMemo(() => {
@@ -224,7 +278,6 @@ const StaffPage = () => {
         <table className="min-w-full divide-y divide-gray-200 text-sm">
           <thead className="bg-gray-50 text-xs font-semibold uppercase tracking-wide text-gray-500">
             <tr>
-              <th className="px-4 py-3 text-left">Mã nhân viên</th>
               <th className="px-4 py-3 text-left">Họ &amp; tên</th>
               <th className="px-4 py-3 text-left">Giới tính</th>
               <th className="px-4 py-3 text-left">Số điện thoại</th>
@@ -237,9 +290,6 @@ const StaffPage = () => {
           <tbody className="divide-y divide-gray-200">
             {rows.map((member) => (
               <tr key={member.id} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  {member.employeeCode}
-                </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
                     {member.avatar ? (
