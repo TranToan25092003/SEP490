@@ -1,12 +1,7 @@
+import React from "react";
 import {
   sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
-  iconHome as imgHome,
-  iconInvoice as imgInvoice,
-  iconBanking as imgMoney,
-  iconStaff as imgStaff,
-  iconLog as iconLog,
-  iconAttendance as iconAttendance,
 } from "@/assets/admin/sidebar_new";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,23 +11,34 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronRight, LogOut, Building2 } from "lucide-react";
+
+import {
+  LayoutDashboard,
+  Wrench,
+  ClipboardList,
+  Building2,
+  Users,
+  CalendarCheck, 
+  ScrollText,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 const items = [
-  { key: "home", label: "Dashboard", icon: imgHome, href: "/manager" },
+  { key: "home", label: "Dashboard", icon: LayoutDashboard, href: "/manager" },
   {
     key: "parts",
     label: "Quản lý phụ tùng",
-    icon: imgMoney,
+    icon: Wrench, 
     href: "/manager/items",
   },
   {
     key: "goodReceipts",
     label: "Quản lý phiếu nhập ",
-    icon: imgInvoice,
+    icon: ClipboardList, 
     href: "/manager/goods-receipt-list",
   },
   {
@@ -41,18 +47,17 @@ const items = [
     icon: Building2,
     href: "/manager/bays",
   },
-  { key: "staff", label: "Staff", icon: imgStaff, href: "/manager/staff" },
+  { key: "staff", label: "Staff", icon: Users, href: "/manager/staff" },
   {
     key: "attendance",
     label: "Điểm danh",
-    icon: iconAttendance,
+    icon: CalendarCheck, 
     href: "/manager/attendance-tracking",
   },
-
   {
     key: "log",
     label: "Log",
-    icon: iconLog,
+    icon: ScrollText, 
     href: "/manager/activity-logs",
   },
 ];
@@ -62,7 +67,7 @@ export default function ManagerSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => {},
+  onExpandToggle = () => { },
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -79,11 +84,9 @@ export default function ManagerSidebar({
 
   return (
     <aside
-      className={cn(
-        "fixed left-0 z-40 bg-white transition-all",
-        expanded ? `w-[${expandedWidth}px]` : `w-[${width}px]`
-      )}
-      style={{ top: 0, bottom: 0 }}
+      className="fixed left-0 z-40 bg-white transition-all"
+      // Loại bỏ style width cứng để dùng class của Tailwind
+      style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
         <img alt="" src={imgLine} className="w-px h-full" />
@@ -97,8 +100,7 @@ export default function ManagerSidebar({
           >
             <div className="flex flex-col gap-3">
               {items.map((it) => {
-                // Kiểm tra xem mục này có đang hoạt động không
-                // Xử lý trường hợp đặc biệt cho trang chủ dashboard
+                const Icon = it.icon; // Icon giờ luôn là component
                 const isActive =
                   it.href === "/manager"
                     ? location.pathname === it.href
@@ -114,6 +116,8 @@ export default function ManagerSidebar({
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
+                              "font-semibold text-red-600": isActive, // Style text khi active
+                              "text-gray-700": !isActive,
                             }
                           )}
                         >
@@ -122,11 +126,10 @@ export default function ManagerSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${
-                            isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100" // Style khi active
-                              : "text-gray-500 hover:bg-gray-100" // Style khi không active
-                          }`}
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
+                              ? "bg-red-50 text-red-600 hover:bg-red-100" // Style nút khi active
+                              : "text-gray-500 hover:bg-gray-100" // Style nút khi không active
+                            }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (
@@ -134,22 +137,10 @@ export default function ManagerSidebar({
                               to={it.href}
                               aria-current={isActive ? "page" : undefined}
                             >
-                              {typeof it.icon === "string" ? (
-                                <img alt="" src={it.icon} className="size-7" />
-                              ) : (
-                                (() => {
-                                  const Icon = it.icon;
-                                  return <Icon className="size-7" />;
-                                })()
-                              )}
+                              <Icon className="size-7" />
                             </Link>
-                          ) : typeof it.icon === "string" ? (
-                            <img alt="" src={it.icon} className="size-7" />
                           ) : (
-                            (() => {
-                              const Icon = it.icon;
-                              return <Icon className="size-7" />;
-                            })()
+                            <Icon className="size-7" />
                           )}
                         </Button>
                       </div>
