@@ -76,6 +76,7 @@ import AdminModelsPage from "./pages/admin/AdminModelsPage";
 import AdminBannersPage from "./pages/admin/AdminBannersPage";
 import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
+import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -204,6 +205,10 @@ const router = createBrowserRouter([
       {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
+      },
+      {
+        path: "loyalty",
+        element: <LoyaltyProgram />,
       },
     ],
   },
