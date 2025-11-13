@@ -143,14 +143,19 @@ export default function ManagerBays() {
               </TableRow>
             ) : bays.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={4}
+                  className="text-center text-muted-foreground"
+                >
                   Chưa có bay nào
                 </TableCell>
               </TableRow>
             ) : (
               bays.map((bay) => (
                 <TableRow key={bay._id}>
-                  <TableCell className="font-medium">{bay.bay_number}</TableCell>
+                  <TableCell className="font-medium">
+                    {bay.bay_number}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -164,13 +169,13 @@ export default function ManagerBays() {
                   </TableCell>
                   <TableCell>{bay.description || "-"}</TableCell>
                   <TableCell className="space-x-2">
-                    <Button
+                    {/* <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleToggleStatus(bay)}
                     >
                       Đổi trạng thái
-                    </Button>
+                    </Button> */}
                     <Button
                       variant="destructive"
                       size="sm"
@@ -188,4 +193,3 @@ export default function ManagerBays() {
     </div>
   );
 }
-
