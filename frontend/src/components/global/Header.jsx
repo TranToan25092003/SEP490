@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { SignedIn, useUser } from "@clerk/clerk-react";
 import { customFetch } from "@/utils/customAxios";
@@ -114,6 +114,10 @@ const Header = () => {
                       </DropdownMenuItem>
                       <DropdownMenuItem onSelect={() => navigate("/invoices")}>
                         Hóa Đơn - Thanh Toán
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem onSelect={() => navigate("/loyalty")}>
+                        Điểm thưởng
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />
