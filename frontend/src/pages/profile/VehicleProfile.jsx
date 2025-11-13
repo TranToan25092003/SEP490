@@ -64,6 +64,7 @@ const VehicleProfile = ({ vehicles = [] }) => {
           </div>
 
           {/* Hiển thị danh sách hình ảnh của xe */}
+          
           {vehicle.images && vehicle.images.length > 0 && (
             <div className="mt-6">
               <Label>Hình ảnh xe</Label>
