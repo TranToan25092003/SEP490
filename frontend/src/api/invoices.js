@@ -22,3 +22,19 @@ export const confirmInvoicePayment = async (invoiceId, payload = {}) => {
 
   return response.data;
 };
+
+export const fetchCustomerInvoices = async () => {
+  const response = await customFetch("/invoices", {
+    method: "GET",
+  });
+
+  return response.data;
+};
+
+export const fetchCustomerInvoiceDetail = async (invoiceId) => {
+  const response = await customFetch(`/invoices/${invoiceId}`, {
+    method: "GET",
+  });
+
+  return response.data;
+};

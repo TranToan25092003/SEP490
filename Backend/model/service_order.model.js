@@ -40,6 +40,11 @@ const PartItemSchema = new Schema(
 // The main data model
 const ServiceOrderSchema = new Schema(
   {
+    orderNumber: {
+      type: String,
+      required: false,
+      unique: true,
+    }, // Số lệnh sửa chữa (VD: SC000001)
     staff_clerk_id: { type: String, required: true }, // Staff who created the order
     booking_id: { type: Schema.Types.ObjectId, ref: "Booking", required: true }, // Associated booking ID
     items: [ItemsSchema], // Array of order items (services, parts, custom)
@@ -83,6 +88,27 @@ ServiceOrderSchema.methods.getTaxAmount = function () {
 ServiceOrderSchema.methods.getAmountAfterTax = function () {
   return this.getTotalCostBeforeTax() + this.getTaxAmount();
 };
+
+// Pre-save middleware để tự động tạo orderNumber
+ServiceOrderSchema.pre("save", async function (next) {
+  if (!this.orderNumber) {
+    // Tìm lệnh sửa chữa cuối cùng
+    const lastOrder = await this.constructor
+      .findOne({
+        orderNumber: new RegExp("^SC"),
+      })
+      .sort({ orderNumber: -1 });
+
+    let nextNumber = 1;
+    if (lastOrder && lastOrder.orderNumber) {
+      const lastNumber = parseInt(lastOrder.orderNumber.slice(2));
+      nextNumber = lastNumber + 1;
+    }
+
+    this.orderNumber = `SC${String(nextNumber).padStart(6, "0")}`;
+  }
+  next();
+});
 
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 

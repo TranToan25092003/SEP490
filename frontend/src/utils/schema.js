@@ -6,10 +6,10 @@ export const vehicleSchema = z.object({
   license_plate: z
     .string()
     .min(1, "Biển số xe là bắt buộc")
-    .regex(/^[0-9]{2}[A-Z]{1,2}[-][0-9]{3,6}$/, {
-      message: "Định dạng biển số không hợp lệ (VD: 51A-12345)",
+    .regex(/^[0-9]{2}-[A-Z]{1}[0-9A-Z]{1}[- ]([0-9]{3,4}|[0-9]{5}|[0-9]{3}\.[0-9]{2})$/, {
+      message: "Định dạng biển số không hợp lệ (VD: 29-G1-12345 hoặc 29-G1-123.45)",
     })
-    .max(12, "Biển số quá dài"),
+    .max(15, "Biển số quá dài"),
   year: z
     .number()
     .optional()

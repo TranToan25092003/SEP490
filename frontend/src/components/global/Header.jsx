@@ -78,36 +78,44 @@ const Header = () => {
                     >
                       <img
                         src={profileImage}
-                        className="h-8 w-8 rounded-2xl object-cover" 
-                        alt={user?.firstName || 'User Avatar'}
+                        className="h-8 w-8 rounded-2xl object-cover"
+                        alt={user?.firstName || "User Avatar"}
                       ></img>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     className="w-60"
-                    align="end" 
+                    align="end"
                     sideOffset={10}
                   >
                     <SignedIn>
                       {/* Thêm thông tin người dùng ở đây nếu muốn */}
                       <DropdownMenuItem className="focus:bg-transparent">
                         <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">{user?.fullName || "Người dùng"}</p>
+                          <p className="text-sm font-medium leading-none">
+                            {user?.fullName || "Người dùng"}
+                          </p>
                           <p className="text-xs leading-none text-muted-foreground">
                             {user?.primaryEmailAddress?.emailAddress}
                           </p>
                         </div>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => navigate('/profile')}>
+                      <DropdownMenuItem onSelect={() => navigate("/profile")}>
                         Thông tin
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => navigate('/history')}>
+                      <DropdownMenuItem onSelect={() => navigate("/history")}>
                         Lịch sử mua hàng
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => navigate('/service-progress')}>
+                      <DropdownMenuItem
+                        onSelect={() => navigate("/service-progress")}
+                      >
                         Theo dõi tiến độ
                       </DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => navigate("/invoices")}>
+                        Hóa Đơn - Thanh Toán
+                      </DropdownMenuItem>
+
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
                         <SignOutLink></SignOutLink>
@@ -164,8 +172,9 @@ const Header = () => {
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
                 <button
-                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${isPartsMenuOpen ? "bg-[#3a454f]" : ""
-                    }`}
+                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${
+                    isPartsMenuOpen ? "bg-[#3a454f]" : ""
+                  }`}
                 >
                   Phụ Tùng <ChevronsUpDown className="ml-2 h-4 w-4" />
                 </button>
@@ -178,7 +187,10 @@ const Header = () => {
                           className="break-inside-avoid mb-6"
                         >
                           <h3 className="mb-3 text-sm font-bold uppercase text-red-500">
-                            <Link to={`/items?brand=${group.brand}`} className="hover:text-red-400">
+                            <Link
+                              to={`/items?brand=${group.brand}`}
+                              className="hover:text-red-400"
+                            >
                               Phụ Tùng {group.brand}
                             </Link>
                           </h3>

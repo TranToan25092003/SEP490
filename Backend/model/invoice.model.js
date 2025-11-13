@@ -5,6 +5,11 @@ const Schema = mongoose.Schema;
 // Represents invoices generated from service orders (and optionally quotes)
 const InvoiceSchema = new Schema(
   {
+    invoiceNumber: {
+      type: String,
+      required: false,
+      unique: true,
+    }, // Số hóa đơn (VD: HD000001)
     quote_id: {
       type: Schema.Types.ObjectId,
       ref: "Quote",
@@ -51,5 +56,27 @@ InvoiceSchema.index(
     partialFilterExpression: { quote_id: { $type: "objectId" } },
   }
 );
+
+// Pre-save middleware để tự động tạo invoiceNumber
+InvoiceSchema.pre("save", async function (next) {
+  if (!this.invoiceNumber) {
+    // Tìm hóa đơn cuối cùng
+    const lastInvoice = await this.constructor
+      .findOne({
+        invoiceNumber: new RegExp("^HD"),
+      })
+      .sort({ invoiceNumber: -1 });
+
+    let nextNumber = 1;
+    if (lastInvoice && lastInvoice.invoiceNumber) {
+      const lastNumber = parseInt(lastInvoice.invoiceNumber.slice(2));
+      nextNumber = lastNumber + 1;
+    }
+
+    this.invoiceNumber = `HD${String(nextNumber).padStart(6, "0")}`;
+  }
+  next();
+});
+
 const Invoice = mongoose.model("Invoice", InvoiceSchema);
 module.exports = Invoice;

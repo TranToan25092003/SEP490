@@ -62,7 +62,7 @@ import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
-import { authenTicationForStaffLoader, authenTicationLoader } from "./utils/authentication.loader";
+import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import ActivityLogs from "./pages/manager/ActivityLogs";
 import { activityLogsLoader } from "./utils/loaders";
@@ -74,6 +74,8 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminModelsPage from "./pages/admin/AdminModelsPage";
 import AdminBannersPage from "./pages/admin/AdminBannersPage";
+import CustomerInvoices from "./pages/customer/CustomerInvoices";
+import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -120,6 +122,16 @@ const router = createBrowserRouter([
       {
         path: "/complaint",
         element: <CreateComplaint />,
+      },
+      {
+        path: "/invoices",
+        element: <CustomerInvoices />,
+        loader: CustomerInvoices.loader,
+      },
+      {
+        path: "/invoices/:id",
+        element: <CustomerInvoiceDetail />,
+        loader: CustomerInvoiceDetail.loader,
       },
 
       // 404 within HomeLayout
@@ -199,7 +211,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
-    loader: authenTicationForStaffLoader,
+    // loader: authenTicationForStaffLoader,
     children: [
       { index: true, element: <StaffDashboardPage /> },
       {
@@ -270,11 +282,11 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
-    // loader: authenTicationForAdminLoader,   //Add later 
+    // loader: authenTicationForAdminLoader,   //Add later
     children: [
       {
         index: true,
-        element: <AdminDashboardPage />
+        element: <AdminDashboardPage />,
       },
       {
         path: "services",
@@ -284,14 +296,13 @@ const router = createBrowserRouter([
       {
         path: "models",
         element: <AdminModelsPage />,
-        loader: adminModelsLoader
+        loader: adminModelsLoader,
       },
       {
         path: "banners",
         element: <AdminBannersPage />,
-        loader: adminBannersLoader
-      }
-
+        loader: adminBannersLoader,
+      },
     ],
   },
 ]);
