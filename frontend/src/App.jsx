@@ -168,7 +168,7 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <ManagerLayout />,
-    loader: authenTicationLoader,
+    // loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
       { path: "staff", element: <StaffPage /> },

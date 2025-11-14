@@ -1,5 +1,5 @@
 import React from "react";
-import { useLoaderData } from "react-router-dom";
+import { useLoaderData, Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -11,9 +11,6 @@ import hero1 from "@/assets/header-img.jpg";
 import g1 from "@/assets/gallery-1.jpg";
 import g2 from "@/assets/gallery-2.jpg";
 import g3 from "@/assets/gallery-3.jpg";
-import part1 from "@/assets/part-lopsau.png";
-import part2 from "@/assets/part-bugi.png";
-import part3 from "@/assets/part-maphanh.png";
 import bgParts from "@/assets/bg-parts.png";
 import worldMap from "@/assets/world-map.png";
 import service1 from "@/assets/service-suaxe.png";
@@ -25,43 +22,26 @@ import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
 import ItemList from "@/components/customer/ItemList";
 import { useUser } from "@clerk/clerk-react";
 
+const fallbackSlides = [
+  { _id: 'f1', title: 'Banner 1', image_url: hero1, link_url: '/booking' },
+  { _id: 'f2', title: 'Banner 2', image_url: g1, link_url: '/booking' },
+  { _id: 'f3', title: 'Banner 3', image_url: g2, link_url: '/booking' },
+  { _id: 'f4', title: 'Banner 4', image_url: g3, link_url: '/booking' },
+];
+
+const services = [
+  { id: 1, name: "SỬA XE", tag: "New | Used", image: service1 },
+  { id: 2, name: "THAY NHỚT", tag: "New | Used", image: service2 },
+  { id: 3, name: "ATVS", tag: "New | Used", image: service3 },
+  { id: 4, name: "RỬA XE", tag: "New | Used", image: service4 },
+];
+
 function Home() {
-  const { parts } = useLoaderData();
-  const slides = [hero1, g1, g2, g3];
+  const { parts, banners } = useLoaderData();
+  const slides = (banners && banners.length > 0) ? banners : fallbackSlides;
   const [api, setApi] = React.useState(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [slideCount, setSlideCount] = React.useState(slides.length);
-
-  const featuredParts = [
-    {
-      id: 1,
-      name: "Lốp sau MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "340.000 VND",
-      image: part1,
-    },
-    {
-      id: 2,
-      name: "Bugi + IC MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "50.000 VND",
-      image: part2,
-    },
-    {
-      id: 3,
-      name: "Bố Má Phanh MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "110.000 VND",
-      image: part3,
-    },
-  ];
-
-  const services = [
-    { id: 1, name: "SỬA XE", tag: "New | Used", image: service1 },
-    { id: 2, name: "THAY NHỚT", tag: "New | Used", image: service2 },
-    { id: 3, name: "ATVS", tag: "New | Used", image: service3 },
-    { id: 4, name: "RỬA XE", tag: "New | Used", image: service4 },
-  ];
 
   React.useEffect(() => {
     if (!api) return;
@@ -83,14 +63,14 @@ function Home() {
         <div className="mx-auto max-w-[1920px]">
           <Carousel className="w-full" setApi={setApi}>
             <CarouselContent className="">
-              {slides.map((src, idx) => (
-                <CarouselItem key={src}>
+              {slides.map((slide, idx) => (
+                <CarouselItem key={slide._id || idx}>
                   <div className="w-full">
                     <div className="relative aspect-[16/7] w-full max-h-[800px]">
                       {/* 1. Image (bottom layer) */}
                       <img
-                        src={src}
-                        alt={`slide-${idx + 1}`}
+                        src={slide.image_url}
+                        alt={slide.title || `Slide ${idx + 1}`}
                         className="absolute inset-0 h-full w-full object-cover"
                       />
 
@@ -107,17 +87,13 @@ function Home() {
                             Phụ tùng tốt nhất cho{" "}
                             <br className="hidden md:block" /> mọi nhà
                           </div>
-                          <button
-                            className="mx-auto inline-flex w-40 items-center justify-center gap-2.5 rounded-lg bg-red-600 p-2.5
-                                        text-lg font-bold text-white
-                                       transition-all duration-150 ease-in-out
-                                       hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg
-                                       active:scale-95
-                                       cursor-pointer"
+                          <Link
+                            to={slide.link_url || "/items"}
+                            className="mx-auto inline-flex w-40 items-center justify-center gap-2.5 rounded-lg bg-red-600 p-2.5 text-lg font-bold text-white transition-all duration-150 ease-in-out hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
                           >
                             <MotorcycleIcon />
                             Tìm hiểu
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -135,9 +111,8 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                      selectedIndex === i ? "bg-white" : "bg-white/50"
-                    }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
+                      }`}
                   />
                 ))}
               </div>
