@@ -1,12 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -15,12 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
   Activity,
@@ -39,6 +29,11 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  getManagerLoyaltyOverview,
+  getManagerLoyaltyTransactions,
+} from "@/api/manager/loyalty";
 
 const formatNumber = (value) =>
   new Intl.NumberFormat("vi-VN").format(value ?? 0);
@@ -50,117 +45,82 @@ const formatCurrency = (value) =>
   }).format(value ?? 0);
 const formatPoints = (value) => `${formatNumber(value)} điểm`;
 
-const earningRules = [
-  {
-    id: "purchase",
-    title: "Mua hàng",
-    ratio: "1 điểm = 10.000₫",
-    bonus: "+5% cho hóa đơn > 2.000.000₫",
-    limit: "Không giới hạn",
-    expiry: "12 tháng",
-    channel: "Tự động qua hóa đơn",
-  },
-  {
-    id: "maintenance",
-    title: "Bảo dưỡng hoàn tất",
-    ratio: "+50 điểm/lệnh",
-    bonus: "Đạt chuẩn MotorMate",
-    limit: "3 lần/tháng",
-    expiry: "12 tháng",
-    channel: "Kích hoạt bởi cố vấn dịch vụ",
-  },
-  {
-    id: "checkin",
-    title: "Check-in mỗi ngày",
-    ratio: "+5 điểm/lần",
-    bonus: "Giới hạn 1 lần/ngày",
-    limit: "Theo ngày",
-    expiry: "15 ngày",
-    channel: "Ứng dụng/ki-ốt tự phục vụ",
-  },
-  {
-    id: "referral",
-    title: "Giới thiệu bạn bè",
-    ratio: "+200 điểm/giao dịch",
-    bonus: "Khi người được mời hoàn tất đơn đầu tiên",
-    limit: "5 lượt/tháng",
-    expiry: "12 tháng",
-    channel: "Link giới thiệu, cần kiểm duyệt",
-  },
-];
+const formatDateTime = (value) => {
+  if (!value) return "--";
+  try {
+    return new Date(value).toLocaleString("vi-VN", { hour12: false });
+  } catch {
+    return value;
+  }
+};
 
-const redemptionCatalog = [
-  {
-    id: "voucher-50",
-    reward: "Voucher 50.000₫",
-    cost: 500,
-    delivery: "Sinh mã giảm giá",
-    stock: "Còn 128 mã",
-    note: "Áp dụng dịch vụ tiêu chuẩn",
-  },
-  {
-    id: "voucher-120",
-    reward: "Voucher 120.000₫",
-    cost: 1000,
-    delivery: "Sinh mã giảm giá",
-    stock: "Còn 62 mã",
-    note: "Ưu tiên dịch vụ Premium",
-  },
-  {
-    id: "cashback",
-    reward: "Hoàn tiền 5%",
-    cost: 1500,
-    delivery: "Trừ trực tiếp trên hóa đơn",
-    stock: "Không giới hạn",
-    note: "Đơn từ 1.000.000₫",
-  },
-];
+const formatClerkDisplay = (clerkId) => {
+  if (!clerkId) return "Khách vãng lai";
+  if (clerkId.length <= 8) return clerkId;
+  return `${clerkId.slice(0, 4)}…${clerkId.slice(-4)}`;
+};
 
-const transactionHistory = [
-  {
-    id: "TX-12032",
-    member: "Nguyễn Minh Khoa",
-    action: "Mua hàng",
-    delta: 120,
-    balance: 1420,
-    detail: "Invoice #MM-0045",
-    performedBy: "Hệ thống",
-    channel: "POS",
-    timestamp: "10:21 • 12/11/2025",
-  },
-  {
-    id: "TX-12019",
-    member: "Trần Hà Vy",
-    action: "Đổi voucher 50k",
-    delta: -500,
-    balance: 860,
-    detail: "Voucher #VC-9952",
-    performedBy: "Khách hàng",
-    channel: "App",
-    timestamp: "18:05 • 11/11/2025",
-  },
-  {
-    id: "TX-11998",
-    member: "Lâm Tuấn Kiệt",
-    action: "Giới thiệu thành công",
-    delta: 200,
-    balance: 1760,
-    detail: "Referral #RF-224",
-    performedBy: "Hệ thống",
-    channel: "Referral",
-    timestamp: "15:42 • 10/11/2025",
-  },
-  {
-    id: "TX-11975",
-    member: "Phạm Diệu Ngọc",
-    action: "Check-in ngày",
-    delta: 5,
-    balance: 245,
-    detail: "Check-in streak: 7 ngày",
-    performedBy: "Khách hàng",
-    channel: "App",
-    timestamp: "08:02 • 10/11/2025",
-  },
+const formatClerkSubtitle = (clerkId) =>
+  clerkId ? `ID: ${clerkId}` : "ID không xác định";
+
+const formatUserEmail = (email) => email || "Chưa cập nhật email";
+
+const normalizeReward = (reward) => {
+  if (!reward) return null;
+  const delivery =
+    reward.discountType === "percentage" ? "Giảm theo %" : "Sinh mã giảm giá";
+  const note =
+    reward.discountType === "percentage"
+      ? `Áp dụng ${reward.value ?? 0}%`
+      : `Giảm ${formatCurrency(reward.value ?? 0)}`;
+  return {
+    id: reward.id,
+    reward: reward.title || reward.reward,
+    cost: reward.cost,
+    delivery,
+    stock:
+      typeof reward.stock === "number"
+        ? `Còn ${reward.stock} mã`
+        : "Không giới hạn",
+    note,
+  };
+};
+
+const transformTransaction = (tx) => {
+  const profile = tx.memberProfile || {};
+  const fallbackEmail =
+    tx.metadata?.email ||
+    tx.metadata?.customerEmail ||
+    tx.metadata?.memberEmail;
+  return {
+    id: tx._id,
+    member: profile.fullName || formatClerkDisplay(tx.clerkId),
+    memberSubtitle: formatClerkSubtitle(tx.clerkId),
+    email: formatUserEmail(profile.email || fallbackEmail),
+    avatar: profile.avatar || tx.metadata?.avatar || null,
+    action: tx.reason || tx.type,
+    delta: Number(tx.points) || 0,
+    balance: Number(tx.balanceAfter) || 0,
+    detail: tx.metadata?.note || tx.sourceRef?.refId || "--",
+    performedBy: tx.performedBy || "Hệ thống",
+    channel: tx.sourceRef?.kind || tx.metadata?.channel || tx.type,
+    timestamp: formatDateTime(tx.createdAt),
+  };
+};
+
+const initialStats = {
+  engagedMembers: 0,
+  activeMembers: 0,
+  totalPoints: 0,
+  redeemedPoints: 0,
+  expiringSoon: 0,
+  campaigns: 0,
+};
+
+const HISTORY_SCOPE_OPTIONS = [
+  { key: "all", label: "Tất cả" },
+  { key: "earn", label: "Tích điểm" },
+  { key: "redeem", label: "Quy đổi" },
 ];
 
 const auditLogs = [
@@ -219,10 +179,10 @@ const apiEndpoints = [
 ];
 
 const customerGuide = [
-  "Xem ví điểm tại mục \"Ví điểm\" để biết số dư và hạn sử dụng.",
+  'Xem ví điểm tại mục "Ví điểm" để biết số dư và hạn sử dụng.',
   "Tích điểm khi thanh toán dịch vụ, check-in, tham gia khuyến mãi.",
   "Giới thiệu bạn bè bằng link/mã riêng, điểm cộng khi đơn đầu hoàn tất.",
-  "Đổi điểm trong mục \"Đổi quà\" để lấy voucher hoặc giảm trực tiếp.",
+  'Đổi điểm trong mục "Đổi quà" để lấy voucher hoặc giảm trực tiếp.',
   "Khi có vấn đề hãy liên hệ hỗ trợ kèm mã giao dịch hoặc ảnh màn hình.",
 ];
 
@@ -236,33 +196,99 @@ const adminGuide = [
 
 const LoyaltyProgram = () => {
   const [historyScope, setHistoryScope] = useState("all");
+  const [stats, setStats] = useState(initialStats);
+  const [earningRules, setEarningRules] = useState([]);
+  const [redemptionCatalog, setRedemptionCatalog] = useState([]);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [loadingTransactions, setLoadingTransactions] = useState(true);
+  const [overviewError, setOverviewError] = useState(null);
+  const [transactionsError, setTransactionsError] = useState(null);
 
-  const stats = useMemo(
-    () => ({
-      engagedMembers: 1245,
-      activeMembers: 892,
-      totalPoints: 320450,
-      redeemedPoints: 187300,
-      expiringSoon: 14500,
-      campaigns: 4,
-    }),
-    []
-  );
+  useEffect(() => {
+    let ignore = false;
 
-  const filteredHistory = useMemo(() => {
-    if (historyScope === "earn") {
-      return transactionHistory.filter((item) => item.delta > 0);
-    }
-    if (historyScope === "redeem") {
-      return transactionHistory.filter((item) => item.delta < 0);
-    }
-    return transactionHistory;
+    const loadOverview = async () => {
+      try {
+        setLoadingOverview(true);
+        setOverviewError(null);
+        const response = await getManagerLoyaltyOverview();
+        if (ignore) return;
+        const payload = response?.data?.data || {};
+        setStats({ ...initialStats, ...(payload.stats || {}) });
+        setEarningRules(payload.catalogSummary?.earningRules || []);
+        const rewards =
+          (payload.catalogSummary?.rewards || [])
+            .map(normalizeReward)
+            .filter(Boolean) || [];
+        setRedemptionCatalog(rewards);
+        setLeaderboard(payload.leaderboard || []);
+      } catch (error) {
+        if (!ignore) {
+          setOverviewError(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Không thể tải dữ liệu tổng quan."
+          );
+        }
+      } finally {
+        if (!ignore) setLoadingOverview(false);
+      }
+    };
+
+    loadOverview();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadTransactions = async () => {
+      try {
+        setLoadingTransactions(true);
+        setTransactionsError(null);
+        const params =
+          historyScope === "all"
+            ? { limit: 20 }
+            : { limit: 20, type: historyScope };
+        const response = await getManagerLoyaltyTransactions(params);
+        if (ignore) return;
+        const payload = response?.data?.data || [];
+        setTransactions(payload.map(transformTransaction));
+      } catch (error) {
+        if (!ignore) {
+          setTransactionsError(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Không thể tải lịch sử giao dịch."
+          );
+          setTransactions([]);
+        }
+      } finally {
+        if (!ignore) setLoadingTransactions(false);
+      }
+    };
+
+    loadTransactions();
+    return () => {
+      ignore = true;
+    };
   }, [historyScope]);
 
-  const expiringPercentage = Math.min(
-    Math.round((stats.expiringSoon / stats.totalPoints) * 100),
-    100
-  );
+  const filteredHistory = useMemo(() => transactions, [transactions]);
+
+  const expiringPercentage = useMemo(() => {
+    if (!stats.totalPoints) return 0;
+    return Math.min(
+      Math.round((stats.expiringSoon / stats.totalPoints) * 100),
+      100
+    );
+  }, [stats.expiringSoon, stats.totalPoints]);
+
+  const showInitialLoading = loadingOverview && !overviewError;
 
   return (
     <div className="p-6 space-y-6">
@@ -290,6 +316,17 @@ const LoyaltyProgram = () => {
           </Button>
         </div>
       </div>
+
+      {showInitialLoading && (
+        <div className="rounded-lg border border-dashed border-gray-200 bg-white p-3 text-sm text-muted-foreground">
+          Đang tải dữ liệu chương trình loyalty...
+        </div>
+      )}
+      {overviewError && (
+        <div className="rounded-lg border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+          {overviewError}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <Card className="border-amber-100 bg-amber-50">
@@ -386,45 +423,57 @@ const LoyaltyProgram = () => {
             </Badge>
           </CardHeader>
           <CardContent className="space-y-4">
-            {earningRules.map((rule) => (
-              <div
-                key={rule.id}
-                className="rounded-xl border p-4 hover:border-gray-400 transition-colors"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-gray-900">{rule.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {rule.channel}
-                    </p>
+            {earningRules.length ? (
+              earningRules.map((rule) => (
+                <div
+                  key={rule.id}
+                  className="rounded-xl border p-4 hover:border-gray-400 transition-colors"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {rule.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {rule.channel}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {rule.expiry} hết hạn
+                    </Badge>
                   </div>
-                  <Badge variant="outline" className="text-xs">
-                    {rule.expiry} hết hạn
-                  </Badge>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-3 text-sm">
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">
+                        Tỷ lệ
+                      </p>
+                      <p className="font-medium text-gray-900">{rule.ratio}</p>
+                      <p className="text-xs text-green-600 mt-1">
+                        {rule.bonus}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">
+                        Hạn mức
+                      </p>
+                      <p className="font-medium text-gray-900">{rule.limit}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs uppercase text-muted-foreground">
+                        Ghi chú
+                      </p>
+                      <p className="font-medium text-gray-900">
+                        {rule.channel}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3 text-sm">
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground">
-                      Tỷ lệ
-                    </p>
-                    <p className="font-medium text-gray-900">{rule.ratio}</p>
-                    <p className="text-xs text-green-600 mt-1">{rule.bonus}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground">
-                      Hạn mức
-                    </p>
-                    <p className="font-medium text-gray-900">{rule.limit}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs uppercase text-muted-foreground">
-                      Ghi chú
-                    </p>
-                    <p className="font-medium text-gray-900">{rule.channel}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Chưa có quy tắc tích điểm nào được cấu hình.
+              </p>
+            )}
           </CardContent>
         </Card>
 
@@ -453,6 +502,34 @@ const LoyaltyProgram = () => {
                   <span className="font-semibold text-rose-500">6</span>
                 </div>
               </div>
+              {leaderboard.length > 0 && (
+                <>
+                  <Separator />
+                  <div className="space-y-2 text-sm">
+                    <p className="text-xs uppercase text-muted-foreground">
+                      Top khách hàng theo điểm
+                    </p>
+                    {leaderboard.map((member) => (
+                      <div
+                        key={member.clerkId}
+                        className="flex items-center justify-between rounded border px-3 py-2"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {formatClerkDisplay(member.clerkId)}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatClerkSubtitle(member.clerkId)}
+                          </p>
+                        </div>
+                        <span className="text-muted-foreground">
+                          {formatPoints(member.balance)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
               <Separator />
               <div className="space-y-3 text-sm">
                 <div className="flex items-center gap-3">
@@ -479,28 +556,34 @@ const LoyaltyProgram = () => {
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              {redemptionCatalog.map((reward) => (
-                <div
-                  key={reward.id}
-                  className="rounded-lg border p-3 text-sm hover:border-gray-400 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {reward.reward}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {reward.note}
-                      </p>
+              {redemptionCatalog.length ? (
+                redemptionCatalog.map((reward) => (
+                  <div
+                    key={reward.id}
+                    className="rounded-lg border p-3 text-sm hover:border-gray-400 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {reward.reward}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {reward.note}
+                        </p>
+                      </div>
+                      <Badge variant="success">{reward.stock}</Badge>
                     </div>
-                    <Badge variant="success">{reward.stock}</Badge>
+                    <div className="mt-3 flex items-center justify-between text-xs uppercase text-muted-foreground">
+                      <span>{formatPoints(reward.cost)}</span>
+                      <span>{reward.delivery}</span>
+                    </div>
                   </div>
-                  <div className="mt-3 flex items-center justify-between text-xs uppercase text-muted-foreground">
-                    <span>{formatPoints(reward.cost)}</span>
-                    <span>{reward.delivery}</span>
-                  </div>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Chưa có ưu đãi nào trong danh sách đổi thưởng.
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -512,17 +595,14 @@ const LoyaltyProgram = () => {
             <div>
               <CardTitle>Lịch sử phát sinh & Audit log</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Theo dõi từng giao dịch cộng/trừ điểm kèm lý do, người thực hiện.
+                Theo dõi từng giao dịch cộng/trừ điểm kèm lý do, người thực
+                hiện.
               </p>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Hiển thị</span>
               <div className="inline-flex rounded-full border bg-muted/40 p-1">
-                {[
-                  { key: "all", label: "Tất cả" },
-                  { key: "earn", label: "Tích điểm" },
-                  { key: "redeem", label: "Quy đổi" },
-                ].map((option) => (
+                {HISTORY_SCOPE_OPTIONS.map((option) => (
                   <button
                     key={option.key}
                     onClick={() => setHistoryScope(option.key)}
@@ -553,6 +633,11 @@ const LoyaltyProgram = () => {
             </TabsList>
 
             <TabsContent value="transactions">
+              {transactionsError && (
+                <div className="mb-4 rounded-lg border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
+                  {transactionsError}
+                </div>
+              )}
               <Table className="min-w-[720px]">
                 <TableHeader>
                   <TableRow>
@@ -566,42 +651,79 @@ const LoyaltyProgram = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredHistory.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-semibold">
-                        {item.id}
-                        <p className="text-xs text-muted-foreground">
-                          {item.timestamp}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-medium">{item.member}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.performedBy}
-                        </p>
-                      </TableCell>
-                      <TableCell>{item.action}</TableCell>
-                      <TableCell>
-                        <span
-                          className={`font-semibold ${
-                            item.delta > 0 ? "text-green-600" : "text-rose-600"
-                          }`}
-                        >
-                          {item.delta > 0 ? "+" : "-"}
-                          {formatNumber(Math.abs(item.delta))} điểm
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        {formatNumber(item.balance)} điểm
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{item.channel}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm">{item.detail}</p>
+                  {loadingTransactions ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="py-6 text-center text-sm text-muted-foreground"
+                      >
+                        Đang tải lịch sử giao dịch...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : filteredHistory.length ? (
+                    filteredHistory.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-semibold">
+                          {item.id}
+                          <p className="text-xs text-muted-foreground">
+                            {item.timestamp}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar>
+                              {item.avatar ? (
+                                <AvatarImage
+                                  src={item.avatar}
+                                  alt={item.member}
+                                />
+                              ) : null}
+                              <AvatarFallback>
+                                {item.member?.slice(0, 2)?.toUpperCase() ||
+                                  "KH"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{item.member}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.email}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{item.action}</TableCell>
+                        <TableCell>
+                          <span
+                            className={`font-semibold ${
+                              item.delta > 0
+                                ? "text-green-600"
+                                : "text-rose-600"
+                            }`}
+                          >
+                            {item.delta > 0 ? "+" : "-"}
+                            {formatNumber(Math.abs(item.delta))} điểm
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatPoints(item.balance)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.channel}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm">{item.detail}</p>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="py-6 text-center text-sm text-muted-foreground"
+                      >
+                        {transactionsError ||
+                          "Chưa có giao dịch nào trong phạm vi lựa chọn."}
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
