@@ -1,12 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -28,19 +23,22 @@ import {
   TicketCheck,
   Wallet,
 } from "lucide-react";
+import { toast } from "sonner";
+import { getPointBalance, getPointHistory } from "@/api/loyalty";
 
 const formatPoints = (value) =>
   `${new Intl.NumberFormat("vi-VN").format(value)} điểm`;
 
-const walletData = {
-  balance: 1240,
-  expiringSoon: 120,
-  expiringDate: "12/12/2025",
+const INITIAL_WALLET = {
+  balance: 0,
+  expiringSoon: 0,
+  expiringDate: null,
   tier: "Bạc",
   tierBenefits: "Hoàn tiền 2% và ưu tiên đặt lịch",
-  streakDays: 7,
+  streakDays: 0,
   nextRewardThreshold: 1500,
-  vouchersOwned: 2,
+  vouchersOwned: 0,
+  updatedAt: null,
 };
 
 const earningActions = [
@@ -98,45 +96,6 @@ const rewardsCatalog = [
   },
 ];
 
-const timeline = [
-  {
-    id: "TX-12032",
-    action: "Thanh toán dịch vụ",
-    detail: "Invoice #MM-0045",
-    points: "+120",
-    balance: 1240,
-    time: "12/11/2025 • 09:45",
-    channel: "Cửa hàng",
-  },
-  {
-    id: "TX-12019",
-    action: "Đổi voucher 50.000₫",
-    detail: "Voucher #VC-9952",
-    points: "-500",
-    balance: 1120,
-    time: "11/11/2025 • 18:05",
-    channel: "Ứng dụng",
-  },
-  {
-    id: "TX-11998",
-    action: "Giới thiệu thành công",
-    detail: "Referral #RF-224",
-    points: "+200",
-    balance: 1620,
-    time: "10/11/2025 • 15:42",
-    channel: "Link",
-  },
-  {
-    id: "TX-11975",
-    action: "Check-in ngày",
-    detail: "Chuỗi 7 ngày",
-    points: "+5",
-    balance: 1420,
-    time: "10/11/2025 • 08:02",
-    channel: "Ứng dụng",
-  },
-];
-
 const reminders = [
   "Điểm hết hạn sau 12 tháng kể từ ngày phát sinh.",
   "Điểm quy đổi tối thiểu 500 điểm/lần để sinh voucher.",
@@ -144,11 +103,88 @@ const reminders = [
   "Giữ mã giao dịch hoặc chụp màn hình để hỗ trợ nhanh khi có sự cố.",
 ];
 
+const SOURCE_CHANNEL_LABELS = {
+  invoice: "Hoá đơn",
+  booking: "Đặt lịch",
+  referral: "Giới thiệu",
+  manual: "Hệ thống",
+};
+
+const formatDateTime = (value) => {
+  if (!value) return "--";
+  try {
+    return new Date(value).toLocaleString("vi-VN", { hour12: false });
+  } catch {
+    return value;
+  }
+};
+
+const formatDeltaPoints = (value) => {
+  const numeric = Number(value) || 0;
+  const prefix = numeric > 0 ? "+" : "";
+  return `${prefix}${new Intl.NumberFormat("vi-VN").format(numeric)} di?m`;
+};
+
 const LoyaltyWallet = () => {
-  const nextRewardProgress = useMemo(() => {
-    const current = Math.min(walletData.balance, walletData.nextRewardThreshold);
-    return Math.round((current / walletData.nextRewardThreshold) * 100);
+  const [wallet, setWallet] = useState(INITIAL_WALLET);
+  const [transactions, setTransactions] = useState([]);
+  const [loadingBalance, setLoadingBalance] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchBalance = async () => {
+      try {
+        setLoadingBalance(true);
+        const response = await getPointBalance();
+        if (ignore) return;
+        const payload = response?.data?.data || {};
+        setWallet((prev) => ({
+          ...prev,
+          balance: Number(payload.balance) || 0,
+          updatedAt: payload.updatedAt || prev.updatedAt,
+        }));
+      } catch (error) {
+        if (!ignore) {
+          console.error("Failed to fetch point balance", error);
+          toast.error("Không tải được điểm. Vui lòng thử lại!");
+        }
+      } finally {
+        if (!ignore) setLoadingBalance(false);
+      }
+    };
+
+    const fetchHistory = async () => {
+      try {
+        setLoadingHistory(true);
+        const response = await getPointHistory({ limit: 10 });
+        if (ignore) return;
+        const payload = response?.data?.data || {};
+        setTransactions(payload.items || []);
+      } catch (error) {
+        if (!ignore) {
+          console.error("Failed to fetch point history", error);
+          toast.error("Không tải được lịch sử điểm.");
+        }
+      } finally {
+        if (!ignore) setLoadingHistory(false);
+      }
+    };
+
+    fetchBalance();
+    fetchHistory();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  const nextRewardProgress = useMemo(() => {
+    const threshold = wallet.nextRewardThreshold || 1;
+    const current = Math.min(wallet.balance, threshold);
+    return Math.round((current / threshold) * 100);
+  }, [wallet.balance, wallet.nextRewardThreshold]);
 
   return (
     <div className="bg-slate-50 min-h-screen">
@@ -160,30 +196,44 @@ const LoyaltyWallet = () => {
                 Ví điểm MotorMate
               </p>
               <h1 className="mt-2 text-3xl font-semibold">
-                {formatPoints(walletData.balance)}
+                {loadingBalance ? "Dang tai..." : formatPoints(wallet.balance)}
               </h1>
               <p className="text-sm mt-1 opacity-90">
-                {walletData.balance >= walletData.nextRewardThreshold
+                {wallet.balance >= wallet.nextRewardThreshold
                   ? "Bạn đã đủ điểm để đổi voucher."
                   : `Cần thêm ${formatPoints(
-                      walletData.nextRewardThreshold - walletData.balance
+                      Math.max(
+                        0,
+                        (wallet.nextRewardThreshold || 0) - wallet.balance
+                      )
                     )} để nhận quà tiếp theo.`}
               </p>
+              {wallet.updatedAt && (
+                <p className="text-xs mt-1 opacity-80">
+                  Cap nhat {formatDateTime(wallet.updatedAt)}
+                </p>
+              )}
             </div>
             <div className="grid gap-3 text-sm">
               <div className="rounded-2xl bg-white/15 px-4 py-2">
-                <p className="text-xs uppercase tracking-widest">Tầng thành viên</p>
+                <p className="text-xs uppercase tracking-widest">
+                  Tầng thành viên
+                </p>
                 <p className="text-lg font-semibold">
-                  {walletData.tier} • {walletData.tierBenefits}
+                  {wallet.tier} • {wallet.tierBenefits}
                 </p>
               </div>
               <div className="rounded-2xl bg-white/15 px-4 py-2 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-widest">Điểm sắp hết hạn</p>
-                  <p className="text-lg font-semibold">
-                    {formatPoints(walletData.expiringSoon)}
+                  <p className="text-xs uppercase tracking-widest">
+                    Điểm sắp hết hạn
                   </p>
-                  <p className="text-xs opacity-90">Hết hạn vào {walletData.expiringDate}</p>
+                  <p className="text-lg font-semibold">
+                    {formatPoints(wallet.expiringSoon)}
+                  </p>
+                  <p className="text-xs opacity-90">
+                    Hết hạn vào {wallet.expiringDate}
+                  </p>
                 </div>
                 <Button className="bg-white text-rose-500 hover:bg-white/90">
                   Nhắc tôi
@@ -193,7 +243,9 @@ const LoyaltyWallet = () => {
           </div>
           <div className="mt-6">
             <div className="flex items-center justify-between text-xs uppercase tracking-widest mb-2">
-              <span>Mục tiêu kế tiếp {formatPoints(walletData.nextRewardThreshold)}</span>
+              <span>
+                Mục tiêu kế tiếp {formatPoints(wallet.nextRewardThreshold)}
+              </span>
               <span>{nextRewardProgress}%</span>
             </div>
             <div className="h-2 w-full rounded-full bg-white/30">
@@ -214,7 +266,7 @@ const LoyaltyWallet = () => {
               <Repeat className="size-4 text-rose-500" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{walletData.streakDays} ngày</p>
+              <p className="text-2xl font-semibold">{wallet.streakDays} ngày</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Giữ chuỗi để nhận quà bất ngờ mỗi 7 ngày.
               </p>
@@ -228,7 +280,7 @@ const LoyaltyWallet = () => {
               <TicketCheck className="size-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-semibold">{walletData.vouchersOwned}</p>
+              <p className="text-2xl font-semibold">{wallet.vouchersOwned}</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Xem tại mục “Voucher của tôi” khi thanh toán.
               </p>
@@ -244,7 +296,8 @@ const LoyaltyWallet = () => {
             <CardContent>
               <p className="text-2xl font-semibold">2 lớp</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Mọi điều chỉnh đều lưu audit log. Báo gian lận ngay nếu nghi ngờ.
+                Mọi điều chỉnh đều lưu audit log. Báo gian lận ngay nếu nghi
+                ngờ.
               </p>
             </CardContent>
           </Card>
@@ -275,10 +328,14 @@ const LoyaltyWallet = () => {
                   </div>
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-semibold text-gray-900">{action.title}</p>
+                      <p className="font-semibold text-gray-900">
+                        {action.title}
+                      </p>
                       <Badge variant="outline">{action.points}</Badge>
                     </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{action.desc}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {action.desc}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -306,13 +363,19 @@ const LoyaltyWallet = () => {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-semibold text-gray-900">{reward.title}</p>
-                      <p className="text-sm text-muted-foreground">{reward.desc}</p>
+                      <p className="font-semibold text-gray-900">
+                        {reward.title}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {reward.desc}
+                      </p>
                     </div>
                     <Badge variant="success">{reward.stock}</Badge>
                   </div>
                   <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">{formatPoints(reward.cost)}</span>
+                    <span className="font-medium">
+                      {formatPoints(reward.cost)}
+                    </span>
                     <Button size="sm" variant="secondary" className="gap-2">
                       Đổi ngay <ArrowUpRight className="size-4" />
                     </Button>
@@ -349,31 +412,71 @@ const LoyaltyWallet = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {timeline.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-semibold">{item.id}</TableCell>
-                    <TableCell>{item.action}</TableCell>
-                    <TableCell>
-                      <p className="text-sm">{item.detail}</p>
-                      <p className="text-xs text-muted-foreground">{item.time}</p>
-                    </TableCell>
-                    <TableCell>
-                      <span
-                        className={`font-semibold ${
-                          item.points.startsWith("+")
-                            ? "text-green-600"
-                            : "text-rose-600"
-                        }`}
-                      >
-                        {item.points}
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatPoints(item.balance)}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{item.channel}</Badge>
+                {loadingHistory ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-6 text-center text-sm text-muted-foreground"
+                    >
+                      Đang tải lịch sử ví điểm...
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : transactions.length ? (
+                  transactions.map((tx) => {
+                    const channel =
+                      SOURCE_CHANNEL_LABELS[tx?.sourceRef?.kind] ||
+                      tx?.metadata?.channel ||
+                      tx?.type;
+                    const reason = tx?.reason || "Giao dịch";
+                    const createdAt = formatDateTime(tx?.createdAt);
+                    const balanceAfter =
+                      typeof tx?.balanceAfter === "number"
+                        ? tx.balanceAfter
+                        : wallet.balance;
+
+                    return (
+                      <TableRow key={tx._id}>
+                        <TableCell className="font-semibold">
+                          {tx._id}
+                        </TableCell>
+                        <TableCell className="capitalize">{tx.type}</TableCell>
+                        <TableCell>
+                          <p className="text-sm">{reason}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {createdAt}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <span
+                            className={`font-semibold ${
+                              Number(tx.points) >= 0
+                                ? "text-green-600"
+                                : "text-rose-600"
+                            }`}
+                          >
+                            {formatDeltaPoints(tx.points)}
+                          </span>
+                        </TableCell>
+                        <TableCell>{formatPoints(balanceAfter)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {channel}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={6}
+                      className="py-6 text-center text-sm text-muted-foreground"
+                    >
+                      Chưa có giao dịch điểm nào. Thực hiện mua hàng hoặc
+                      check-in để bắt đầu tích điểm!
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -422,7 +525,10 @@ const LoyaltyWallet = () => {
                   <Sparkles className="size-4" />
                   Liên hệ hỗ trợ
                 </Button>
-                <Button variant="outline" className="gap-2 flex-1 min-w-[160px]">
+                <Button
+                  variant="outline"
+                  className="gap-2 flex-1 min-w-[160px]"
+                >
                   <Gift className="size-4" />
                   Chính sách đổi điểm
                 </Button>
@@ -441,7 +547,8 @@ const LoyaltyWallet = () => {
                 Tích điểm mọi lúc: thanh toán, check-in, giới thiệu, bảo dưỡng.
               </h2>
               <p className="text-sm text-muted-foreground mt-2">
-                Hãy bật thông báo để không bỏ lỡ điểm thưởng và nhắc nhở hết hạn.
+                Hãy bật thông báo để không bỏ lỡ điểm thưởng và nhắc nhở hết
+                hạn.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
