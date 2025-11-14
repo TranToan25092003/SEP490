@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +12,16 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Activity,
   ArrowDownRight,
@@ -194,6 +204,19 @@ const adminGuide = [
   "Báo cáo tổng điểm theo thời gian, chiến dịch, top người dùng.",
 ];
 
+const createSimpleRuleForm = () => ({
+  voucherQuantity: "",
+  voucherDescription: "",
+  conversionType: "points",
+  conversionValue: "",
+  conversionPointsAmount: "",
+  conversionCurrencyAmount: "",
+  conversionPreviewPoints: "100",
+  validFrom: "",
+  validTo: "",
+  priority: "1",
+});
+
 const LoyaltyProgram = () => {
   const [historyScope, setHistoryScope] = useState("all");
   const [stats, setStats] = useState(initialStats);
@@ -205,6 +228,8 @@ const LoyaltyProgram = () => {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [overviewError, setOverviewError] = useState(null);
   const [transactionsError, setTransactionsError] = useState(null);
+  const [ruleForm, setRuleForm] = useState(() => createSimpleRuleForm());
+  const [showRuleForm, setShowRuleForm] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -278,6 +303,113 @@ const LoyaltyProgram = () => {
     };
   }, [historyScope]);
 
+  const handleRuleFieldChange = (field) => (event) => {
+    const { value } = event.target;
+    setRuleForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleRuleFieldDirectChange = (field, value) => {
+    setRuleForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleApplyQuickConversion = () => {
+    setRuleForm((prev) => ({
+      ...prev,
+      conversionType: "points",
+      conversionValue: "",
+      conversionPointsAmount: "1",
+      conversionCurrencyAmount: "100",
+      conversionPreviewPoints: prev.conversionPreviewPoints || "100",
+    }));
+  };
+
+  const handleRuleDateChange = (field) => (event) => {
+    const { value } = event.target;
+    setRuleForm((prev) => {
+      if (field === "validTo" && value && prev.validFrom) {
+        const startDate = new Date(`${prev.validFrom}T00:00:00Z`);
+        const endDate = new Date(`${value}T00:00:00Z`);
+        if (endDate <= startDate) {
+          return prev;
+        }
+      }
+      if (field === "validFrom") {
+        const nextState = { ...prev, validFrom: value };
+        if (
+          nextState.validTo &&
+          value &&
+          new Date(`${nextState.validTo}T00:00:00Z`) <=
+            new Date(`${value}T00:00:00Z`)
+        ) {
+          nextState.validTo = "";
+        }
+        return nextState;
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const handleRuleFormSubmit = (event) => {
+    event.preventDefault();
+    console.log("Rule draft", ruleForm);
+  };
+
+  const handleResetRuleForm = () => {
+    setRuleForm(createSimpleRuleForm());
+  };
+
+  const minValidTo = useMemo(() => {
+    if (!ruleForm.validFrom) return undefined;
+    const base = new Date(`${ruleForm.validFrom}T00:00:00Z`);
+    base.setUTCDate(base.getUTCDate() + 1);
+    return base.toISOString().split("T")[0];
+  }, [ruleForm.validFrom]);
+
+  const conversionPreviewCurrency = useMemo(() => {
+    if (ruleForm.conversionType !== "points") return null;
+    const previewPoints = Number(ruleForm.conversionPreviewPoints);
+    const pointUnit = Number(ruleForm.conversionPointsAmount);
+    const currencyUnit = Number(ruleForm.conversionCurrencyAmount);
+    if (
+      !previewPoints ||
+      !pointUnit ||
+      !currencyUnit ||
+      Number.isNaN(previewPoints) ||
+      Number.isNaN(pointUnit) ||
+      Number.isNaN(currencyUnit)
+    ) {
+      return null;
+    }
+    const value = (previewPoints / pointUnit) * currencyUnit;
+    if (!Number.isFinite(value)) return null;
+    return Math.round(value);
+  }, [
+    ruleForm.conversionType,
+    ruleForm.conversionPointsAmount,
+    ruleForm.conversionCurrencyAmount,
+    ruleForm.conversionPreviewPoints,
+  ]);
+
+  const conversionSummaryText = useMemo(() => {
+    if (ruleForm.conversionType === "percent") {
+      return ruleForm.conversionValue
+        ? `${ruleForm.conversionValue}%`
+        : "Chưa nhập";
+    }
+    if (ruleForm.conversionPointsAmount && ruleForm.conversionCurrencyAmount) {
+      const currencyValue = formatCurrency(
+        Number(ruleForm.conversionCurrencyAmount) || 0
+      );
+      return `${ruleForm.conversionPointsAmount} điểm ≈ ${currencyValue}`;
+    }
+    return "Chưa nhập";
+  }, [
+    ruleForm.conversionType,
+    ruleForm.conversionValue,
+    ruleForm.conversionPointsAmount,
+    ruleForm.conversionCurrencyAmount,
+  ]);
+
   const filteredHistory = useMemo(() => transactions, [transactions]);
 
   const expiringPercentage = useMemo(() => {
@@ -310,9 +442,12 @@ const LoyaltyProgram = () => {
             <History className="size-4" />
             Lịch sử điều chỉnh
           </Button>
-          <Button className="gap-2">
+          <Button
+            className="gap-2"
+            onClick={() => setShowRuleForm((prev) => !prev)}
+          >
             <Settings className="size-4" />
-            Cấu hình quy tắc
+            {showRuleForm ? "Ẩn form" : "Cấu hình quy tắc"}
           </Button>
         </div>
       </div>
@@ -326,6 +461,240 @@ const LoyaltyProgram = () => {
         <div className="rounded-lg border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
           {overviewError}
         </div>
+      )}
+
+      {showRuleForm && (
+        <Card className="border-primary/20 bg-white/95 shadow-sm">
+          <CardHeader>
+            <CardTitle>Cấu hình nhanh quy tắc</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Chỉ nhập những trường quan trọng: số lượng voucher, tỉ lệ quy đổi,
+              thời gian áp dụng và mức ưu tiên.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleRuleFormSubmit} className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="voucherQuantity">Số lượng voucher</Label>
+                    <Input
+                      id="voucherQuantity"
+                      type="number"
+                      min="0"
+                      placeholder="Ví dụ: 100"
+                      value={ruleForm.voucherQuantity}
+                      onChange={handleRuleFieldChange("voucherQuantity")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="voucherDescription">Mô tả voucher</Label>
+                    <Textarea
+                      id="voucherDescription"
+                      rows={3}
+                      placeholder="Ví dụ: Voucher giảm 100k cho gói bảo dưỡng chuẩn."
+                      value={ruleForm.voucherDescription}
+                      onChange={handleRuleFieldChange("voucherDescription")}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Ghi chú ngắn gọn để team marketing/CSKH hiểu cách áp dụng.
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Hình thức quy đổi</Label>
+                    <Select
+                      value={ruleForm.conversionType}
+                      onValueChange={(value) =>
+                        handleRuleFieldDirectChange("conversionType", value)
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Chọn loại" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="points">Điểm cố định</SelectItem>
+                        <SelectItem value="percent">Phần trăm</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {ruleForm.conversionType === "percent" ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="conversionPercent">
+                        Tỉ lệ % thưởng thêm
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="conversionPercent"
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          className="pr-14"
+                          placeholder="Ví dụ: 5"
+                          value={ruleForm.conversionValue}
+                          onChange={handleRuleFieldChange("conversionValue")}
+                        />
+                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                          %
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Nhập phần trăm thưởng thêm so với giao dịch gốc.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label htmlFor="conversionPointsAmount">
+                            Điểm cơ sở
+                          </Label>
+                          <Input
+                            id="conversionPointsAmount"
+                            type="number"
+                            min="1"
+                            placeholder="Ví dụ: 1"
+                            value={ruleForm.conversionPointsAmount}
+                            onChange={handleRuleFieldChange(
+                              "conversionPointsAmount"
+                            )}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="conversionCurrencyAmount">
+                            Tương ứng (VNĐ)
+                          </Label>
+                          <Input
+                            id="conversionCurrencyAmount"
+                            type="number"
+                            min="0"
+                            placeholder="Ví dụ: 100"
+                            value={ruleForm.conversionCurrencyAmount}
+                            onChange={handleRuleFieldChange(
+                              "conversionCurrencyAmount"
+                            )}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="conversionPreviewPoints">
+                          Với số điểm này thì được bao nhiêu tiền?
+                        </Label>
+                        <div className="grid gap-2 sm:grid-cols-2">
+                          <Input
+                            id="conversionPreviewPoints"
+                            type="number"
+                            min="0"
+                            placeholder="Ví dụ: 100"
+                            value={ruleForm.conversionPreviewPoints}
+                            onChange={handleRuleFieldChange(
+                              "conversionPreviewPoints"
+                            )}
+                          />
+                          <div className="flex items-center rounded-md border bg-muted/50 px-3 text-sm font-medium">
+                            {conversionPreviewCurrency !== null
+                              ? formatCurrency(conversionPreviewCurrency)
+                              : "Nhập đủ để xem"}
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {ruleForm.conversionPointsAmount || "?"} điểm tương
+                          đương số tiền VNĐ ở trên.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="rounded-lg border bg-muted/40 p-3 text-sm text-muted-foreground">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-gray-900 text-sm">
+                          Quick convert
+                        </p>
+                        <p>1 điểm = 100 đồng (mặc định chương trình)</p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleApplyQuickConversion}
+                      >
+                        Áp dụng
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="validFrom">Áp dụng từ ngày</Label>
+                  <Input
+                    id="validFrom"
+                    type="date"
+                    value={ruleForm.validFrom}
+                    onChange={handleRuleDateChange("validFrom")}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="validTo">Đến ngày</Label>
+                  <Input
+                    id="validTo"
+                    type="date"
+                    min={minValidTo}
+                    value={ruleForm.validTo}
+                    onChange={handleRuleDateChange("validTo")}
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="priority">
+                    Ưu tiên (số càng nhỏ càng áp dụng trước)
+                  </Label>
+                  <Input
+                    id="priority"
+                    type="number"
+                    min="1"
+                    value={ruleForm.priority}
+                    onChange={handleRuleFieldChange("priority")}
+                  />
+                </div>
+                <div className="rounded-lg border bg-muted/10 p-3 text-sm text-muted-foreground">
+                  <p>
+                    Thời gian áp dụng: {ruleForm.validFrom || "..."} →{" "}
+                    {ruleForm.validTo || "..."}
+                  </p>
+                  <p>
+                    Tỉ lệ:{" "}
+                    {ruleForm.conversionType === "percent"
+                      ? ruleForm.conversionValue
+                        ? `${ruleForm.conversionValue}%`
+                        : "Chưa nhập"
+                      : ruleForm.conversionValue || "Chưa nhập"}{" "}
+                    • Số voucher: {ruleForm.voucherQuantity || "Chưa nhập"}
+                  </p>
+                  <p>Mô tả: {ruleForm.voucherDescription || "Chưa cập nhật"}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleResetRuleForm}
+                >
+                  Xóa dữ liệu
+                </Button>
+                <Button type="submit" className="gap-2">
+                  <Sparkles className="size-4" />
+                  Lưu cấu hình nháp
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
