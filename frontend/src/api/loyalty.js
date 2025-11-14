@@ -5,3 +5,5 @@ export const getPointHistory = (params) =>
   customFetch.get("/loyalty/history", { params });
 export const redeemPoints = (payload) =>
   customFetch.post("/loyalty/redeem", payload);
+export const redeemVoucher = (payload) =>
+  customFetch.post("/loyalty/redeem/voucher", payload);

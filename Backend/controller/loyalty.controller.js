@@ -74,3 +74,24 @@ exports.adjustPoints = asyncHandler(async (req, res) => {
 
   res.status(201).json({ success: true, data: result });
 });
+
+exports.redeemVoucher = asyncHandler(async (req, res) => {
+  const clerkId = req.userId || req.body.clerkId;
+  if (!clerkId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "clerkId required" });
+  }
+
+  const { rewardId, metadata } = req.body;
+  const performedBy = req.user?.clerkId || clerkId;
+
+  const result = await LoyaltyService.redeemVoucher({
+    clerkId,
+    rewardId,
+    metadata,
+    performedBy,
+  });
+
+  res.status(201).json({ success: true, data: result });
+});

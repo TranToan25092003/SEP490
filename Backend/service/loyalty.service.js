@@ -1,4 +1,42 @@
-const { LoyalPoint, LoyaltyTransaction, Invoice } = require("../model");
+const {
+  LoyalPoint,
+  LoyaltyTransaction,
+  Invoice,
+  LoyaltyVoucher,
+} = require("../model");
+
+const VOUCHER_CATALOG = {
+  "voucher-50": {
+    id: "voucher-50",
+    title: "Voucher 50.000₫",
+    cost: 500,
+    value: 50000,
+    currency: "VND",
+    discountType: "fixed",
+    validityDays: 60,
+    stock: 128,
+  },
+  "voucher-120": {
+    id: "voucher-120",
+    title: "Voucher 120.000₫",
+    cost: 1000,
+    value: 120000,
+    currency: "VND",
+    discountType: "fixed",
+    validityDays: 60,
+    stock: 62,
+  },
+  cashback: {
+    id: "cashback",
+    title: "Hoàn tiền 5%",
+    cost: 1500,
+    value: 5,
+    currency: "VND",
+    discountType: "percentage",
+    validityDays: 45,
+    stock: null,
+  },
+};
 
 class LoyaltyService {
   async getOrCreateWallet(clerkId) {
@@ -140,8 +178,91 @@ class LoyaltyService {
       metadata: { invoiceId: invoice._id, amount: invoice.amount },
     });
   }
+
+  getVoucherCatalog() {
+    return Object.values(VOUCHER_CATALOG);
+  }
+
+  async generateVoucherCode(prefix = "VC") {
+    const attempts = 5;
+    for (let i = 0; i < attempts; i += 1) {
+      const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const code = `${prefix}-${randomPart}`;
+      const exists = await LoyaltyVoucher.exists({ voucherCode: code });
+      if (!exists) return code;
+    }
+    throw new Error("Could not generate a unique voucher code");
+  }
+
+  async redeemVoucher({ clerkId, rewardId, performedBy, metadata = {} }) {
+    if (!clerkId) throw new Error("clerkId is required");
+    if (!rewardId) throw new Error("rewardId is required");
+
+    const reward = VOUCHER_CATALOG[rewardId];
+    if (!reward) throw new Error("Reward is not available");
+
+    const issuedAt = new Date();
+    const expiresAt = reward.validityDays
+      ? new Date(issuedAt.getTime() + reward.validityDays * 24 * 60 * 60 * 1000)
+      : null;
+    const voucherCode = await this.generateVoucherCode("VC");
+    const redemptionMetadata = {
+      ...metadata,
+      rewardId: reward.id,
+      rewardName: reward.title,
+      voucherCode,
+      voucherValue: reward.value,
+      voucherCurrency: reward.currency,
+      voucherExpiresAt: expiresAt,
+    };
+
+    const { wallet, transaction } = await this.redeemPoints({
+      clerkId,
+      points: reward.cost,
+      reason: `Redeem ${reward.title}`,
+      sourceRef: { kind: "voucher" },
+      performedBy,
+      metadata: redemptionMetadata,
+    });
+
+    const voucher = await LoyaltyVoucher.create({
+      clerkId,
+      rewardId: reward.id,
+      rewardName: reward.title,
+      voucherCode,
+      pointsCost: reward.cost,
+      value: reward.value,
+      currency: reward.currency,
+      discountType: reward.discountType,
+      status: "active",
+      issuedAt,
+      expiresAt,
+      transactionId: transaction._id,
+      metadata: redemptionMetadata,
+    });
+
+    await LoyaltyTransaction.findByIdAndUpdate(transaction._id, {
+      $set: { sourceRef: { kind: "voucher", refId: voucher._id } },
+    });
+
+    const transactionPayload =
+      typeof transaction.toObject === "function"
+        ? transaction.toObject()
+        : transaction;
+    transactionPayload.sourceRef = { kind: "voucher", refId: voucher._id };
+    const walletPayload =
+      typeof wallet.toObject === "function" ? wallet.toObject() : wallet;
+
+    return {
+      voucher,
+      wallet: walletPayload,
+      transaction: transactionPayload,
+      reward,
+    };
+  }
 }
 
 module.exports = {
   LoyaltyService: new LoyaltyService(),
+  VOUCHER_CATALOG,
 };

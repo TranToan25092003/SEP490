@@ -15,7 +15,7 @@ const LoyaltyTransactionSchema = new Schema(
     sourceRef: {
       kind: {
         type: String,
-        enum: ["invoice", "booking", "manual"],
+        enum: ["invoice", "booking", "manual", "voucher"],
         default: "manual",
       },
       refId: { type: Schema.Types.ObjectId, required: false },

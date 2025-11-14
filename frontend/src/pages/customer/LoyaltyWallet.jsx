@@ -24,7 +24,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getPointBalance, getPointHistory } from "@/api/loyalty";
+import { getPointBalance, getPointHistory, redeemVoucher } from "@/api/loyalty";
 
 const formatPoints = (value) =>
   `${new Intl.NumberFormat("vi-VN").format(value)} điểm`;
@@ -122,7 +122,7 @@ const formatDateTime = (value) => {
 const formatDeltaPoints = (value) => {
   const numeric = Number(value) || 0;
   const prefix = numeric > 0 ? "+" : "";
-  return `${prefix}${new Intl.NumberFormat("vi-VN").format(numeric)} di?m`;
+  return `${prefix}${new Intl.NumberFormat("vi-VN").format(numeric)} điểm`;
 };
 
 const LoyaltyWallet = () => {
@@ -130,6 +130,7 @@ const LoyaltyWallet = () => {
   const [transactions, setTransactions] = useState([]);
   const [loadingBalance, setLoadingBalance] = useState(true);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [redeemingRewardId, setRedeemingRewardId] = useState(null);
 
   useEffect(() => {
     let ignore = false;
@@ -179,6 +180,56 @@ const LoyaltyWallet = () => {
       ignore = true;
     };
   }, []);
+
+  const handleRedeemReward = async (reward) => {
+    if (!reward) return;
+
+    if ((Number(wallet.balance) || 0) < reward.cost) {
+      toast.error("Bạn chưa đủ điểm để đổi ưu đãi này.");
+      return;
+    }
+
+    try {
+      setRedeemingRewardId(reward.id);
+      const response = await redeemVoucher({ rewardId: reward.id });
+      const payload = response?.data?.data || {};
+      const updatedWallet = payload.wallet || {};
+      const newTransaction = payload.transaction;
+      const voucher = payload.voucher;
+
+      setWallet((prev) => ({
+        ...prev,
+        balance:
+          typeof updatedWallet.total_points === "number"
+            ? updatedWallet.total_points
+            : Math.max(0, (Number(prev.balance) || 0) - reward.cost),
+        updatedAt:
+          updatedWallet.updatedAt || updatedWallet.updated_at || prev.updatedAt,
+        vouchersOwned: (prev.vouchersOwned || 0) + 1,
+      }));
+
+      if (newTransaction) {
+        setTransactions((prev) =>
+          [newTransaction, ...(prev || [])].slice(0, 10)
+        );
+      }
+
+      const voucherCode = voucher?.voucherCode;
+      toast.success(
+        voucherCode
+          ? `Đổi ${reward.title} thành công. Mã voucher: ${voucherCode}`
+          : `Đổi ${reward.title} thành công.`
+      );
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Đổi voucher thất bại. Vui lòng thử lại.";
+      toast.error(message);
+    } finally {
+      setRedeemingRewardId(null);
+    }
+  };
 
   const nextRewardProgress = useMemo(() => {
     const threshold = wallet.nextRewardThreshold || 1;
@@ -356,32 +407,54 @@ const LoyaltyWallet = () => {
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              {rewardsCatalog.map((reward) => (
-                <div
-                  key={reward.id}
-                  className="rounded-2xl border p-4 flex flex-col gap-2 hover:border-gray-400 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {reward.title}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {reward.desc}
-                      </p>
+              {rewardsCatalog.map((reward) => {
+                const currentBalance = Number(wallet.balance) || 0;
+                const canRedeem = currentBalance >= reward.cost;
+                const neededPoints = Math.max(0, reward.cost - currentBalance);
+
+                return (
+                  <div
+                    key={reward.id}
+                    className="rounded-2xl border p-4 flex flex-col gap-2 hover:border-gray-400 transition-colors"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {reward.title}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          {reward.desc}
+                        </p>
+                      </div>
+                      <Badge variant="success">{reward.stock}</Badge>
                     </div>
-                    <Badge variant="success">{reward.stock}</Badge>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">
+                        {formatPoints(reward.cost)}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant={canRedeem ? "secondary" : "outline"}
+                        className="gap-2"
+                        disabled={!canRedeem || redeemingRewardId === reward.id}
+                        onClick={() => handleRedeemReward(reward)}
+                      >
+                        {redeemingRewardId === reward.id
+                          ? "Đang đổi..."
+                          : "Đổi ngay"}
+                        <ArrowUpRight className="size-4" />
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {canRedeem
+                        ? "Đủ điểm để đổi quà."
+                        : `Cần thêm ${formatPoints(
+                            neededPoints
+                          )} để đổi ưu đãi.`}
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">
-                      {formatPoints(reward.cost)}
-                    </span>
-                    <Button size="sm" variant="secondary" className="gap-2">
-                      Đổi ngay <ArrowUpRight className="size-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>

@@ -50,6 +50,39 @@ router.get("/history", loyaltyController.getHistory);
 
 /**
  * @swagger
+ * /loyalty/redeem/voucher:
+ *   post:
+ *     summary: (Client) Đổi điểm để lấy voucher được cấu hình sẵn
+ *     tags:
+ *       - Loyalty
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - rewardId
+ *             properties:
+ *               rewardId:
+ *                 type: string
+ *                 description: Mã voucher nằm trong catalog
+ *               metadata:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Trừ điểm, sinh voucher thành công
+ *       400:
+ *         description: Thiếu dữ liệu hoặc không đủ điểm
+ *       401:
+ *         description: Chưa đăng nhập hoặc token không hợp lệ
+ */
+router.post("/redeem/voucher", loyaltyController.redeemVoucher);
+
+/**
+ * @swagger
  * /loyalty/redeem:
  *   post:
  *     summary: (Client) Đổi/quy đổi điểm để lấy ưu đãi
