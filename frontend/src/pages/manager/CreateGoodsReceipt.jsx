@@ -602,202 +602,195 @@ export default function CreateGoodsReceipt() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Danh sách sản phẩm</h2>
-          <div className="flex items-center gap-2">
-            <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 border-dashed"
-                >
-                  <Plus className="h-4 w-4" />
-                  Thêm sản phẩm vào phiếu nhập
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[500px] p-0" align="end">
-                <Command>
-                  <CommandInput
-                    placeholder="Tìm kiếm sản phẩm..."
-                    value={searchValue}
-                    onValueChange={(value) => {
-                      setSearchValue(value);
-                      debouncedSearch(value);
-                    }}
-                  />
-                  <CommandList>
-                    {isSearching ? (
-                      <CommandEmpty>Đang tìm kiếm...</CommandEmpty>
-                    ) : searchResults.length === 0 && searchValue.trim() ? (
-                      <CommandEmpty>
-                        Không tìm thấy sản phẩm nào với từ khóa "{searchValue}"
-                      </CommandEmpty>
-                    ) : searchResults.length === 0 ? (
-                      <CommandEmpty>
-                        Nhập từ khóa để tìm kiếm sản phẩm
-                      </CommandEmpty>
-                    ) : (
-                      <CommandGroup>
-                        {searchResults.map((part) => (
-                          <CommandItem
-                            key={part._id}
-                            value={part.name}
-                            onSelect={() => {
-                              addItem(part);
-                              setSearchOpen(false);
-                              setSearchValue("");
-                            }}
-                            className="cursor-pointer"
-                          >
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex-1">
-                                <div className="font-medium">{part.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  Mã: {part.code} | Tồn: {part.quantity} | Giá:{" "}
-                                  {formatPrice(part.sellingPrice)}
-                                </div>
-                              </div>
-                              <Plus className="h-4 w-4 ml-2 text-primary" />
-                            </div>
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-            <Button
-              onClick={() => setIsAddProductModalOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Thêm sản phẩm mới
-            </Button>
-          </div>
+          <Button
+            onClick={() => setIsAddProductModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Thêm sản phẩm mới
+          </Button>
         </div>
 
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>STT</TableHead>
+              <TableHead>Tên sản phẩm</TableHead>
+              <TableHead>Mã sản phẩm</TableHead>
+              <TableHead>Đơn vị</TableHead>
+              <TableHead>Số lượng theo chứng từ</TableHead>
+              <TableHead>Số lượng thực nhập</TableHead>
+              <TableHead>Đơn giá</TableHead>
+              <TableHead>Thành tiền</TableHead>
+              <TableHead>Action</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {/* Add Product Row */}
+            <TableRow className="bg-gray-50/50 hover:bg-gray-50">
+              <TableCell colSpan={9} className="p-2">
+                <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-center gap-2 h-10 text-muted-foreground hover:text-foreground"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Thêm sản phẩm vào phiếu nhập
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[500px] p-0" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Tìm kiếm sản phẩm..."
+                        value={searchValue}
+                        onValueChange={(value) => {
+                          setSearchValue(value);
+                          debouncedSearch(value);
+                        }}
+                      />
+                      <CommandList>
+                        {isSearching ? (
+                          <CommandEmpty>Đang tìm kiếm...</CommandEmpty>
+                        ) : searchResults.length === 0 && searchValue.trim() ? (
+                          <CommandEmpty>
+                            Không tìm thấy sản phẩm nào với từ khóa "
+                            {searchValue}"
+                          </CommandEmpty>
+                        ) : searchResults.length === 0 ? (
+                          <CommandEmpty>
+                            Nhập từ khóa để tìm kiếm sản phẩm
+                          </CommandEmpty>
+                        ) : (
+                          <CommandGroup>
+                            {searchResults.map((part) => (
+                              <CommandItem
+                                key={part._id}
+                                value={part.name}
+                                onSelect={() => {
+                                  addItem(part);
+                                  setSearchOpen(false);
+                                  setSearchValue("");
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex-1">
+                                    <div className="font-medium">
+                                      {part.name}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      Mã: {part.code} | Tồn: {part.quantity} |
+                                      Giá: {formatPrice(part.sellingPrice)}
+                                    </div>
+                                  </div>
+                                  <Plus className="h-4 w-4 ml-2 text-primary" />
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </TableCell>
+            </TableRow>
+
+            {/* Product Items */}
+            {items.length === 0 ? (
               <TableRow>
-                <TableHead>STT</TableHead>
-                <TableHead>Tên sản phẩm</TableHead>
-                <TableHead>Mã sản phẩm</TableHead>
-                <TableHead>Đơn vị</TableHead>
-                <TableHead>Số lượng theo chứng từ</TableHead>
-                <TableHead>Số lượng thực nhập</TableHead>
-                <TableHead>Đơn giá</TableHead>
-                <TableHead>Thành tiền</TableHead>
-                <TableHead>Action</TableHead>
+                <TableCell
+                  colSpan={9}
+                  className="text-center py-8 text-muted-foreground"
+                >
+                  Chưa có sản phẩm nào. Nhấn vào nút "Thêm sản phẩm vào phiếu
+                  nhập" ở trên để thêm sản phẩm.
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={9}
-                    className="text-center py-12 text-muted-foreground"
-                  >
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="text-base">
-                        Chưa có sản phẩm nào trong phiếu nhập
-                      </div>
-                      <div className="text-sm">
-                        Nhấn vào nút "Thêm sản phẩm vào phiếu nhập" ở trên để
-                        thêm sản phẩm
-                      </div>
-                    </div>
+            ) : (
+              items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.sequenceNumber}</TableCell>
+                  <TableCell className="font-medium">{item.partName}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {item.partCode}
+                  </TableCell>
+                  <TableCell>
+                    <div className="w-[100px] px-3 py-2 text-sm">Cái</div>
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={item.quantityOnDocument || ""}
+                      onChange={(e) =>
+                        handleNumberInput(
+                          item.id,
+                          "quantityOnDocument",
+                          e.target.value
+                        )
+                      }
+                      className="w-[120px]"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={item.quantityActuallyReceived || ""}
+                      onChange={(e) =>
+                        handleNumberInput(
+                          item.id,
+                          "quantityActuallyReceived",
+                          e.target.value
+                        )
+                      }
+                      className="w-[120px]"
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={item.unitPrice || ""}
+                      onChange={(e) =>
+                        handleNumberInput(item.id, "unitPrice", e.target.value)
+                      }
+                      className="w-[120px]"
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {formatPrice(item.totalAmount)}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeItem(item.id)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
-              ) : (
-                items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.sequenceNumber}</TableCell>
-                    <TableCell className="font-medium">
-                      {item.partName}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {item.partCode}
-                    </TableCell>
-                    <TableCell>
-                      <div className="w-[100px] px-3 py-2 text-sm">Cái</div>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.quantityOnDocument || ""}
-                        onChange={(e) =>
-                          handleNumberInput(
-                            item.id,
-                            "quantityOnDocument",
-                            e.target.value
-                          )
-                        }
-                        className="w-[120px]"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.quantityActuallyReceived || ""}
-                        onChange={(e) =>
-                          handleNumberInput(
-                            item.id,
-                            "quantityActuallyReceived",
-                            e.target.value
-                          )
-                        }
-                        className="w-[120px]"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        min="0"
-                        value={item.unitPrice || ""}
-                        onChange={(e) =>
-                          handleNumberInput(
-                            item.id,
-                            "unitPrice",
-                            e.target.value
-                          )
-                        }
-                        className="w-[120px]"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {formatPrice(item.totalAmount)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeItem(item.id)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-            {items.length > 0 && (
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={7} className="text-right font-bold">
-                    Tổng cộng:
-                  </TableCell>
-                  <TableCell className="font-bold">
-                    {formatPrice(totalAmount)}
-                  </TableCell>
-                  <TableCell></TableCell>
-                </TableRow>
-              </TableFooter>
+              ))
             )}
-          </Table>
-        </div>
+          </TableBody>
+          {items.length > 0 && (
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={7} className="text-right font-bold">
+                  Tổng cộng:
+                </TableCell>
+                <TableCell className="font-bold">
+                  {formatPrice(totalAmount)}
+                </TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
+        </Table>
       </div>
 
       {/* Submit Section */}

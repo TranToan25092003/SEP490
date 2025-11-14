@@ -62,7 +62,10 @@ import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
-import { authenTicationLoader } from "./utils/authentication.loader";
+import {
+  authenTicationLoader,
+  authenTicationForStaffLoader,
+} from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import ActivityLogs from "./pages/manager/ActivityLogs";
 import { activityLogsLoader } from "./utils/loaders";
