@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
+  Home,
   Wrench,
   ClipboardList,
   Cog,
@@ -31,7 +31,7 @@ const items = [
   {
     key: "dashboard",
     label: "Tổng quát",
-    icon: LayoutDashboard,
+    icon: Home,
     href: "/admin", 
   },
   {

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
   Wrench,
   MessageSquareWarning,
   Package,
@@ -20,6 +19,7 @@ import {
   MessageCircle,
   FileText,
   LogOut,
+  Home
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ const items = [
   {
     key: "dashboard",
     label: "Tổng quát",
-    icon: LayoutDashboard,
+    icon: Home,
     href: "/staff",
   },
   {
@@ -126,6 +126,8 @@ export default function StaffSideBar({
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
+                              "font-semibold text-red-600": isActive, // Style text khi active
+                              "text-gray-700": !isActive,
                             }
                           )}
                         >

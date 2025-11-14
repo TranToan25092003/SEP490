@@ -120,6 +120,7 @@ module.exports.getVehicles = async (req, res) => {
       license_plate: v.license_plate,
       year: v.year,
     }));
+    console.log(formatted)
 
     res.status(200).json({ success: true, data: formatted });
   } catch (error) {
