@@ -26,7 +26,7 @@ class BookingsController {
     try {
       const customerId = req.userId;
 
-      const bookings = await bookingsService.getBookingsByCustomerId(customerId);
+      const bookings = await bookingsService.getUserBookings(customerId);
 
       res.status(200).json({
         data: bookings,
@@ -61,8 +61,8 @@ class BookingsController {
       res.status(200).json({
         message: "Booking checked in successfully",
         data: {
-          serviceOrderId: booking.service_order_id
-        }
+          serviceOrderId: booking.service_order_id,
+        },
       });
     } catch (error) {
       next(error);
@@ -88,7 +88,14 @@ class BookingsController {
 
   async getAllBookings(req, res, next) {
     try {
-      const { page, limit, customerName, status, startTimestamp, endTimestamp } = req.query;
+      const {
+        page,
+        limit,
+        customerName,
+        status,
+        startTimestamp,
+        endTimestamp,
+      } = req.query;
       const bookings = await bookingsService.getAllBookingsSortedAscending({
         page: parseInt(page, 10) || 1,
         limit: parseInt(limit, 10) || 20,
