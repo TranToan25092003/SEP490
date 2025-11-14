@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +33,9 @@ import {
   History,
   Layers,
   Link2,
+  Pencil,
   Repeat,
+  Trash2,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -41,8 +43,13 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  createLoyaltyRule,
+  deleteLoyaltyRule,
   getManagerLoyaltyOverview,
   getManagerLoyaltyTransactions,
+  listLoyaltyRules,
+  updateLoyaltyRule,
+  updateLoyaltyRuleStatus,
 } from "@/api/manager/loyalty";
 
 const formatNumber = (value) =>
@@ -217,10 +224,116 @@ const createSimpleRuleForm = () => ({
   priority: "1",
 });
 
+const buildRulePayload = (formValues) => {
+  const nameSource = formValues.voucherDescription?.trim();
+  const fallbackName = `Quy tắc ngày ${new Date().toLocaleDateString("vi-VN")}`;
+  const isPercent = formValues.conversionType === "percent";
+  return {
+    name: nameSource || fallbackName,
+    description: formValues.voucherDescription || "Rule đơn giản",
+    voucherDescription: formValues.voucherDescription || "",
+    voucherQuantity: Number(formValues.voucherQuantity) || 0,
+    conversionType: formValues.conversionType,
+    conversionValue: isPercent ? Number(formValues.conversionValue) || 0 : 0,
+    conversionPointsAmount: !isPercent
+      ? Number(formValues.conversionPointsAmount) || 1
+      : 0,
+    conversionCurrencyAmount: !isPercent
+      ? Number(formValues.conversionCurrencyAmount) || 0
+      : 0,
+    conversionPreviewPoints: Number(formValues.conversionPreviewPoints) || 0,
+    validFrom: formValues.validFrom || null,
+    validTo: formValues.validTo || null,
+    priority: Number(formValues.priority) || 1,
+    status: "draft",
+  };
+};
+
+const transformRuleRecord = (rule) => {
+  const formatDate = (value) => {
+    if (!value) return null;
+    try {
+      return new Date(value).toLocaleDateString("vi-VN");
+    } catch {
+      return null;
+    }
+  };
+
+  const expiry = formatDate(rule.validTo) || "Không";
+  const start = formatDate(rule.validFrom);
+  const end = formatDate(rule.validTo);
+  const schedule =
+    start && end
+      ? `${start} → ${end}`
+      : start
+      ? `Từ ${start}`
+      : "Không giới hạn";
+  const ratio =
+    rule.conversionType === "percent"
+      ? `${rule.conversionValue ?? 0}% thưởng`
+      : `${formatNumber(
+          rule.conversionPointsAmount || 1
+        )} điểm ≈ ${formatCurrency(rule.conversionCurrencyAmount || 0)}`;
+
+  return {
+    id: rule._id || rule.id,
+    title: rule.name || "Quy tắc chưa đặt tên",
+    channel: `Trạng thái: ${rule.status || "chưa rõ"} • Ưu tiên ${
+      rule.priority || 1
+    }`,
+    expiry,
+    ratio,
+    bonus: rule.voucherDescription || rule.description || "Không có mô tả",
+    limit: rule.voucherQuantity
+      ? `${formatNumber(rule.voucherQuantity)} voucher khả dụng`
+      : "Không giới hạn",
+    schedule,
+    status: rule.status || "draft",
+  };
+};
+
+const mapRuleToFormValues = (rule) => {
+  const toInputDate = (value) => {
+    if (!value) return "";
+    try {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toISOString().slice(0, 10);
+    } catch {
+      return "";
+    }
+  };
+  return {
+    voucherQuantity:
+      rule.voucherQuantity === null || rule.voucherQuantity === undefined
+        ? ""
+        : String(rule.voucherQuantity),
+    voucherDescription: rule.voucherDescription || rule.description || "",
+    conversionType: rule.conversionType || "points",
+    conversionValue:
+      rule.conversionType === "percent"
+        ? String(rule.conversionValue ?? "")
+        : "",
+    conversionPointsAmount:
+      rule.conversionType !== "percent"
+        ? String(rule.conversionPointsAmount ?? "")
+        : "",
+    conversionCurrencyAmount:
+      rule.conversionType !== "percent"
+        ? String(rule.conversionCurrencyAmount ?? "")
+        : "",
+    conversionPreviewPoints: String(rule.conversionPreviewPoints ?? "100"),
+    validFrom: toInputDate(rule.validFrom),
+    validTo: toInputDate(rule.validTo),
+    priority: String(rule.priority ?? "1"),
+  };
+};
+
 const LoyaltyProgram = () => {
   const [historyScope, setHistoryScope] = useState("all");
   const [stats, setStats] = useState(initialStats);
   const [earningRules, setEarningRules] = useState([]);
+  const [rawRules, setRawRules] = useState([]);
   const [redemptionCatalog, setRedemptionCatalog] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -228,8 +341,98 @@ const LoyaltyProgram = () => {
   const [loadingTransactions, setLoadingTransactions] = useState(true);
   const [overviewError, setOverviewError] = useState(null);
   const [transactionsError, setTransactionsError] = useState(null);
+  const [loadingRules, setLoadingRules] = useState(false);
+  const [rulesError, setRulesError] = useState(null);
   const [ruleForm, setRuleForm] = useState(() => createSimpleRuleForm());
   const [showRuleForm, setShowRuleForm] = useState(false);
+  const [savingRule, setSavingRule] = useState(false);
+  const [ruleSubmitMessage, setRuleSubmitMessage] = useState("");
+  const [ruleSubmitError, setRuleSubmitError] = useState("");
+  const [editingRuleId, setEditingRuleId] = useState(null);
+  const [ruleStatusMessage, setRuleStatusMessage] = useState("");
+  const [ruleStatusError, setRuleStatusError] = useState("");
+  const [ruleDeleteMessage, setRuleDeleteMessage] = useState("");
+  const [ruleDeleteError, setRuleDeleteError] = useState("");
+  const [updatingRuleId, setUpdatingRuleId] = useState(null);
+  const [deletingRuleId, setDeletingRuleId] = useState(null);
+
+  const fetchRules = useCallback(async () => {
+    try {
+      setLoadingRules(true);
+      setRulesError(null);
+      const response = await listLoyaltyRules({
+        limit: 20,
+        sortBy: "priority",
+        sortOrder: "asc",
+      });
+      const items = response?.data?.data?.items || [];
+      setRawRules(items);
+      setEarningRules(items.map(transformRuleRecord));
+    } catch (error) {
+      setRulesError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể tải danh sách quy tắc."
+      );
+      setRawRules([]);
+      setEarningRules([]);
+    } finally {
+      setLoadingRules(false);
+    }
+  }, []);
+
+  const handleRuleStatusChange = async (ruleId, nextStatus) => {
+    setRuleStatusMessage("");
+    setRuleStatusError("");
+    setUpdatingRuleId(ruleId);
+    try {
+      await updateLoyaltyRuleStatus(ruleId, { status: nextStatus });
+      setRuleStatusMessage(
+        nextStatus === "active"
+          ? "Đã bật quy tắc."
+          : nextStatus === "inactive"
+          ? "Đã tắt quy tắc."
+          : "Đã cập nhật trạng thái."
+      );
+      await fetchRules();
+    } catch (error) {
+      setRuleStatusError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể cập nhật trạng thái."
+      );
+    } finally {
+      setUpdatingRuleId(null);
+    }
+  };
+
+  const handleDeleteRule = async (ruleId) => {
+    if (
+      typeof window !== "undefined" &&
+      !window.confirm("Bạn có chắc muốn xoá quy tắc này?")
+    ) {
+      return;
+    }
+    clearRuleFeedback();
+    setDeletingRuleId(ruleId);
+    try {
+      await deleteLoyaltyRule(ruleId);
+      setRuleDeleteMessage("Đã xoá quy tắc.");
+      if (editingRuleId === ruleId) {
+        setEditingRuleId(null);
+        setRuleForm(createSimpleRuleForm());
+      }
+      await fetchRules();
+    } catch (error) {
+      setRuleDeleteError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể xoá quy tắc."
+      );
+    } finally {
+      setDeletingRuleId(null);
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -242,7 +445,6 @@ const LoyaltyProgram = () => {
         if (ignore) return;
         const payload = response?.data?.data || {};
         setStats({ ...initialStats, ...(payload.stats || {}) });
-        setEarningRules(payload.catalogSummary?.earningRules || []);
         const rewards =
           (payload.catalogSummary?.rewards || [])
             .map(normalizeReward)
@@ -303,16 +505,32 @@ const LoyaltyProgram = () => {
     };
   }, [historyScope]);
 
+  useEffect(() => {
+    fetchRules();
+  }, [fetchRules]);
+
+  const clearRuleFeedback = () => {
+    setRuleSubmitMessage("");
+    setRuleSubmitError("");
+    setRuleStatusMessage("");
+    setRuleStatusError("");
+    setRuleDeleteMessage("");
+    setRuleDeleteError("");
+  };
+
   const handleRuleFieldChange = (field) => (event) => {
     const { value } = event.target;
+    clearRuleFeedback();
     setRuleForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleRuleFieldDirectChange = (field, value) => {
+    clearRuleFeedback();
     setRuleForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleApplyQuickConversion = () => {
+    clearRuleFeedback();
     setRuleForm((prev) => ({
       ...prev,
       conversionType: "points",
@@ -323,8 +541,25 @@ const LoyaltyProgram = () => {
     }));
   };
 
+  const handleEditRule = (ruleId) => {
+    clearRuleFeedback();
+    const target =
+      rawRules.find((rule) => (rule._id || rule.id) === ruleId) || null;
+    if (!target) return;
+    setEditingRuleId(ruleId);
+    setRuleForm(mapRuleToFormValues(target));
+    setShowRuleForm(true);
+  };
+
+  const handleCancelEdit = () => {
+    clearRuleFeedback();
+    setEditingRuleId(null);
+    setRuleForm(createSimpleRuleForm());
+  };
+
   const handleRuleDateChange = (field) => (event) => {
     const { value } = event.target;
+    clearRuleFeedback();
     setRuleForm((prev) => {
       if (field === "validTo" && value && prev.validFrom) {
         const startDate = new Date(`${prev.validFrom}T00:00:00Z`);
@@ -349,13 +584,37 @@ const LoyaltyProgram = () => {
     });
   };
 
-  const handleRuleFormSubmit = (event) => {
+  const handleRuleFormSubmit = async (event) => {
     event.preventDefault();
-    console.log("Rule draft", ruleForm);
+    clearRuleFeedback();
+    setSavingRule(true);
+    try {
+      const payload = buildRulePayload(ruleForm);
+      if (editingRuleId) {
+        await updateLoyaltyRule(editingRuleId, payload);
+        setRuleSubmitMessage("Đã cập nhật quy tắc.");
+      } else {
+        await createLoyaltyRule(payload);
+        setRuleSubmitMessage("Đã lưu quy tắc mới.");
+      }
+      setRuleForm(createSimpleRuleForm());
+      setEditingRuleId(null);
+      await fetchRules();
+    } catch (error) {
+      setRuleSubmitError(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Không thể lưu quy tắc."
+      );
+    } finally {
+      setSavingRule(false);
+    }
   };
 
   const handleResetRuleForm = () => {
+    clearRuleFeedback();
     setRuleForm(createSimpleRuleForm());
+    setEditingRuleId(null);
   };
 
   const minValidTo = useMemo(() => {
@@ -409,6 +668,12 @@ const LoyaltyProgram = () => {
     ruleForm.conversionPointsAmount,
     ruleForm.conversionCurrencyAmount,
   ]);
+
+  const editingRuleTitle = useMemo(() => {
+    if (!editingRuleId) return "";
+    const target = earningRules.find((rule) => rule.id === editingRuleId);
+    return target?.title || "";
+  }, [editingRuleId, earningRules]);
 
   const filteredHistory = useMemo(() => transactions, [transactions]);
 
@@ -474,6 +739,28 @@ const LoyaltyProgram = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRuleFormSubmit} className="space-y-6">
+              {editingRuleId && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+                  <div>
+                    <p className="font-medium text-amber-900">
+                      Đang cập nhật voucher
+                    </p>
+                    <p className="text-amber-700">
+                      {editingRuleTitle || "Voucher chưa đặt tên"} (ID:{" "}
+                      {editingRuleId})
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={savingRule}
+                  >
+                    Huỷ chỉnh sửa
+                  </Button>
+                </div>
+              )}
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -667,29 +954,32 @@ const LoyaltyProgram = () => {
                     {ruleForm.validTo || "..."}
                   </p>
                   <p>
-                    Tỉ lệ:{" "}
-                    {ruleForm.conversionType === "percent"
-                      ? ruleForm.conversionValue
-                        ? `${ruleForm.conversionValue}%`
-                        : "Chưa nhập"
-                      : ruleForm.conversionValue || "Chưa nhập"}{" "}
-                    • Số voucher: {ruleForm.voucherQuantity || "Chưa nhập"}
+                    Tỉ lệ: {conversionSummaryText} • Số voucher:{" "}
+                    {ruleForm.voucherQuantity || "Chưa nhập"}
                   </p>
                   <p>Mô tả: {ruleForm.voucherDescription || "Chưa cập nhật"}</p>
                 </div>
               </div>
+
+              {ruleSubmitError && (
+                <p className="text-sm text-destructive">{ruleSubmitError}</p>
+              )}
+              {ruleSubmitMessage && (
+                <p className="text-sm text-green-600">{ruleSubmitMessage}</p>
+              )}
 
               <div className="flex flex-wrap justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleResetRuleForm}
+                  disabled={savingRule}
                 >
-                  Xóa dữ liệu
+                  {editingRuleId ? "Huỷ chỉnh sửa" : "Xóa dữ liệu"}
                 </Button>
-                <Button type="submit" className="gap-2">
+                <Button type="submit" className="gap-2" disabled={savingRule}>
                   <Sparkles className="size-4" />
-                  Lưu cấu hình nháp
+                  {editingRuleId ? "Cập nhật voucher" : "Lưu cấu hình nháp"}
                 </Button>
               </div>
             </form>
@@ -777,7 +1067,7 @@ const LoyaltyProgram = () => {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-1">
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between">
             <div>
@@ -788,15 +1078,27 @@ const LoyaltyProgram = () => {
             </div>
             <Badge variant="secondary" className="gap-1">
               <Sparkles className="size-3.5" />
-              {earningRules.length} hành động đang bật
+              {earningRules.length} Voucher
             </Badge>
           </CardHeader>
           <CardContent className="space-y-4">
-            {earningRules.length ? (
+            {loadingRules ? (
+              <p className="text-sm text-muted-foreground">
+                Đang tải quy tắc...
+              </p>
+            ) : rulesError ? (
+              <div className="rounded border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                {rulesError}
+              </div>
+            ) : earningRules.length ? (
               earningRules.map((rule) => (
                 <div
                   key={rule.id}
-                  className="rounded-xl border p-4 hover:border-gray-400 transition-colors"
+                  className={`rounded-xl border p-4 transition-colors ${
+                    editingRuleId === rule.id
+                      ? "border-primary bg-primary/5 shadow-sm"
+                      : "hover:border-gray-400"
+                  }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -807,10 +1109,54 @@ const LoyaltyProgram = () => {
                         {rule.channel}
                       </p>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {rule.expiry} hết hạn
-                    </Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline" className="text-xs">
+                        {rule.expiry} hết hạn
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEditRule(rule.id)}
+                        className={`gap-1 ${
+                          editingRuleId === rule.id
+                            ? "border-primary text-primary"
+                            : ""
+                        }`}
+                      >
+                        <Pencil className="size-4" />
+                        Cập nhật
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleRuleStatusChange(rule.id, "active")
+                        }
+                        className={`${
+                          rule.status === "active"
+                            ? "bg-green-600 text-white"
+                            : ""
+                        }`}
+                      >
+                        Bật
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          handleRuleStatusChange(rule.id, "inactive")
+                        }
+                        className={`${
+                          rule.status === "active"
+                            ? ""
+                            : "bg-red-700 text-white"
+                        }`}
+                      >
+                        Tắt
+                      </Button>
+                    </div>
                   </div>
+
                   <div className="mt-3 grid gap-3 sm:grid-cols-3 text-sm">
                     <div>
                       <p className="text-xs uppercase text-muted-foreground">
@@ -832,7 +1178,7 @@ const LoyaltyProgram = () => {
                         Ghi chú
                       </p>
                       <p className="font-medium text-gray-900">
-                        {rule.channel}
+                        {rule.schedule}
                       </p>
                     </div>
                   </div>
@@ -845,117 +1191,6 @@ const LoyaltyProgram = () => {
             )}
           </CardContent>
         </Card>
-
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Ví điểm & cảnh báo</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Tình trạng tổng quát ví điểm khách hàng.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span>Ví đang hoạt động</span>
-                  <span className="font-semibold">
-                    {formatNumber(stats.activeMembers)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>Ví bị khóa/tạm dừng</span>
-                  <span className="font-semibold text-orange-500">18</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>Ví cần xác minh</span>
-                  <span className="font-semibold text-rose-500">6</span>
-                </div>
-              </div>
-              {leaderboard.length > 0 && (
-                <>
-                  <Separator />
-                  <div className="space-y-2 text-sm">
-                    <p className="text-xs uppercase text-muted-foreground">
-                      Top khách hàng theo điểm
-                    </p>
-                    {leaderboard.map((member) => (
-                      <div
-                        key={member.clerkId}
-                        className="flex items-center justify-between rounded border px-3 py-2"
-                      >
-                        <div>
-                          <p className="font-medium">
-                            {formatClerkDisplay(member.clerkId)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatClerkSubtitle(member.clerkId)}
-                          </p>
-                        </div>
-                        <span className="text-muted-foreground">
-                          {formatPoints(member.balance)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              <Separator />
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <ShieldCheck className="size-4 text-green-600" />
-                  <p>Kiểm duyệt tự động các giao dịch lớn & hành vi lặp.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Repeat className="size-4 text-blue-600" />
-                  <p>Nhắc nhở điểm sắp hết hạn sau 12 tháng phát sinh.</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Layers className="size-4 text-purple-600" />
-                  <p>Giới hạn quy đổi tối thiểu 500 điểm (cấu hình được).</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle>Gói quy đổi nổi bật</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Gán vào chiến dịch bán chéo hoặc marketing automation.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {redemptionCatalog.length ? (
-                redemptionCatalog.map((reward) => (
-                  <div
-                    key={reward.id}
-                    className="rounded-lg border p-3 text-sm hover:border-gray-400 transition-colors"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {reward.reward}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {reward.note}
-                        </p>
-                      </div>
-                      <Badge variant="success">{reward.stock}</Badge>
-                    </div>
-                    <div className="mt-3 flex items-center justify-between text-xs uppercase text-muted-foreground">
-                      <span>{formatPoints(reward.cost)}</span>
-                      <span>{reward.delivery}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Chưa có ưu đãi nào trong danh sách đổi thưởng.
-                </p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
       <Card>
