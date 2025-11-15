@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -8,13 +8,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from '@/components/ui/badge'; 
+import { Badge } from '@/components/ui/badge';
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import placeholderVehicle from '@/assets/part-lopsau.png'; 
 
 
 
 // Component VehicleProfile mới
 const VehicleProfile = ({ vehicles = [] }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 2;
+
   if (vehicles.length === 0) {
     return (
       <div className="text-center text-gray-500 py-10">
@@ -24,9 +29,15 @@ const VehicleProfile = ({ vehicles = [] }) => {
     );
   }
 
+  // Tính toán phân trang
+  const totalPages = Math.ceil(vehicles.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentVehicles = vehicles.slice(startIndex, endIndex);
+
   return (
     <div className="space-y-8">
-      {vehicles.map((vehicle) => (
+      {currentVehicles.map((vehicle) => (
         <div key={vehicle._id} className="border-b pb-8 mb-8 last:border-b-0 last:pb-0 last:mb-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
@@ -83,7 +94,62 @@ const VehicleProfile = ({ vehicles = [] }) => {
         </div>
       ))}
 
-      {vehicles.length > 0 && (
+      {/* Phân trang */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-4 border-t">
+          <div className="text-sm text-muted-foreground">
+            Hiển thị {startIndex + 1} -{" "}
+            {Math.min(endIndex, vehicles.length)} trong tổng số{" "}
+            {vehicles.length} xe
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) => Math.max(1, prev - 1))
+              }
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Trước
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from(
+                { length: totalPages },
+                (_, i) => i + 1
+              ).map((page) => (
+                <Button
+                  key={page}
+                  variant={
+                    currentPage === page ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => setCurrentPage(page)}
+                  className="min-w-[2.5rem]"
+                >
+                  {page}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(totalPages, prev + 1)
+                )
+              }
+              disabled={currentPage === totalPages}
+            >
+              Sau
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {vehicles.length > 0 && totalPages <= 1 && (
         <p className="mt-6 text-center text-sm text-gray-500">Xe được thêm hiển thị giống như trên.</p>
       )}
     </div>

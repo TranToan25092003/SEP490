@@ -154,7 +154,10 @@ const CustomerInvoiceDetail = () => {
       return;
     }
 
+    // Dừng auto-polling khi user click manually
+    setIsPolling(false);
     setIsCheckingPayment(true);
+    
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
       const isPaid = await checkPaid(invoice.totalAmount, invoiceNumber);
@@ -190,6 +193,39 @@ const CustomerInvoiceDetail = () => {
     } catch (error) {
       console.error("Lỗi khi kiểm tra thanh toán:", error);
       toast.error("Không thể kiểm tra thanh toán. Vui lòng thử lại sau.");
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  };
+
+  // Function để fake thanh toán (dev mode)
+  const handleFakePayment = async () => {
+    if (!invoice || invoice.status === "paid") {
+      return;
+    }
+
+    // Dừng auto-polling khi user click manually
+    setIsPolling(false);
+    setIsCheckingPayment(true);
+    
+    try {
+      const response = await customFetch(
+        `/invoices/${invoice.id}/verify-payment`,
+        {
+          method: "POST",
+        }
+      );
+
+      if (response.data) {
+        toast.success("✅ [TEST] Đã fake thanh toán thành công!");
+        revalidator.revalidate();
+        setPaymentModalOpen(false);
+      } else {
+        toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi fake thanh toán:", error);
+      toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
     } finally {
       setIsCheckingPayment(false);
     }
@@ -491,7 +527,7 @@ const CustomerInvoiceDetail = () => {
 
       {/* Modal thanh toán */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               Thanh toán hóa đơn
@@ -503,9 +539,9 @@ const CustomerInvoiceDetail = () => {
               </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-              <div className="flex justify-between text-sm">
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/40 p-4">
+              <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-foreground">
                   Tổng tiền cần thanh toán:
                 </span>
@@ -516,7 +552,7 @@ const CustomerInvoiceDetail = () => {
             </div>
             {invoice && (
               <div className="flex flex-col items-center justify-center space-y-3">
-                <div className="rounded-lg border-2 border-border bg-white p-4 min-h-[250px] flex items-center justify-center">
+                <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
                   {!qrCodeError ? (
                     <img
                       src={generateQRCodeUrl(
@@ -524,7 +560,7 @@ const CustomerInvoiceDetail = () => {
                         invoice.invoiceNumber || invoice.id
                       )}
                       alt="QR Code thanh toán"
-                      className="w-full max-w-[250px] h-auto"
+                      className="w-full h-auto max-w-full"
                       onError={(e) => {
                         console.error("QR Code load error:", e);
                         console.error("Failed URL:", e.target.src);
@@ -551,7 +587,7 @@ const CustomerInvoiceDetail = () => {
                   )}
                 </div>
                 {!qrCodeError && (
-                  <p className="text-xs text-muted-foreground text-center max-w-xs">
+                  <p className="text-xs text-muted-foreground text-center px-4">
                     Quét mã QR để thanh toán qua ứng dụng ngân hàng
                   </p>
                 )}
@@ -560,8 +596,8 @@ const CustomerInvoiceDetail = () => {
             {invoice && invoice.status === "unpaid" && (
               <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
                 <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {isPolling && <RefreshCw className="h-4 w-4 animate-spin" />}
-                  <span>
+                  {isPolling && <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />}
+                  <span className="break-words">
                     {isPolling
                       ? "Đang tự động kiểm tra thanh toán..."
                       : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
@@ -569,35 +605,64 @@ const CustomerInvoiceDetail = () => {
                 </div>
               </div>
             )}
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
               <Button
                 variant="outline"
-                onClick={() => setPaymentModalOpen(false)}
-                className="flex-1"
+                onClick={() => {
+                  setIsPolling(false);
+                  setPaymentModalOpen(false);
+                }}
+                className="w-full sm:flex-1 order-3 sm:order-1"
               >
                 Hủy
               </Button>
               {invoice && invoice.status === "unpaid" && (
-                <Button
-                  onClick={handleCheckPayment}
-                  className="flex-1"
-                  disabled={isCheckingPayment || isPolling}
-                >
-                  {isCheckingPayment ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Đang kiểm tra...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4" />
-                      Kiểm tra thanh toán
-                    </>
+                <>
+                  <Button
+                    onClick={handleCheckPayment}
+                    className="w-full sm:flex-1 order-1 sm:order-2"
+                    disabled={isCheckingPayment}
+                  >
+                    {isCheckingPayment ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="hidden sm:inline">Đang kiểm tra...</span>
+                        <span className="sm:hidden">Đang kiểm tra...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Kiểm tra thanh toán</span>
+                        <span className="sm:hidden">Kiểm tra</span>
+                      </>
+                    )}
+                  </Button>
+                  {/* DEV MODE: Button để fake thanh toán cho testing */}
+                  {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_PAYMENT === 'true') && (
+                    <Button
+                      onClick={handleFakePayment}
+                      className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
+                      disabled={isCheckingPayment}
+                      title="DEV MODE: Fake thanh toán để test tích điểm"
+                    >
+                      {isCheckingPayment ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          <span className="hidden sm:inline">Đang xử lý...</span>
+                          <span className="sm:hidden">Đang xử lý...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">🧪 Fake Thanh Toán</span>
+                          <span className="sm:hidden">🧪 Fake</span>
+                        </>
+                      )}
+                    </Button>
                   )}
-                </Button>
+                </>
               )}
               {invoice && invoice.status === "paid" && (
-                <Button className="flex-1" disabled>
+                <Button className="w-full sm:flex-1" disabled>
                   Đã thanh toán
                 </Button>
               )}
