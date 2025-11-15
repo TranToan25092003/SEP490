@@ -63,38 +63,6 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     toast.error("This feature is not implemented");
   };
 
-  const handleStartServiceOrder = async (serviceOrderData) => {
-    const result = await NiceModal.show(ChooseStaffModal, {
-      mode: "single"
-    });
-
-    try {
-      const scheduleTask = scheduleInspection(serviceOrderData.id, [{
-        technicianClerkId: result.technicianClerkId,
-        role: "lead"
-      }], 30);
-
-      const { inspectionTask } = await toast.promise(scheduleTask, {
-        success: "Lên lịch kiểm tra thành công",
-        error: "Không thể lên lịch kiểm tra",
-        loading: "Đang lên lịch kiểm tra..."
-      }).unwrap();
-
-      const startTask = beginInspectionTask(inspectionTask._id);
-
-      await toast.promise(startTask, {
-        success: "Đã bắt đầu kiểm tra",
-        error: "Không thể bắt đầu kiểm tra",
-        loading: "Không thể bắt đầu kiểm tra"
-      })
-
-      revalidator.revalidate();
-    } catch (error) {
-      console.error("Failed to schedule inspection", error);
-      return;
-    }
-  };
-
   return (
     <ServiceOrderEditForm
       serviceOrder={serviceOrder}
@@ -107,7 +75,6 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
           total: 1.1 * sum
         };
       }}
-      onStartServiceOrder={handleStartServiceOrder}
       onCancelServiceOrder={handleCancelServiceOrder}
       onUpdateServiceOrder={handleUpdateServiceOrder}
       onSendInvoice={handleSendInvoice}

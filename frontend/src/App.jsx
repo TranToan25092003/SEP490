@@ -11,6 +11,7 @@ import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
+import BookingTracking from "./pages/customer/BookingTracking";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
 import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
@@ -62,7 +63,6 @@ import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
-import { authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
 import ActivityLogs from "./pages/manager/ActivityLogs";
 import { activityLogsLoader } from "./utils/loaders";
@@ -96,6 +96,11 @@ const router = createBrowserRouter([
         path: "/booking",
         loader: Booking.loader,
         element: <Booking />,
+      },
+      {
+        path: "/booking-tracking",
+        element: <BookingTracking />,
+        loader: BookingTracking.loader,
       },
       {
         path: "/booking/:id",
@@ -171,7 +176,7 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <ManagerLayout />,
-    loader: authenTicationLoader,
+    // loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager /> },
       { path: "staff", element: <StaffPage /> },

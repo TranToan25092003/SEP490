@@ -84,10 +84,15 @@ async function fetchTechniciansFromClerk() {
 
     chunkUsers.forEach((user) => {
       const orgRole = staffRolesById.get(user.id);
+      const position = resolvePosition(user, orgRole);
+      if (position !== "technician") {
+        return;
+      }
+
       technicians.push({
         technicianClerkId: user.id,
         technicianName: resolveFullName(user),
-        position: resolvePosition(user, orgRole),
+        position,
         email: user.emailAddresses?.[0]?.emailAddress || null,
         avatar: user.profileImageUrl || null,
       });
@@ -108,8 +113,6 @@ class StaffService {
   /**
    * List all technicians in the system along with their status
    * whether they are currently assigned to any tasks.
-   *
-   * @return {import("./types").TechnicianInfoWithAvailabilityDTO[]}
    */
   async getTechniciansWithStatusAtThisMoment() {
     const technicians = await this.getAllTechnicians();
@@ -132,11 +135,21 @@ class StaffService {
       }
     }
 
+    // circular dependency fix: import inside the method
+    const { AttendanceService } = require("./attendance.service");
+    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(technicians);
+
     return technicians.map((technician) => {
       const info = map[technician.technicianClerkId] || {
         isBusy: false,
         assignedTaskId: null,
       };
+
+      if (staffIdsPresent.includes(technician.technicianClerkId)) {
+        info.isPresent = true;
+      } else {
+        info.isPresent = false;
+      }
 
       return {
         ...technician,

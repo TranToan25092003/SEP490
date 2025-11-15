@@ -108,7 +108,7 @@ const Header = () => {
                         Lịch sử mua hàng
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onSelect={() => navigate("/service-progress")}
+                        onSelect={() => navigate("/booking-tracking")}
                       >
                         Theo dõi tiến độ
                       </DropdownMenuItem>

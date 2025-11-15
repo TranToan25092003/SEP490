@@ -13,7 +13,7 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
-  LayoutDashboard,
+  Home,
   Wrench,
   ClipboardList,
   Building2,
@@ -29,7 +29,7 @@ import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 const items = [
-  { key: "home", label: "Dashboard", icon: LayoutDashboard, href: "/manager" },
+  { key: "home", label: "Dashboard", icon: Home, href: "/manager" },
   {
     key: "parts",
     label: "Quản lý phụ tùng",
