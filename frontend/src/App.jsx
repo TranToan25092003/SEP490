@@ -11,6 +11,7 @@ import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
+import BookingHistoryDetail from "./pages/customer/BookingHistoryDetail";
 import BookingTracking from "./pages/customer/BookingTracking";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
@@ -109,6 +110,11 @@ const router = createBrowserRouter([
         path: "/booking/:id/quotes",
         element: <BookingQuotes />,
         loader: BookingQuotes.loader,
+      },
+      {
+        path: "/booking/:id/history",
+        element: <BookingHistoryDetail />,
+        loader: BookingHistoryDetail.loader,
       },
       {
         path: "/about",
