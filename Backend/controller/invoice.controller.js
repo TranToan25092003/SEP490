@@ -1,4 +1,5 @@
 const { InvoiceService } = require("../service/invoice.service");
+const { LoyaltyService } = require("../service/loyalty.service");
 
 class InvoiceController {
   async list(req, res, next) {
@@ -74,7 +75,7 @@ class InvoiceController {
   async confirmPayment(req, res, next) {
     try {
       const { id } = req.params;
-      const { paymentMethod } = req.body;
+      const { paymentMethod, voucherCode, paidAmount } = req.body || {};
       const confirmedBy = req.userId || null;
 
       const invoice = await InvoiceService.confirmInvoicePayment(
@@ -82,6 +83,12 @@ class InvoiceController {
         paymentMethod,
         confirmedBy
       );
+
+      await this._handleLoyaltyAfterPayment(invoice, {
+        voucherCode,
+        paidAmount,
+        performedBy: confirmedBy,
+      });
 
       res.status(200).json({
         data: invoice,
@@ -124,12 +131,44 @@ class InvoiceController {
         "SYSTEM" // Hệ thống tự động xác nhận
       );
 
+      await this._handleLoyaltyAfterPayment(updatedInvoice, {
+        voucherCode,
+        paidAmount,
+        performedBy: "SYSTEM",
+      });
+
       res.status(200).json({
         data: updatedInvoice,
         message: "Đã xác nhận thanh toán thành công",
       });
     } catch (error) {
       next(error);
+    }
+  }
+
+  async _handleLoyaltyAfterPayment(
+    invoice,
+    { voucherCode, paidAmount, performedBy }
+  ) {
+    try {
+      if (!invoice || !invoice.customerClerkId) {
+        return;
+      }
+
+      const amountToUse =
+        paidAmount !== undefined && paidAmount !== null
+          ? paidAmount
+          : invoice.totalAmount;
+
+      await LoyaltyService.handleInvoicePaymentSuccess({
+        invoiceId: invoice.id,
+        clerkId: invoice.customerClerkId,
+        amount: amountToUse,
+        voucherCode,
+        performedBy,
+      });
+    } catch (loyaltyError) {
+      console.error("Failed to update loyalty after payment:", loyaltyError);
     }
   }
 }

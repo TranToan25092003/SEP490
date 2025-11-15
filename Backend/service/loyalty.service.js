@@ -8,6 +8,9 @@ const {
 } = require("../model");
 const { UsersService } = require("./users.service");
 
+const PAYMENT_BONUS_POINTS = 50;
+const PAYMENT_CONVERSION_UNIT = 10000;
+
 const EARNING_RULES = [
   {
     id: "purchase",
@@ -174,6 +177,74 @@ class LoyaltyService {
     });
 
     return { wallet: decorateWallet(wallet), transaction: tx };
+  }
+
+  async handleInvoicePaymentSuccess({
+    invoiceId,
+    clerkId,
+    amount,
+    voucherCode,
+    performedBy,
+  }) {
+    if (!clerkId) return null;
+
+    const normalizedAmount = Math.max(Number(amount) || 0, 0);
+    const basePoints = PAYMENT_BONUS_POINTS;
+    const conversionPoints = Math.floor(normalizedAmount / PAYMENT_CONVERSION_UNIT);
+    const totalPoints = Math.max(basePoints + conversionPoints, 0);
+
+    let transactionResult = null;
+    if (totalPoints > 0) {
+      let invoiceObjectId = null;
+      if (invoiceId && Types.ObjectId.isValid(invoiceId)) {
+        invoiceObjectId = new Types.ObjectId(invoiceId);
+      }
+
+      const alreadyAwarded = await LoyaltyTransaction.exists({
+        clerkId,
+        "sourceRef.kind": "invoice",
+        ...(invoiceObjectId && { "sourceRef.refId": invoiceObjectId }),
+      });
+
+      if (!alreadyAwarded) {
+        transactionResult = await this.awardPoints({
+          clerkId,
+          points: totalPoints,
+          reason: `Thanh toan hoa don ${invoiceId}`,
+          sourceRef: invoiceObjectId
+            ? { kind: "invoice", refId: invoiceObjectId }
+            : { kind: "invoice" },
+          performedBy,
+          metadata: {
+            invoiceId,
+            amount: normalizedAmount,
+            voucherCode: voucherCode || null,
+            basePoints,
+            conversionPoints,
+          },
+        });
+      }
+    }
+
+    let voucherUpdate = null;
+    if (voucherCode) {
+      voucherUpdate = await LoyaltyVoucher.findOneAndUpdate(
+        { voucherCode, clerkId, status: "active" },
+        {
+          $set: {
+            status: "used",
+            redeemedAt: new Date(),
+            redeemedBy: performedBy || clerkId,
+          },
+        },
+        { new: true }
+      );
+    }
+
+    return {
+      voucher: voucherUpdate,
+      pointsAwarded: transactionResult ? totalPoints : 0,
+    };
   }
 
   async redeemPoints({
