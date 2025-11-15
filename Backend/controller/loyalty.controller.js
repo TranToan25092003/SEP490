@@ -86,6 +86,8 @@ exports.redeemVoucher = asyncHandler(async (req, res) => {
   const { rewardId, metadata } = req.body;
   const performedBy = req.user?.clerkId || clerkId;
 
+  console.log(metadata);
+
   const result = await LoyaltyService.redeemVoucher({
     clerkId,
     rewardId,

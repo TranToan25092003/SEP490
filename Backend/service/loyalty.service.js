@@ -8,39 +8,6 @@ const {
 } = require("../model");
 const { UsersService } = require("./users.service");
 
-const STATIC_VOUCHER_CATALOG = {
-  "voucher-50": {
-    id: "voucher-50",
-    title: "Voucher 50.000₫",
-    cost: 500,
-    value: 50000,
-    currency: "VND",
-    discountType: "fixed",
-    validityDays: 60,
-    stock: 128,
-  },
-  "voucher-120": {
-    id: "voucher-120",
-    title: "Voucher 120.000₫",
-    cost: 1000,
-    value: 120000,
-    currency: "VND",
-    discountType: "fixed",
-    validityDays: 60,
-    stock: 62,
-  },
-  cashback: {
-    id: "cashback",
-    title: "Hoàn tiền 5%",
-    cost: 1500,
-    value: 5,
-    currency: "VND",
-    discountType: "percentage",
-    validityDays: 45,
-    stock: null,
-  },
-};
-
 const EARNING_RULES = [
   {
     id: "purchase",
@@ -124,12 +91,32 @@ class LoyaltyService {
     });
     const tierInfo = calculateTierInfo(wallet.total_points || 0);
     const rewards = await this.getVoucherCatalog();
+    const ownedVouchers = await LoyaltyVoucher.find({ clerkId })
+      .sort({ createdAt: -1 })
+      .limit(25)
+      .select(
+        "voucherCode status expiresAt rewardName discountType value currency pointsCost createdAt issuedAt redeemedAt"
+      )
+      .lean();
 
     return {
       clerkId,
       balance: wallet.total_points,
       updatedAt: wallet.updatedAt,
       vouchersOwned: activeVoucherCount,
+      vouchers: ownedVouchers.map((voucher) => ({
+        id: voucher._id,
+        code: voucher.voucherCode,
+        status: voucher.status,
+        rewardName: voucher.rewardName,
+        pointsCost: voucher.pointsCost,
+        value: voucher.value,
+        currency: voucher.currency,
+        discountType: voucher.discountType,
+        issuedAt: voucher.issuedAt || voucher.createdAt,
+        expiresAt: voucher.expiresAt,
+        redeemedAt: voucher.redeemedAt || null,
+      })),
       ...tierInfo,
       catalog: {
         rewards,
@@ -277,11 +264,7 @@ class LoyaltyService {
       .sort({ priority: 1, createdAt: -1 })
       .lean();
 
-    const dynamicRewards = await this.transformRulesToRewards(rules);
-    if (dynamicRewards.length) {
-      return dynamicRewards;
-    }
-    return Object.values(STATIC_VOUCHER_CATALOG);
+    return await this.transformRulesToRewards(rules);
   }
 
   async transformRulesToRewards(rules = []) {
@@ -303,6 +286,7 @@ class LoyaltyService {
       acc[doc._id] = doc.total;
       return acc;
     }, {});
+
     return rules
       .filter((rule) => this.isRuleUsable(rule))
       .map((rule) => this.formatRuleReward(rule, issuedMap))
@@ -341,6 +325,7 @@ class LoyaltyService {
       Number(rule.conversionPreviewPoints) ||
       Number(rule.conversionPointsAmount) ||
       0;
+
     if (!cost || cost <= 0) {
       return null;
     }
@@ -350,7 +335,9 @@ class LoyaltyService {
     const value =
       discountType === "percentage"
         ? Number(rule.conversionValue) || 0
-        : Number(rule.conversionCurrencyAmount) || 0;
+        : Number(
+            rule.conversionCurrencyAmount * rule.conversionPreviewPoints
+          ) || 0;
     if (value <= 0) {
       return null;
     }
@@ -397,7 +384,10 @@ class LoyaltyService {
   async generateVoucherCode(prefix = "VC") {
     const attempts = 5;
     for (let i = 0; i < attempts; i += 1) {
-      const randomPart = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const randomPart = Math.random()
+        .toString(36)
+        .substring(2, 8)
+        .toUpperCase();
       const code = `${prefix}-${randomPart}`;
       const exists = await LoyaltyVoucher.exists({ voucherCode: code });
       if (!exists) return code;
@@ -409,13 +399,8 @@ class LoyaltyService {
     if (!clerkId) throw new Error("clerkId is required");
     if (!rewardId) throw new Error("rewardId is required");
 
-    let reward = null;
-    if (Types.ObjectId.isValid(rewardId)) {
-      reward = await this.getRuleRewardById(rewardId);
-    }
-    if (!reward) {
-      reward = STATIC_VOUCHER_CATALOG[rewardId] || null;
-    }
+    const reward = await this.getRuleRewardById(rewardId);
+
     if (!reward) throw new Error("Reward is not available");
     if (!reward.cost || reward.cost <= 0) {
       throw new Error("Reward configuration is invalid");
@@ -423,7 +408,9 @@ class LoyaltyService {
 
     const isDynamicReward = Boolean(reward.ruleId);
     if (isDynamicReward && reward.stock) {
-      const minted = await LoyaltyVoucher.countDocuments({ rewardId: reward.id });
+      const minted = await LoyaltyVoucher.countDocuments({
+        rewardId: reward.id,
+      });
       if (minted >= reward.stock) {
         throw new Error("Voucher da het so luong");
       }
@@ -487,7 +474,9 @@ class LoyaltyService {
 
     let rewardPayload = reward;
     if (isDynamicReward) {
-      const minted = await LoyaltyVoucher.countDocuments({ rewardId: reward.id });
+      const minted = await LoyaltyVoucher.countDocuments({
+        rewardId: reward.id,
+      });
       rewardPayload = {
         ...reward,
         remainingStock: reward.stock
@@ -510,9 +499,7 @@ class LoyaltyService {
     const windowStart = new Date(
       now.getTime() - safeWindowDays * 24 * 60 * 60 * 1000
     );
-    const expiringEnd = new Date(
-      now.getTime() + 30 * 24 * 60 * 60 * 1000
-    );
+    const expiringEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
     const [
       engagedMembers,
@@ -678,7 +665,6 @@ class LoyaltyService {
 
 module.exports = {
   LoyaltyService: new LoyaltyService(),
-  VOUCHER_CATALOG: STATIC_VOUCHER_CATALOG,
   EARNING_RULES,
   TIER_LEVELS,
 };

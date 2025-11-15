@@ -94,14 +94,22 @@ const normalizeReward = (reward) => {
     reward.discountType === "percentage"
       ? `A?p d???ng ${reward.value ?? 0}%`
       : `Gi???m ${formatCurrency(reward.value ?? 0)}`;
-  let stockLabel = "KhA'ng gi??>i h???n";
+  const costPoints = Number(reward.cost);
+  const shouldShowCost =
+    reward.discountType === "percentage" &&
+    Number.isFinite(costPoints) &&
+    costPoints > 0;
+  const normalizedNote = shouldShowCost
+    ? `${note} (chi phi ${formatPoints(costPoints)})`
+    : note;
+  let stockLabel = "không giới hạn";
   if (typeof reward.remainingStock === "number") {
     stockLabel =
       reward.remainingStock > 0
         ? `C??n ${formatNumber(reward.remainingStock)} mA?`
         : "??A? h???t mA??";
   } else if (typeof reward.stock === "number") {
-    stockLabel = `Gi???i h???n ${formatNumber(reward.stock)} mA?`;
+    stockLabel = `Giới hạn ${formatNumber(reward.stock)} mã`;
   } else if (typeof reward.stock === "string") {
     stockLabel = reward.stock;
   }
@@ -111,7 +119,7 @@ const normalizeReward = (reward) => {
     cost: reward.cost,
     delivery,
     stock: stockLabel,
-    note,
+    note: normalizedNote,
   };
 };
 
@@ -302,6 +310,7 @@ const LoyaltyProgram = () => {
   const [ruleDeleteError, setRuleDeleteError] = useState("");
   const [updatingRuleId, setUpdatingRuleId] = useState(null);
   const [deletingRuleId, setDeletingRuleId] = useState(null);
+
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loadingAudits, setLoadingAudits] = useState(false);
@@ -933,29 +942,50 @@ const LoyaltyProgram = () => {
                     </Select>
                   </div>
                   {ruleForm.conversionType === "percent" ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="conversionPercent">
-                        Tỉ lệ % thưởng thêm
-                      </Label>
-                      <div className="relative">
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="conversionPercent">
+                          Tỷ lệ % thưởng thêm
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="conversionPercent"
+                            type="number"
+                            min="0"
+                            step="0.1"
+                            className="pr-14"
+                            placeholder="VD: 5"
+                            value={ruleForm.conversionValue}
+                            onChange={handleRuleFieldChange("conversionValue")}
+                          />
+                          <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
+                            %
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Nhập phần trăm thưởng thêm so với giao dịch gốc.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="conversionPercentCost">
+                          Số điểm cần để đổi ưu đãi này
+                        </Label>
                         <Input
-                          id="conversionPercent"
+                          id="conversionPercentCost"
                           type="number"
                           min="0"
-                          step="0.1"
-                          className="pr-14"
-                          placeholder="Ví dụ: 5"
-                          value={ruleForm.conversionValue}
-                          onChange={handleRuleFieldChange("conversionValue")}
+                          placeholder="VD: 500"
+                          value={ruleForm.conversionPreviewPoints}
+                          onChange={handleRuleFieldChange(
+                            "conversionPreviewPoints"
+                          )}
                         />
-                        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
-                          %
-                        </span>
+                        <p className="text-xs text-muted-foreground">
+                          Thành viên phải có ít nhất chừng này điểm để đổi ưu
+                          đãi phần trăm.
+                        </p>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Nhập phần trăm thưởng thêm so với giao dịch gốc.
-                      </p>
-                    </div>
+                    </>
                   ) : (
                     <div className="space-y-4">
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -1034,6 +1064,20 @@ const LoyaltyProgram = () => {
                       >
                         Áp dụng
                       </Button>
+                      {editingRuleId ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleDeleteRule(editingRuleId)}
+                          className="gap-1"
+                          disabled={deletingRuleId}
+                        >
+                          <X className="size-4" />
+                          {deletingRuleId ? "Dang xoá..." : "xoá"}
+                        </Button>
+                      ) : (
+                        ""
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1081,10 +1125,7 @@ const LoyaltyProgram = () => {
                   </p>
                   <p>
                     Tỉ lệ: {conversionSummaryText} • Số voucher:{" "}
-                    <p>
-                      Voucher cA? hiA?u l???c:{" "}
-                      {ruleForm.voucherValidityDays || "60"} ngA?y
-                    </p>
+                    <p>Voucher có hiệu lực: {ruleForm.voucherValidityDays}</p>
                     {ruleForm.voucherQuantity || "Chưa nhập"}
                   </p>
                   <p>Mô tả: {ruleForm.voucherDescription || "Chưa cập nhật"}</p>
