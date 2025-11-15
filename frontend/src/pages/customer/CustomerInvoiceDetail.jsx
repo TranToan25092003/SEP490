@@ -1,6 +1,7 @@
 import { useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Container from "@/components/global/Container";
+import background from "@/assets/cool-motorcycle-indoors.png";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -282,21 +283,36 @@ const CustomerInvoiceDetail = () => {
           }}
           featureName="xem hóa đơn"
         />
-        <Container className="py-16">
-          <div className="max-w-xl mx-auto text-center space-y-4">
-            <h1 className="text-3xl font-semibold">Vui lòng đăng nhập</h1>
-            <p className="text-muted-foreground">
-              Bạn cần đăng nhập để xem chi tiết hóa đơn của mình.
-            </p>
-          </div>
-        </Container>
+        <div
+          className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${background})`,
+            backgroundPosition: "65% 35%",
+          }}
+        >
+          <Container className="py-16 w-full max-w-7xl">
+            <div className="max-w-xl mx-auto text-center space-y-4">
+              <h1 className="text-3xl font-semibold">Vui lòng đăng nhập</h1>
+              <p className="text-muted-foreground">
+                Bạn cần đăng nhập để xem chi tiết hóa đơn của mình.
+              </p>
+            </div>
+          </Container>
+        </div>
       </>
     );
   }
 
   return (
-    <Container className="py-12 space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundPosition: "65% 35%",
+      }}
+    >
+      <Container className="py-12 space-y-8 w-full max-w-7xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold uppercase tracking-tight">
             Thông tin hóa đơn
@@ -670,7 +686,8 @@ const CustomerInvoiceDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
-    </Container>
+      </Container>
+    </div>
   );
 };
 
