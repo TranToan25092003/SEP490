@@ -233,7 +233,7 @@ const CustomerInvoices = () => {
                             Chưa thanh toán
                           </SelectItem>
                         </SelectContent>
-                      </SelectTrigger>
+                      </Select>
                     </div>
 
                     {/* Nút xóa filter */}
