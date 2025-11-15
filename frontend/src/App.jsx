@@ -37,6 +37,7 @@ import NotFoundPage from "./pages/404";
 import {
   partsPageLoader,
   partFormLoader,
+  homeLoader,
   partsClientLoader,
   partLoaderByClient,
   goodsReceiptListLoader,
@@ -89,7 +90,7 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-        loader: partsClientLoader,
+        loader: homeLoader,
       },
       {
         path: "/booking",
