@@ -1,11 +1,16 @@
-const {
-  LoyaltyRule,
-  LoyaltyRuleAudit,
-} = require("../../model");
+const { Types } = require("mongoose");
+const { LoyaltyRule, LoyaltyRuleAudit } = require("../../model");
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const STATUS_VALUES = ["draft", "active", "inactive", "archived"];
+const AUDIT_ACTION_META = {
+  create: { label: "Tạo quy tắc", risk: "Thấp" },
+  update: { label: "Cập nhật quy tắc", risk: "Trung bình" },
+  status: { label: "Đổi trạng thái", risk: "Trung bình" },
+  delete: { label: "Xóa quy tắc", risk: "Cảnh báo" },
+};
+const AUDIT_ACTIONS = Object.keys(AUDIT_ACTION_META);
 
 class LoyaltyRulesService {
   static formatRule(doc) {
@@ -38,6 +43,60 @@ class LoyaltyRulesService {
       // eslint-disable-next-line no-console
       console.error("Failed to log loyalty rule audit", error);
     }
+  }
+
+  static formatAuditRecord(doc, ruleMap = {}) {
+    if (!doc) return null;
+    const data = typeof doc.toObject === "function" ? doc.toObject() : doc;
+    const meta = AUDIT_ACTION_META[data.action] || {
+      label: "Điều chỉnh",
+      risk: "Trung bình",
+    };
+    const ruleId =
+      data.ruleId && typeof data.ruleId === "object" && data.ruleId.toString
+        ? data.ruleId.toString()
+        : data.ruleId
+        ? String(data.ruleId)
+        : null;
+    const ruleInfo = ruleId ? ruleMap[ruleId] : null;
+    const ruleName =
+      ruleInfo?.name ||
+      data.after?.name ||
+      data.before?.name ||
+      "Quy tắc không xác định";
+    let reason = data.metadata?.reason || null;
+    if (!reason) {
+      if (data.action === "status") {
+        reason = `Trạng thái → ${data.metadata?.status || data.after?.status || "không rõ"}`;
+      } else if (data.action === "delete") {
+        reason = "Quy tắc đã được đánh dấu xóa.";
+      } else if (data.action === "create") {
+        reason = "Khởi tạo quy tắc mới.";
+      } else {
+        reason = "Điều chỉnh cấu hình quy tắc.";
+      }
+    }
+    const change =
+      data.metadata?.summary || `${meta.label} • ${ruleName}`;
+    const actor =
+      data.actorName ||
+      data.actorEmail ||
+      (data.actorId ? `Người dùng ${data.actorId}` : "Hệ thống");
+
+    return {
+      id: data._id?.toString() || data.id,
+      ruleId: data.ruleId,
+      action: data.action,
+      change,
+      reason,
+      risk: meta.risk,
+      actor,
+      actorId: data.actorId || null,
+      actorEmail: data.actorEmail || null,
+      ruleName,
+      timestamp: data.createdAt,
+      metadata: data.metadata || null,
+    };
   }
 
   static validateDates(validFrom, validTo) {
@@ -103,6 +162,13 @@ class LoyaltyRulesService {
         throw new Error("Số lượng voucher không hợp lệ");
       }
       payload.voucherQuantity = qty;
+    }
+    if (payload.voucherValidityDays !== undefined) {
+      const days = this.normalizeNumber(payload.voucherValidityDays, 60);
+      if (!days || days < 1) {
+        throw new Error("So ngay voucher khong hop le");
+      }
+      payload.voucherValidityDays = days;
     }
     if (payload.priority !== undefined) {
       const priority = this.normalizeNumber(payload.priority, 1);
@@ -268,6 +334,60 @@ class LoyaltyRulesService {
     );
 
     return { success: true };
+  }
+
+  async listAudits({ limit = 30, ruleId, action } = {}) {
+    const sanitizedLimit = Math.min(
+      Math.max(parseInt(limit, 10) || 30, 1),
+      100
+    );
+    const filter = {};
+    if (ruleId && Types.ObjectId.isValid(ruleId)) {
+      filter.ruleId = ruleId;
+    }
+    if (action && AUDIT_ACTIONS.includes(action)) {
+      filter.action = action;
+    }
+
+    const records = await LoyaltyRuleAudit.find(filter)
+      .sort({ createdAt: -1 })
+      .limit(sanitizedLimit)
+      .lean();
+
+    const ruleIds = [
+      ...new Set(
+        records
+          .map((record) =>
+            record.ruleId && record.ruleId.toString
+              ? record.ruleId.toString()
+              : record.ruleId
+              ? String(record.ruleId)
+              : null
+          )
+          .filter(Boolean)
+      ),
+    ];
+
+    const ruleDocs = ruleIds.length
+      ? await LoyaltyRule.find({ _id: { $in: ruleIds } })
+          .select("name description voucherDescription")
+          .lean()
+      : [];
+
+    const ruleMap = ruleDocs.reduce((acc, rule) => {
+      acc[rule._id.toString()] = rule;
+      return acc;
+    }, {});
+
+    return {
+      items: records.map((record) =>
+        LoyaltyRulesService.formatAuditRecord(record, ruleMap)
+      ),
+      pagination: {
+        limit: sanitizedLimit,
+        total: records.length,
+      },
+    };
   }
 }
 

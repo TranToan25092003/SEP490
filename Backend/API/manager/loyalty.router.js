@@ -5,6 +5,7 @@ const controller = require("../../controller/manager/loyalty.controller");
 router.get("/overview", controller.getOverview);
 router.get("/transactions", controller.getTransactions);
 router.get("/catalog", controller.getCatalog);
+router.get("/audits", controller.getRuleAudits);
 router.get("/rules", controller.listRules);
 router.get("/rules/:id", controller.getRuleDetail);
 router.post("/rules", controller.createRule);

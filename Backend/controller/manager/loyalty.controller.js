@@ -21,7 +21,12 @@ exports.getTransactions = asyncHandler(async (req, res) => {
 });
 
 exports.getCatalog = asyncHandler(async (_req, res) => {
-  const data = LoyaltyService.getCatalogDetails();
+  const data = await LoyaltyService.getCatalogDetails();
+  res.json({ success: true, data });
+});
+
+exports.getRuleAudits = asyncHandler(async (req, res) => {
+  const data = await LoyaltyRulesService.listAudits(req.query);
   res.json({ success: true, data });
 });
 

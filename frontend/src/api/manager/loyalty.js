@@ -9,6 +9,9 @@ export const getManagerLoyaltyCatalog = () =>
 export const getManagerLoyaltyTransactions = (params) =>
   customFetch.get("/manager/loyalty/transactions", { params });
 
+export const getManagerLoyaltyAudits = (params) =>
+  customFetch.get("/manager/loyalty/audits", { params });
+
 export const listLoyaltyRules = (params) =>
   customFetch.get("/manager/loyalty/rules", { params });
 

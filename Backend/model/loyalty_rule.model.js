@@ -8,6 +8,7 @@ const LoyaltyRuleSchema = new Schema(
     description: { type: String, default: "" },
     voucherDescription: { type: String, default: "" },
     voucherQuantity: { type: Number, default: 0, min: 0 },
+    voucherValidityDays: { type: Number, default: 60, min: 1 },
     conversionType: {
       type: String,
       enum: ["points", "percent"],

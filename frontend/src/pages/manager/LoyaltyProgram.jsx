@@ -34,8 +34,9 @@ import {
   Layers,
   Link2,
   Pencil,
+  Search,
   Repeat,
-  Trash2,
+  X,
   Settings,
   ShieldCheck,
   Sparkles,
@@ -45,6 +46,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   createLoyaltyRule,
   deleteLoyaltyRule,
+  getManagerLoyaltyAudits,
   getManagerLoyaltyOverview,
   getManagerLoyaltyTransactions,
   listLoyaltyRules,
@@ -85,20 +87,30 @@ const formatUserEmail = (email) => email || "Chưa cập nhật email";
 const normalizeReward = (reward) => {
   if (!reward) return null;
   const delivery =
-    reward.discountType === "percentage" ? "Giảm theo %" : "Sinh mã giảm giá";
+    reward.discountType === "percentage"
+      ? "Gi???m theo %"
+      : "Sinh mA? gi???m giA?";
   const note =
     reward.discountType === "percentage"
-      ? `Áp dụng ${reward.value ?? 0}%`
-      : `Giảm ${formatCurrency(reward.value ?? 0)}`;
+      ? `A?p d???ng ${reward.value ?? 0}%`
+      : `Gi???m ${formatCurrency(reward.value ?? 0)}`;
+  let stockLabel = "KhA'ng gi??>i h???n";
+  if (typeof reward.remainingStock === "number") {
+    stockLabel =
+      reward.remainingStock > 0
+        ? `C??n ${formatNumber(reward.remainingStock)} mA?`
+        : "??A? h???t mA??";
+  } else if (typeof reward.stock === "number") {
+    stockLabel = `Gi???i h???n ${formatNumber(reward.stock)} mA?`;
+  } else if (typeof reward.stock === "string") {
+    stockLabel = reward.stock;
+  }
   return {
     id: reward.id,
     reward: reward.title || reward.reward,
     cost: reward.cost,
     delivery,
-    stock:
-      typeof reward.stock === "number"
-        ? `Còn ${reward.stock} mã`
-        : "Không giới hạn",
+    stock: stockLabel,
     note,
   };
 };
@@ -140,80 +152,10 @@ const HISTORY_SCOPE_OPTIONS = [
   { key: "redeem", label: "Quy đổi" },
 ];
 
-const auditLogs = [
-  {
-    id: "LOG-8202",
-    actor: "Admin • Hoàng Anh",
-    change: "+50 điểm",
-    reason: "Điều chỉnh thủ công ticket #452",
-    risk: "Thấp",
-    timestamp: "09:11 • 09/11/2025",
-  },
-  {
-    id: "LOG-8192",
-    actor: "Rule Engine",
-    change: "Khóa check-in",
-    reason: "Phát hiện 4 lần check-in/1 giờ",
-    risk: "Cảnh báo",
-    timestamp: "21:35 • 08/11/2025",
-  },
-  {
-    id: "LOG-8188",
-    actor: "Admin • Bích Phương",
-    change: "Cập nhật tỷ lệ quy đổi",
-    reason: "Chiến dịch Black Friday",
-    risk: "Trung bình",
-    timestamp: "14:18 • 08/11/2025",
-  },
-];
-
-const apiEndpoints = [
-  {
-    method: "POST",
-    path: "/api/points/award",
-    desc: "Cộng điểm sau khi hành động hoàn tất.",
-  },
-  {
-    method: "POST",
-    path: "/api/points/redeem",
-    desc: "Trừ điểm và sinh voucher hoặc hoàn tiền.",
-  },
-  {
-    method: "GET",
-    path: "/api/points/balance?userId=",
-    desc: "Lấy ví điểm hiện tại và hạn sử dụng.",
-  },
-  {
-    method: "GET",
-    path: "/api/points/history?userId=",
-    desc: "Chi tiết giao dịch/ticket đối chiếu.",
-  },
-  {
-    method: "POST",
-    path: "/api/points/admin/adjust",
-    desc: "Điều chỉnh thủ công, ghi audit log bắt buộc.",
-  },
-];
-
-const customerGuide = [
-  'Xem ví điểm tại mục "Ví điểm" để biết số dư và hạn sử dụng.',
-  "Tích điểm khi thanh toán dịch vụ, check-in, tham gia khuyến mãi.",
-  "Giới thiệu bạn bè bằng link/mã riêng, điểm cộng khi đơn đầu hoàn tất.",
-  'Đổi điểm trong mục "Đổi quà" để lấy voucher hoặc giảm trực tiếp.',
-  "Khi có vấn đề hãy liên hệ hỗ trợ kèm mã giao dịch hoặc ảnh màn hình.",
-];
-
-const adminGuide = [
-  "Cấu hình tỷ lệ tích điểm, hạn sử dụng và ngưỡng đổi theo chiến dịch.",
-  "Theo dõi và lọc giao dịch để duyệt các yêu cầu nghi vấn.",
-  "Dùng audit log để kiểm soát mọi điều chỉnh thủ công.",
-  "Kết nối automation: gửi email/thông báo khi điểm sắp hết hạn.",
-  "Báo cáo tổng điểm theo thời gian, chiến dịch, top người dùng.",
-];
-
 const createSimpleRuleForm = () => ({
   voucherQuantity: "",
   voucherDescription: "",
+  voucherValidityDays: "60",
   conversionType: "points",
   conversionValue: "",
   conversionPointsAmount: "",
@@ -233,6 +175,10 @@ const buildRulePayload = (formValues) => {
     description: formValues.voucherDescription || "Rule đơn giản",
     voucherDescription: formValues.voucherDescription || "",
     voucherQuantity: Number(formValues.voucherQuantity) || 0,
+    voucherValidityDays:
+      Number(formValues.voucherValidityDays) > 0
+        ? Number(formValues.voucherValidityDays)
+        : 60,
     conversionType: formValues.conversionType,
     conversionValue: isPercent ? Number(formValues.conversionValue) || 0 : 0,
     conversionPointsAmount: !isPercent
@@ -308,6 +254,7 @@ const mapRuleToFormValues = (rule) => {
       rule.voucherQuantity === null || rule.voucherQuantity === undefined
         ? ""
         : String(rule.voucherQuantity),
+    voucherValidityDays: String(rule.voucherValidityDays ?? "60"),
     voucherDescription: rule.voucherDescription || rule.description || "",
     conversionType: rule.conversionType || "points",
     conversionValue:
@@ -355,6 +302,12 @@ const LoyaltyProgram = () => {
   const [ruleDeleteError, setRuleDeleteError] = useState("");
   const [updatingRuleId, setUpdatingRuleId] = useState(null);
   const [deletingRuleId, setDeletingRuleId] = useState(null);
+  const [showHistoryPanel, setShowHistoryPanel] = useState(false);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loadingAudits, setLoadingAudits] = useState(false);
+  const [auditError, setAuditError] = useState(null);
+  const [historySearch, setHistorySearch] = useState("");
+  const [auditFilter, setAuditFilter] = useState("all");
 
   const fetchRules = useCallback(async () => {
     try {
@@ -504,6 +457,42 @@ const LoyaltyProgram = () => {
       ignore = true;
     };
   }, [historyScope]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const loadAudits = async () => {
+      try {
+        setLoadingAudits(true);
+        setAuditError(null);
+        const response = await getManagerLoyaltyAudits({ limit: 30 });
+        if (ignore) return;
+        const payload = response?.data?.data;
+        const items = Array.isArray(payload?.items)
+          ? payload.items
+          : Array.isArray(payload)
+          ? payload
+          : [];
+        setAuditLogs(items);
+      } catch (error) {
+        if (!ignore) {
+          setAuditError(
+            error?.response?.data?.message ||
+              error?.message ||
+              "Không thể tải audit log."
+          );
+          setAuditLogs([]);
+        }
+      } finally {
+        if (!ignore) setLoadingAudits(false);
+      }
+    };
+
+    loadAudits();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     fetchRules();
@@ -675,7 +664,49 @@ const LoyaltyProgram = () => {
     return target?.title || "";
   }, [editingRuleId, earningRules]);
 
-  const filteredHistory = useMemo(() => transactions, [transactions]);
+  const filteredHistory = useMemo(() => {
+    if (!historySearch) return transactions;
+    const keyword = historySearch.toLowerCase();
+    return transactions.filter((item) => {
+      const id = item.id?.toLowerCase() || "";
+      const member = item.member?.toLowerCase() || "";
+      const email = item.email?.toLowerCase() || "";
+      const action = item.action?.toLowerCase() || "";
+      const detail = item.detail?.toLowerCase() || "";
+      return (
+        id.includes(keyword) ||
+        member.includes(keyword) ||
+        email.includes(keyword) ||
+        action.includes(keyword) ||
+        detail.includes(keyword)
+      );
+    });
+  }, [transactions, historySearch]);
+
+  const filteredAuditLogs = useMemo(() => {
+    if (auditFilter === "all") return auditLogs;
+    return auditLogs.filter((log) => {
+      const riskValue = (log.risk || "").toLowerCase();
+      return riskValue === auditFilter.toLowerCase();
+    });
+  }, [auditFilter, auditLogs]);
+
+  const historySummary = useMemo(() => {
+    const totalTx = transactions.length;
+    const earnTx = transactions.filter((item) => item.delta > 0).length;
+    const redeemTx = transactions.filter((item) => item.delta < 0).length;
+    const warningLogs = auditLogs.filter(
+      (log) => (log.risk || "").toLowerCase() === "cảnh báo"
+    ).length;
+    return {
+      totalTx,
+      earnTx,
+      redeemTx,
+      warningLogs,
+    };
+  }, [transactions, auditLogs]);
+
+  const recentAdjustments = useMemo(() => auditLogs.slice(0, 5), [auditLogs]);
 
   const expiringPercentage = useMemo(() => {
     if (!stats.totalPoints) return 0;
@@ -703,10 +734,6 @@ const LoyaltyProgram = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" className="gap-2">
-            <History className="size-4" />
-            Lịch sử điều chỉnh
-          </Button>
           <Button
             className="gap-2"
             onClick={() => setShowRuleForm((prev) => !prev)}
@@ -726,6 +753,89 @@ const LoyaltyProgram = () => {
         <div className="rounded-lg border border-destructive bg-destructive/10 p-3 text-sm text-destructive">
           {overviewError}
         </div>
+      )}
+
+      {showHistoryPanel && (
+        <Card className="border-amber-200 bg-amber-50/60">
+          <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle>Lịch sử điều chỉnh gần đây</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Theo dõi nhanh những điều chỉnh thủ công/engine đã áp dụng trong
+                48h qua.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistoryPanel(false)}
+              >
+                Đóng bảng
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {auditError && (
+              <div className="rounded border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                {auditError}
+              </div>
+            )}
+            {loadingAudits && !auditError && (
+              <p className="text-sm text-muted-foreground">
+                Đang tải audit log...
+              </p>
+            )}
+            {!loadingAudits && !auditError && (
+              <>
+                {recentAdjustments.length ? (
+                  recentAdjustments.map((log, index) => (
+                    <div
+                      key={log.id}
+                      className="rounded-lg border border-amber-100 bg-white/70 p-3 text-sm shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 font-semibold text-gray-900">
+                          <span className="text-xs text-muted-foreground">
+                            #{index + 1}
+                          </span>
+                          {log.change}
+                        </div>
+                        <Badge
+                          variant={
+                            log.risk === "Cảnh báo"
+                              ? "destructive"
+                              : log.risk === "Trung bình"
+                              ? "secondary"
+                              : "success"
+                          }
+                          className="text-xs uppercase"
+                        >
+                          {log.risk}
+                        </Badge>
+                      </div>
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        <p>
+                          Bởi:{" "}
+                          <span className="font-medium text-gray-900">
+                            {log.actor}
+                          </span>
+                        </p>
+                        <p>Lý do: {log.reason}</p>
+                        <p className="mt-1 text-gray-700">{log.timestamp}</p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Chưa có điều chỉnh nào được ghi nhận.
+                  </p>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {showRuleForm && (
@@ -775,6 +885,22 @@ const LoyaltyProgram = () => {
                     />
                   </div>
                   <div className="space-y-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="voucherValidityDays">
+                        Voucher có hiệu lực (ngày)
+                      </Label>
+                      <Input
+                        id="voucherValidityDays"
+                        type="number"
+                        min="1"
+                        placeholder="Ví dụ: 60"
+                        value={ruleForm.voucherValidityDays}
+                        onChange={handleRuleFieldChange("voucherValidityDays")}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Nhập số ngày voucher có hiệu lực sau khi được tạo.
+                      </p>
+                    </div>
                     <Label htmlFor="voucherDescription">Mô tả voucher</Label>
                     <Textarea
                       id="voucherDescription"
@@ -955,6 +1081,10 @@ const LoyaltyProgram = () => {
                   </p>
                   <p>
                     Tỉ lệ: {conversionSummaryText} • Số voucher:{" "}
+                    <p>
+                      Voucher cA? hiA?u l???c:{" "}
+                      {ruleForm.voucherValidityDays || "60"} ngA?y
+                    </p>
                     {ruleForm.voucherQuantity || "Chưa nhập"}
                   </p>
                   <p>Mô tả: {ruleForm.voucherDescription || "Chưa cập nhật"}</p>
@@ -1203,27 +1333,77 @@ const LoyaltyProgram = () => {
                 hiện.
               </p>
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Hiển thị</span>
-              <div className="inline-flex rounded-full border bg-muted/40 p-1">
-                {HISTORY_SCOPE_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => setHistoryScope(option.key)}
-                    className={`px-3 py-1 text-xs font-medium rounded-full transition ${
-                      historyScope === option.key
-                        ? "bg-white shadow text-gray-900"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+            <div className="flex flex-col gap-3 text-sm md:flex-row md:items-center">
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">Hiển thị</span>
+                <div className="inline-flex rounded-full border bg-muted/40 p-1">
+                  {HISTORY_SCOPE_OPTIONS.map((option) => (
+                    <button
+                      key={option.key}
+                      onClick={() => setHistoryScope(option.key)}
+                      className={`px-3 py-1 text-xs font-medium rounded-full transition ${
+                        historyScope === option.key
+                          ? "bg-white shadow text-gray-900"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative w-full md:w-64">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={historySearch}
+                    onChange={(event) => setHistorySearch(event.target.value)}
+                    placeholder="Tìm mã giao dịch, email..."
+                    className="h-9 pl-9 pr-9"
+                  />
+                  {historySearch && (
+                    <button
+                      type="button"
+                      onClick={() => setHistorySearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground hover:text-gray-900"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg border bg-muted/30 p-3">
+              <p className="text-xs uppercase text-muted-foreground">
+                Tổng giao dịch
+              </p>
+              <p className="text-xl font-semibold text-gray-900">
+                {formatNumber(historySummary.totalTx)}
+              </p>
+            </div>
+            <div className="rounded-lg border bg-green-50 p-3">
+              <p className="text-xs uppercase text-green-700">Cộng điểm</p>
+              <p className="text-xl font-semibold text-green-700">
+                {formatNumber(historySummary.earnTx)}
+              </p>
+            </div>
+            <div className="rounded-lg border bg-rose-50 p-3">
+              <p className="text-xs uppercase text-rose-700">Trừ điểm</p>
+              <p className="text-xl font-semibold text-rose-700">
+                {formatNumber(historySummary.redeemTx)}
+              </p>
+            </div>
+            <div className="rounded-lg border bg-amber-50 p-3">
+              <p className="text-xs uppercase text-amber-700">Cảnh báo</p>
+              <p className="text-xl font-semibold text-amber-700">
+                {formatNumber(historySummary.warningLogs)}
+              </p>
+            </div>
+          </div>
           <Tabs defaultValue="transactions" className="space-y-4">
             <TabsList>
               <TabsTrigger value="transactions" className="gap-2">
@@ -1333,6 +1513,25 @@ const LoyaltyProgram = () => {
             </TabsContent>
 
             <TabsContent value="audits">
+              <div className="flex flex-wrap items-center gap-2 pb-2">
+                {["all", "Cảnh báo", "Trung bình", "Thấp"].map((risk) => (
+                  <Button
+                    key={risk}
+                    size="sm"
+                    type="button"
+                    variant={auditFilter === risk ? "default" : "outline"}
+                    onClick={() => setAuditFilter(risk)}
+                    className="text-xs"
+                  >
+                    {risk === "all" ? "Tất cả" : risk}
+                  </Button>
+                ))}
+              </div>
+              {auditError && (
+                <div className="mb-3 rounded border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+                  {auditError}
+                </div>
+              )}
               <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow>
@@ -1344,146 +1543,62 @@ const LoyaltyProgram = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {auditLogs.map((log) => (
-                    <TableRow key={log.id}>
-                      <TableCell className="font-semibold">{log.id}</TableCell>
-                      <TableCell>{log.actor}</TableCell>
-                      <TableCell>{log.change}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            log.risk === "Cảnh báo"
-                              ? "destructive"
-                              : log.risk === "Trung bình"
-                              ? "secondary"
-                              : "success"
-                          }
-                        >
-                          {log.risk}
-                        </Badge>
+                  {loadingAudits ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="py-4 text-center text-sm text-muted-foreground"
+                      >
+                        Đang tải audit log...
                       </TableCell>
-                      <TableCell>{log.timestamp}</TableCell>
                     </TableRow>
-                  ))}
+                  ) : auditError ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="py-4 text-center text-sm text-destructive"
+                      >
+                        Không thể hiển thị audit log. Vui lòng thử lại.
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredAuditLogs.length ? (
+                    filteredAuditLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="font-semibold">
+                          {log.id}
+                        </TableCell>
+                        <TableCell>{log.actor}</TableCell>
+                        <TableCell>{log.change}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              log.risk === "Cảnh báo"
+                                ? "destructive"
+                                : log.risk === "Trung bình"
+                                ? "secondary"
+                                : "success"
+                            }
+                          >
+                            {log.risk}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{log.timestamp}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="py-4 text-center text-sm text-muted-foreground"
+                      >
+                        Không có log phù hợp với bộ lọc này.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Hướng dẫn & cam kết hiển thị</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Đảm bảo người dùng luôn biết cách tích/đổi điểm và điều kiện áp
-              dụng.
-            </p>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2">
-            <div>
-              <div className="flex items-center gap-2 text-xs uppercase font-semibold text-muted-foreground mb-3">
-                <UsersRound className="size-4" />
-                Người dùng
-              </div>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                {customerGuide.map((item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="text-green-500">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-xs uppercase font-semibold text-muted-foreground mb-3">
-                <ShieldCheck className="size-4" />
-                Quản trị
-              </div>
-              <ul className="space-y-3 text-sm text-muted-foreground">
-                {adminGuide.map((item) => (
-                  <li key={item} className="flex gap-2">
-                    <span className="text-blue-500">•</span>
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>API & tích hợp</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Dùng làm checklist khi backend hoàn thiện endpoint.
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {apiEndpoints.map((endpoint) => (
-              <div
-                key={endpoint.path}
-                className="rounded-lg border p-3 hover:border-gray-400 transition-colors"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <Badge
-                    variant={
-                      endpoint.method === "GET" ? "secondary" : "outline"
-                    }
-                    className="text-xs uppercase"
-                  >
-                    {endpoint.method}
-                  </Badge>
-                  <Badge variant="outline" className="gap-1 text-xs">
-                    <Link2 className="size-3" />
-                    REST
-                  </Badge>
-                </div>
-                <p className="mt-3 font-mono text-xs text-gray-900">
-                  {endpoint.path}
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {endpoint.desc}
-                </p>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-indigo-100 bg-indigo-50">
-        <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-wider text-indigo-600 font-semibold">
-              Nhắc nhở vận hành
-            </p>
-            <h2 className="text-lg font-semibold text-gray-900 mt-1">
-              Luôn thông báo khi điểm được cộng, đổi hoặc sắp hết hạn
-            </h2>
-            <p className="text-sm text-indigo-700 mt-2">
-              Kích hoạt email/notification song song để tăng tương tác và giảm
-              khiếu nại nhầm lẫn.
-            </p>
-          </div>
-          <div className="space-y-2 text-sm text-indigo-900">
-            <div className="flex items-center gap-2">
-              <BellRing className="size-4" />
-              Push/App notification
-            </div>
-            <div className="flex items-center gap-2">
-              <BarChart3 className="size-4" />
-              Dashboard báo cáo theo chiến dịch
-            </div>
-            <div className="flex items-center gap-2">
-              <UsersRound className="size-4" />
-              Top khách hàng có nhiều điểm
-            </div>
-          </div>
-          <Button className="w-full md:w-auto gap-2">
-            <Gift className="size-4" />
-            Khởi tạo chiến dịch mới
-          </Button>
         </CardContent>
       </Card>
     </div>
