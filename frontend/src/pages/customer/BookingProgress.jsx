@@ -64,7 +64,9 @@ const BookingProgress = () => {
     >
       <Container className="space-y-4 my-8 w-full max-w-7xl">
         <div className="flex justify-between items-center">
-        <H3>CHI TIẾT ĐƠN</H3>
+        <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+          <H3 className="text-gray-900">CHI TIẾT ĐƠN</H3>
+        </div>
         <Tabs value="progress">
           <TabsList>
             <TabsTrigger value="progress">

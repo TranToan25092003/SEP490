@@ -140,12 +140,12 @@ class ServiceOrderService {
       // Nếu item là warranty part, đảm bảo giá = 0
       const isWarrantyPart = item.type === "part" && warrantyPartIds.includes(item.partId);
       return {
-        item_type: item.type,
-        service_id: item.serviceId,
-        part_id: item.partId,
-        name: item.name,
+      item_type: item.type,
+      service_id: item.serviceId,
+      part_id: item.partId,
+      name: item.name,
         price: isWarrantyPart ? 0 : item.price, // Warranty parts luôn có giá = 0
-        quantity: item.quantity
+      quantity: item.quantity
       };
     });
     await serviceOrder.save();
@@ -277,10 +277,10 @@ class ServiceOrderService {
       const isWarrantyService = /bảo hành/i.test(service.name);
       return {
         price: isWarrantyService ? 0 : service.base_price,
-        quantity: 1,
-        service_id: service._id,
-        name: service.name,
-        item_type: "service"
+      quantity: 1,
+      service_id: service._id,
+      name: service.name,
+      item_type: "service"
       };
     });
   }

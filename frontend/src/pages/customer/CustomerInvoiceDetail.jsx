@@ -158,7 +158,7 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
       const isPaid = await checkPaid(invoice.totalAmount, invoiceNumber);
@@ -208,7 +208,7 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
       const response = await customFetch(
         `/invoices/${invoice.id}/verify-payment`,
@@ -291,9 +291,11 @@ const CustomerInvoiceDetail = () => {
           }}
         >
           <Container className="py-16 w-full max-w-7xl">
-            <div className="max-w-xl mx-auto text-center space-y-4">
-              <h1 className="text-3xl font-semibold">Vui lòng đăng nhập</h1>
-              <p className="text-muted-foreground">
+            <div className="max-w-xl mx-auto text-center space-y-4 bg-white rounded-lg p-6 shadow-lg">
+              <h1 className="text-3xl font-semibold text-gray-900">
+                Vui lòng đăng nhập
+              </h1>
+              <p className="text-gray-700">
                 Bạn cần đăng nhập để xem chi tiết hóa đơn của mình.
               </p>
             </div>
@@ -313,379 +315,395 @@ const CustomerInvoiceDetail = () => {
     >
       <Container className="py-12 space-y-8 w-full max-w-7xl">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold uppercase tracking-tight">
-            Thông tin hóa đơn
-          </h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho lần
-            sửa chữa của bạn.
-          </p>
+          <div className="space-y-2 bg-white rounded-lg p-4 shadow-lg">
+            <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900">
+              Thông tin hóa đơn
+            </h1>
+            <p className="text-gray-700 max-w-2xl">
+              Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
+              lần sửa chữa của bạn.
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate(-1)}
+            className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Quay lại
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="w-full sm:w-auto"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lại
-        </Button>
-      </div>
 
-      {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+            {error}
+          </div>
+        )}
 
-      {!invoice && !error ? (
-        <EmptyState
-          icon={ClipboardList}
-          title="Không tìm thấy hóa đơn"
-          subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
-        />
-      ) : null}
+        {!invoice && !error ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Không tìm thấy hóa đơn"
+            subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
+          />
+        ) : null}
 
-      {invoice && (
-        <div className="space-y-8">
-          <Card className="shadow-sm border border-border/60">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="text-sm uppercase tracking-wide text-muted-foreground">
-                    Mã hóa đơn
-                  </div>
-                  <div className="text-2xl font-semibold font-mono">
-                    {invoice.invoiceNumber || invoice.id}
-                  </div>
-                  {renderStatusBadge(invoice.status)}
-                </div>
-                <div className="grid gap-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <div className="text-muted-foreground">Ngày tạo</div>
-                    <div className="font-medium text-foreground">
-                      {formatDateTime(invoice.createdAt)}
+        {invoice && (
+          <div className="space-y-8">
+            <Card className="shadow-sm border border-border/60">
+              <CardContent className="p-6 space-y-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-3">
+                    <div className="text-sm uppercase tracking-wide text-muted-foreground">
+                      Mã hóa đơn
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Ngày cập nhật</div>
-                    <div className="font-medium text-foreground">
-                      {formatDateTime(invoice.updatedAt)}
+                    <div className="text-2xl font-semibold font-mono">
+                      {invoice.invoiceNumber || invoice.id}
                     </div>
+                    {renderStatusBadge(invoice.status)}
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Lệnh sửa chữa</div>
-                    <div className="font-medium text-foreground font-mono">
-                      {invoice.serviceOrderNumber ||
-                        invoice.serviceOrderId ||
-                        "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Biển số xe</div>
-                    <div className="font-medium text-foreground">
-                      {invoice.licensePlate || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Tên khách hàng</div>
-                    <div className="font-medium text-foreground">
-                      {invoice.customerName || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">
-                      Trạng thái thanh toán
-                    </div>
-                    <div className="font-medium text-foreground">
-                      {renderPaymentMethod(invoice.paymentMethod)}
-                    </div>
-                  </div>
-                  {invoice.confirmedBy && (
+                  <div className="grid gap-4 text-sm sm:grid-cols-2">
                     <div>
-                      <div className="text-muted-foreground">Xác nhận bởi</div>
+                      <div className="text-muted-foreground">Ngày tạo</div>
                       <div className="font-medium text-foreground">
-                        {invoice.confirmedBy}
+                        {formatDateTime(invoice.createdAt)}
                       </div>
                     </div>
-                  )}
-                  {invoice.confirmedAt && (
+                    <div>
+                      <div className="text-muted-foreground">Ngày cập nhật</div>
+                      <div className="font-medium text-foreground">
+                        {formatDateTime(invoice.updatedAt)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Lệnh sửa chữa</div>
+                      <div className="font-medium text-foreground font-mono">
+                        {invoice.serviceOrderNumber ||
+                          invoice.serviceOrderId ||
+                          "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Biển số xe</div>
+                      <div className="font-medium text-foreground">
+                        {invoice.licensePlate || "—"}
+                      </div>
+                    </div>
                     <div>
                       <div className="text-muted-foreground">
-                        Thời gian xác nhận
+                        Tên khách hàng
                       </div>
                       <div className="font-medium text-foreground">
-                        {formatDateTime(invoice.confirmedAt)}
+                        {invoice.customerName || "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">
+                        Trạng thái thanh toán
+                      </div>
+                      <div className="font-medium text-foreground">
+                        {renderPaymentMethod(invoice.paymentMethod)}
+                      </div>
+                    </div>
+                    {invoice.confirmedBy && (
+                      <div>
+                        <div className="text-muted-foreground">
+                          Xác nhận bởi
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {invoice.confirmedBy}
+                        </div>
+                      </div>
+                    )}
+                    {invoice.confirmedAt && (
+                      <div>
+                        <div className="text-muted-foreground">
+                          Thời gian xác nhận
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatDateTime(invoice.confirmedAt)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="shadow-sm border border-border/60">
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold uppercase tracking-wide">
+                      Báo giá đã duyệt
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Danh sách các hạng mục dịch vụ và phụ tùng đã được thực
+                      hiện cho xe của bạn.
+                    </p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hạng mục</TableHead>
+                          <TableHead>Loại</TableHead>
+                          <TableHead className="text-right">Số lượng</TableHead>
+                          <TableHead className="text-right">Đơn giá</TableHead>
+                          <TableHead className="text-right">
+                            Thành tiền
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(invoice.items ?? []).map((item, index) => (
+                          <TableRow key={`${item.name}-${index}`}>
+                            <TableCell className="font-medium">
+                              {item.name}
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatPrice(item.price)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatPrice(item.lineTotal)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {(invoice.items ?? []).length === 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center text-sm text-muted-foreground py-6"
+                            >
+                              Không có hạng mục nào trong hóa đơn này.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border border-border/60">
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold uppercase tracking-wide">
+                      Tổng hợp &amp; xác nhận
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Chi tiết các khoản phí và số tiền cần thanh toán.
+                    </p>
+                  </div>
+                  <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
+                    <div className="flex justify-between text-sm">
+                      <span>Tạm tính</span>
+                      <span className="font-medium">
+                        {formatPrice(invoice.subtotal)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Thuế (10%)</span>
+                      <span className="font-medium">
+                        {formatPrice(invoice.tax)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
+                      <span>Tổng cộng</span>
+                      <span className="text-lg">
+                        {formatPrice(invoice.totalAmount)}
+                      </span>
+                    </div>
+                  </div>
+                  {invoice.status === "unpaid" && (
+                    <Button
+                      onClick={() => setPaymentModalOpen(true)}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Thanh toán
+                    </Button>
+                  )}
+                  {invoice.status === "paid" && (
+                    <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
+                      <div className="font-medium mb-1">Đã thanh toán</div>
+                      <div className="text-muted-foreground">
+                        Hóa đơn đã được thanh toán thành công.
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="shadow-sm border border-border/60">
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold uppercase tracking-wide">
-                    Báo giá đã duyệt
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Danh sách các hạng mục dịch vụ và phụ tùng đã được thực hiện
-                    cho xe của bạn.
-                  </p>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Hạng mục</TableHead>
-                        <TableHead>Loại</TableHead>
-                        <TableHead className="text-right">Số lượng</TableHead>
-                        <TableHead className="text-right">Đơn giá</TableHead>
-                        <TableHead className="text-right">Thành tiền</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(invoice.items ?? []).map((item, index) => (
-                        <TableRow key={`${item.name}-${index}`}>
-                          <TableCell className="font-medium">
-                            {item.name}
-                          </TableCell>
-                          <TableCell className="capitalize">
-                            {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {item.quantity}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatPrice(item.price)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatPrice(item.lineTotal)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {(invoice.items ?? []).length === 0 && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="text-center text-sm text-muted-foreground py-6"
-                          >
-                            Không có hạng mục nào trong hóa đơn này.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-sm border border-border/60">
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold uppercase tracking-wide">
-                    Tổng hợp &amp; xác nhận
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Chi tiết các khoản phí và số tiền cần thanh toán.
-                  </p>
-                </div>
-                <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Tạm tính</span>
-                    <span className="font-medium">
-                      {formatPrice(invoice.subtotal)}
-                    </span>
+                  <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                    Bạn có thể thanh toán online hoặc trực tiếp thanh toán tại
+                    quầy
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Thuế (10%)</span>
-                    <span className="font-medium">
-                      {formatPrice(invoice.tax)}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
-                    <span>Tổng cộng</span>
-                    <span className="text-lg">
-                      {formatPrice(invoice.totalAmount)}
-                    </span>
-                  </div>
-                </div>
-                {invoice.status === "unpaid" && (
-                  <Button
-                    onClick={() => setPaymentModalOpen(true)}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Thanh toán
-                  </Button>
-                )}
-                {invoice.status === "paid" && (
-                  <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
-                    <div className="font-medium mb-1">Đã thanh toán</div>
-                    <div className="text-muted-foreground">
-                      Hóa đơn đã được thanh toán thành công.
-                    </div>
-                  </div>
-                )}
-                <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                  Nếu bạn cần hỗ trợ thêm về hóa đơn, vui lòng liên hệ đội ngũ
-                  chăm sóc khách hàng của Motormate.
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* Modal thanh toán */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Thanh toán hóa đơn
-            </DialogTitle>
-            <DialogDescription>
-              Mã hóa đơn:{" "}
-              <span className="font-mono font-medium">
-                {invoice?.invoiceNumber || invoice?.id}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="rounded-lg border bg-muted/40 p-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">
-                  Tổng tiền cần thanh toán:
-                </span>
-                <span className="text-lg font-semibold">
-                  {invoice ? formatPrice(invoice.totalAmount) : "—"}
-                </span>
-              </div>
+                </CardContent>
+              </Card>
             </div>
-            {invoice && (
-              <div className="flex flex-col items-center justify-center space-y-3">
-                <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
-                  {!qrCodeError ? (
-                    <img
-                      src={generateQRCodeUrl(
-                        invoice.totalAmount,
-                        invoice.invoiceNumber || invoice.id
-                      )}
-                      alt="QR Code thanh toán"
-                      className="w-full h-auto max-w-full"
-                      onError={(e) => {
-                        console.error("QR Code load error:", e);
-                        console.error("Failed URL:", e.target.src);
-                        setQrCodeError(true);
-                      }}
-                      onLoad={() => {
-                        console.log("QR Code loaded successfully");
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center space-y-2 text-muted-foreground py-8">
-                      <CreditCard className="h-12 w-12 mx-auto opacity-50" />
-                      <p className="text-sm font-medium">
-                        Không thể tải QR Code
-                      </p>
-                      <p className="text-xs">
-                        Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
-                        sau.
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                {!qrCodeError && (
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Quét mã QR để thanh toán qua ứng dụng ngân hàng
-                  </p>
-                )}
-              </div>
-            )}
-            {invoice && invoice.status === "unpaid" && (
-              <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
-                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {isPolling && <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />}
-                  <span className="break-words">
-                    {isPolling
-                      ? "Đang tự động kiểm tra thanh toán..."
-                      : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
+          </div>
+        )}
+
+        {/* Modal thanh toán */}
+        <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">
+                Thanh toán hóa đơn
+              </DialogTitle>
+              <DialogDescription>
+                Mã hóa đơn:{" "}
+                <span className="font-mono font-medium">
+                  {invoice?.invoiceNumber || invoice?.id}
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/40 p-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">
+                    Tổng tiền cần thanh toán:
+                  </span>
+                  <span className="text-lg font-semibold">
+                    {invoice ? formatPrice(invoice.totalAmount) : "—"}
                   </span>
                 </div>
               </div>
-            )}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsPolling(false);
-                  setPaymentModalOpen(false);
-                }}
-                className="w-full sm:flex-1 order-3 sm:order-1"
-              >
-                Hủy
-              </Button>
-              {invoice && invoice.status === "unpaid" && (
-                <>
-                  <Button
-                    onClick={handleCheckPayment}
-                    className="w-full sm:flex-1 order-1 sm:order-2"
-                    disabled={isCheckingPayment}
-                  >
-                    {isCheckingPayment ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        <span className="hidden sm:inline">Đang kiểm tra...</span>
-                        <span className="sm:hidden">Đang kiểm tra...</span>
-                      </>
+              {invoice && (
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
+                    {!qrCodeError ? (
+                      <img
+                        src={generateQRCodeUrl(
+                          invoice.totalAmount,
+                          invoice.invoiceNumber || invoice.id
+                        )}
+                        alt="QR Code thanh toán"
+                        className="w-full h-auto max-w-full"
+                        onError={(e) => {
+                          console.error("QR Code load error:", e);
+                          console.error("Failed URL:", e.target.src);
+                          setQrCodeError(true);
+                        }}
+                        onLoad={() => {
+                          console.log("QR Code loaded successfully");
+                        }}
+                      />
                     ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Kiểm tra thanh toán</span>
-                        <span className="sm:hidden">Kiểm tra</span>
-                      </>
+                      <div className="text-center space-y-2 text-muted-foreground py-8">
+                        <CreditCard className="h-12 w-12 mx-auto opacity-50" />
+                        <p className="text-sm font-medium">
+                          Không thể tải QR Code
+                        </p>
+                        <p className="text-xs">
+                          Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
+                          sau.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
+                        </p>
+                      </div>
                     )}
-                  </Button>
-                  {/* DEV MODE: Button để fake thanh toán cho testing */}
-                  {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_PAYMENT === 'true') && (
+                  </div>
+                  {!qrCodeError && (
+                    <p className="text-xs text-muted-foreground text-center px-4">
+                      Quét mã QR để thanh toán qua ứng dụng ngân hàng
+                    </p>
+                  )}
+                </div>
+              )}
+              {invoice && invoice.status === "unpaid" && (
+                <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
+                  <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                    {isPolling && (
+                      <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                    )}
+                    <span className="break-words">
+                      {isPolling
+                        ? "Đang tự động kiểm tra thanh toán..."
+                        : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsPolling(false);
+                    setPaymentModalOpen(false);
+                  }}
+                  className="w-full sm:flex-1 order-3 sm:order-1"
+                >
+                  Hủy
+                </Button>
+                {invoice && invoice.status === "unpaid" && (
+                  <>
                     <Button
-                      onClick={handleFakePayment}
-                      className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
+                      onClick={handleCheckPayment}
+                      className="w-full sm:flex-1 order-1 sm:order-2"
                       disabled={isCheckingPayment}
-                      title="DEV MODE: Fake thanh toán để test tích điểm"
                     >
                       {isCheckingPayment ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          <span className="hidden sm:inline">Đang xử lý...</span>
-                          <span className="sm:hidden">Đang xử lý...</span>
+                          <span className="hidden sm:inline">
+                            Đang kiểm tra...
+                          </span>
+                          <span className="sm:hidden">Đang kiểm tra...</span>
                         </>
                       ) : (
                         <>
-                          <span className="hidden sm:inline">🧪 Fake Thanh Toán</span>
-                          <span className="sm:hidden">🧪 Fake</span>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          <span className="hidden sm:inline">
+                            Kiểm tra thanh toán
+                          </span>
+                          <span className="sm:hidden">Kiểm tra</span>
                         </>
                       )}
                     </Button>
-                  )}
-                </>
-              )}
-              {invoice && invoice.status === "paid" && (
-                <Button className="w-full sm:flex-1" disabled>
-                  Đã thanh toán
-                </Button>
-              )}
+                    {/* DEV MODE: Button để fake thanh toán cho testing */}
+                    {(import.meta.env.DEV ||
+                      import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
+                      <Button
+                        onClick={handleFakePayment}
+                        className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
+                        disabled={isCheckingPayment}
+                        title="DEV MODE: Fake thanh toán để test tích điểm"
+                      >
+                        {isCheckingPayment ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            <span className="hidden sm:inline">
+                              Đang xử lý...
+                            </span>
+                            <span className="sm:hidden">Đang xử lý...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline">
+                              🧪 Fake Thanh Toán
+                            </span>
+                            <span className="sm:hidden">🧪 Fake</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </>
+                )}
+                {invoice && invoice.status === "paid" && (
+                  <Button className="w-full sm:flex-1" disabled>
+                    Đã thanh toán
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
       </Container>
     </div>
   );

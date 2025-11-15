@@ -22,8 +22,8 @@ import { getBookingById } from "@/api/bookings";
 import { getServiceOrderById } from "@/api/serviceOrders";
 import { checkWarrantyEligibility } from "@/api/warranty";
 import { formatPrice } from "@/lib/utils";
-import BackButton from "@/components/global/BackButton";
 import background from "@/assets/cool-motorcycle-indoors.png";
+import { ArrowLeft } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -180,8 +180,18 @@ const BookingHistoryDetailContent = ({ data }) => {
       }}
     >
       <Container className="space-y-6 my-8 w-full max-w-7xl">
-        <BackButton to="/profile?tab=history" label="Quay lại lịch sử sửa xe" />
-        <H3>Chi Tiết Lịch Sử Sửa Xe</H3>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/profile?tab=history")}
+            className="inline-flex items-center gap-2 bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-4 py-2 shadow-lg transition-colors border border-gray-200"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-medium">Quay lại lịch sử sửa xe</span>
+          </button>
+          <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+            <H3 className="text-gray-900">Chi Tiết Lịch Sử Sửa Xe</H3>
+          </div>
+        </div>
 
       {/* Thông tin đơn hàng */}
       <Card>
