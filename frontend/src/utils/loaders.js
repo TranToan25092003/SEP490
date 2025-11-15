@@ -63,9 +63,9 @@ export const partsClientLoader = async ({ request }) => {
     const url = new URL(request.url);
     const queryParams = new URLSearchParams(url.search);
 
-    const [partsResponse, groupedModelsResponse] = await Promise.all([
+    const [partsResponse, bannersResponse] = await Promise.all([
       customFetch(`/parts?${queryParams.toString()}`),
-      customFetch("/models/grouped-by-brand"),
+      customFetch("/banners/active"),
     ]);
 
     const partsApiResponse = partsResponse.data;
@@ -73,17 +73,15 @@ export const partsClientLoader = async ({ request }) => {
       throw new Error(partsApiResponse.message || "Failed to load parts");
     }
 
-    const groupedModelsApiResponse = groupedModelsResponse.data;
-    if (!groupedModelsApiResponse.success) {
-      throw new Error(
-        groupedModelsApiResponse.message || "Failed to load filter data"
-      );
+    const bannersApiResponse = bannersResponse.data;
+    if (!bannersApiResponse.success) {
+      throw new Error(bannersApiResponse.message || "Failed to load active banners");
     }
 
     return {
       parts: partsApiResponse.data,
       pagination: partsApiResponse.pagination,
-      groupedModels: groupedModelsApiResponse.data,
+      banners: bannersApiResponse.data,
     };
   } catch (error) {
     console.error("Parts loader error:", error);
@@ -93,7 +91,7 @@ export const partsClientLoader = async ({ request }) => {
     return {
       parts: [],
       pagination: {},
-      groupedModels: [],
+      banners: [],
     };
   }
 };
@@ -684,7 +682,7 @@ export const adminModelsLoader = async ({ request }) => {
     }
 
     return {
-      models: apiResponse.data, 
+      models: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {
@@ -734,7 +732,7 @@ export const adminBannersLoader = async ({ request }) => {
     }
 
     return {
-      banners: apiResponse.data, 
+      banners: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {

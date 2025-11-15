@@ -50,6 +50,8 @@ export default function GoodsReceiptDetail() {
 
   // Convert number to Vietnamese words
   const numberToVietnameseWords = (num) => {
+    if (num === 0) return "không";
+
     const ones = [
       "",
       "một",
@@ -62,63 +64,110 @@ export default function GoodsReceiptDetail() {
       "tám",
       "chín",
     ];
-    const tens = [
-      "",
-      "",
-      "hai mươi",
-      "ba mươi",
-      "bốn mươi",
-      "năm mươi",
-      "sáu mươi",
-      "bảy mươi",
-      "tám mươi",
-      "chín mươi",
-    ];
-    const hundreds = [
-      "",
-      "một trăm",
-      "hai trăm",
-      "ba trăm",
-      "bốn trăm",
-      "năm trăm",
-      "sáu trăm",
-      "bảy trăm",
-      "tám trăm",
-      "chín trăm",
-    ];
 
-    if (num === 0) return "không";
-    if (num < 10) return ones[num];
-    if (num < 100) {
-      const ten = Math.floor(num / 10);
-      const one = num % 10;
-      if (one === 0) return tens[ten];
-      if (ten === 1) return `mười ${ones[one]}`;
-      return `${tens[ten]} ${ones[one]}`;
+    const readGroup = (n) => {
+      if (n === 0) return "";
+      let result = "";
+
+      const hundred = Math.floor(n / 100);
+      const remainder = n % 100;
+      const ten = Math.floor(remainder / 10);
+      const one = remainder % 10;
+
+      // Handle hundreds
+      if (hundred > 0) {
+        result += ones[hundred] + " trăm ";
+      }
+
+      // Handle tens and ones
+      if (ten > 0) {
+        if (ten === 1) {
+          if (one === 0) {
+            result += "mười";
+          } else if (one === 5) {
+            result += "mười lăm";
+          } else {
+            result += "mười " + ones[one];
+          }
+        } else {
+          result += ones[ten] + " mươi ";
+          if (one === 1) {
+            result += "mốt";
+          } else if (one === 5) {
+            result += "lăm";
+          } else if (one > 0) {
+            result += ones[one];
+          }
+        }
+      } else if (one > 0) {
+        result += ones[one];
+      }
+
+      return result.trim();
+    };
+
+    // Handle billions (tỷ)
+    if (num >= 1000000000) {
+      const billion = Math.floor(num / 1000000000);
+      const remainder = num % 1000000000;
+      let result = readGroup(billion) + " tỷ";
+      if (remainder > 0) {
+        result += " " + numberToVietnameseWords(remainder);
+      }
+      return result;
     }
-    if (num < 1000) {
-      const hundred = Math.floor(num / 100);
-      const remainder = num % 100;
-      if (remainder === 0) return hundreds[hundred];
-      return `${hundreds[hundred]} ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000) {
-      const thousand = Math.floor(num / 1000);
-      const remainder = num % 1000;
-      if (remainder === 0) return `${numberToVietnameseWords(thousand)} nghìn`;
-      return `${numberToVietnameseWords(
-        thousand
-      )} nghìn ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000000) {
+
+    // Handle millions (triệu)
+    if (num >= 1000000) {
       const million = Math.floor(num / 1000000);
       const remainder = num % 1000000;
-      if (remainder === 0) return `${numberToVietnameseWords(million)} triệu`;
-      return `${numberToVietnameseWords(
-        million
-      )} triệu ${numberToVietnameseWords(remainder)}`;
+      let result = readGroup(million) + " triệu";
+      if (remainder > 0) {
+        result += " " + numberToVietnameseWords(remainder);
+      }
+      return result;
     }
-    return "số quá lớn";
+
+    // Handle thousands (nghìn)
+    if (num >= 1000) {
+      const thousand = Math.floor(num / 1000);
+      const remainder = num % 1000;
+      let result = readGroup(thousand) + " nghìn";
+      if (remainder > 0) {
+        result += " " + readGroup(remainder);
+      }
+      return result;
+    }
+
+    // Handle numbers less than 1000
+    return readGroup(num);
+  };
+
+  // Convert amount to Vietnamese words with đồng
+  const amountToVietnameseWords = (amount) => {
+    if (!amount || amount === 0) return "không đồng";
+
+    const amountInThousands = Math.floor(amount / 1000);
+    const remainder = amount % 1000;
+
+    let result = numberToVietnameseWords(amountInThousands);
+    
+    if (amountInThousands > 0) {
+      result += " nghìn";
+    }
+
+    if (remainder > 0) {
+      result += " " + numberToVietnameseWords(remainder);
+    }
+
+    result += " đồng";
+
+    // Add "chẵn" if there's no remainder (exact amount)
+    if (remainder === 0 && amountInThousands > 0) {
+      result += " chẵn";
+    }
+
+    return result;
   };
 
   const handleExportPDF = async () => {
@@ -131,9 +180,7 @@ export default function GoodsReceiptDetail() {
       const pdfBlob = await generateGoodsReceiptPDF({
         ...receipt,
         items: items,
-        totalAmountInWords: `${numberToVietnameseWords(
-          Math.floor(totalAmount / 1000)
-        )} nghìn đồng chẵn`,
+        totalAmountInWords: amountToVietnameseWords(totalAmount),
       });
 
       // Create download link
@@ -416,9 +463,8 @@ export default function GoodsReceiptDetail() {
       {receipt.totalAmount && (
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-semibold mb-2">Tổng số tiền (Viết bằng chữ):</h3>
-          <p className="text-lg">
-            {numberToVietnameseWords(Math.floor(receipt.totalAmount / 1000))}{" "}
-            nghìn đồng chẵn
+          <p className="text-lg capitalize">
+            {amountToVietnameseWords(receipt.totalAmount)}
           </p>
         </div>
       )}

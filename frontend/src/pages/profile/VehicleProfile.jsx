@@ -35,11 +35,11 @@ const VehicleProfile = ({ vehicles = [] }) => {
             </div>
             <div>
               <Label htmlFor={`nickname-${vehicle._id}`}>Tên gọi</Label>
-              <Input id={`nickname-${vehicle._id}`} value={vehicle.model_id?.name || 'N/A'} disabled className="mt-2 bg-gray-100/70" />
+              <Input id={`nickname-${vehicle._id}`} value={vehicle.name || 'Unknown'} disabled className="mt-2 bg-gray-100/70" />
             </div>
             <div>
               <Label htmlFor={`type-${vehicle._id}`}>Loại Xe</Label>
-              <Select disabled value={vehicle.model_id?.engine_type || 'gasoline'}>
+              <Select disabled value={vehicle.engine_type || 'gasoline'}>
                 <SelectTrigger className="mt-2 bg-gray-100/70 w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="gasoline">Động cơ xăng</SelectItem>
@@ -49,11 +49,10 @@ const VehicleProfile = ({ vehicles = [] }) => {
             </div>
             <div>
               <Label htmlFor={`brand-${vehicle._id}`}>Hãng Xe</Label>
-              <Select disabled value={vehicle.model_id?.brand || 'YAMAHA'}>
+              <Select disabled value={vehicle.brand || 'YAMAHA'}>
                 <SelectTrigger className="mt-2 bg-gray-100/70 w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="YAMAHA">YAMAHA</SelectItem>
-                  <SelectItem value="HONDA">HONDA</SelectItem>
+                  <SelectItem value={vehicle.brand || 'YAMAHA'}>{vehicle.brand || 'Unknown'}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
