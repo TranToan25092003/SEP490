@@ -2,6 +2,7 @@ import BookingStatusHeader from "@/components/customer/booking-progress/BookingS
 import BookingStatusTimeline from "@/components/customer/booking-progress/BookingStatusTimeline";
 import Container from "@/components/global/Container";
 import { H3 } from "@/components/ui/headings";
+import background from "@/assets/cool-motorcycle-indoors.png";
 import { useLoaderData, useParams, Link, Await } from "react-router-dom";
 import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
@@ -54,9 +55,18 @@ const BookingProgress = () => {
   const { id } = useParams();
 
   return (
-    <Container className="space-y-4 my-8">
-      <div className="flex justify-between items-center">
-        <H3>CHI TIẾT ĐƠN</H3>
+    <div
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundPosition: "65% 35%",
+      }}
+    >
+      <Container className="space-y-4 my-8 w-full max-w-7xl">
+        <div className="flex justify-between items-center">
+        <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
+          <H3 className="text-gray-900">CHI TIẾT ĐƠN</H3>
+        </div>
         <Tabs value="progress">
           <TabsList>
             <TabsTrigger value="progress">
@@ -91,7 +101,8 @@ const BookingProgress = () => {
           )}
         </Await>
       </Suspense>
-    </Container>
+      </Container>
+    </div>
   );
 };
 

@@ -1,6 +1,7 @@
 import { useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/global/Container";
+import background from "@/assets/cool-motorcycle-indoors.png";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -430,258 +431,280 @@ const CustomerInvoiceDetail = () => {
           }}
           featureName="xem hóa đơn"
         />
-        <Container className="py-16">
-          <div className="max-w-xl mx-auto text-center space-y-4">
-            <h1 className="text-3xl font-semibold">Vui lòng đăng nhập</h1>
-            <p className="text-muted-foreground">
-              Bạn cần đăng nhập để xem chi tiết hóa đơn của mình.
-            </p>
-          </div>
-        </Container>
+        <div
+          className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: `url(${background})`,
+            backgroundPosition: "65% 35%",
+          }}
+        >
+          <Container className="py-16 w-full max-w-7xl">
+            <div className="max-w-xl mx-auto text-center space-y-4 bg-white rounded-lg p-6 shadow-lg">
+              <h1 className="text-3xl font-semibold text-gray-900">
+                Vui lòng đăng nhập
+              </h1>
+              <p className="text-gray-700">
+                Bạn cần đăng nhập để xem chi tiết hóa đơn của mình.
+              </p>
+            </div>
+          </Container>
+        </div>
       </>
     );
   }
 
   return (
-    <Container className="py-12 space-y-8">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-3xl font-bold uppercase tracking-tight">
-            Thông tin hóa đơn
-          </h1>
-          <p className="text-muted-foreground max-w-2xl">
-            Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho lần
-            sửa chữa của bạn.
-          </p>
+    <div
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundPosition: "65% 35%",
+      }}
+    >
+      <Container className="py-12 space-y-8 w-full max-w-7xl">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2 bg-white rounded-lg p-4 shadow-lg">
+            <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900">
+              Thông tin hóa đơn
+            </h1>
+            <p className="text-gray-700 max-w-2xl">
+              Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
+              lần sửa chữa của bạn.
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate(-1)}
+            className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Quay lại
+          </Button>
         </div>
-        <Button
-          variant="outline"
-          onClick={() => navigate(-1)}
-          className="w-full sm:w-auto"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Quay lại
-        </Button>
-      </div>
 
-      {error && (
-        <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
-          {error}
-        </div>
-      )}
+        {error && (
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+            {error}
+          </div>
+        )}
 
-      {!invoice && !error ? (
-        <EmptyState
-          icon={ClipboardList}
-          title="Không tìm thấy hóa đơn"
-          subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
-        />
-      ) : null}
+        {!invoice && !error ? (
+          <EmptyState
+            icon={ClipboardList}
+            title="Không tìm thấy hóa đơn"
+            subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
+          />
+        ) : null}
 
-      {invoice && (
-        <div className="space-y-8">
-          <Card className="shadow-sm border border-border/60">
-            <CardContent className="p-6 space-y-6">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="text-sm uppercase tracking-wide text-muted-foreground">
-                    Mã hóa đơn
-                  </div>
-                  <div className="text-2xl font-semibold font-mono">
-                    {invoice.invoiceNumber || invoice.id}
-                  </div>
-                  {renderStatusBadge(invoice.status)}
-                </div>
-                <div className="grid gap-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <div className="text-muted-foreground">Ngày tạo</div>
-                    <div className="font-medium text-foreground">
-                      {formatDateTime(invoice.createdAt)}
+        {invoice && (
+          <div className="space-y-8">
+            <Card className="shadow-sm border border-border/60">
+              <CardContent className="p-6 space-y-6">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-3">
+                    <div className="text-sm uppercase tracking-wide text-muted-foreground">
+                      Mã hóa đơn
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Ngày cập nhật</div>
-                    <div className="font-medium text-foreground">
-                      {formatDateTime(invoice.updatedAt)}
+                    <div className="text-2xl font-semibold font-mono">
+                      {invoice.invoiceNumber || invoice.id}
                     </div>
+                    {renderStatusBadge(invoice.status)}
                   </div>
-                  <div>
-                    <div className="text-muted-foreground">Lệnh sửa chữa</div>
-                    <div className="font-medium text-foreground font-mono">
-                      {invoice.serviceOrderNumber ||
-                        invoice.serviceOrderId ||
-                        "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Biển số xe</div>
-                    <div className="font-medium text-foreground">
-                      {invoice.licensePlate || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Tên khách hàng</div>
-                    <div className="font-medium text-foreground">
-                      {invoice.customerName || "—"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">
-                      Trạng thái thanh toán
-                    </div>
-                    <div className="font-medium text-foreground">
-                      {renderPaymentMethod(invoice.paymentMethod)}
-                    </div>
-                  </div>
-                  {invoice.confirmedBy && (
+                  <div className="grid gap-4 text-sm sm:grid-cols-2">
                     <div>
-                      <div className="text-muted-foreground">Xác nhận bởi</div>
+                      <div className="text-muted-foreground">Ngày tạo</div>
                       <div className="font-medium text-foreground">
-                        {invoice.confirmedBy}
+                        {formatDateTime(invoice.createdAt)}
                       </div>
                     </div>
-                  )}
-                  {invoice.confirmedAt && (
+                    <div>
+                      <div className="text-muted-foreground">Ngày cập nhật</div>
+                      <div className="font-medium text-foreground">
+                        {formatDateTime(invoice.updatedAt)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Lệnh sửa chữa</div>
+                      <div className="font-medium text-foreground font-mono">
+                        {invoice.serviceOrderNumber ||
+                          invoice.serviceOrderId ||
+                          "—"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Biển số xe</div>
+                      <div className="font-medium text-foreground">
+                        {invoice.licensePlate || "—"}
+                      </div>
+                    </div>
                     <div>
                       <div className="text-muted-foreground">
-                        Thời gian xác nhận
+                        Tên khách hàng
                       </div>
                       <div className="font-medium text-foreground">
-                        {formatDateTime(invoice.confirmedAt)}
+                        {invoice.customerName || "—"}
                       </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-6 lg:grid-cols-2">
-            <Card className="shadow-sm border border-border/60">
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold uppercase tracking-wide">
-                    Báo giá đã duyệt
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Danh sách các hạng mục dịch vụ và phụ tùng đã được thực hiện
-                    cho xe của bạn.
-                  </p>
-                </div>
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Hạng mục</TableHead>
-                        <TableHead>Loại</TableHead>
-                        <TableHead className="text-right">Số lượng</TableHead>
-                        <TableHead className="text-right">Đơn giá</TableHead>
-                        <TableHead className="text-right">Thành tiền</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {(invoice.items ?? []).map((item, index) => (
-                        <TableRow key={`${item.name}-${index}`}>
-                          <TableCell className="font-medium">
-                            {item.name}
-                          </TableCell>
-                          <TableCell className="capitalize">
-                            {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {item.quantity}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatPrice(item.price)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatPrice(item.lineTotal)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {(invoice.items ?? []).length === 0 && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="text-center text-sm text-muted-foreground py-6"
-                          >
-                            Không có hạng mục nào trong hóa đơn này.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                    <div>
+                      <div className="text-muted-foreground">
+                        Trạng thái thanh toán
+                      </div>
+                      <div className="font-medium text-foreground">
+                        {renderPaymentMethod(invoice.paymentMethod)}
+                      </div>
+                    </div>
+                    {invoice.confirmedBy && (
+                      <div>
+                        <div className="text-muted-foreground">
+                          Xác nhận bởi
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {invoice.confirmedBy}
+                        </div>
+                      </div>
+                    )}
+                    {invoice.confirmedAt && (
+                      <div>
+                        <div className="text-muted-foreground">
+                          Thời gian xác nhận
+                        </div>
+                        <div className="font-medium text-foreground">
+                          {formatDateTime(invoice.confirmedAt)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="shadow-sm border border-border/60">
-              <CardContent className="p-6 space-y-4">
-                <div>
-                  <h2 className="text-lg font-semibold uppercase tracking-wide">
-                    Tổng hợp &amp; xác nhận
-                  </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Chi tiết các khoản phí và số tiền cần thanh toán.
-                  </p>
-                </div>
-                <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
-                  <div className="flex justify-between text-sm">
-                    <span>Tạm tính</span>
-                    <span className="font-medium">
-                      {formatPrice(invoice.subtotal)}
-                    </span>
+            <div className="grid gap-6 lg:grid-cols-2">
+              <Card className="shadow-sm border border-border/60">
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold uppercase tracking-wide">
+                      Báo giá đã duyệt
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Danh sách các hạng mục dịch vụ và phụ tùng đã được thực
+                      hiện cho xe của bạn.
+                    </p>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Thuế (10%)</span>
-                    <span className="font-medium">
-                      {formatPrice(invoice.tax)}
-                    </span>
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Hạng mục</TableHead>
+                          <TableHead>Loại</TableHead>
+                          <TableHead className="text-right">Số lượng</TableHead>
+                          <TableHead className="text-right">Đơn giá</TableHead>
+                          <TableHead className="text-right">
+                            Thành tiền
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(invoice.items ?? []).map((item, index) => (
+                          <TableRow key={`${item.name}-${index}`}>
+                            <TableCell className="font-medium">
+                              {item.name}
+                            </TableCell>
+                            <TableCell className="capitalize">
+                              {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {item.quantity}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatPrice(item.price)}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatPrice(item.lineTotal)}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {(invoice.items ?? []).length === 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center text-sm text-muted-foreground py-6"
+                            >
+                              Không có hạng mục nào trong hóa đơn này.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
-                  <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
-                    <span>Tổng cộng</span>
-                    <span className="text-lg">
-                      {formatPrice(invoice.totalAmount)}
-                    </span>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border border-border/60">
+                <CardContent className="p-6 space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold uppercase tracking-wide">
+                      Tổng hợp &amp; xác nhận
+                    </h2>
+                    <p className="text-sm text-muted-foreground">
+                      Chi tiết các khoản phí và số tiền cần thanh toán.
+                    </p>
                   </div>
-                  {voucherDiscount > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm text-emerald-600">
-                        <span>Giảm giá bằng voucher</span>
-                        <span>-{formatPrice(voucherDiscount)}</span>
-                      </div>
-                      <div className="flex justify-between text-base font-semibold text-emerald-700">
-                        <span>Số tiền còn lại cần thanh toán.</span>
-                        <span className="text-lg">
-                          {formatPrice(payableAmount)}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-                {invoice.status === "unpaid" && (
-                  <Button
-                    onClick={() => setPaymentModalOpen(true)}
-                    className="w-full"
-                    size="lg"
-                  >
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Thanh toán
-                  </Button>
-                )}
-                {invoice.status === "paid" && (
-                  <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
-                    <div className="font-medium mb-1">Đã thanh toán</div>
-                    <div className="text-muted-foreground">
-                      Hóa đơn đã được thanh toán thành công.
+                  <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
+                    <div className="flex justify-between text-sm">
+                      <span>Tạm tính</span>
+                      <span className="font-medium">
+                        {formatPrice(invoice.subtotal)}
+                      </span>
                     </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Thuế (10%)</span>
+                      <span className="font-medium">
+                        {formatPrice(invoice.tax)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
+                      <span>Tổng cộng</span>
+                      <span className="text-lg">
+                        {formatPrice(invoice.totalAmount)}
+                      </span>
+                    </div>
+                    {voucherDiscount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm text-emerald-600 border-t pt-2 mt-2">
+                          <span>Giảm giá bằng voucher</span>
+                          <span>-{formatPrice(voucherDiscount)}</span>
+                        </div>
+                        <div className="flex justify-between text-base font-semibold text-emerald-700 border-t pt-2 mt-2">
+                          <span>Số tiền còn lại cần thanh toán</span>
+                          <span className="text-lg">
+                            {formatPrice(payableAmount)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
-                )}
-                <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
-                  Nếu bạn cần hỗ trợ thêm về hóa đơn, vui lòng liên hệ đội ngũ
-                  chăm sóc khách hàng của Motormate.
-                </div>
-              </CardContent>
+                  {invoice.status === "unpaid" && (
+                    <Button
+                      onClick={() => setPaymentModalOpen(true)}
+                      className="w-full"
+                      size="lg"
+                    >
+                      <CreditCard className="mr-2 h-5 w-5" />
+                      Thanh toán
+                    </Button>
+                  )}
+                  {invoice.status === "paid" && (
+                    <div className="rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm text-success">
+                      <div className="font-medium mb-1">Đã thanh toán</div>
+                      <div className="text-muted-foreground">
+                        Hóa đơn đã được thanh toán thành công.
+                      </div>
+                    </div>
+                  )}
+                  <div className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground">
+                    Bạn có thể thanh toán online hoặc trực tiếp thanh toán tại
+                    quầy
+                  </div>
+                </CardContent>
             </Card>
           </div>
         </div>
@@ -712,13 +735,13 @@ const CustomerInvoiceDetail = () => {
                 </span>
               </div>
               {voucherDiscount > 0 && (
-                <div className="flex justify-between text-xs text-emerald-600">
-                  <span>Giam voucher</span>
+                <div className="flex justify-between text-xs text-emerald-600 mt-2">
+                  <span>Giảm voucher</span>
                   <span>-{formatPrice(voucherDiscount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-base font-semibold border-t pt-2">
-                <span>số tiền cần thanh toán</span>
+              <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
+                <span>Số tiền cần thanh toán</span>
                 <span className="text-lg">
                   {invoice ? formatPrice(payableAmount) : "—"}
                 </span>
@@ -739,7 +762,7 @@ const CustomerInvoiceDetail = () => {
                       size="sm"
                       onClick={() => setSelectedVoucherCode("")}
                     >
-                      bỏ chọn
+                      Bỏ chọn
                     </Button>
                   )}
                 </div>
@@ -752,10 +775,10 @@ const CustomerInvoiceDetail = () => {
                     <SelectValue
                       placeholder={
                         voucherLoading
-                          ? "Dang tai voucher..."
+                          ? "Đang tải voucher..."
                           : availableVouchers.length === 0
-                          ? "Chua co voucher kha dung"
-                          : "Chon voucher"
+                          ? "Chưa có voucher khả dụng"
+                          : "Chọn voucher"
                       }
                     />
                   </SelectTrigger>
@@ -772,27 +795,27 @@ const CustomerInvoiceDetail = () => {
                 )}
                 {voucherLoading && !voucherError && (
                   <p className="text-xs text-muted-foreground">
-                    Dang tai danh sach voucher...
+                    Đang tải danh sách voucher...
                   </p>
                 )}
                 {!voucherLoading &&
                   availableVouchers.length === 0 &&
                   !voucherError && (
                     <p className="text-xs text-muted-foreground">
-                      Ban chua co voucher kha dung.
+                      Bạn chưa có voucher khả dụng.
                     </p>
                   )}
                 {selectedVoucher && (
                   <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
                     <p className="font-medium">{selectedVoucher.rewardName}</p>
-                    <p>Gia tri: {formatVoucherValue(selectedVoucher)}</p>
+                    <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
                     <p>
-                      Ma:{" "}
+                      Mã:{" "}
                       <span className="font-mono">{selectedVoucher.code}</span>
                     </p>
                     {selectedVoucher.expiresAt && (
                       <p>
-                        Han su dung: {formatDateTime(selectedVoucher.expiresAt)}
+                        Hạn sử dụng: {formatDateTime(selectedVoucher.expiresAt)}
                       </p>
                     )}
                   </div>
@@ -921,16 +944,17 @@ const CustomerInvoiceDetail = () => {
                   )}
                 </>
               )}
-              {invoice && invoice.status === "paid" && (
-                <Button className="w-full sm:flex-1" disabled>
-                  Đã thanh toán
-                </Button>
-              )}
+                {invoice && invoice.status === "paid" && (
+                  <Button className="w-full sm:flex-1" disabled>
+                    Đã thanh toán
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </Container>
+          </DialogContent>
+        </Dialog>
+      </Container>
+    </div>
   );
 };
 

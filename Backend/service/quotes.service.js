@@ -11,7 +11,10 @@ const ERROR_CODES = {
 
 class QuotesService {
   async createQuote(serviceOrderId) {
-    const serviceOrder = await ServiceOrder.findById(serviceOrderId).populate("items.part_id").exec();
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId)
+      .populate("items.part_id")
+      .populate("booking_id")
+      .exec();
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh sửa chữa không tồn tại",
@@ -28,6 +31,7 @@ class QuotesService {
       );
     }
 
+    // Tạo items từ service order
     const items = serviceOrder.items.map(item => ({
       type: item.item_type,
       name: item.item_type === "service" ? item.name : item.part_id.name,
@@ -35,10 +39,45 @@ class QuotesService {
       price: item.price,
     }));
 
+    // Tìm warranty liên quan đến booking này (nếu đây là warranty booking)
+    const Warranty = require("../model/warranty.model");
+    const warranty = await Warranty.findOne({
+      booking_id: serviceOrder.booking_id._id
+    })
+      .populate("warranty_parts.part_id")
+      .exec();
+
+    // Nếu có warranty, thêm warranty parts vào items với giá = 0
+    if (warranty && warranty.warranty_parts && warranty.warranty_parts.length > 0) {
+      warranty.warranty_parts.forEach(wp => {
+        // Kiểm tra xem part này đã có trong items chưa
+        const existingPartIndex = items.findIndex(
+          item => item.type === "part" && item.name === (wp.part_name || wp.part_id?.name)
+        );
+
+        if (existingPartIndex >= 0) {
+          // Nếu đã có, đảm bảo giá = 0
+          items[existingPartIndex].price = 0;
+        } else {
+          // Nếu chưa có, thêm mới với giá = 0
+          items.push({
+            type: "part",
+            name: wp.part_name || wp.part_id?.name,
+            quantity: wp.quantity || 1,
+            price: 0, // Giá bảo hành = 0
+          });
+        }
+      });
+    }
+
+    // Tính toán tổng tiền (bao gồm cả warranty parts với giá = 0)
+    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.1;
+
     const quote = new Quote({
       so_id: serviceOrderId,
-      subtotal: serviceOrder.getTotalCostBeforeTax(),
-      tax: serviceOrder.getTaxAmount(),
+      subtotal: subtotal,
+      tax: tax,
       items: items,
       status: "pending",
     });

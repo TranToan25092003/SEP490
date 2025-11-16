@@ -14,6 +14,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
 import BookingHistoryDetail from "./pages/customer/BookingHistoryDetail";
 import BookingTracking from "./pages/customer/BookingTracking";
+import WarrantyBooking from "./pages/customer/WarrantyBooking";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
 import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
@@ -119,6 +120,10 @@ const router = createBrowserRouter([
         path: "/booking/:id/history",
         element: <BookingHistoryDetail />,
         loader: BookingHistoryDetail.loader,
+      },
+      {
+        path: "/warranty-booking",
+        element: <WarrantyBooking />,
       },
       {
         path: "/about",
