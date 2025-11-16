@@ -6,6 +6,7 @@ import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
@@ -79,6 +80,8 @@ import AdminModelsPage from "./pages/admin/AdminModelsPage";
 import AdminBannersPage from "./pages/admin/AdminBannersPage";
 import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
+import LoyaltyWallet from "./pages/customer/LoyaltyWallet";
+import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -125,6 +128,10 @@ const router = createBrowserRouter([
       {
         path: "/about",
         element: <About />,
+      },
+      {
+        path: "/loyalty",
+        element: <LoyaltyWallet />,
       },
       {
         path: "/items",
@@ -174,6 +181,10 @@ const router = createBrowserRouter([
     element: <Login></Login>,
   },
   {
+    path: "/register",
+    element: <Register />,
+  },
+  {
     path: "/sso-callback",
     element: (
       <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
@@ -221,6 +232,10 @@ const router = createBrowserRouter([
       {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
+      },
+      {
+        path: "loyalty",
+        element: <LoyaltyProgram />,
       },
     ],
   },

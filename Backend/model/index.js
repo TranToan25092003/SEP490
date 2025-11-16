@@ -33,6 +33,10 @@ const ModelVehicle = require("./vehicle_model.model");
 const Vehicle = require("./vehicle.model");
 const Warranty = require("./warranty.model");
 const ActivityLog = require("./activity_log.model");
+const LoyaltyTransaction = require("./loyalty_transaction.model");
+const LoyaltyVoucher = require("./loyalty_voucher.model");
+const LoyaltyRule = require("./loyalty_rule.model");
+const LoyaltyRuleAudit = require("./loyalty_rule_audit.model");
 
 module.exports = {
   Test,
@@ -44,6 +48,7 @@ module.exports = {
   GoodsReceiptItem,
   Invoice,
   LoyalPoint,
+  LoyaltyTransaction,
   MaintenanceRule,
   Notification,
   Part,
@@ -65,4 +70,7 @@ module.exports = {
   Warranty,
   Booking,
   ActivityLog,
+  LoyaltyVoucher,
+  LoyaltyRule,
+  LoyaltyRuleAudit,
 };

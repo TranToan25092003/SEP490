@@ -1,5 +1,5 @@
 import { useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/global/Container";
 import background from "@/assets/cool-motorcycle-indoors.png";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,10 +20,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import EmptyState from "@/components/global/EmptyState";
 import { ClipboardList, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { fetchCustomerInvoiceDetail } from "@/api/invoices";
+import { getPointBalance } from "@/api/loyalty";
 import { customFetch } from "@/utils/customAxios";
 import AuthRequiredModal from "@/components/global/AuthRequiredModal";
 import { toast } from "sonner";
@@ -128,6 +136,49 @@ const checkPaid = async (price, content) => {
   }
 };
 
+const normalizeOwnedVoucher = (voucher) => {
+  if (!voucher) return null;
+
+  return {
+    id: voucher.id || voucher._id || voucher.voucherCode,
+    code: voucher.code || voucher.voucherCode || "",
+    rewardName:
+      voucher.rewardName || voucher.reward?.title || voucher.title || "Voucher",
+    status: voucher.status || "active",
+    value: Number(voucher.value ?? voucher.voucherValue ?? 0) || 0,
+    currency: voucher.currency || voucher.voucherCurrency || "VND",
+    discountType: voucher.discountType || "fixed",
+    expiresAt: voucher.expiresAt || voucher.voucherExpiresAt || null,
+  };
+};
+
+const isVoucherUsable = (voucher) => {
+  if (!voucher) return false;
+  if (voucher.status !== "active") return false;
+  if (!voucher.expiresAt) return true;
+  return new Date(voucher.expiresAt) >= new Date();
+};
+
+const calculateVoucherDiscount = (voucher, baseAmount) => {
+  if (!voucher || !baseAmount || baseAmount <= 0) return 0;
+  const amount = Number(baseAmount) || 0;
+  if (voucher.discountType === "percentage") {
+    const percentage = Math.min(Math.max(Number(voucher.value) || 0, 0), 100);
+    return Math.min(Math.round((amount * percentage) / 100), amount);
+  }
+
+  const fixedValue = Math.max(Number(voucher.value) || 0, 0);
+  return Math.min(fixedValue, amount);
+};
+
+const formatVoucherValue = (voucher) => {
+  if (!voucher) return "";
+  if (voucher.discountType === "percentage") {
+    return `${voucher.value || 0}%`;
+  }
+  return formatPrice(voucher.value || 0);
+};
+
 const CustomerInvoiceDetail = () => {
   const { invoice, requiresAuth, error } = useLoaderData();
   const navigate = useNavigate();
@@ -137,6 +188,30 @@ const CustomerInvoiceDetail = () => {
   const [qrCodeError, setQrCodeError] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState(null);
+  const [availableVouchers, setAvailableVouchers] = useState([]);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+
+  const selectedVoucher = useMemo(() => {
+    if (!selectedVoucherCode) return null;
+    return (
+      availableVouchers.find(
+        (voucher) => voucher.code === selectedVoucherCode
+      ) || null
+    );
+  }, [availableVouchers, selectedVoucherCode]);
+
+  const voucherDiscount = useMemo(() => {
+    if (!invoice || !selectedVoucher) return 0;
+    return calculateVoucherDiscount(selectedVoucher, invoice.totalAmount);
+  }, [invoice, selectedVoucher]);
+
+  const payableAmount = useMemo(() => {
+    if (!invoice) return 0;
+    const total = Number(invoice.totalAmount) || 0;
+    return Math.max(total - voucherDiscount, 0);
+  }, [invoice, voucherDiscount]);
 
   useEffect(() => {
     setAuthModalVisible(requiresAuth);
@@ -148,6 +223,57 @@ const CustomerInvoiceDetail = () => {
       setQrCodeError(false);
     }
   }, [paymentModalOpen]);
+  useEffect(() => {
+    if (!paymentModalOpen || !invoice || invoice.status === "paid") {
+      return;
+    }
+
+    let ignore = false;
+    const fetchVouchers = async () => {
+      try {
+        setVoucherLoading(true);
+        setVoucherError(null);
+        const response = await getPointBalance();
+        if (ignore) return;
+        const payload = response?.data?.data || {};
+        const normalized = Array.isArray(payload.vouchers)
+          ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
+          : [];
+        const usable = normalized.filter(isVoucherUsable);
+        setAvailableVouchers(usable);
+        setSelectedVoucherCode((currentCode) => {
+          if (!currentCode) return currentCode;
+          const stillExists = usable.some(
+            (voucher) => voucher.code === currentCode
+          );
+          return stillExists ? currentCode : "";
+        });
+      } catch (fetchError) {
+        if (ignore) return;
+        console.error("Failed to load vouchers", fetchError);
+        setVoucherError(
+          "KhA'ng t���i �`�����c voucher. Vui lA�ng th��- l���i sau."
+        );
+        setAvailableVouchers([]);
+        setSelectedVoucherCode("");
+      } finally {
+        if (!ignore) {
+          setVoucherLoading(false);
+        }
+      }
+    };
+
+    fetchVouchers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [paymentModalOpen, invoice]);
+  useEffect(() => {
+    if (invoice?.status === "paid" && selectedVoucherCode) {
+      setSelectedVoucherCode("");
+    }
+  }, [invoice?.status, selectedVoucherCode]);
 
   // Function để kiểm tra và cập nhật trạng thái thanh toán
   const handleCheckPayment = async () => {
@@ -161,15 +287,27 @@ const CustomerInvoiceDetail = () => {
 
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
-      const isPaid = await checkPaid(invoice.totalAmount, invoiceNumber);
+      const amountToVerify = Math.max(payableAmount || 0, 0);
+      const isPaid = await checkPaid(amountToVerify, invoiceNumber);
 
       if (isPaid) {
         // Gọi API để cập nhật trạng thái hóa đơn
         try {
+          const verifyPayload = {
+            paidAmount: payableAmount,
+          };
+          if (selectedVoucher) {
+            verifyPayload.voucherCode = selectedVoucher.code;
+            verifyPayload.voucherDiscount = voucherDiscount;
+            verifyPayload.voucherType = selectedVoucher.discountType;
+            verifyPayload.voucherValue = selectedVoucher.value;
+          }
+
           const response = await customFetch(
             `/invoices/${invoice.id}/verify-payment`,
             {
               method: "POST",
+              data: verifyPayload,
             }
           );
 
@@ -210,10 +348,19 @@ const CustomerInvoiceDetail = () => {
     setIsCheckingPayment(true);
 
     try {
+      const verifyPayload = { paidAmount: payableAmount };
+      if (selectedVoucher) {
+        verifyPayload.voucherCode = selectedVoucher.code;
+        verifyPayload.voucherDiscount = voucherDiscount;
+        verifyPayload.voucherType = selectedVoucher.discountType;
+        verifyPayload.voucherValue = selectedVoucher.value;
+      }
+
       const response = await customFetch(
         `/invoices/${invoice.id}/verify-payment`,
         {
           method: "POST",
+          data: verifyPayload,
         }
       );
 
@@ -222,6 +369,7 @@ const CustomerInvoiceDetail = () => {
         revalidator.revalidate();
         setPaymentModalOpen(false);
       } else {
+        console.log(response);
         toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
       }
     } catch (error) {
@@ -519,6 +667,20 @@ const CustomerInvoiceDetail = () => {
                         {formatPrice(invoice.totalAmount)}
                       </span>
                     </div>
+                    {voucherDiscount > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm text-emerald-600 border-t pt-2 mt-2">
+                          <span>Giảm giá bằng voucher</span>
+                          <span>-{formatPrice(voucherDiscount)}</span>
+                        </div>
+                        <div className="flex justify-between text-base font-semibold text-emerald-700 border-t pt-2 mt-2">
+                          <span>Số tiền còn lại cần thanh toán</span>
+                          <span className="text-lg">
+                            {formatPrice(payableAmount)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                   </div>
                   {invoice.status === "unpaid" && (
                     <Button
@@ -543,158 +705,245 @@ const CustomerInvoiceDetail = () => {
                     quầy
                   </div>
                 </CardContent>
-              </Card>
-            </div>
+            </Card>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Modal thanh toán */}
-        <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-xl font-semibold">
-                Thanh toán hóa đơn
-              </DialogTitle>
-              <DialogDescription>
-                Mã hóa đơn:{" "}
-                <span className="font-mono font-medium">
-                  {invoice?.invoiceNumber || invoice?.id}
+      {/* Modal thanh toán */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              Thanh toán hóa đơn
+            </DialogTitle>
+            <DialogDescription>
+              Mã hóa đơn:{" "}
+              <span className="font-mono font-medium">
+                {invoice?.invoiceNumber || invoice?.id}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="rounded-lg border bg-muted/40 p-4">
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-muted-foreground">
+                  Tổng tiền cần thanh toán:
                 </span>
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="rounded-lg border bg-muted/40 p-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">
-                    Tổng tiền cần thanh toán:
-                  </span>
-                  <span className="text-lg font-semibold">
-                    {invoice ? formatPrice(invoice.totalAmount) : "—"}
+                <span className="text-lg font-semibold">
+                  {invoice ? formatPrice(invoice.totalAmount) : "—"}
+                </span>
+              </div>
+              {voucherDiscount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-600 mt-2">
+                  <span>Giảm voucher</span>
+                  <span>-{formatPrice(voucherDiscount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
+                <span>Số tiền cần thanh toán</span>
+                <span className="text-lg">
+                  {invoice ? formatPrice(payableAmount) : "—"}
+                </span>
+              </div>
+            </div>
+            {invoice?.status === "unpaid" && (
+              <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Sử dụng voucher</p>
+                    <p className="text-xs text-muted-foreground">
+                      Chọn voucher để giảm số tiền chuyển khoản.
+                    </p>
+                  </div>
+                  {selectedVoucherCode && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedVoucherCode("")}
+                    >
+                      Bỏ chọn
+                    </Button>
+                  )}
+                </div>
+                <Select
+                  value={selectedVoucherCode || undefined}
+                  onValueChange={setSelectedVoucherCode}
+                  disabled={voucherLoading || availableVouchers.length === 0}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        voucherLoading
+                          ? "Đang tải voucher..."
+                          : availableVouchers.length === 0
+                          ? "Chưa có voucher khả dụng"
+                          : "Chọn voucher"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVouchers.map((voucher) => (
+                      <SelectItem key={voucher.code} value={voucher.code}>
+                        {voucher.rewardName} ({formatVoucherValue(voucher)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {voucherError && (
+                  <p className="text-xs text-destructive">{voucherError}</p>
+                )}
+                {voucherLoading && !voucherError && (
+                  <p className="text-xs text-muted-foreground">
+                    Đang tải danh sách voucher...
+                  </p>
+                )}
+                {!voucherLoading &&
+                  availableVouchers.length === 0 &&
+                  !voucherError && (
+                    <p className="text-xs text-muted-foreground">
+                      Bạn chưa có voucher khả dụng.
+                    </p>
+                  )}
+                {selectedVoucher && (
+                  <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
+                    <p className="font-medium">{selectedVoucher.rewardName}</p>
+                    <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
+                    <p>
+                      Mã:{" "}
+                      <span className="font-mono">{selectedVoucher.code}</span>
+                    </p>
+                    {selectedVoucher.expiresAt && (
+                      <p>
+                        Hạn sử dụng: {formatDateTime(selectedVoucher.expiresAt)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+            {invoice && (
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
+                  {!qrCodeError ? (
+                    <img
+                      src={generateQRCodeUrl(
+                        payableAmount,
+                        invoice.invoiceNumber || invoice.id
+                      )}
+                      alt="QR Code thanh toán"
+                      className="w-full h-auto max-w-full"
+                      onError={(e) => {
+                        console.error("QR Code load error:", e);
+                        console.error("Failed URL:", e.target.src);
+                        setQrCodeError(true);
+                      }}
+                      onLoad={() => {
+                        console.log("QR Code loaded successfully");
+                      }}
+                    />
+                  ) : (
+                    <div className="text-center space-y-2 text-muted-foreground py-8">
+                      <CreditCard className="h-12 w-12 mx-auto opacity-50" />
+                      <p className="text-sm font-medium">
+                        Không thể tải QR Code
+                      </p>
+                      <p className="text-xs">
+                        Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
+                        sau.
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {!qrCodeError && (
+                  <p className="text-xs text-muted-foreground text-center px-4">
+                    Quét mã QR để thanh toán qua ứng dụng ngân hàng
+                  </p>
+                )}
+              </div>
+            )}
+            {invoice && invoice.status === "unpaid" && (
+              <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
+                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                  {isPolling && (
+                    <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                  )}
+                  <span className="break-words">
+                    {isPolling
+                      ? "Đang tự động kiểm tra thanh toán..."
+                      : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
                   </span>
                 </div>
               </div>
-              {invoice && (
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
-                    {!qrCodeError ? (
-                      <img
-                        src={generateQRCodeUrl(
-                          invoice.totalAmount,
-                          invoice.invoiceNumber || invoice.id
-                        )}
-                        alt="QR Code thanh toán"
-                        className="w-full h-auto max-w-full"
-                        onError={(e) => {
-                          console.error("QR Code load error:", e);
-                          console.error("Failed URL:", e.target.src);
-                          setQrCodeError(true);
-                        }}
-                        onLoad={() => {
-                          console.log("QR Code loaded successfully");
-                        }}
-                      />
-                    ) : (
-                      <div className="text-center space-y-2 text-muted-foreground py-8">
-                        <CreditCard className="h-12 w-12 mx-auto opacity-50" />
-                        <p className="text-sm font-medium">
-                          Không thể tải QR Code
-                        </p>
-                        <p className="text-xs">
-                          Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
-                          sau.
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {!qrCodeError && (
-                    <p className="text-xs text-muted-foreground text-center px-4">
-                      Quét mã QR để thanh toán qua ứng dụng ngân hàng
-                    </p>
-                  )}
-                </div>
-              )}
+            )}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsPolling(false);
+                  setPaymentModalOpen(false);
+                }}
+                className="w-full sm:flex-1 order-3 sm:order-1"
+              >
+                Hủy
+              </Button>
               {invoice && invoice.status === "unpaid" && (
-                <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
-                  <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                    {isPolling && (
-                      <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                <>
+                  <Button
+                    onClick={handleCheckPayment}
+                    className="w-full sm:flex-1 order-1 sm:order-2"
+                    disabled={isCheckingPayment}
+                  >
+                    {isCheckingPayment ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="hidden sm:inline">
+                          Đang kiểm tra...
+                        </span>
+                        <span className="sm:hidden">Đang kiểm tra...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">
+                          Kiểm tra thanh toán
+                        </span>
+                        <span className="sm:hidden">Kiểm tra</span>
+                      </>
                     )}
-                    <span className="break-words">
-                      {isPolling
-                        ? "Đang tự động kiểm tra thanh toán..."
-                        : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
-                    </span>
-                  </div>
-                </div>
-              )}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsPolling(false);
-                    setPaymentModalOpen(false);
-                  }}
-                  className="w-full sm:flex-1 order-3 sm:order-1"
-                >
-                  Hủy
-                </Button>
-                {invoice && invoice.status === "unpaid" && (
-                  <>
+                  </Button>
+                  {/* DEV MODE: Button để fake thanh toán cho testing */}
+                  {(import.meta.env.DEV ||
+                    import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
                     <Button
-                      onClick={handleCheckPayment}
-                      className="w-full sm:flex-1 order-1 sm:order-2"
+                      onClick={handleFakePayment}
+                      className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
                       disabled={isCheckingPayment}
+                      title="DEV MODE: Fake thanh toán để test tích điểm"
                     >
                       {isCheckingPayment ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                           <span className="hidden sm:inline">
-                            Đang kiểm tra...
+                            Đang xử lý...
                           </span>
-                          <span className="sm:hidden">Đang kiểm tra...</span>
+                          <span className="sm:hidden">Đang xử lý...</span>
                         </>
                       ) : (
                         <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
                           <span className="hidden sm:inline">
-                            Kiểm tra thanh toán
+                            🧪 Fake Thanh Toán
                           </span>
-                          <span className="sm:hidden">Kiểm tra</span>
+                          <span className="sm:hidden">🧪 Fake</span>
                         </>
                       )}
                     </Button>
-                    {/* DEV MODE: Button để fake thanh toán cho testing */}
-                    {(import.meta.env.DEV ||
-                      import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
-                      <Button
-                        onClick={handleFakePayment}
-                        className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
-                        disabled={isCheckingPayment}
-                        title="DEV MODE: Fake thanh toán để test tích điểm"
-                      >
-                        {isCheckingPayment ? (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            <span className="hidden sm:inline">
-                              Đang xử lý...
-                            </span>
-                            <span className="sm:hidden">Đang xử lý...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="hidden sm:inline">
-                              🧪 Fake Thanh Toán
-                            </span>
-                            <span className="sm:hidden">🧪 Fake</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                  </>
-                )}
+                  )}
+                </>
+              )}
                 {invoice && invoice.status === "paid" && (
                   <Button className="w-full sm:flex-1" disabled>
                     Đã thanh toán
