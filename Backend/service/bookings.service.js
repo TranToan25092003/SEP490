@@ -293,12 +293,25 @@ class BookingsService {
       );
     }
 
-    if (booking.status !== "booked") {
+    if (booking.status === "cancelled") {
       throw new DomainError(
-        "Chỉ có thể hủy các booking ở trạng thái 'booked'",
+        "Booking đã bị hủy trước đó",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
         400
       );
+    }
+
+    if (booking.status === "completed") {
+      throw new DomainError(
+        "Không thể hủy booking đã hoàn thành",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        400
+      );
+    }
+
+    const serviceOrderId = booking.service_order_id;
+    if (serviceOrderId) {
+      await ServiceOrderService.cancelServiceOrder(serviceOrderId);
     }
 
     booking.status = "cancelled";

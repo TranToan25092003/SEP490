@@ -98,14 +98,14 @@ const BookingStatusTimeline = ({
               subtitle="Xe chưa được tiếp nhận, vui lòng đến gara đúng thời gian đã hẹn."
             />
           )}
-          {booking.status === "checked_in" && (
+          {inspectionTask && (
             <EmptyState
               icon={Check}
               title="Đã tiếp nhận"
               subtitle="Xe đã được tiếp nhận"
             />
           )}
-          {booking.status === "cancelled" && (
+          {booking.status === "cancelled" && !inspectionTask && (
             <EmptyState
               icon={XCircle}
               title="Đã hủy"

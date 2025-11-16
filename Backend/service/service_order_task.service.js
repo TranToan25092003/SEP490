@@ -209,6 +209,12 @@ class ServiceOrderTaskService {
       );
     }
 
+    const booking = await Booking.findById(serviceOrder.booking_id).exec();
+    if (booking) {
+      booking.status = "in_progress";
+      await booking.save();
+    }
+
     await this.beginTask(inspectionTask, techniciansInfoArray);
 
     serviceOrder.status = "waiting_inspection";

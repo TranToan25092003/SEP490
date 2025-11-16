@@ -6,6 +6,7 @@ const { UsersService } = require("./users.service");
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
   SERVICE_ORDER_ALREADY_EXISTS: "SERVICE_ORDER_ALREADY_EXISTS",
+  SERVICE_ORDER_INVALID_STATE: "SERVICE_ORDER_INVALID_STATE",
 };
 
 class ServiceOrderService {
@@ -171,6 +172,44 @@ class ServiceOrderService {
       completedAt: serviceOrder.completed_at,
       estimatedCompletedAt: serviceOrder.expected_completion_time
     };
+  }
+
+  async cancelServiceOrder(serviceOrderId) {
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
+    if (!serviceOrder) {
+      throw new DomainError(
+        "Lệnh không tồn tại",
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+        404
+      );
+    }
+
+    if (serviceOrder.status === "completed") {
+      throw new DomainError(
+        "Không thể hủy lệnh đã hoàn thành",
+        ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
+        409
+      );
+    }
+
+    if (serviceOrder.status === "cancelled") {
+      throw new DomainError(
+        "Lệnh đã bị hủy trước đó",
+        ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
+        409
+      );
+    }
+
+    if (serviceOrder.status === "servicing") {
+      throw new DomainError(
+        "Không thể hủy lệnh đang tiến hành sửa chữa",
+        ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
+        409
+      );
+    }
+
+    serviceOrder.status = "cancelled";
+    await serviceOrder.save();
   }
 
   async _createServiceOrderFromBooking(staffId, bookingId) {
