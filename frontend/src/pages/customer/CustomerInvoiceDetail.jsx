@@ -28,13 +28,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import EmptyState from "@/components/global/EmptyState";
-import { ClipboardList, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
+import {
+  ClipboardList,
+  ArrowLeft,
+  CreditCard,
+  RefreshCw,
+  Download,
+} from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { fetchCustomerInvoiceDetail } from "@/api/invoices";
 import { getPointBalance } from "@/api/loyalty";
 import { customFetch } from "@/utils/customAxios";
 import AuthRequiredModal from "@/components/global/AuthRequiredModal";
 import { toast } from "sonner";
+import { generateInvoicePDF } from "@/utils/invoicePdfGenerator";
 
 function loader({ params }) {
   return fetchCustomerInvoiceDetail(params.id)
@@ -192,6 +199,7 @@ const CustomerInvoiceDetail = () => {
   const [voucherError, setVoucherError] = useState(null);
   const [availableVouchers, setAvailableVouchers] = useState([]);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const selectedVoucher = useMemo(() => {
     if (!selectedVoucherCode) return null;
@@ -274,6 +282,41 @@ const CustomerInvoiceDetail = () => {
       setSelectedVoucherCode("");
     }
   }, [invoice?.status, selectedVoucherCode]);
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!invoice) {
+      toast.error("Không có dữ liệu hóa đơn để tải xuống");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      // Prepare invoice data with voucher info if available
+      const invoiceDataForPDF = {
+        ...invoice,
+        voucherDiscount: voucherDiscount > 0 ? voucherDiscount : 0,
+        payableAmount: payableAmount,
+        selectedVoucher: selectedVoucher || null,
+      };
+
+      const pdfBlob = await generateInvoicePDF(invoiceDataForPDF);
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Hoa-don-${invoice.invoiceNumber || invoice.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Tải hóa đơn thành công!");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Không thể tạo file PDF. Vui lòng thử lại sau.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   // Function để kiểm tra và cập nhật trạng thái thanh toán
   const handleCheckPayment = async () => {
@@ -461,43 +504,63 @@ const CustomerInvoiceDetail = () => {
         backgroundPosition: "65% 35%",
       }}
     >
-      <Container className="py-12 space-y-8 w-full max-w-7xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2 bg-white rounded-lg p-4 shadow-lg">
-            <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900">
-              Thông tin hóa đơn
-            </h1>
-            <p className="text-gray-700 max-w-2xl">
-              Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
-              lần sửa chữa của bạn.
-            </p>
+      <Container className="py-12 w-full max-w-7xl">
+        {/* Header với nút quay lại và tải PDF */}
+        <div className="bg-white rounded-t-lg shadow-lg mb-0">
+          {/* Nút quay lại ở trên cùng */}
+          <div className="p-4 border-b border-gray-200">
+            <Button
+              onClick={() => navigate(-1)}
+              variant="ghost"
+              className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Quay lại
+            </Button>
           </div>
-          <Button
-            onClick={() => navigate(-1)}
-            className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Quay lại
-          </Button>
+          {/* Title và nút PDF ở dòng dưới */}
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900 mb-2">
+                Thông tin hóa đơn
+              </h1>
+              <p className="text-gray-700">
+                Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
+                lần sửa chữa của bạn.
+              </p>
+            </div>
+            {invoice && (
+              <Button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isGeneratingPDF ? "Đang tạo PDF..." : "Tải hóa đơn PDF"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm mt-0">
             {error}
           </div>
         )}
 
         {!invoice && !error ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="Không tìm thấy hóa đơn"
-            subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
-          />
+          <div className="bg-white rounded-lg shadow-lg mt-0">
+            <EmptyState
+              icon={ClipboardList}
+              title="Không tìm thấy hóa đơn"
+              subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
+            />
+          </div>
         ) : null}
 
         {invoice && (
-          <div className="space-y-8">
-            <Card className="shadow-sm border border-border/60">
+          <div className="mt-0">
+            <Card className="shadow-sm border border-border/60 rounded-none border-t-0">
               <CardContent className="p-6 space-y-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-3">
@@ -577,8 +640,8 @@ const CustomerInvoiceDetail = () => {
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="shadow-sm border border-border/60">
+            <div className="grid gap-0 lg:grid-cols-2">
+              <Card className="shadow-sm border border-border/60 rounded-none border-t-0 border-r-0 lg:border-r-0 rounded-bl-lg">
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h2 className="text-lg font-semibold uppercase tracking-wide">
@@ -638,7 +701,7 @@ const CustomerInvoiceDetail = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border border-border/60">
+              <Card className="border border-border/60 rounded-none border-t-0 border-l-0 rounded-br-lg shadow-none">
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h2 className="text-lg font-semibold uppercase tracking-wide">
