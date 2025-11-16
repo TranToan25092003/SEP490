@@ -31,6 +31,17 @@ const InvoiceSchema = new Schema(
       required: false,
     }, // Payment method
     discount_code: { type: String, required: false }, // Discount code applied (optional)
+    discount_amount: {
+      type: Number,
+      required: false,
+      min: 0,
+      default: 0,
+    }, // Total discount value applied when paying
+    paid_amount: {
+      type: Number,
+      required: false,
+      min: 0,
+    }, // Actual amount customer paid after discounts
     loyalty_points_earned: {
       type: Number,
       required: false,

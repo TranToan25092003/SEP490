@@ -283,7 +283,7 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
       const amountToVerify = Math.max(payableAmount || 0, 0);
@@ -345,12 +345,21 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
+      const verifyPayload = { paidAmount: payableAmount };
+      if (selectedVoucher) {
+        verifyPayload.voucherCode = selectedVoucher.code;
+        verifyPayload.voucherDiscount = voucherDiscount;
+        verifyPayload.voucherType = selectedVoucher.discountType;
+        verifyPayload.voucherValue = selectedVoucher.value;
+      }
+
       const response = await customFetch(
         `/invoices/${invoice.id}/verify-payment`,
         {
           method: "POST",
+          data: verifyPayload,
         }
       );
 
@@ -359,6 +368,7 @@ const CustomerInvoiceDetail = () => {
         revalidator.revalidate();
         setPaymentModalOpen(false);
       } else {
+        console.log(response);
         toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
       }
     } catch (error) {
@@ -835,7 +845,9 @@ const CustomerInvoiceDetail = () => {
             {invoice && invoice.status === "unpaid" && (
               <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
                 <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {isPolling && <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />}
+                  {isPolling && (
+                    <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                  )}
                   <span className="break-words">
                     {isPolling
                       ? "Đang tự động kiểm tra thanh toán..."
@@ -865,19 +877,24 @@ const CustomerInvoiceDetail = () => {
                     {isCheckingPayment ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        <span className="hidden sm:inline">Đang kiểm tra...</span>
+                        <span className="hidden sm:inline">
+                          Đang kiểm tra...
+                        </span>
                         <span className="sm:hidden">Đang kiểm tra...</span>
                       </>
                     ) : (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Kiểm tra thanh toán</span>
+                        <span className="hidden sm:inline">
+                          Kiểm tra thanh toán
+                        </span>
                         <span className="sm:hidden">Kiểm tra</span>
                       </>
                     )}
                   </Button>
                   {/* DEV MODE: Button để fake thanh toán cho testing */}
-                  {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_PAYMENT === 'true') && (
+                  {(import.meta.env.DEV ||
+                    import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
                     <Button
                       onClick={handleFakePayment}
                       className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
@@ -887,12 +904,16 @@ const CustomerInvoiceDetail = () => {
                       {isCheckingPayment ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          <span className="hidden sm:inline">Đang xử lý...</span>
+                          <span className="hidden sm:inline">
+                            Đang xử lý...
+                          </span>
                           <span className="sm:hidden">Đang xử lý...</span>
                         </>
                       ) : (
                         <>
-                          <span className="hidden sm:inline">🧪 Fake Thanh Toán</span>
+                          <span className="hidden sm:inline">
+                            🧪 Fake Thanh Toán
+                          </span>
                           <span className="sm:hidden">🧪 Fake</span>
                         </>
                       )}

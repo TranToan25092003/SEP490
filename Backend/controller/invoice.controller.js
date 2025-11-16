@@ -81,10 +81,11 @@ class InvoiceController {
       const invoice = await InvoiceService.confirmInvoicePayment(
         id,
         paymentMethod,
-        confirmedBy
+        confirmedBy,
+        { voucherCode, paidAmount }
       );
 
-      await this._handleLoyaltyAfterPayment(invoice, {
+      await handleLoyaltyAfterPayment(invoice, {
         voucherCode,
         paidAmount,
         performedBy: confirmedBy,
@@ -102,6 +103,7 @@ class InvoiceController {
   async verifyPayment(req, res, next) {
     try {
       const { id } = req.params;
+      const { voucherCode, paidAmount } = req.body || {};
       const customerClerkId = req.userId;
 
       // Kiểm tra hóa đơn có thuộc về customer không
@@ -128,10 +130,11 @@ class InvoiceController {
       const updatedInvoice = await InvoiceService.confirmInvoicePayment(
         id,
         "bank_transfer",
-        "SYSTEM" // Hệ thống tự động xác nhận
+        "SYSTEM", // Hệ thống tự động xác nhận
+        { voucherCode, paidAmount }
       );
 
-      await this._handleLoyaltyAfterPayment(updatedInvoice, {
+      await handleLoyaltyAfterPayment(updatedInvoice, {
         voucherCode,
         paidAmount,
         performedBy: "SYSTEM",
@@ -146,30 +149,37 @@ class InvoiceController {
     }
   }
 
-  async _handleLoyaltyAfterPayment(
-    invoice,
-    { voucherCode, paidAmount, performedBy }
-  ) {
-    try {
-      if (!invoice || !invoice.customerClerkId) {
-        return;
-      }
+}
 
-      const amountToUse =
-        paidAmount !== undefined && paidAmount !== null
-          ? paidAmount
-          : invoice.totalAmount;
-
-      await LoyaltyService.handleInvoicePaymentSuccess({
-        invoiceId: invoice.id,
-        clerkId: invoice.customerClerkId,
-        amount: amountToUse,
-        voucherCode,
-        performedBy,
-      });
-    } catch (loyaltyError) {
-      console.error("Failed to update loyalty after payment:", loyaltyError);
+async function handleLoyaltyAfterPayment(
+  invoice,
+  { voucherCode, paidAmount, performedBy }
+) {
+  try {
+    if (!invoice || !invoice.customerClerkId) {
+      return;
     }
+
+    const amountToUse =
+      paidAmount !== undefined && paidAmount !== null
+        ? paidAmount
+        : invoice.totalAmount;
+
+    const loyaltyResult = await LoyaltyService.handleInvoicePaymentSuccess({
+      invoiceId: invoice.id,
+      clerkId: invoice.customerClerkId,
+      amount: amountToUse,
+      voucherCode,
+      performedBy,
+    });
+
+    const pointsEarned = loyaltyResult?.pointsAwarded ?? 0;
+    await InvoiceService.updateLoyaltyPoints(invoice.id, pointsEarned);
+    if (invoice) {
+      invoice.loyaltyPointsEarned = pointsEarned;
+    }
+  } catch (loyaltyError) {
+    console.error("Failed to update loyalty after payment:", loyaltyError);
   }
 }
 
