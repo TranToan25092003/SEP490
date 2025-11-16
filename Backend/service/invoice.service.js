@@ -317,7 +317,12 @@ class InvoiceService {
     );
   }
 
-  async confirmInvoicePayment(invoiceId, paymentMethod, confirmedBy) {
+  async confirmInvoicePayment(
+    invoiceId,
+    paymentMethod,
+    confirmedBy,
+    { voucherCode, paidAmount } = {}
+  ) {
     const invoice = await Invoice.findById(invoiceId)
       .populate({
         path: "service_order_id",
@@ -346,6 +351,20 @@ class InvoiceService {
 
     if (paymentMethod) {
       invoice.payment_method = paymentMethod;
+    }
+
+    if (voucherCode) {
+      invoice.discount_code = voucherCode;
+    }
+
+    if (paidAmount !== undefined && paidAmount !== null) {
+      const numericPaid = Number(paidAmount);
+      if (!Number.isNaN(numericPaid) && numericPaid >= 0) {
+        const originalAmount = Number(invoice.amount) || 0;
+        const effectivePaid = Math.min(numericPaid, originalAmount);
+        invoice.paid_amount = effectivePaid;
+        invoice.discount_amount = Math.max(originalAmount - effectivePaid, 0);
+      }
     }
 
     invoice.status = "paid";
@@ -389,6 +408,19 @@ class InvoiceService {
     );
   }
 
+  async updateLoyaltyPoints(invoiceId, pointsEarned) {
+    if (!invoiceId) return null;
+    const normalizedPoints = Math.max(Number(pointsEarned) || 0, 0);
+    const invoice = await Invoice.findById(invoiceId);
+    if (!invoice) {
+      return null;
+    }
+
+    invoice.loyalty_points_earned = normalizedPoints;
+    await invoice.save();
+    return invoice;
+  }
+
   _mapInvoiceSummary(invoice, serviceOrder, customerName = null) {
     const booking = serviceOrder?.booking_id;
     const vehicle = booking?.vehicle_id;
@@ -400,7 +432,12 @@ class InvoiceService {
       serviceOrderNumber:
         serviceOrder?.orderNumber || serviceOrder?._id?.toString() || null,
       status: invoice.status,
-      totalAmount: invoice.amount,
+      totalAmount: invoice.paid_amount ?? invoice.amount,
+      originalAmount: invoice.amount,
+      discountCode: invoice.discount_code || null,
+      discountAmount: invoice.discount_amount || 0,
+      loyaltyPointsEarned: invoice.loyalty_points_earned || 0,
+      clerkId: invoice.clerkId || null,
       subtotal: invoice.subtotal,
       tax: invoice.tax,
       createdAt: invoice.createdAt,
@@ -436,7 +473,12 @@ class InvoiceService {
       status: invoice.status,
       subtotal: invoice.subtotal,
       tax: invoice.tax,
-      totalAmount: invoice.amount,
+      totalAmount: invoice.paid_amount ?? invoice.amount,
+      originalAmount: invoice.amount,
+      discountCode: invoice.discount_code || null,
+      discountAmount: invoice.discount_amount || 0,
+      loyaltyPointsEarned: invoice.loyalty_points_earned || 0,
+      clerkId: invoice.clerkId || null,
       paymentMethod: invoice.payment_method || null,
       confirmedBy: confirmedByName || invoice.confirmed_by || null,
       confirmedAt: invoice.confirmed_at || null,

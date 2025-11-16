@@ -109,7 +109,7 @@ const Login = () => {
           <div className="absolute top-4 right-4 md:mt-[5px] md:ml-[40px] bg-white w-auto md:w-[260px] h-auto inline-flex text-sm md:text-base">
             <p className="font-normal leading-normal">Bạn chưa có tài khoản?</p>
             <button
-              onClick={handleGoogleSignup}
+              onClick={() => navigate("/register")}
               className="text-[#DF1D01] cursor-pointer underline ml-1 hover:text-red-700"
             >
               Đăng Ký

@@ -1,5 +1,5 @@
 import { useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Container from "@/components/global/Container";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -19,10 +19,18 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import EmptyState from "@/components/global/EmptyState";
 import { ClipboardList, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { fetchCustomerInvoiceDetail } from "@/api/invoices";
+import { getPointBalance } from "@/api/loyalty";
 import { customFetch } from "@/utils/customAxios";
 import AuthRequiredModal from "@/components/global/AuthRequiredModal";
 import { toast } from "sonner";
@@ -127,6 +135,49 @@ const checkPaid = async (price, content) => {
   }
 };
 
+const normalizeOwnedVoucher = (voucher) => {
+  if (!voucher) return null;
+
+  return {
+    id: voucher.id || voucher._id || voucher.voucherCode,
+    code: voucher.code || voucher.voucherCode || "",
+    rewardName:
+      voucher.rewardName || voucher.reward?.title || voucher.title || "Voucher",
+    status: voucher.status || "active",
+    value: Number(voucher.value ?? voucher.voucherValue ?? 0) || 0,
+    currency: voucher.currency || voucher.voucherCurrency || "VND",
+    discountType: voucher.discountType || "fixed",
+    expiresAt: voucher.expiresAt || voucher.voucherExpiresAt || null,
+  };
+};
+
+const isVoucherUsable = (voucher) => {
+  if (!voucher) return false;
+  if (voucher.status !== "active") return false;
+  if (!voucher.expiresAt) return true;
+  return new Date(voucher.expiresAt) >= new Date();
+};
+
+const calculateVoucherDiscount = (voucher, baseAmount) => {
+  if (!voucher || !baseAmount || baseAmount <= 0) return 0;
+  const amount = Number(baseAmount) || 0;
+  if (voucher.discountType === "percentage") {
+    const percentage = Math.min(Math.max(Number(voucher.value) || 0, 0), 100);
+    return Math.min(Math.round((amount * percentage) / 100), amount);
+  }
+
+  const fixedValue = Math.max(Number(voucher.value) || 0, 0);
+  return Math.min(fixedValue, amount);
+};
+
+const formatVoucherValue = (voucher) => {
+  if (!voucher) return "";
+  if (voucher.discountType === "percentage") {
+    return `${voucher.value || 0}%`;
+  }
+  return formatPrice(voucher.value || 0);
+};
+
 const CustomerInvoiceDetail = () => {
   const { invoice, requiresAuth, error } = useLoaderData();
   const navigate = useNavigate();
@@ -136,6 +187,30 @@ const CustomerInvoiceDetail = () => {
   const [qrCodeError, setQrCodeError] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [isPolling, setIsPolling] = useState(false);
+  const [voucherLoading, setVoucherLoading] = useState(false);
+  const [voucherError, setVoucherError] = useState(null);
+  const [availableVouchers, setAvailableVouchers] = useState([]);
+  const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+
+  const selectedVoucher = useMemo(() => {
+    if (!selectedVoucherCode) return null;
+    return (
+      availableVouchers.find(
+        (voucher) => voucher.code === selectedVoucherCode
+      ) || null
+    );
+  }, [availableVouchers, selectedVoucherCode]);
+
+  const voucherDiscount = useMemo(() => {
+    if (!invoice || !selectedVoucher) return 0;
+    return calculateVoucherDiscount(selectedVoucher, invoice.totalAmount);
+  }, [invoice, selectedVoucher]);
+
+  const payableAmount = useMemo(() => {
+    if (!invoice) return 0;
+    const total = Number(invoice.totalAmount) || 0;
+    return Math.max(total - voucherDiscount, 0);
+  }, [invoice, voucherDiscount]);
 
   useEffect(() => {
     setAuthModalVisible(requiresAuth);
@@ -147,6 +222,57 @@ const CustomerInvoiceDetail = () => {
       setQrCodeError(false);
     }
   }, [paymentModalOpen]);
+  useEffect(() => {
+    if (!paymentModalOpen || !invoice || invoice.status === "paid") {
+      return;
+    }
+
+    let ignore = false;
+    const fetchVouchers = async () => {
+      try {
+        setVoucherLoading(true);
+        setVoucherError(null);
+        const response = await getPointBalance();
+        if (ignore) return;
+        const payload = response?.data?.data || {};
+        const normalized = Array.isArray(payload.vouchers)
+          ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
+          : [];
+        const usable = normalized.filter(isVoucherUsable);
+        setAvailableVouchers(usable);
+        setSelectedVoucherCode((currentCode) => {
+          if (!currentCode) return currentCode;
+          const stillExists = usable.some(
+            (voucher) => voucher.code === currentCode
+          );
+          return stillExists ? currentCode : "";
+        });
+      } catch (fetchError) {
+        if (ignore) return;
+        console.error("Failed to load vouchers", fetchError);
+        setVoucherError(
+          "KhA'ng t���i �`�����c voucher. Vui lA�ng th��- l���i sau."
+        );
+        setAvailableVouchers([]);
+        setSelectedVoucherCode("");
+      } finally {
+        if (!ignore) {
+          setVoucherLoading(false);
+        }
+      }
+    };
+
+    fetchVouchers();
+
+    return () => {
+      ignore = true;
+    };
+  }, [paymentModalOpen, invoice]);
+  useEffect(() => {
+    if (invoice?.status === "paid" && selectedVoucherCode) {
+      setSelectedVoucherCode("");
+    }
+  }, [invoice?.status, selectedVoucherCode]);
 
   // Function để kiểm tra và cập nhật trạng thái thanh toán
   const handleCheckPayment = async () => {
@@ -157,18 +283,30 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
-      const isPaid = await checkPaid(invoice.totalAmount, invoiceNumber);
+      const amountToVerify = Math.max(payableAmount || 0, 0);
+      const isPaid = await checkPaid(amountToVerify, invoiceNumber);
 
       if (isPaid) {
         // Gọi API để cập nhật trạng thái hóa đơn
         try {
+          const verifyPayload = {
+            paidAmount: payableAmount,
+          };
+          if (selectedVoucher) {
+            verifyPayload.voucherCode = selectedVoucher.code;
+            verifyPayload.voucherDiscount = voucherDiscount;
+            verifyPayload.voucherType = selectedVoucher.discountType;
+            verifyPayload.voucherValue = selectedVoucher.value;
+          }
+
           const response = await customFetch(
             `/invoices/${invoice.id}/verify-payment`,
             {
               method: "POST",
+              data: verifyPayload,
             }
           );
 
@@ -207,12 +345,21 @@ const CustomerInvoiceDetail = () => {
     // Dừng auto-polling khi user click manually
     setIsPolling(false);
     setIsCheckingPayment(true);
-    
+
     try {
+      const verifyPayload = { paidAmount: payableAmount };
+      if (selectedVoucher) {
+        verifyPayload.voucherCode = selectedVoucher.code;
+        verifyPayload.voucherDiscount = voucherDiscount;
+        verifyPayload.voucherType = selectedVoucher.discountType;
+        verifyPayload.voucherValue = selectedVoucher.value;
+      }
+
       const response = await customFetch(
         `/invoices/${invoice.id}/verify-payment`,
         {
           method: "POST",
+          data: verifyPayload,
         }
       );
 
@@ -221,6 +368,7 @@ const CustomerInvoiceDetail = () => {
         revalidator.revalidate();
         setPaymentModalOpen(false);
       } else {
+        console.log(response);
         toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
       }
     } catch (error) {
@@ -496,6 +644,20 @@ const CustomerInvoiceDetail = () => {
                       {formatPrice(invoice.totalAmount)}
                     </span>
                   </div>
+                  {voucherDiscount > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm text-emerald-600">
+                        <span>Giảm giá bằng voucher</span>
+                        <span>-{formatPrice(voucherDiscount)}</span>
+                      </div>
+                      <div className="flex justify-between text-base font-semibold text-emerald-700">
+                        <span>Số tiền còn lại cần thanh toán.</span>
+                        <span className="text-lg">
+                          {formatPrice(payableAmount)}
+                        </span>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {invoice.status === "unpaid" && (
                   <Button
@@ -549,14 +711,101 @@ const CustomerInvoiceDetail = () => {
                   {invoice ? formatPrice(invoice.totalAmount) : "—"}
                 </span>
               </div>
+              {voucherDiscount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-600">
+                  <span>Giam voucher</span>
+                  <span>-{formatPrice(voucherDiscount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-semibold border-t pt-2">
+                <span>số tiền cần thanh toán</span>
+                <span className="text-lg">
+                  {invoice ? formatPrice(payableAmount) : "—"}
+                </span>
+              </div>
             </div>
+            {invoice?.status === "unpaid" && (
+              <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">Sử dụng voucher</p>
+                    <p className="text-xs text-muted-foreground">
+                      Chọn voucher để giảm số tiền chuyển khoản.
+                    </p>
+                  </div>
+                  {selectedVoucherCode && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedVoucherCode("")}
+                    >
+                      bỏ chọn
+                    </Button>
+                  )}
+                </div>
+                <Select
+                  value={selectedVoucherCode || undefined}
+                  onValueChange={setSelectedVoucherCode}
+                  disabled={voucherLoading || availableVouchers.length === 0}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        voucherLoading
+                          ? "Dang tai voucher..."
+                          : availableVouchers.length === 0
+                          ? "Chua co voucher kha dung"
+                          : "Chon voucher"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableVouchers.map((voucher) => (
+                      <SelectItem key={voucher.code} value={voucher.code}>
+                        {voucher.rewardName} ({formatVoucherValue(voucher)})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {voucherError && (
+                  <p className="text-xs text-destructive">{voucherError}</p>
+                )}
+                {voucherLoading && !voucherError && (
+                  <p className="text-xs text-muted-foreground">
+                    Dang tai danh sach voucher...
+                  </p>
+                )}
+                {!voucherLoading &&
+                  availableVouchers.length === 0 &&
+                  !voucherError && (
+                    <p className="text-xs text-muted-foreground">
+                      Ban chua co voucher kha dung.
+                    </p>
+                  )}
+                {selectedVoucher && (
+                  <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
+                    <p className="font-medium">{selectedVoucher.rewardName}</p>
+                    <p>Gia tri: {formatVoucherValue(selectedVoucher)}</p>
+                    <p>
+                      Ma:{" "}
+                      <span className="font-mono">{selectedVoucher.code}</span>
+                    </p>
+                    {selectedVoucher.expiresAt && (
+                      <p>
+                        Han su dung: {formatDateTime(selectedVoucher.expiresAt)}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             {invoice && (
               <div className="flex flex-col items-center justify-center space-y-3">
                 <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
                   {!qrCodeError ? (
                     <img
                       src={generateQRCodeUrl(
-                        invoice.totalAmount,
+                        payableAmount,
                         invoice.invoiceNumber || invoice.id
                       )}
                       alt="QR Code thanh toán"
@@ -596,7 +845,9 @@ const CustomerInvoiceDetail = () => {
             {invoice && invoice.status === "unpaid" && (
               <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
                 <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {isPolling && <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />}
+                  {isPolling && (
+                    <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                  )}
                   <span className="break-words">
                     {isPolling
                       ? "Đang tự động kiểm tra thanh toán..."
@@ -626,19 +877,24 @@ const CustomerInvoiceDetail = () => {
                     {isCheckingPayment ? (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        <span className="hidden sm:inline">Đang kiểm tra...</span>
+                        <span className="hidden sm:inline">
+                          Đang kiểm tra...
+                        </span>
                         <span className="sm:hidden">Đang kiểm tra...</span>
                       </>
                     ) : (
                       <>
                         <RefreshCw className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Kiểm tra thanh toán</span>
+                        <span className="hidden sm:inline">
+                          Kiểm tra thanh toán
+                        </span>
                         <span className="sm:hidden">Kiểm tra</span>
                       </>
                     )}
                   </Button>
                   {/* DEV MODE: Button để fake thanh toán cho testing */}
-                  {(import.meta.env.DEV || import.meta.env.VITE_ENABLE_TEST_PAYMENT === 'true') && (
+                  {(import.meta.env.DEV ||
+                    import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
                     <Button
                       onClick={handleFakePayment}
                       className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
@@ -648,12 +904,16 @@ const CustomerInvoiceDetail = () => {
                       {isCheckingPayment ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          <span className="hidden sm:inline">Đang xử lý...</span>
+                          <span className="hidden sm:inline">
+                            Đang xử lý...
+                          </span>
                           <span className="sm:hidden">Đang xử lý...</span>
                         </>
                       ) : (
                         <>
-                          <span className="hidden sm:inline">🧪 Fake Thanh Toán</span>
+                          <span className="hidden sm:inline">
+                            🧪 Fake Thanh Toán
+                          </span>
                           <span className="sm:hidden">🧪 Fake</span>
                         </>
                       )}
