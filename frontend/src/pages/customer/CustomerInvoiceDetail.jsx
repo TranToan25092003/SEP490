@@ -34,6 +34,7 @@ import {
   CreditCard,
   RefreshCw,
   Download,
+  Loader2,
 } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { fetchCustomerInvoiceDetail } from "@/api/invoices";
@@ -498,12 +499,28 @@ const CustomerInvoiceDetail = () => {
 
   return (
     <div
-      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat relative"
       style={{
         backgroundImage: `url(${background})`,
         backgroundPosition: "65% 35%",
       }}
     >
+      {/* Loading Overlay khi đang tạo PDF */}
+      {isGeneratingPDF && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+            <div className="text-center">
+              <p className="text-lg font-semibold text-gray-900">
+                Đang tạo hóa đơn PDF...
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Vui lòng đợi trong giây lát
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <Container className="py-12 w-full max-w-7xl">
         {/* Header với nút quay lại và tải PDF */}
         <div className="bg-white rounded-t-lg shadow-lg mb-0">
