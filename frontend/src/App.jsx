@@ -68,8 +68,8 @@ import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
 import StaffPage from "./pages/manager/Staff";
-import ActivityLogs from "./pages/manager/ActivityLogs";
-import { activityLogsLoader } from "./utils/loaders";
+import AdminActivityLogs from "./pages/admin/ActivityLogs";
+import { adminActivityLogsLoader } from "./utils/loaders";
 import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
 import AttendanceTracking from "./pages/manager/AttendanceTracking";
@@ -225,11 +225,6 @@ const router = createBrowserRouter([
         element: <ManagerBays />,
       },
       {
-        path: "activity-logs",
-        element: <ActivityLogs />,
-        loader: activityLogsLoader,
-      },
-      {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
       },
@@ -334,6 +329,11 @@ const router = createBrowserRouter([
         path: "banners",
         element: <AdminBannersPage />,
         loader: adminBannersLoader,
+      },
+      {
+        path: "activity-logs",
+        element: <AdminActivityLogs />,
+        loader: adminActivityLogsLoader,
       },
     ],
   },

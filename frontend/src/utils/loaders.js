@@ -644,6 +644,47 @@ export const activityLogsLoader = async ({ request }) => {
   }
 };
 
+export const adminActivityLogsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    // Try admin endpoint first, fallback to manager endpoint if needed
+    try {
+      const { data } = await customFetch(`/admin/activity-logs?${query}`);
+      if (!data.success) {
+        throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+      }
+      return {
+        logs: data.items,
+        pagination: data.pagination,
+      };
+    } catch (adminError) {
+      // Fallback to manager endpoint if admin endpoint doesn't exist
+      const { data } = await customFetch(`/manager/activity-logs?${query}`);
+      if (!data.success) {
+        throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+      }
+      return {
+        logs: data.items,
+        pagination: data.pagination,
+      };
+    }
+  } catch (error) {
+    toast.error("Lỗi tải nhật ký", {
+      description: error.message,
+    });
+    return {
+      logs: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+      },
+    };
+  }
+};
+
 export const adminServicesLoader = async ({ request }) => {
   try {
     const url = new URL(request.url);

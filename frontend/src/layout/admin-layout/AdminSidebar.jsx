@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   sidebarLogo as imgLogo,
@@ -20,6 +19,7 @@ import {
   Car,
   Image,
   Users,
+  ScrollText,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -32,31 +32,37 @@ const items = [
     key: "dashboard",
     label: "Tổng quát",
     icon: Home,
-    href: "/admin", 
+    href: "/admin",
   },
   {
     key: "services",
     label: "Quản lý service",
     icon: Cog,
-    href: "/admin/services", 
+    href: "/admin/services",
   },
   {
     key: "models",
     label: "Quản lý model",
     icon: Car,
-    href: "/admin/models", 
+    href: "/admin/models",
   },
   {
     key: "banners",
     label: "Quản lý banner",
     icon: Image,
-    href: "/admin/banners", 
+    href: "/admin/banners",
   },
+  // {
+  //   key: "staff",
+  //   label: "Quản lý staff",
+  //   icon: Users,
+  //   href: "/admin/staff",
+  // },
   {
-    key: "staff",
-    label: "Quản lý staff",
-    icon: Users,
-    href: "/admin/staff", 
+    key: "log",
+    label: "Log",
+    icon: ScrollText,
+    href: "/admin/activity-logs",
   },
 ];
 
@@ -65,7 +71,7 @@ export default function AdminSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => { },
+  onExpandToggle = () => {},
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -99,9 +105,10 @@ export default function AdminSidebar({
               {items.map((it) => {
                 const Icon = it.icon;
                 // Cập nhật logic kiểm tra active
-                const isActive = (it.href === "/admin") 
-                  ? location.pathname === it.href
-                  : location.pathname.startsWith(it.href);
+                const isActive =
+                  it.href === "/admin"
+                    ? location.pathname === it.href
+                    : location.pathname.startsWith(it.href);
 
                 return (
                   <Tooltip key={it.key}>
@@ -113,7 +120,7 @@ export default function AdminSidebar({
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive, 
+                              "font-semibold text-red-600": isActive,
                               "text-gray-700": !isActive,
                             }
                           )}
@@ -123,10 +130,11 @@ export default function AdminSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${
+                            isActive
                               ? "bg-red-50 text-red-600 hover:bg-red-100"
                               : "text-gray-500 hover:bg-gray-100"
-                            }`}
+                          }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (
