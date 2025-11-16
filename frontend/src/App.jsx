@@ -6,6 +6,7 @@ import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
@@ -173,6 +174,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login></Login>,
+  },
+  {
+    path: "/register",
+    element: <Register />,
   },
   {
     path: "/sso-callback",
