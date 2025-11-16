@@ -62,7 +62,7 @@ async function fetchStaffUserIds() {
   return { staffIds, staffRolesById };
 }
 
-async function fetchTechniciansFromClerk() {
+async function fetchAllStaffFromClerk() {
   const { staffIds, staffRolesById } = await fetchStaffUserIds();
 
   if (!staffIds.size) {
@@ -85,9 +85,6 @@ async function fetchTechniciansFromClerk() {
     chunkUsers.forEach((user) => {
       const orgRole = staffRolesById.get(user.id);
       const position = resolvePosition(user, orgRole);
-      if (position !== "technician") {
-        return;
-      }
 
       technicians.push({
         technicianClerkId: user.id,
@@ -102,12 +99,23 @@ async function fetchTechniciansFromClerk() {
   return technicians;
 }
 
+async function fetchTechniciansFromClerk() {
+  const allStaff = await fetchAllStaffFromClerk();
+  return allStaff.filter(
+    (staff) => staff.position === "technician"
+  );
+}
+
 class StaffService {
   /**
    * Return all technicians registered in Clerk that match the configured roles.
    */
   async getAllTechnicians() {
     return fetchTechniciansFromClerk();
+  }
+
+  async getAllStaffIncludingTechnicians() {
+    return fetchAllStaffFromClerk();
   }
 
   /**
