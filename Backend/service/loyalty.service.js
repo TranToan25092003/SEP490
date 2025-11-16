@@ -187,11 +187,15 @@ class LoyaltyService {
     performedBy,
   }) {
     if (!clerkId) return null;
-
+    console.log(amount);
     const normalizedAmount = Math.max(Number(amount) || 0, 0);
     const basePoints = PAYMENT_BONUS_POINTS;
-    const conversionPoints = Math.floor(normalizedAmount / PAYMENT_CONVERSION_UNIT);
+    const conversionPoints = Math.floor(
+      normalizedAmount / PAYMENT_CONVERSION_UNIT
+    );
     const totalPoints = Math.max(basePoints + conversionPoints, 0);
+
+    console.log(totalPoints);
 
     let transactionResult = null;
     if (totalPoints > 0) {

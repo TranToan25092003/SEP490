@@ -160,14 +160,24 @@ async function handleLoyaltyAfterPayment(
       return;
     }
 
-    const amountToUse =
+  const amountToUse =
       paidAmount !== undefined && paidAmount !== null
         ? paidAmount
         : invoice.totalAmount;
 
+    const clerkId =
+      invoice.customerClerkId ||
+      invoice.clerkId ||
+      invoice?.serviceOrder?.customer_clerk_id ||
+      null;
+
+    if (!clerkId) {
+      return;
+    }
+
     const loyaltyResult = await LoyaltyService.handleInvoicePaymentSuccess({
       invoiceId: invoice.id,
-      clerkId: invoice.customerClerkId,
+      clerkId,
       amount: amountToUse,
       voucherCode,
       performedBy,

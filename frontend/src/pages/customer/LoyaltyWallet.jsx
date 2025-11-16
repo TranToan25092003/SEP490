@@ -50,13 +50,6 @@ const INITIAL_WALLET = {
 
 const earningActions = [
   {
-    id: "purchase",
-    title: "Thanh toán dịch vụ",
-    desc: "1 điểm cho mỗi 10.000₫ chi tiêu, tự cộng sau khi hoá đơn hoàn tất.",
-    points: "+120 điểm",
-    icon: Wallet,
-  },
-  {
     id: "maintenance",
     title: "Hoàn tất bảo dưỡng",
     desc: "+50 điểm cho gói bảo dưỡng chuẩn MotorMate.",
@@ -69,13 +62,6 @@ const earningActions = [
     desc: "+5 điểm/lần, tối đa 1 lần/ngày. Giữ streak để nhận quà.",
     points: "+5 điểm",
     icon: Repeat,
-  },
-  {
-    id: "referral",
-    title: "Giới thiệu bạn bè",
-    desc: "+200 điểm khi bạn bè hoàn tất đơn đầu tiên qua link của bạn.",
-    points: "+200 điểm",
-    icon: Link2,
   },
 ];
 
@@ -391,7 +377,7 @@ const LoyaltyWallet = () => {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+          {/* <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Chuỗi check-in
@@ -404,7 +390,7 @@ const LoyaltyWallet = () => {
                 Giữ chuỗi để nhận quà bất ngờ mỗi 7 ngày.
               </p>
             </CardContent>
-          </Card>
+          </Card> */}
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium text-muted-foreground">
