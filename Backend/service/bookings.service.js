@@ -1,5 +1,9 @@
 const DomainError = require("../errors/domainError");
-const { ServicesService, mapServiceToDTO, ERROR_CODES: SERVICE_ERROR_CODES } = require("./services.service");
+const {
+  ServicesService,
+  mapServiceToDTO,
+  ERROR_CODES: SERVICE_ERROR_CODES,
+} = require("./services.service");
 const { VehiclesService, mapToVehicleDTO } = require("./vehicles.service");
 const { UsersService } = require("./users.service");
 const ServiceOrderService = require("./service_order.service");
@@ -53,7 +57,10 @@ class BookingsService {
       timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
     );
 
-    const isAvailable = await this._isTimeslotAvailable(timeSlotStart, timeSlotEnd);
+    const isAvailable = await this._isTimeslotAvailable(
+      timeSlotStart,
+      timeSlotEnd
+    );
     if (!isAvailable) {
       throw new DomainError(
         "Slot không khả dụng",
@@ -132,7 +139,10 @@ class BookingsService {
   async getBookingById(bookingId) {
     const booking = await Booking.findById(bookingId)
       .populate("service_ids")
-      .populate("vehicle_id")
+      .populate({
+        path: "vehicle_id",
+        populate: { path: "model_id" },
+      })
       .populate("service_order_id")
       .exec();
 
@@ -140,13 +150,15 @@ class BookingsService {
       return null;
     }
 
-    const userMap = await UsersService.getFullNamesByIds([booking.customer_clerk_id]);
+    const userMap = await UsersService.getFullNamesByIds([
+      booking.customer_clerk_id,
+    ]);
 
     return {
       id: booking._id,
       customer: {
         customerClerkId: booking.customer_clerk_id,
-        customerName: userMap[booking.customer_clerk_id]
+        customerName: userMap[booking.customer_clerk_id],
       },
       vehicle: mapToVehicleDTO(booking.vehicle_id),
       services: booking.service_ids.map(mapServiceToDTO),
@@ -161,11 +173,14 @@ class BookingsService {
   async getUserBookings(customerClerkId) {
     const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
       .populate("service_ids")
-      .populate("vehicle_id")
+      .populate({
+        path: "vehicle_id",
+        populate: { path: "model_id" },
+      })
       .sort({ slot_start_time: -1 })
       .exec();
 
-    return bookings.map(booking => ({
+    return bookings.map((booking) => ({
       id: booking._id,
       vehicle: mapToVehicleDTO(booking.vehicle_id),
       services: booking.service_ids.map(mapServiceToDTO),
@@ -182,7 +197,7 @@ class BookingsService {
     customerName = null,
     status = null,
     startTimestamp = null,
-    endTimestamp = null
+    endTimestamp = null,
   }) {
     const filters = {};
 
@@ -227,23 +242,23 @@ class BookingsService {
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
-      Booking.countDocuments(filters).exec()
+      Booking.countDocuments(filters).exec(),
     ]);
 
     const totalPages = Math.ceil(totalItems / limit);
-    const customerIds = bookings.map(b => b.customer_clerk_id.toString());
+    const customerIds = bookings.map((b) => b.customer_clerk_id.toString());
     const userMap = await UsersService.getFullNamesByIds(customerIds);
 
     return {
-      bookings: bookings.map(booking => ({
+      bookings: bookings.map((booking) => ({
         id: booking._id,
         customerName: userMap[booking.customer_clerk_id.toString()],
-        services: booking.service_ids.map(s => s.name),
+        services: booking.service_ids.map((s) => s.name),
         slotStartTime: booking.slot_start_time,
         slotEndTime: booking.slot_end_time,
         status: booking.status,
         serviceOrderId: booking.service_order_id,
-        createdAt: booking.createdAt
+        createdAt: booking.createdAt,
       })),
       pagination: {
         currentPage: page,

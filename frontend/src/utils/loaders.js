@@ -58,14 +58,12 @@ export const partsLoader = async ({ request }) => {
   }
 };
 
-export const partsClientLoader = async ({ request }) => {
+// Loader for Home page - gets featured parts (newest parts, limit 3)
+export const homeLoader = async () => {
   try {
-    const url = new URL(request.url);
-    const queryParams = new URLSearchParams(url.search);
-
-    const [partsResponse, groupedModelsResponse] = await Promise.all([
-      customFetch(`/parts?${queryParams.toString()}`),
-      customFetch("/models/grouped-by-brand"),
+    const [partsResponse, bannersResponse] = await Promise.all([
+      customFetch("/parts?limit=3&sortBy=createdAt&sortOrder=desc"),
+      customFetch("/banners/active"),
     ]);
 
     const partsApiResponse = partsResponse.data;
@@ -73,17 +71,57 @@ export const partsClientLoader = async ({ request }) => {
       throw new Error(partsApiResponse.message || "Failed to load parts");
     }
 
-    const groupedModelsApiResponse = groupedModelsResponse.data;
-    if (!groupedModelsApiResponse.success) {
+    const bannersApiResponse = bannersResponse.data;
+    if (!bannersApiResponse.success) {
       throw new Error(
-        groupedModelsApiResponse.message || "Failed to load filter data"
+        bannersApiResponse.message || "Failed to load active banners"
+      );
+    }
+
+    return {
+      parts: partsApiResponse.data || [],
+      pagination: partsApiResponse.pagination,
+      banners: bannersApiResponse.data || [],
+    };
+  } catch (error) {
+    console.error("Home loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải dữ liệu trang chủ",
+    });
+    return {
+      parts: [],
+      pagination: {},
+      banners: [],
+    };
+  }
+};
+
+export const partsClientLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const queryParams = new URLSearchParams(url.search);
+
+    const [partsResponse, bannersResponse] = await Promise.all([
+      customFetch(`/parts?${queryParams.toString()}`),
+      customFetch("/banners/active"),
+    ]);
+
+    const partsApiResponse = partsResponse.data;
+    if (!partsApiResponse.success) {
+      throw new Error(partsApiResponse.message || "Failed to load parts");
+    }
+
+    const bannersApiResponse = bannersResponse.data;
+    if (!bannersApiResponse.success) {
+      throw new Error(
+        bannersApiResponse.message || "Failed to load active banners"
       );
     }
 
     return {
       parts: partsApiResponse.data,
       pagination: partsApiResponse.pagination,
-      groupedModels: groupedModelsApiResponse.data,
+      banners: bannersApiResponse.data,
     };
   } catch (error) {
     console.error("Parts loader error:", error);
@@ -93,7 +131,7 @@ export const partsClientLoader = async ({ request }) => {
     return {
       parts: [],
       pagination: {},
-      groupedModels: [],
+      banners: [],
     };
   }
 };
@@ -210,17 +248,18 @@ export const partLoaderByClient = async ({ params }) => {
     }
     const product = mainProductApiResponse.data;
 
-    // Fetch related products based on the brand
+    // Fetch related products based on the brand (limit to 3)
     let relatedProducts = [];
     if (product && product.brand) {
       const relatedResponse = await customFetch(
-        `/parts?brand=${product.brand}`
+        `/parts?brand=${product.brand}&limit=4`
       );
       const relatedApiResponse = relatedResponse.data;
       if (relatedApiResponse.success) {
-        relatedProducts = relatedApiResponse.data.filter(
-          (p) => p._id !== product._id
-        );
+        // Filter out the current product and limit to 3
+        relatedProducts = relatedApiResponse.data
+          .filter((p) => p._id !== product._id)
+          .slice(0, 3);
       }
     }
     return { product, relatedProducts };
@@ -684,7 +723,7 @@ export const adminModelsLoader = async ({ request }) => {
     }
 
     return {
-      models: apiResponse.data, 
+      models: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {
@@ -734,7 +773,7 @@ export const adminBannersLoader = async ({ request }) => {
     }
 
     return {
-      banners: apiResponse.data, 
+      banners: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {

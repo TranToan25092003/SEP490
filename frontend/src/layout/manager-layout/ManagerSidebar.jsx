@@ -13,12 +13,13 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
-  LayoutDashboard,
+  Home,
   Wrench,
   ClipboardList,
   Building2,
   Users,
-  CalendarCheck, 
+  CalendarCheck,
+  Gift,
   ScrollText,
   LogOut,
   ChevronRight,
@@ -28,17 +29,17 @@ import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 const items = [
-  { key: "home", label: "Dashboard", icon: LayoutDashboard, href: "/manager" },
+  { key: "home", label: "Dashboard", icon: Home, href: "/manager" },
   {
     key: "parts",
     label: "Quản lý phụ tùng",
-    icon: Wrench, 
+    icon: Wrench,
     href: "/manager/items",
   },
   {
     key: "goodReceipts",
     label: "Quản lý phiếu nhập ",
-    icon: ClipboardList, 
+    icon: ClipboardList,
     href: "/manager/goods-receipt-list",
   },
   {
@@ -51,13 +52,19 @@ const items = [
   {
     key: "attendance",
     label: "Điểm danh",
-    icon: CalendarCheck, 
+    icon: CalendarCheck,
     href: "/manager/attendance-tracking",
+  },
+  {
+    key: "loyalty",
+    label: "Điểm thưởng",
+    icon: Gift,
+    href: "/manager/loyalty",
   },
   {
     key: "log",
     label: "Log",
-    icon: ScrollText, 
+    icon: ScrollText,
     href: "/manager/activity-logs",
   },
 ];
@@ -67,7 +74,7 @@ export default function ManagerSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => { },
+  onExpandToggle = () => {},
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -126,10 +133,11 @@ export default function ManagerSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${
+                            isActive
                               ? "bg-red-50 text-red-600 hover:bg-red-100" // Style nút khi active
                               : "text-gray-500 hover:bg-gray-100" // Style nút khi không active
-                            }`}
+                          }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (

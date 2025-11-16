@@ -59,7 +59,7 @@ export default function StaffInvoiceDetail() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Mã hóa đơn</div>
-                  <div className="text-lg font-semibold">{invoice.id}</div>
+                  <div className="text-lg font-semibold font-mono">{invoice.invoiceNumber || invoice.id}</div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Trạng thái</div>
@@ -67,7 +67,7 @@ export default function StaffInvoiceDetail() {
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Lệnh sửa chữa</div>
-                  <div>{invoice.serviceOrderId}</div>
+                  <div className="font-mono">{invoice.serviceOrderNumber || invoice.serviceOrderId}</div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Khách hàng</div>

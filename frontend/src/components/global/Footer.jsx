@@ -78,7 +78,7 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Quick Links */}
-          <div className="w-full pl-16">
+          <div className="w-full md:pl-16">
             <div className="lg:max-w-[220px] xl:max-w-[240px]">
               <div className="mb-4 font-['Poppins'] text-sm uppercase text-white">
                 Quick Links

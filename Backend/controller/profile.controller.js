@@ -116,10 +116,11 @@ module.exports.getVehicles = async (req, res) => {
       brand: v.model_id?.brand || "Không rõ",
       engine_type: v.model_id?.engine_type || "Không rõ",
       description: v.model_id?.description || "",
-      image: v?.images?.[0] || null,
+      images: v?.images || null,
       license_plate: v.license_plate,
       year: v.year,
     }));
+    console.log(formatted)
 
     res.status(200).json({ success: true, data: formatted });
   } catch (error) {
