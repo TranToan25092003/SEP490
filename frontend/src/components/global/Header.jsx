@@ -104,8 +104,10 @@ const Header = () => {
                       <DropdownMenuItem onSelect={() => navigate("/profile")}>
                         Thông tin
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => navigate("/history")}>
-                        Lịch sử mua hàng
+                      <DropdownMenuItem
+                        onSelect={() => navigate("/profile?tab=history")}
+                      >
+                        Lịch sử sửa xe
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onSelect={() => navigate("/booking-tracking")}
