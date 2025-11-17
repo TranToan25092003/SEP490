@@ -62,6 +62,7 @@ import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
+import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
@@ -291,6 +292,10 @@ const router = createBrowserRouter([
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "complaints/categories",
+        element: <ComplaintCategoryManager />,
       },
       {
         path: "invoices",
