@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSignIn } from "@clerk/clerk-react";
 import { toast } from "sonner";
+import photo from "@/assets/bg-parts.png";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -80,8 +81,11 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center"
+      style={{ backgroundImage: `url(${photo})` }}
+    >
+      <div className="w-full max-w-md bg-white/90 backdrop-blur-lg rounded-lg shadow-lg p-6">
         <h1 className="text-2xl font-semibold text-center text-[#D31705] uppercase mb-6">
           Quên mật khẩu
         </h1>
