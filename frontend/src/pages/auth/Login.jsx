@@ -1,13 +1,12 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import photo from "../../assets/image.png";
 import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
 
-import { useState } from "react";
 import { useNavigate, Route, Routes } from "react-router-dom";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { signIn } = useSignIn();
+  const { signIn, isLoaded, setActive } = useSignIn();
   const { signUp } = useSignUp();
   const { isSignedIn } = useUser();
   const [email, setEmail] = useState("");
@@ -16,38 +15,53 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hide, setHide] = useState(false);
 
-  if (isSignedIn) {
-    navigate("/");
-    return;
-  }
+  useEffect(() => {
+    if (isSignedIn) {
+      navigate("/");
+    }
+  }, [isSignedIn, navigate]);
+
+  if (!isLoaded) return null;
 
   const handleEmailSignin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    console.log(email, password);
+
     if (!email || !password) {
       toast.error("Vui lòng nhập email và mật khẩu.");
       setIsLoading(false);
       return;
     }
-
+    setIsLoading(true);
     try {
-      const signInAttempt = await signIn.create({
+      const result = await signIn.create({
         identifier: email,
         password,
       });
+      if (result.status == "complete") {
+        await setActive({ session: result.createdSessionId });
+        navigate("/");
+        return;
+      }
 
-      console.log(signInAttempt.status);
+      if (result.status == "needs_first_factor") {
+        const final = await signIn.attemptFirstFactor({
+          strategy: "password",
+          password,
+        });
 
-      await signIn.attemptFirstFactor({
-        strategy: "password",
-      });
+        if (final.status == "complete") {
+          await setActive({ session: final.createdSessionId });
+          navigate("/");
+          return;
+        }
+      }
 
       navigate("/");
+      toast.error("Không thể hoàn tất đăng nhập. Hãy thử lại.");
     } catch (error) {
+      toast.warning(error.errors?.[0]?.message || error.message);
+    } finally {
       setIsLoading(false);
-
-      toast.warning(error.message);
     }
   };
 
@@ -251,9 +265,13 @@ const Login = () => {
               />
 
               <div className="flex justify-end">
-                <p className="uppercase underline cursor-pointer hover:text-gray-500">
+                <button
+                  type="button"
+                  onClick={() => navigate("/forgot-password")}
+                  className="uppercase underline cursor-pointer hover:text-gray-500"
+                >
                   QUÊN MẬT KHẨU ?
-                </p>
+                </button>
               </div>
 
               <div className="w-full">
