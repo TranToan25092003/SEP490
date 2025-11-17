@@ -35,8 +35,6 @@ const LoyaltyVoucherSchema = new Schema(
   { timestamps: true }
 );
 
-LoyaltyVoucherSchema.index({ voucherCode: 1 });
-
 const LoyaltyVoucher = mongoose.model("LoyaltyVoucher", LoyaltyVoucherSchema);
 
 module.exports = LoyaltyVoucher;
