@@ -122,6 +122,10 @@ const Header = () => {
                         Điểm thưởng
                       </DropdownMenuItem>
 
+                      <DropdownMenuItem onSelect={() => navigate("/complaint")}>
+                        Khiếu Nại
+                      </DropdownMenuItem>
+
                       <DropdownMenuSeparator />
                       <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
                         <SignOutLink></SignOutLink>

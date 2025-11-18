@@ -5,7 +5,7 @@ class ComplaintController {
     try {
 
         if(req.userId !== req.body.clerkId){
-            res.status(401).json({
+            return res.status(401).json({
                 success: false,
                 message: "Unauthorized user!",
             });
@@ -34,6 +34,33 @@ class ComplaintController {
         });
     }
 }
+
+    async getMyComplaints(req, res, next) {
+        try {
+            const complaints = await complaintService.getComplaintsByUser(req.userId);
+            res.status(200).json({
+                success: true,
+                data: complaints,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async getComplaintDetail(req, res, next) {
+        try {
+            const complaint = await complaintService.getComplaintDetailForUser(
+                req.params.id,
+                req.userId
+            );
+            res.status(200).json({
+                success: true,
+                data: complaint,
+            });
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new ComplaintController();

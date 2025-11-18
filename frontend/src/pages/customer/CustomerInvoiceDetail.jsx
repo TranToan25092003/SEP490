@@ -28,13 +28,21 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import EmptyState from "@/components/global/EmptyState";
-import { ClipboardList, ArrowLeft, CreditCard, RefreshCw } from "lucide-react";
+import {
+  ClipboardList,
+  ArrowLeft,
+  CreditCard,
+  RefreshCw,
+  Download,
+  Loader2,
+} from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { fetchCustomerInvoiceDetail } from "@/api/invoices";
 import { getPointBalance } from "@/api/loyalty";
 import { customFetch } from "@/utils/customAxios";
 import AuthRequiredModal from "@/components/global/AuthRequiredModal";
 import { toast } from "sonner";
+import { generateInvoicePDF } from "@/utils/invoicePdfGenerator";
 
 function loader({ params }) {
   return fetchCustomerInvoiceDetail(params.id)
@@ -192,6 +200,7 @@ const CustomerInvoiceDetail = () => {
   const [voucherError, setVoucherError] = useState(null);
   const [availableVouchers, setAvailableVouchers] = useState([]);
   const [selectedVoucherCode, setSelectedVoucherCode] = useState("");
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const selectedVoucher = useMemo(() => {
     if (!selectedVoucherCode) return null;
@@ -274,6 +283,41 @@ const CustomerInvoiceDetail = () => {
       setSelectedVoucherCode("");
     }
   }, [invoice?.status, selectedVoucherCode]);
+
+  // Handle PDF download
+  const handleDownloadPDF = async () => {
+    if (!invoice) {
+      toast.error("Không có dữ liệu hóa đơn để tải xuống");
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      // Prepare invoice data with voucher info if available
+      const invoiceDataForPDF = {
+        ...invoice,
+        voucherDiscount: voucherDiscount > 0 ? voucherDiscount : 0,
+        payableAmount: payableAmount,
+        selectedVoucher: selectedVoucher || null,
+      };
+
+      const pdfBlob = await generateInvoicePDF(invoiceDataForPDF);
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Hoa-don-${invoice.invoiceNumber || invoice.id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Tải hóa đơn thành công!");
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast.error("Không thể tạo file PDF. Vui lòng thử lại sau.");
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
 
   // Function để kiểm tra và cập nhật trạng thái thanh toán
   const handleCheckPayment = async () => {
@@ -455,49 +499,85 @@ const CustomerInvoiceDetail = () => {
 
   return (
     <div
-      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat relative"
       style={{
         backgroundImage: `url(${background})`,
         backgroundPosition: "65% 35%",
       }}
     >
-      <Container className="py-12 space-y-8 w-full max-w-7xl">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-2 bg-white rounded-lg p-4 shadow-lg">
-            <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900">
-              Thông tin hóa đơn
-            </h1>
-            <p className="text-gray-700 max-w-2xl">
-              Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
-              lần sửa chữa của bạn.
-            </p>
+      {/* Loading Overlay khi đang tạo PDF */}
+      {isGeneratingPDF && (
+        <div className="fixed inset-0 bg-white z-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-12 w-12 animate-spin text-red-600" />
+            <div className="text-center">
+              <p className="text-lg font-semibold text-gray-900">
+                Đang tạo hóa đơn PDF...
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Vui lòng đợi trong giây lát
+              </p>
+            </div>
           </div>
-          <Button
-            onClick={() => navigate(-1)}
-            className="w-full sm:w-auto bg-white text-gray-900 hover:bg-gray-100 border border-gray-200"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Quay lại
-          </Button>
+        </div>
+      )}
+      <Container className="py-12 w-full max-w-7xl">
+        {/* Header với nút quay lại và tải PDF */}
+        <div className="bg-white rounded-t-lg shadow-lg mb-0">
+          {/* Nút quay lại ở trên cùng */}
+          <div className="p-4 border-b border-gray-200">
+            <Button
+              onClick={() => navigate(-1)}
+              variant="ghost"
+              className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Quay lại
+            </Button>
+          </div>
+          {/* Title và nút PDF ở dòng dưới */}
+          <div className="flex items-center justify-between p-6">
+            <div>
+              <h1 className="text-3xl font-bold uppercase tracking-tight text-gray-900 mb-2">
+                Thông tin hóa đơn
+              </h1>
+              <p className="text-gray-700">
+                Xem chi tiết các hạng mục, chi phí và trạng thái thanh toán cho
+                lần sửa chữa của bạn.
+              </p>
+            </div>
+            {invoice && (
+              <Button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPDF}
+                className="bg-red-600 hover:bg-red-700 text-white border-0"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                {isGeneratingPDF ? "Đang tạo PDF..." : "Tải hóa đơn PDF"}
+              </Button>
+            )}
+          </div>
         </div>
 
         {error && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3 text-destructive text-sm mt-0">
             {error}
           </div>
         )}
 
         {!invoice && !error ? (
-          <EmptyState
-            icon={ClipboardList}
-            title="Không tìm thấy hóa đơn"
-            subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
-          />
+          <div className="bg-white rounded-lg shadow-lg mt-0">
+            <EmptyState
+              icon={ClipboardList}
+              title="Không tìm thấy hóa đơn"
+              subtitle="Hãy kiểm tra lại mã hóa đơn hoặc liên hệ với chúng tôi để được hỗ trợ."
+            />
+          </div>
         ) : null}
 
         {invoice && (
-          <div className="space-y-8">
-            <Card className="shadow-sm border border-border/60">
+          <div className="mt-0">
+            <Card className="shadow-sm border border-border/60 rounded-none border-t-0">
               <CardContent className="p-6 space-y-6">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-3">
@@ -577,8 +657,8 @@ const CustomerInvoiceDetail = () => {
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card className="shadow-sm border border-border/60">
+            <div className="grid gap-0 lg:grid-cols-2">
+              <Card className="shadow-sm border border-border/60 rounded-none border-t-0 border-r-0 lg:border-r-0 rounded-bl-lg">
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h2 className="text-lg font-semibold uppercase tracking-wide">
@@ -638,7 +718,7 @@ const CustomerInvoiceDetail = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm border border-border/60">
+              <Card className="border border-border/60 rounded-none border-t-0 border-l-0 rounded-br-lg shadow-none">
                 <CardContent className="p-6 space-y-4">
                   <div>
                     <h2 className="text-lg font-semibold uppercase tracking-wide">
@@ -705,245 +785,250 @@ const CustomerInvoiceDetail = () => {
                     quầy
                   </div>
                 </CardContent>
-            </Card>
-          </div>
-        </div>
-      )}
-
-      {/* Modal thanh toán */}
-      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">
-              Thanh toán hóa đơn
-            </DialogTitle>
-            <DialogDescription>
-              Mã hóa đơn:{" "}
-              <span className="font-mono font-medium">
-                {invoice?.invoiceNumber || invoice?.id}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="rounded-lg border bg-muted/40 p-4">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-muted-foreground">
-                  Tổng tiền cần thanh toán:
-                </span>
-                <span className="text-lg font-semibold">
-                  {invoice ? formatPrice(invoice.totalAmount) : "—"}
-                </span>
-              </div>
-              {voucherDiscount > 0 && (
-                <div className="flex justify-between text-xs text-emerald-600 mt-2">
-                  <span>Giảm voucher</span>
-                  <span>-{formatPrice(voucherDiscount)}</span>
-                </div>
-              )}
-              <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
-                <span>Số tiền cần thanh toán</span>
-                <span className="text-lg">
-                  {invoice ? formatPrice(payableAmount) : "—"}
-                </span>
-              </div>
+              </Card>
             </div>
-            {invoice?.status === "unpaid" && (
-              <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-medium">Sử dụng voucher</p>
-                    <p className="text-xs text-muted-foreground">
-                      Chọn voucher để giảm số tiền chuyển khoản.
-                    </p>
-                  </div>
-                  {selectedVoucherCode && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedVoucherCode("")}
-                    >
-                      Bỏ chọn
-                    </Button>
-                  )}
+          </div>
+        )}
+
+        {/* Modal thanh toán */}
+        <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-semibold">
+                Thanh toán hóa đơn
+              </DialogTitle>
+              <DialogDescription>
+                Mã hóa đơn:{" "}
+                <span className="font-mono font-medium">
+                  {invoice?.invoiceNumber || invoice?.id}
+                </span>
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border bg-muted/40 p-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground">
+                    Tổng tiền cần thanh toán:
+                  </span>
+                  <span className="text-lg font-semibold">
+                    {invoice ? formatPrice(invoice.totalAmount) : "—"}
+                  </span>
                 </div>
-                <Select
-                  value={selectedVoucherCode || undefined}
-                  onValueChange={setSelectedVoucherCode}
-                  disabled={voucherLoading || availableVouchers.length === 0}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={
-                        voucherLoading
-                          ? "Đang tải voucher..."
-                          : availableVouchers.length === 0
-                          ? "Chưa có voucher khả dụng"
-                          : "Chọn voucher"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableVouchers.map((voucher) => (
-                      <SelectItem key={voucher.code} value={voucher.code}>
-                        {voucher.rewardName} ({formatVoucherValue(voucher)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {voucherError && (
-                  <p className="text-xs text-destructive">{voucherError}</p>
-                )}
-                {voucherLoading && !voucherError && (
-                  <p className="text-xs text-muted-foreground">
-                    Đang tải danh sách voucher...
-                  </p>
-                )}
-                {!voucherLoading &&
-                  availableVouchers.length === 0 &&
-                  !voucherError && (
-                    <p className="text-xs text-muted-foreground">
-                      Bạn chưa có voucher khả dụng.
-                    </p>
-                  )}
-                {selectedVoucher && (
-                  <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
-                    <p className="font-medium">{selectedVoucher.rewardName}</p>
-                    <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
-                    <p>
-                      Mã:{" "}
-                      <span className="font-mono">{selectedVoucher.code}</span>
-                    </p>
-                    {selectedVoucher.expiresAt && (
-                      <p>
-                        Hạn sử dụng: {formatDateTime(selectedVoucher.expiresAt)}
-                      </p>
-                    )}
+                {voucherDiscount > 0 && (
+                  <div className="flex justify-between text-xs text-emerald-600 mt-2">
+                    <span>Giảm voucher</span>
+                    <span>-{formatPrice(voucherDiscount)}</span>
                   </div>
                 )}
-              </div>
-            )}
-            {invoice && (
-              <div className="flex flex-col items-center justify-center space-y-3">
-                <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
-                  {!qrCodeError ? (
-                    <img
-                      src={generateQRCodeUrl(
-                        payableAmount,
-                        invoice.invoiceNumber || invoice.id
-                      )}
-                      alt="QR Code thanh toán"
-                      className="w-full h-auto max-w-full"
-                      onError={(e) => {
-                        console.error("QR Code load error:", e);
-                        console.error("Failed URL:", e.target.src);
-                        setQrCodeError(true);
-                      }}
-                      onLoad={() => {
-                        console.log("QR Code loaded successfully");
-                      }}
-                    />
-                  ) : (
-                    <div className="text-center space-y-2 text-muted-foreground py-8">
-                      <CreditCard className="h-12 w-12 mx-auto opacity-50" />
-                      <p className="text-sm font-medium">
-                        Không thể tải QR Code
-                      </p>
-                      <p className="text-xs">
-                        Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
-                        sau.
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
-                      </p>
-                    </div>
-                  )}
-                </div>
-                {!qrCodeError && (
-                  <p className="text-xs text-muted-foreground text-center px-4">
-                    Quét mã QR để thanh toán qua ứng dụng ngân hàng
-                  </p>
-                )}
-              </div>
-            )}
-            {invoice && invoice.status === "unpaid" && (
-              <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
-                <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                  {isPolling && (
-                    <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
-                  )}
-                  <span className="break-words">
-                    {isPolling
-                      ? "Đang tự động kiểm tra thanh toán..."
-                      : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
+                <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
+                  <span>Số tiền cần thanh toán</span>
+                  <span className="text-lg">
+                    {invoice ? formatPrice(payableAmount) : "—"}
                   </span>
                 </div>
               </div>
-            )}
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setIsPolling(false);
-                  setPaymentModalOpen(false);
-                }}
-                className="w-full sm:flex-1 order-3 sm:order-1"
-              >
-                Hủy
-              </Button>
-              {invoice && invoice.status === "unpaid" && (
-                <>
-                  <Button
-                    onClick={handleCheckPayment}
-                    className="w-full sm:flex-1 order-1 sm:order-2"
-                    disabled={isCheckingPayment}
-                  >
-                    {isCheckingPayment ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        <span className="hidden sm:inline">
-                          Đang kiểm tra...
-                        </span>
-                        <span className="sm:hidden">Đang kiểm tra...</span>
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">
-                          Kiểm tra thanh toán
-                        </span>
-                        <span className="sm:hidden">Kiểm tra</span>
-                      </>
+              {invoice?.status === "unpaid" && (
+                <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium">Sử dụng voucher</p>
+                      <p className="text-xs text-muted-foreground">
+                        Chọn voucher để giảm số tiền chuyển khoản.
+                      </p>
+                    </div>
+                    {selectedVoucherCode && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedVoucherCode("")}
+                      >
+                        Bỏ chọn
+                      </Button>
                     )}
-                  </Button>
-                  {/* DEV MODE: Button để fake thanh toán cho testing */}
-                  {(import.meta.env.DEV ||
-                    import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
+                  </div>
+                  <Select
+                    value={selectedVoucherCode || undefined}
+                    onValueChange={setSelectedVoucherCode}
+                    disabled={voucherLoading || availableVouchers.length === 0}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={
+                          voucherLoading
+                            ? "Đang tải voucher..."
+                            : availableVouchers.length === 0
+                            ? "Chưa có voucher khả dụng"
+                            : "Chọn voucher"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableVouchers.map((voucher) => (
+                        <SelectItem key={voucher.code} value={voucher.code}>
+                          {voucher.rewardName} ({formatVoucherValue(voucher)})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {voucherError && (
+                    <p className="text-xs text-destructive">{voucherError}</p>
+                  )}
+                  {voucherLoading && !voucherError && (
+                    <p className="text-xs text-muted-foreground">
+                      Đang tải danh sách voucher...
+                    </p>
+                  )}
+                  {!voucherLoading &&
+                    availableVouchers.length === 0 &&
+                    !voucherError && (
+                      <p className="text-xs text-muted-foreground">
+                        Bạn chưa có voucher khả dụng.
+                      </p>
+                    )}
+                  {selectedVoucher && (
+                    <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
+                      <p className="font-medium">
+                        {selectedVoucher.rewardName}
+                      </p>
+                      <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
+                      <p>
+                        Mã:{" "}
+                        <span className="font-mono">
+                          {selectedVoucher.code}
+                        </span>
+                      </p>
+                      {selectedVoucher.expiresAt && (
+                        <p>
+                          Hạn sử dụng:{" "}
+                          {formatDateTime(selectedVoucher.expiresAt)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              {invoice && (
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
+                    {!qrCodeError ? (
+                      <img
+                        src={generateQRCodeUrl(
+                          payableAmount,
+                          invoice.invoiceNumber || invoice.id
+                        )}
+                        alt="QR Code thanh toán"
+                        className="w-full h-auto max-w-full"
+                        onError={(e) => {
+                          console.error("QR Code load error:", e);
+                          console.error("Failed URL:", e.target.src);
+                          setQrCodeError(true);
+                        }}
+                        onLoad={() => {
+                          console.log("QR Code loaded successfully");
+                        }}
+                      />
+                    ) : (
+                      <div className="text-center space-y-2 text-muted-foreground py-8">
+                        <CreditCard className="h-12 w-12 mx-auto opacity-50" />
+                        <p className="text-sm font-medium">
+                          Không thể tải QR Code
+                        </p>
+                        <p className="text-xs">
+                          Vui lòng kiểm tra lại thông tin tài khoản hoặc thử lại
+                          sau.
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          Mã hóa đơn: {invoice.invoiceNumber || invoice.id}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  {!qrCodeError && (
+                    <p className="text-xs text-muted-foreground text-center px-4">
+                      Quét mã QR để thanh toán qua ứng dụng ngân hàng
+                    </p>
+                  )}
+                </div>
+              )}
+              {invoice && invoice.status === "unpaid" && (
+                <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
+                  <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
+                    {isPolling && (
+                      <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
+                    )}
+                    <span className="break-words">
+                      {isPolling
+                        ? "Đang tự động kiểm tra thanh toán..."
+                        : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsPolling(false);
+                    setPaymentModalOpen(false);
+                  }}
+                  className="w-full sm:flex-1 order-3 sm:order-1"
+                >
+                  Hủy
+                </Button>
+                {invoice && invoice.status === "unpaid" && (
+                  <>
                     <Button
-                      onClick={handleFakePayment}
-                      className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
+                      onClick={handleCheckPayment}
+                      className="w-full sm:flex-1 order-1 sm:order-2"
                       disabled={isCheckingPayment}
-                      title="DEV MODE: Fake thanh toán để test tích điểm"
                     >
                       {isCheckingPayment ? (
                         <>
                           <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                           <span className="hidden sm:inline">
-                            Đang xử lý...
+                            Đang kiểm tra...
                           </span>
-                          <span className="sm:hidden">Đang xử lý...</span>
+                          <span className="sm:hidden">Đang kiểm tra...</span>
                         </>
                       ) : (
                         <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
                           <span className="hidden sm:inline">
-                            🧪 Fake Thanh Toán
+                            Kiểm tra thanh toán
                           </span>
-                          <span className="sm:hidden">🧪 Fake</span>
+                          <span className="sm:hidden">Kiểm tra</span>
                         </>
                       )}
                     </Button>
-                  )}
-                </>
-              )}
+                    {/* DEV MODE: Button để fake thanh toán cho testing */}
+                    {(import.meta.env.DEV ||
+                      import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
+                      <Button
+                        onClick={handleFakePayment}
+                        className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
+                        disabled={isCheckingPayment}
+                        title="DEV MODE: Fake thanh toán để test tích điểm"
+                      >
+                        {isCheckingPayment ? (
+                          <>
+                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                            <span className="hidden sm:inline">
+                              Đang xử lý...
+                            </span>
+                            <span className="sm:hidden">Đang xử lý...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="hidden sm:inline">
+                              🧪 Fake Thanh Toán
+                            </span>
+                            <span className="sm:hidden">🧪 Fake</span>
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </>
+                )}
                 {invoice && invoice.status === "paid" && (
                   <Button className="w-full sm:flex-1" disabled>
                     Đã thanh toán

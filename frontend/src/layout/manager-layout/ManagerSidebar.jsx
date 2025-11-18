@@ -61,12 +61,6 @@ const items = [
     icon: Gift,
     href: "/manager/loyalty",
   },
-  {
-    key: "log",
-    label: "Log",
-    icon: ScrollText,
-    href: "/manager/activity-logs",
-  },
 ];
 
 export default function ManagerSidebar({

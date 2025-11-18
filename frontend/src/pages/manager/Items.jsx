@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLoaderData, useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,8 @@ import { AdminPagination } from "@/components/global/AdminPagination";
 import { Link } from "react-router-dom";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
+import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
+import { X } from "lucide-react";
 
 export default function ManagerItems() {
   const loaderData = useLoaderData();
@@ -59,8 +61,21 @@ export default function ManagerItems() {
     status: "active",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newImagePreviews, setNewImagePreviews] = useState([]); // [{ file, url, id }]
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const { parts = [], pagination = {} } = loaderData || {};
+
+  // Cleanup image preview URLs when dialog closes
+  useEffect(() => {
+    return () => {
+      newImagePreviews.forEach((preview) => {
+        if (preview?.url) {
+          URL.revokeObjectURL(preview.url);
+        }
+      });
+    };
+  }, [newImagePreviews]);
 
   // Handle search
   const handleSearch = (value) => {
@@ -209,7 +224,54 @@ export default function ManagerItems() {
       quantity: quantity,
       status: initialStatus,
     });
+    setNewImagePreviews([]); // Reset image previews when opening dialog
     setIsEditDialogOpen(true);
+  };
+
+  // Handle image file selection (multiple files)
+  const handleImageSelect = (files) => {
+    if (!files || files.length === 0) return;
+
+    const validPreviews = [];
+    const errors = [];
+
+    Array.from(files).forEach((file) => {
+      const validation = validateFile(file, {
+        maxSize: 5 * 1024 * 1024, // 5MB
+        allowedTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      });
+
+      if (validation.isValid) {
+        validPreviews.push({
+          id: Date.now() + Math.random(), // Unique ID
+          file,
+          url: URL.createObjectURL(file),
+        });
+      } else {
+        errors.push(`${file.name}: ${validation.errors.join(", ")}`);
+      }
+    });
+
+    if (errors.length > 0) {
+      toast.error("Lỗi file", {
+        description: errors.join("; "),
+      });
+    }
+
+    if (validPreviews.length > 0) {
+      setNewImagePreviews((prev) => [...prev, ...validPreviews]);
+    }
+  };
+
+  // Handle remove specific image preview
+  const handleRemoveImagePreview = (previewId) => {
+    setNewImagePreviews((prev) => {
+      const previewToRemove = prev.find((p) => p.id === previewId);
+      if (previewToRemove?.url) {
+        URL.revokeObjectURL(previewToRemove.url);
+      }
+      return prev.filter((p) => p.id !== previewId);
+    });
   };
 
   // Handle edit form submit
@@ -223,12 +285,52 @@ export default function ManagerItems() {
       // If quantity is 0, automatically set status to discontinued
       const finalStatus = quantity === 0 ? "discontinued" : editFormData.status;
 
+      // Upload new images if selected
+      let media = editingPart.media || [];
+      if (newImagePreviews.length > 0) {
+        setIsUploadingImage(true);
+        try {
+          const uploadedMedia = [];
+          for (const preview of newImagePreviews) {
+            try {
+              const uploadResult = await uploadPartImage(preview.file);
+              uploadedMedia.push({
+                publicId: uploadResult.publicId,
+                url: uploadResult.url,
+                kind: uploadResult.kind,
+              });
+            } catch (error) {
+              console.error("Upload error:", error);
+              toast.error("Lỗi upload ảnh", {
+                description: `Không thể upload ${preview.file.name}`,
+              });
+              setIsUploadingImage(false);
+              setIsSubmitting(false);
+              return;
+            }
+          }
+          // Replace all existing media with new images
+          media = uploadedMedia;
+        } catch (error) {
+          console.error("Upload error:", error);
+          toast.error("Lỗi upload ảnh", {
+            description: "Không thể upload ảnh mới",
+          });
+          setIsUploadingImage(false);
+          setIsSubmitting(false);
+          return;
+        } finally {
+          setIsUploadingImage(false);
+        }
+      }
+
       const submitData = {
         ...editFormData,
         sellingPrice: parseFloat(editFormData.sellingPrice) || 0,
         costPrice: parseFloat(editFormData.costPrice) || 0,
         quantity: quantity,
         status: finalStatus,
+        media: media, // Include media array
       };
 
       const response = await customFetch(`/manager/parts/${editingPart._id}`, {
@@ -245,6 +347,7 @@ export default function ManagerItems() {
         });
         setIsEditDialogOpen(false);
         setEditingPart(null);
+        setNewImagePreviews([]);
         // Refresh the page
         window.location.reload();
       } else {
@@ -349,7 +452,7 @@ export default function ManagerItems() {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-semibold">Thêm phụ tùng</h1>
+      <h1 className="text-2xl font-semibold">Quản Lý Phụ Tùng</h1>
       <div className="flex items-center justify-between gap-4">
         <div className="relative w-full max-w-[520px]">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px]">
@@ -538,7 +641,21 @@ export default function ManagerItems() {
       {pagination.totalPages > 1 && <AdminPagination pagination={pagination} />}
 
       {/* Edit Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog
+        open={isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Cleanup when dialog closes
+            newImagePreviews.forEach((preview) => {
+              if (preview?.url) {
+                URL.revokeObjectURL(preview.url);
+              }
+            });
+            setNewImagePreviews([]);
+          }
+          setIsEditDialogOpen(open);
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Chỉnh sửa phụ tùng</DialogTitle>
@@ -676,18 +793,147 @@ export default function ManagerItems() {
                   }
                 />
               </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Hình ảnh</label>
+                <div className="space-y-3">
+                  {/* Current image */}
+                  {editingPart?.media && editingPart.media.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Ảnh hiện tại:
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {editingPart.media.map((mediaItem, idx) => (
+                          <div key={idx} className="relative">
+                            <img
+                              src={mediaItem.url}
+                              alt={`Current ${idx + 1}`}
+                              className="w-24 h-24 object-cover rounded-md border"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* New image previews */}
+                  {newImagePreviews.length > 0 && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-2">
+                        Ảnh mới ({newImagePreviews.length}):
+                      </p>
+                      <div className="flex gap-2 flex-wrap">
+                        {newImagePreviews.map((preview) => (
+                          <div key={preview.id} className="relative">
+                            <img
+                              src={preview.url}
+                              alt="New preview"
+                              className="w-24 h-24 object-cover rounded-md border"
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleRemoveImagePreview(preview.id)
+                              }
+                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                              aria-label="Remove image"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Upload button */}
+                  <div>
+                    <label className="cursor-pointer">
+                      <div
+                        className="h-[120px] rounded-[8px] border border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-gray-400 hover:bg-gray-50 transition-colors"
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.add(
+                            "border-blue-400",
+                            "bg-blue-50"
+                          );
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove(
+                            "border-blue-400",
+                            "bg-blue-50"
+                          );
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          e.currentTarget.classList.remove(
+                            "border-blue-400",
+                            "bg-blue-50"
+                          );
+                          const files = e.dataTransfer?.files;
+                          if (files && files.length > 0) {
+                            handleImageSelect(files);
+                          }
+                        }}
+                      >
+                        {isUploadingImage ? (
+                          <div className="text-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+                            <p className="text-xs">Đang upload...</p>
+                          </div>
+                        ) : (
+                          <div className="text-center">
+                            <p className="text-sm">
+                              {newImagePreviews.length > 0
+                                ? `Đã chọn ${newImagePreviews.length} ảnh - Chọn thêm`
+                                : "Chọn ảnh mới để thay thế"}
+                            </p>
+                            <p className="text-xs mt-1">
+                              Kéo & thả hoặc nhấp để chọn (có thể chọn nhiều)
+                            </p>
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files.length > 0) {
+                              handleImageSelect(e.target.files);
+                            }
+                          }}
+                          disabled={isUploadingImage || isSubmitting}
+                        />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
             </div>
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
-                disabled={isSubmitting}
+                onClick={() => {
+                  newImagePreviews.forEach((preview) => {
+                    if (preview?.url) {
+                      URL.revokeObjectURL(preview.url);
+                    }
+                  });
+                  setIsEditDialogOpen(false);
+                  setNewImagePreviews([]);
+                }}
+                disabled={isSubmitting || isUploadingImage}
               >
                 Hủy
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Đang lưu..." : "Lưu thay đổi"}
+              <Button type="submit" disabled={isSubmitting || isUploadingImage}>
+                {isSubmitting || isUploadingImage
+                  ? "Đang lưu..."
+                  : "Lưu thay đổi"}
               </Button>
             </DialogFooter>
           </form>

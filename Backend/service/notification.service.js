@@ -66,7 +66,7 @@ async function notifyCustomerOnReply(complaint) {
     type: "COMPLAINT_REPLIED",
     title: `Khiếu nại của bạn đã được phản hồi`,
     message: `Nhân viên đã phản hồi khiếu nại #${complaint._id.toString().slice(-6)} của bạn.`,
-    linkTo: `/customer/complaints/${complaint._id}`,
+    linkTo: `/complaint?replyComplaintId=${complaint._id}`,
     actorClerkId: complaint.reply.staffClerkId,
   };
 
