@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Star } from 'lucide-react';
 import productImagePlaceholder from '@/assets/part-lopsau.png';
+import { Badge } from '../ui/badge';
+import { Link } from "react-router-dom";
 
 function ItemDetail({ product }) {
     const [activeImage, setActiveImage] = useState('');
@@ -44,13 +46,26 @@ function ItemDetail({ product }) {
                 <h2 className="text-3xl font-semibold text-black">{product.name}</h2>
                 <div className="flex items-center gap-3">
                     <span className="text-xs font-medium tracking-widest text-red-700">{product.brand}</span>
-                    <div className="h-4 w-px bg-stone-300"></div>
-                    <div className="flex items-center">
-                        {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`h-4 w-4 ${i < product.rating ? 'text-yellow-400 fill-yellow-400' : 'text-zinc-300'}`} />
-                        ))}
-                    </div>
                 </div>
+
+                {product.compatible_model_ids && product.compatible_model_ids.length > 0 && (
+                    <div>
+                        <h3 className="text-base font-semibold tracking-tight text-black mb-3">Dùng cho xe:</h3>
+                        <div className="flex flex-wrap gap-2">
+                            {product.compatible_model_ids.map((model) => (
+                                <Link key={model._id} to={`/items?vehicleModel=${model._id}&brand=${product.brand}`}>
+                                    <Badge
+                                        variant="outline"
+                                        className="bg-yellow-100/60 border-yellow-300 text-yellow-800 cursor-pointer transition-colors hover:bg-red-100 hover:text-red-700 hover:border-red-300"
+                                    >
+                                        {model.name}
+                                    </Badge>
+                                </Link>
+
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div>
                     <h3 className="text-base font-semibold tracking-tight text-black">Mô Tả</h3>

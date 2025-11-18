@@ -280,16 +280,16 @@ function NotificationBell() {
   return (
     <DropdownMenu onOpenChange={handleOpenChange} open={isOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
+        <Button variant="ghost" className=" flex max-w-[100px] gap-4">
           {unreadCount > 0 ? (
             <>
-              <BellRing className="h-7 w-7 md:h-8 md:w-8" />
+              <BellRing className="w-full h-full" />
               <Badge className="absolute -top-1 -right-1 h-5 w-5 justify-center rounded-full p-1 text-xs" variant="destructive">
                 {unreadCount > 9 ? '9+' : unreadCount}
               </Badge>
             </>
           ) : (
-            <Bell className="h-7 w-7 md:h-8 md:w-8" />
+            <Bell className="w-full h-full" />
           )}
         </Button>
       </DropdownMenuTrigger>
