@@ -69,6 +69,15 @@ class ComplaintService {
           );
         });
 
+      notificationService
+        .notifyCustomerComplaintSubmitted(savedComplaint)
+        .catch((err) =>
+          console.error(
+            "Failed to send customer complaint notification:",
+            err.message
+          )
+        );
+
       return savedComplaint;
     } catch (error) {
       console.error("Error creating complaint:", error);

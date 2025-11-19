@@ -1,5 +1,6 @@
 const { Quote, ServiceOrder } = require("../model");
 const DomainError = require("../errors/domainError");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   QUOTE_NOT_FOUND: "QUOTE_NOT_FOUND",
@@ -74,6 +75,10 @@ class QuotesService {
     const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.1;
 
+    const existingQuoteCount = await Quote.countDocuments({
+      so_id: serviceOrderId,
+    });
+
     const quote = new Quote({
       so_id: serviceOrderId,
       subtotal: subtotal,
@@ -86,6 +91,11 @@ class QuotesService {
 
     serviceOrder.status = "waiting_customer_approval";
     await serviceOrder.save();
+
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+    await notificationService.notifyCustomerNewQuote(serviceOrder, quote, {
+      isRevision: existingQuoteCount > 0,
+    });
 
     return this._mapToQuoteDTO(quote);
   }
@@ -123,6 +133,9 @@ class QuotesService {
     serviceOrder.status = "approved";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+    await notificationService.notifyQuoteApproved(serviceOrder, quote);
+
     return this._mapToQuoteDTO(quote);
   }
 
@@ -155,6 +168,11 @@ class QuotesService {
     quote.status = "rejected";
     quote.rejected_reason = reason;
     await quote.save();
+
+    const serviceOrder = await ServiceOrder.findById(quote.so_id).exec();
+    if (serviceOrder) {
+      await notificationService.notifyQuoteRevisionRequested(serviceOrder, quote);
+    }
 
     return this._mapToQuoteDTO(quote);
   }
