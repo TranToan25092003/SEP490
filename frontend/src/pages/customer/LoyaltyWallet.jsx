@@ -23,6 +23,7 @@ import {
   TicketCheck,
   Wallet,
 } from "lucide-react";
+import background from "@/assets/cool-motorcycle-indoors.png";
 import { toast } from "sonner";
 import { getPointBalance, getPointHistory, redeemVoucher } from "@/api/loyalty";
 
@@ -74,8 +75,8 @@ const normalizeReward = (reward) => {
     stockLabel =
       reward.remainingStock > 0
         ? `Còn ${new Intl.NumberFormat("vi-VN").format(
-            reward.remainingStock
-          )} mã`
+          reward.remainingStock
+        )} mã`
         : "Đã hết mã";
   } else if (typeof reward.stock === "number") {
     stockLabel = `Giới hạn ${new Intl.NumberFormat("vi-VN").format(
@@ -346,404 +347,237 @@ const LoyaltyWallet = () => {
   );
 
   return (
-    <div className="bg-slate-50 min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
-        <div className="rounded-3xl bg-gradient-to-br from-red-500 via-rose-500 to-amber-400 text-white p-6 shadow-xl">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm uppercase tracking-widest opacity-80">
-                Ví điểm MotorMate
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold">
-                {loadingBalance ? "Dang tai..." : formatPoints(wallet.balance)}
-              </h1>
-              <p className="text-sm mt-1 opacity-90">
-                {wallet.balance >= wallet.nextRewardThreshold
-                  ? "Bạn đã đủ điểm để đổi voucher."
-                  : `Cần thêm ${formatPoints(
+    <div
+      className="w-full min-h-screen flex items-center justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundPosition: "65% 35%",
+      }}
+    >
+      {/* Main Card Wrapper */}
+      <Card className="w-full max-w-6xl shadow-lg rounded-2xl overflow-hidden bg-gray-50/95 backdrop-blur-sm">
+
+        {/* 1. Header Section (Gradient Card) */}
+        <div className="p-6">
+          <div className="rounded-3xl bg-gradient-to-br from-red-500 via-rose-500 to-amber-400 text-white p-6 shadow-xl">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-widest opacity-80">
+                  Ví điểm MotorMate
+                </p>
+                <h1 className="mt-2 text-4xl font-bold">
+                  {loadingBalance ? "Đang tải..." : formatPoints(wallet.balance)}
+                </h1>
+                <p className="text-sm mt-2 opacity-90 font-medium">
+                  {wallet.balance >= wallet.nextRewardThreshold
+                    ? "Bạn đã đủ điểm để đổi voucher!"
+                    : `Cần thêm ${formatPoints(
                       Math.max(
                         0,
                         (wallet.nextRewardThreshold || 0) - wallet.balance
                       )
-                    )} để nhận quà tiếp theo.`}
-              </p>
-              {wallet.updatedAt && (
-                <p className="text-xs mt-1 opacity-80">
-                  Cap nhat {formatDateTime(wallet.updatedAt)}
+                    )} điểm để nhận quà tiếp theo.`}
                 </p>
-              )}
+                {wallet.updatedAt && (
+                  <p className="text-xs mt-1 opacity-70">
+                    Cập nhật: {formatDateTime(wallet.updatedAt)}
+                  </p>
+                )}
+              </div>
+              {/* Stats in Header */}
+              <div className="flex gap-4">
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 text-center min-w-[100px]">
+                  <p className="text-2xl font-bold">{wallet.vouchersOwned}</p>
+                  <p className="text-xs uppercase opacity-80">Voucher</p>
+                </div>
+                <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 text-center min-w-[100px]">
+                  <p className="text-2xl font-bold">{wallet.streakDays} <span className="text-sm font-normal">ngày</span></p>
+                  <p className="text-xs uppercase opacity-80">Chuỗi</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          {/* <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Chuỗi check-in
-              </CardTitle>
-              <Repeat className="size-4 text-rose-500" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{wallet.streakDays} ngày</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Giữ chuỗi để nhận quà bất ngờ mỗi 7 ngày.
-              </p>
-            </CardContent>
-          </Card> */}
-          <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Voucher đang có
-              </CardTitle>
-              <TicketCheck className="size-4 text-amber-500" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{wallet.vouchersOwned}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Xem tại mục “Voucher của tôi” khi thanh toán.
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                Bảo mật & an toàn
-              </CardTitle>
-              <ShieldCheck className="size-4 text-green-600" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">2 lớp</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Mọi điều chỉnh đều lưu audit log. Báo gian lận ngay nếu nghi
-                ngờ.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <CardContent className="p-6 pt-0 space-y-8">
 
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Voucher của tôi</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Theo dõi mã, trạng thái và hạn sử dụng của các voucher đã đổi.
-              </p>
-            </div>
-            <Badge variant="secondary" className="gap-1">
-              <TicketCheck className="size-3.5" />
-              {ownedVouchers.length} mã
-            </Badge>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {loadingBalance ? (
-              <p className="text-sm text-muted-foreground">
-                Đang tải danh sách voucher...
-              </p>
-            ) : !ownedVouchers.length ? (
-              <p className="text-sm text-muted-foreground">
-                Bạn chưa có voucher nào. Hãy đổi điểm để nhận ưu đãi.
-              </p>
-            ) : (
-              ownedVouchers.map((voucher) => (
-                <div
-                  key={voucher.id || voucher.code}
-                  className="rounded-2xl border p-4 transition hover:border-gray-400 bg-white"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {voucher.rewardName}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Mã: <span className="font-mono">{voucher.code}</span>
-                      </p>
-                    </div>
-                    <Badge
-                      variant={
-                        VOUCHER_STATUS_VARIANTS[voucher.status] || "outline"
-                      }
-                    >
-                      {VOUCHER_STATUS_LABELS[voucher.status] || voucher.status}
-                    </Badge>
-                  </div>
-                  <div className="mt-3 grid gap-3 text-sm sm:grid-cols-3">
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground">
-                        Giá trị
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {formatVoucherValue(voucher)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground">
-                        Điểm đã đổi
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {formatPoints(voucher.pointsCost || 0)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs uppercase text-muted-foreground">
-                        Hạn sử dụng
-                      </p>
-                      <p className="font-medium text-gray-900">
-                        {voucher.expiresAt
-                          ? formatDateTime(voucher.expiresAt)
-                          : "Không thời hạn"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    <p>
-                      Đổi ngày:{" "}
-                      {voucher.issuedAt
-                        ? formatDateTime(voucher.issuedAt)
-                        : "Không rõ"}
-                    </p>
-                    {voucher.status === "used" && voucher.redeemedAt && (
-                      <p>Đã dùng: {formatDateTime(voucher.redeemedAt)}</p>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+          {/* 2. Voucher của tôi & Ưu đãi (Grid Layout) */}
+          <div className="grid gap-6 lg:grid-cols-2">
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <div>
-                <CardTitle>Cách kiếm điểm</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Thực hiện hành động bên dưới để nhận điểm nhanh.
-                </p>
+            {/* Cột Trái: Voucher của tôi */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <TicketCheck className="size-5 text-red-500" /> Voucher của tôi
+                </h2>
+                <Badge variant="secondary">{ownedVouchers.length} mã</Badge>
               </div>
-              <Badge variant="secondary" className="gap-1">
-                <Sparkles className="size-3.5" />
-                Auto tracking
-              </Badge>
-            </CardHeader>
-            <CardContent className="space-y-4">
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                {loadingBalance ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">Đang tải...</p>
+                ) : !ownedVouchers.length ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-xl border-gray-300">
+                    <p className="text-gray-500">Bạn chưa có voucher nào.</p>
+                  </div>
+                ) : (
+                  ownedVouchers.map((voucher) => (
+                    <div key={voucher.id || voucher.code} className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <p className="font-bold text-gray-900">{voucher.rewardName}</p>
+                          <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{voucher.code}</p>
+                        </div>
+                        <Badge variant={VOUCHER_STATUS_VARIANTS[voucher.status] || "outline"}>
+                          {VOUCHER_STATUS_LABELS[voucher.status] || voucher.status}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-end text-sm mt-3">
+                        <div>
+                          <p className="text-gray-500 text-xs">Giá trị</p>
+                          <p className="font-semibold">{formatVoucherValue(voucher)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-gray-500 text-xs">Hết hạn</p>
+                          <p className="font-medium">{voucher.expiresAt ? new Date(voucher.expiresAt).toLocaleDateString('vi-VN') : "Vô thời hạn"}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Cột Phải: Ưu đãi đổi điểm */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                  <Gift className="size-5 text-amber-500" /> Đổi quà
+                </h2>
+              </div>
+              <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                {loadingRewards ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">Đang tải ưu đãi...</p>
+                ) : !displayedRewards.length ? (
+                  <div className="text-center py-8 border-2 border-dashed rounded-xl border-gray-300">
+                    <p className="text-gray-500">Chưa có ưu đãi nào.</p>
+                  </div>
+                ) : (
+                  displayedRewards.map((reward) => {
+                    const currentBalance = Number(wallet.balance) || 0;
+                    const canRedeem = currentBalance >= reward.cost;
+
+                    return (
+                      <div key={reward.id} className="rounded-xl border bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-bold text-gray-900">{reward.title}</p>
+                            {/* <Badge variant="outline" className="text-[10px] h-5">Stock: {reward.stock}</Badge> */}
+                          </div>
+                          <p className="text-sm text-gray-600 line-clamp-1">{reward.desc}</p>
+                          <p className="text-sm font-semibold text-red-600 mt-1">{formatPoints(reward.cost)} điểm</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant={canRedeem ? "default" : "outline"}
+                          className={canRedeem ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+                          disabled={loadingRewards || !canRedeem || redeemingRewardId === reward.id}
+                          onClick={() => handleRedeemReward(reward)}
+                        >
+                          {redeemingRewardId === reward.id ? <Loader2 className="animate-spin h-4 w-4" /> : "Đổi"}
+                        </Button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Cách kiếm điểm */}
+          <div className="border-t pt-6">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Sparkles className="size-5 text-yellow-500" /> Cách kiếm điểm
+            </h2>
+            <div className="grid grid-cols-2 gap-4">
               {earningActions.map((action) => (
                 <div
                   key={action.id}
-                  className="rounded-2xl border p-4 flex gap-4 hover:border-gray-400 transition-colors"
+                  className="flex flex-col items-center text-center p-4 bg-white rounded-xl border shadow-sm hover:shadow-md transition-all"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-rose-50 text-rose-500">
+                  {/* Icon */}
+                  <div className="h-10 w-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
                     <action.icon className="size-5" />
                   </div>
-                  <div className="flex-1">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="font-semibold text-gray-900">
-                        {action.title}
-                      </p>
-                      <Badge variant="outline">{action.points}</Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {action.desc}
-                    </p>
-                  </div>
+
+                  {/* Title */}
+                  <p className="font-semibold text-sm">{action.title}</p>
+
+                  {/* Description */}
+                  <p className="text-xs text-gray-500 mt-1 px-1 leading-snug">
+                    {action.desc}
+                  </p>
+
+                  {/* Badge */}
+                  <Badge
+                    variant="secondary"
+                    className="mt-2 bg-green-100 text-green-700 hover:bg-green-100"
+                  >
+                    {action.points}
+                  </Badge>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex-row items-center justify-between">
-              <div>
-                <CardTitle>Ưu đãi có thể đổi</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Chọn quà phù hợp và nhấn “Đổi” khi đủ điểm.
-                </p>
-              </div>
-              <Button variant="outline" className="gap-2">
-                <Gift className="size-4" />
-                Lịch sử đổi quà
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {loadingRewards ? (
-                <p className="text-sm text-muted-foreground">
-                  Đang tải danh sách ưu đãi...
-                </p>
-              ) : !displayedRewards.length ? (
-                <p className="text-sm text-muted-foreground">
-                  Hiện chưa có voucher khả dụng. Vui lòng quay lại sau.
-                </p>
-              ) : (
-                displayedRewards.map((reward) => {
-                  const currentBalance = Number(wallet.balance) || 0;
-                  const canRedeem = currentBalance >= reward.cost;
-                  const neededPoints = Math.max(
-                    0,
-                    reward.cost - currentBalance
-                  );
-                  const rewardValueLabel =
-                    reward.discountType === "percentage"
-                      ? `${reward.value || 0}%`
-                      : `${formatCurrency(
-                          (reward.value || 0) * (reward.cost || 1),
-                          reward.currency || "VND"
-                        )}`;
-
-                  return (
-                    <div
-                      key={reward.id}
-                      className="rounded-2xl border p-4 flex flex-col gap-2 hover:border-gray-400 transition-colors"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-gray-900">
-                            {reward.title}
-                          </p>
-                          <p className="text-sm text-muted-foreground">
-                            {reward.desc}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Giá trị: {rewardValueLabel}
-                          </p>
-                        </div>
-                        <Badge variant="success">
-                          {reward.stockLabel ||
-                            reward.stock ||
-                            "Không giới hạn"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">
-                          {formatPoints(reward.cost)}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant={canRedeem ? "secondary" : "outline"}
-                          className="gap-2"
-                          disabled={
-                            loadingRewards ||
-                            !canRedeem ||
-                            redeemingRewardId === reward.id
-                          }
-                          onClick={() => handleRedeemReward(reward)}
-                        >
-                          {redeemingRewardId === reward.id
-                            ? "Đang đổi..."
-                            : "Đổi ngay"}
-                          <ArrowUpRight className="size-4" />
-                        </Button>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        {canRedeem
-                          ? "Bạn đã đủ điểm để đổi ưu đãi."
-                          : `Cần thêm ${formatPoints(
-                              neededPoints
-                            )} để đổi ưu đãi.`}
-                      </p>
-                    </div>
-                  );
-                })
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle>Lịch sử ví điểm</CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Theo dõi từng giao dịch cộng/trừ điểm kèm kênh thực hiện.
-              </p>
             </div>
-            <Button variant="outline" className="gap-2">
-              <History className="size-4" />
-              Xuất file
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <Table className="min-w-[720px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Mã giao dịch</TableHead>
-                  <TableHead>Hành động</TableHead>
-                  <TableHead>Chi tiết</TableHead>
-                  <TableHead>Điểm +/-</TableHead>
-                  <TableHead>Số dư</TableHead>
-                  <TableHead>Kênh</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loadingHistory ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="py-6 text-center text-sm text-muted-foreground"
-                    >
-                      Đang tải lịch sử ví điểm...
-                    </TableCell>
-                  </TableRow>
-                ) : transactions.length ? (
-                  transactions.map((tx) => {
-                    const channel =
-                      SOURCE_CHANNEL_LABELS[tx?.sourceRef?.kind] ||
-                      tx?.metadata?.channel ||
-                      tx?.type;
-                    const reason = tx?.reason || "Giao dịch";
-                    const createdAt = formatDateTime(tx?.createdAt);
-                    const balanceAfter =
-                      typeof tx?.balanceAfter === "number"
-                        ? tx.balanceAfter
-                        : wallet.balance;
+          </div>
 
-                    return (
-                      <TableRow key={tx._id}>
-                        <TableCell className="font-semibold">
-                          {tx._id}
-                        </TableCell>
-                        <TableCell className="capitalize">{tx.type}</TableCell>
-                        <TableCell>
-                          <p className="text-sm">{reason}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {createdAt}
-                          </p>
-                        </TableCell>
-                        <TableCell>
-                          <span
-                            className={`font-semibold ${
-                              Number(tx.points) >= 0
-                                ? "text-green-600"
-                                : "text-rose-600"
-                            }`}
-                          >
-                            {formatDeltaPoints(tx.points)}
-                          </span>
-                        </TableCell>
-                        <TableCell>{formatPoints(balanceAfter)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {channel}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={6}
-                      className="py-6 text-center text-sm text-muted-foreground"
-                    >
-                      Chưa có giao dịch điểm nào. Thực hiện mua hàng hoặc
-                      check-in để bắt đầu tích điểm!
-                    </TableCell>
+          {/* 4. Lịch sử giao dịch */}
+          <div className="border-t pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <History className="size-5 text-gray-600" /> Lịch sử giao dịch
+              </h2>
+              <Button variant="ghost" size="sm" className="text-gray-500">Xuất file</Button>
+            </div>
+            <div className="rounded-xl border bg-white overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead>Thời gian</TableHead>
+                    <TableHead>Hoạt động</TableHead>
+                    <TableHead className="text-right">Điểm</TableHead>
+                    <TableHead className="text-right">Số dư</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                </TableHeader>
+                <TableBody>
+                  {loadingHistory ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">Đang tải lịch sử...</TableCell>
+                    </TableRow>
+                  ) : transactions.length > 0 ? (
+                    transactions.map((tx) => (
+                      <TableRow key={tx._id}>
+                        <TableCell className="text-gray-500">{formatDateTime(tx.createdAt)}</TableCell>
+                        <TableCell>
+                          <p className="font-medium text-gray-900">{tx.reason}</p>
+                          <Badge variant="outline" className="text-[10px] mt-1 scale-90 origin-left opacity-70">{SOURCE_CHANNEL_LABELS[tx?.sourceRef?.kind] || 'Hệ thống'}</Badge>
+                        </TableCell>
+                        <TableCell className={`text-right font-bold ${Number(tx.points) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatDeltaPoints(tx.points)}
+                        </TableCell>
+                        <TableCell className="text-right text-gray-600">{formatPoints(tx.balanceAfter ?? wallet.balance)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">Chưa có giao dịch nào.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
     </div>
   );
 };
