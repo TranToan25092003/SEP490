@@ -1,5 +1,6 @@
 const { Quote, ServiceOrder } = require("../model");
 const DomainError = require("../errors/domainError");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   QUOTE_NOT_FOUND: "QUOTE_NOT_FOUND",
@@ -32,7 +33,7 @@ class QuotesService {
     }
 
     // Tạo items từ service order
-    const items = serviceOrder.items.map(item => ({
+    const items = serviceOrder.items.map((item) => ({
       type: item.item_type,
       name: item.item_type === "service" ? item.name : item.part_id.name,
       quantity: item.quantity,
@@ -40,19 +41,28 @@ class QuotesService {
     }));
 
     // Tìm warranty liên quan đến booking này (nếu đây là warranty booking)
-    const Warranty = require("../model/warranty.model");
-    const warranty = await Warranty.findOne({
-      booking_id: serviceOrder.booking_id._id
-    })
-      .populate("warranty_parts.part_id")
-      .exec();
+    let warranty = null;
+    if (serviceOrder.booking_id?._id) {
+      const Warranty = require("../model/warranty.model");
+      warranty = await Warranty.findOne({
+        booking_id: serviceOrder.booking_id._id,
+      })
+        .populate("warranty_parts.part_id")
+        .exec();
+    }
 
     // Nếu có warranty, thêm warranty parts vào items với giá = 0
-    if (warranty && warranty.warranty_parts && warranty.warranty_parts.length > 0) {
-      warranty.warranty_parts.forEach(wp => {
+    if (
+      warranty &&
+      warranty.warranty_parts &&
+      warranty.warranty_parts.length > 0
+    ) {
+      warranty.warranty_parts.forEach((wp) => {
         // Kiểm tra xem part này đã có trong items chưa
         const existingPartIndex = items.findIndex(
-          item => item.type === "part" && item.name === (wp.part_name || wp.part_id?.name)
+          (item) =>
+            item.type === "part" &&
+            item.name === (wp.part_name || wp.part_id?.name)
         );
 
         if (existingPartIndex >= 0) {
@@ -71,8 +81,15 @@ class QuotesService {
     }
 
     // Tính toán tổng tiền (bao gồm cả warranty parts với giá = 0)
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const subtotal = items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
     const tax = subtotal * 0.1;
+
+    const existingQuoteCount = await Quote.countDocuments({
+      so_id: serviceOrderId,
+    });
 
     const quote = new Quote({
       so_id: serviceOrderId,
@@ -86,6 +103,11 @@ class QuotesService {
 
     serviceOrder.status = "waiting_customer_approval";
     await serviceOrder.save();
+
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+    await notificationService.notifyCustomerNewQuote(serviceOrder, quote, {
+      isRevision: existingQuoteCount > 0,
+    });
 
     return this._mapToQuoteDTO(quote);
   }
@@ -123,6 +145,9 @@ class QuotesService {
     serviceOrder.status = "approved";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+    await notificationService.notifyQuoteApproved(serviceOrder, quote);
+
     return this._mapToQuoteDTO(quote);
   }
 
@@ -156,6 +181,14 @@ class QuotesService {
     quote.rejected_reason = reason;
     await quote.save();
 
+    const serviceOrder = await ServiceOrder.findById(quote.so_id).exec();
+    if (serviceOrder) {
+      await notificationService.notifyQuoteRevisionRequested(
+        serviceOrder,
+        quote
+      );
+    }
+
     return this._mapToQuoteDTO(quote);
   }
 
@@ -164,11 +197,7 @@ class QuotesService {
     const query = serviceOrderId ? { so_id: serviceOrderId } : {};
 
     const [quotes, totalItems] = await Promise.all([
-      Quote.find(query)
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .exec(),
+      Quote.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
       Quote.countDocuments(query).exec(),
     ]);
 
@@ -197,7 +226,7 @@ class QuotesService {
     return {
       id: quote._id.toString(),
       serviceOrderId: quote.so_id.toString(),
-      items: quote.items.map(item => ({
+      items: quote.items.map((item) => ({
         type: item.type,
         name: item.name,
         quantity: item.quantity,

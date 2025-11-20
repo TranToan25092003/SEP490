@@ -1,6 +1,7 @@
 const { Invoice, ServiceOrder } = require("../model");
 const DomainError = require("../errors/domainError");
 const { UsersService } = require("./users.service");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   INVOICE_NOT_FOUND: "INVOICE_NOT_FOUND",
@@ -372,6 +373,10 @@ class InvoiceService {
     invoice.confirmed_at = new Date();
 
     await invoice.save();
+
+    await notificationService.notifyPaymentSuccess(invoice, {
+      actorClerkId: confirmedBy,
+    });
 
     // Đảm bảo invoice và serviceOrder đều có số format
     await this._ensureInvoiceNumber(invoice);

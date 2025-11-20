@@ -21,6 +21,8 @@ import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsT
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { generateQuotePDF } from "@/utils/quotePdfGenerator";
+import { toast } from "sonner";
 
 // Rejection Reason Schema
 const rejectionReasonSchema = z.object({
@@ -110,11 +112,17 @@ const RejectionReasonModal = NiceModal.create(() => {
   );
 });
 
-const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) => {
+const ViewQuoteDetailModal = NiceModal.create(({
+  quoteId,
+  allowAcceptReject = false,
+  allowStaffConfirm = false,
+  serviceOrder = null,
+}) => {
   const modal = useModal();
   const [quote, setQuote] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const fetchQuoteDetail = useCallback(async () => {
     try {
@@ -135,6 +143,44 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) =
       fetchQuoteDetail();
     }
   }, [quoteId, fetchQuoteDetail]);
+
+  const handleDownloadPdf = async () => {
+    if (!quote) {
+      toast.error("Không có dữ liệu báo giá để xuất");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    try {
+      const pdfBlob = await generateQuotePDF({
+        quoteNumber: quote.id,
+        serviceOrderNumber:
+          serviceOrder?.orderNumber || serviceOrder?.id || quote.serviceOrderId,
+        customerName: serviceOrder?.customerName || "Khách hàng",
+        licensePlate: serviceOrder?.licensePlate || "—",
+        createdAt: quote.createdAt,
+        status: quote.status,
+        items: quote.items,
+        subtotal: quote.subtotal,
+        tax: quote.tax,
+        grandTotal: quote.grandTotal,
+      });
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Bao-gia-${quote.id?.slice(-8) || "Motormate"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success("Đã tải báo giá!");
+    } catch (pdfError) {
+      console.error("Failed to generate quote PDF:", pdfError);
+      toast.error("Không thể tạo file PDF, vui lòng thử lại");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleClose = () => {
     modal.remove();
@@ -308,39 +354,60 @@ const ViewQuoteDetailModal = NiceModal.create(({ quoteId, allowAcceptReject }) =
           )}
         </div>
 
-        <DialogFooter>
-          {allowAcceptReject && quote && quote.status === "pending" && (
-            <div className="space-x-2">
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  const reason = await NiceModal.show(RejectionReasonModal);
-                  if (reason) {
-                    modal.resolve({ action: "reject", reason });
-                    handleClose();
-                  }
-                }}
-              >
-                Từ Chối
-              </Button>
+        <DialogFooter className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDownloadPdf}
+            disabled={isGeneratingPdf || !quote}
+          >
+            {isGeneratingPdf ? "Đang tạo PDF..." : "Tải báo giá"}
+          </Button>
+          <div className="flex flex-wrap gap-2 justify-end">
+            {allowStaffConfirm && quote && quote.status === "pending" && (
               <Button
                 onClick={() => {
-                  modal.resolve({ action: "accept" });
+                  modal.resolve({ action: "staff-confirm" });
                   handleClose();
                 }}
               >
-                Chấp Nhận
+                Xác nhận báo giá hộ khách
               </Button>
-            </div>
-          )}
-          {!allowAcceptReject && (
-            <Button onClick={() => {
-              modal.resolve({ action: "close" });
-              handleClose();
-            }}>
+            )}
+            {allowAcceptReject && quote && quote.status === "pending" && (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    const reason = await NiceModal.show(RejectionReasonModal);
+                    if (reason) {
+                      modal.resolve({ action: "reject", reason });
+                      handleClose();
+                    }
+                  }}
+                >
+                  Từ Chối
+                </Button>
+                <Button
+                  onClick={() => {
+                    modal.resolve({ action: "accept" });
+                    handleClose();
+                  }}
+                >
+                  Chấp Nhận
+                </Button>
+              </>
+            )}
+            <Button
+              variant="secondary"
+              onClick={() => {
+                modal.resolve({ action: "close" });
+                handleClose();
+              }}
+            >
               Đóng
             </Button>
-          )}
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

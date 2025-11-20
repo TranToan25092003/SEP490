@@ -4,6 +4,7 @@ const { Service } = require("../model");
 const bookingsService = require("./bookings.service");
 const DomainError = require("../errors/domainError");
 const ServiceOrderService = require("./service_order.service");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   WARRANTY_NOT_FOUND: "WARRANTY_NOT_FOUND",
@@ -199,6 +200,11 @@ class WarrantyService {
     });
 
     await warranty.save();
+
+    await notificationService.notifyWarrantyBookingSuccess({
+      booking,
+      serviceOrderId,
+    });
 
     return {
       warranty,

@@ -1,9 +1,35 @@
 const express = require("express");
-const { param, query } = require("express-validator");
+const { param, query, body } = require("express-validator");
 const serviceOrderController = require("../controller/service-order.controller");
 const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
+
+router.post(
+  "/walk-in",
+  authenticate,
+  [
+    body("customerName")
+      .notEmpty()
+      .withMessage("Tên khách hàng là bắt buộc"),
+    body("customerPhone")
+      .notEmpty()
+      .withMessage("Số điện thoại là bắt buộc")
+      .matches(/^[0-9]{9,11}$/)
+      .withMessage("Số điện thoại không hợp lệ"),
+    body("licensePlate")
+      .notEmpty()
+      .withMessage("Biển số xe là bắt buộc"),
+    body("serviceIds")
+      .isArray({ min: 1 })
+      .withMessage("Vui lòng chọn ít nhất một dịch vụ"),
+    body("serviceIds.*")
+      .isMongoId()
+      .withMessage("Dịch vụ không hợp lệ"),
+  ],
+  throwErrors,
+  serviceOrderController.createWalkInServiceOrder
+);
 
 /**
  * @swagger
