@@ -239,6 +239,7 @@ function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
 
   const initialFetchDone = useRef(false);
+  const markAllPendingRef = useRef(false);
 
   useEffect(() => {
     if (userId) {
@@ -357,11 +358,34 @@ function NotificationBell() {
     }
   };
 
+  const markAllNotificationsAsRead = async () => {
+    if (markAllPendingRef.current) return;
+    markAllPendingRef.current = true;
+    try {
+      await customFetch.patch("/notifications/mark-all-as-read");
+      setAllNotifications((prev = { list: [], page: 1, totalPages: 1 }) => ({
+        ...prev,
+        list: (prev.list || []).map((n) => ({ ...n, isRead: true })),
+      }));
+      setUnreadNotifications({ list: [], page: 1, totalPages: 1 });
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    } finally {
+      markAllPendingRef.current = false;
+    }
+  };
+
   const handleOpenChange = (open) => {
     setIsOpen(open);
-    if (open && allNotifications.list.length === 0) {
-      console.log("[NotificationBell] Dropdown opened, trigger fetch");
-      fetchNotifications("all", 1);
+    if (open) {
+      if (allNotifications.list.length === 0) {
+        console.log("[NotificationBell] Dropdown opened, trigger fetch");
+        fetchNotifications("all", 1);
+      }
+      if (unreadCount > 0) {
+        markAllNotificationsAsRead();
+      }
     }
   };
 
@@ -428,11 +452,14 @@ function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-10 w-10 md:h-11 md:w-11 text-gray-900 hover:text-gray-900"
+          className="relative h-12 w-12 md:h-[52px] md:w-[52px] text-gray-900 hover:text-gray-900"
         >
           {unreadCount > 0 ? (
             <>
-              <BellRing className="h-7 w-7 md:h-8 md:w-8" />
+              <BellRing
+                strokeWidth={1.4}
+                className="text-rose-700 size-[20px] md:size-[24px]"
+              />
               <Badge
                 className="absolute -top-1 -right-1 h-5 w-5 justify-center rounded-full p-1 text-xs shadow shadow-rose-400"
                 variant="destructive"
@@ -441,7 +468,10 @@ function NotificationBell() {
               </Badge>
             </>
           ) : (
-            <Bell className="h-7 w-7 md:h-8 md:w-8" />
+            <Bell
+              strokeWidth={1.4}
+              className="text-gray-900 size-[20px] md:size-[24px]"
+            />
           )}
         </Button>
       </DropdownMenuTrigger>

@@ -325,7 +325,10 @@ class BookingsService {
     booking.status = "cancelled";
     await booking.save();
 
-    await notificationService.notifyCustomerBookingCancelled(booking);
+    await Promise.all([
+      notificationService.notifyCustomerBookingCancelled(booking),
+      notificationService.notifyStaffOfBookingCancelled(booking),
+    ]);
 
     return booking;
   }

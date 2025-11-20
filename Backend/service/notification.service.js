@@ -6,7 +6,12 @@ const { UsersService } = require("./users.service");
 const HOTLINE = process.env.BUSINESS_HOTLINE || "1900 6868";
 const APP_BASE_URL = process.env.APP_BASE_URL || process.env.FRONTEND_URL || "";
 const STAFF_BOOKING_LIST_PATH = "/staff/booking/";
-const CLERK_ORGANIZATION_ID = process.env.CLERK_ORGANIZATION_ID || null;
+const DEFAULT_CLERK_ORG_ID = "org_32tzUd7dUcFW7Te5gxEO4VcgkX1";
+const CLERK_ORGANIZATION_ID =
+  process.env.CLERK_ORGANIZATION_ID ||
+  process.env.CLERK_STAFF_ORGANIZATION_ID ||
+  DEFAULT_CLERK_ORG_ID ||
+  null;
 const ORG_MEMBERSHIP_PAGE_SIZE =
   Number(process.env.CLERK_ORG_MEMBERSHIP_PAGE_SIZE) || 100;
 const STAFF_ORG_ROLES = ["staff", "manager", "admin", "technician"];
@@ -168,16 +173,20 @@ async function getStaffClerkIds() {
   }
 
   const staffUsers = await clerkClient.users.getUserList({ limit: 500 });
-  let ids = staffUsers.data.filter(userHasStaffRole).map((user) => user.id);
+  const metadataIds = staffUsers.data
+    .filter(userHasStaffRole)
+    .map((user) => user.id);
 
-  if (ids.length === 0) {
-    ids = await fetchStaffIdsFromOrganization();
-  } else if (CLERK_ORGANIZATION_ID) {
-    const fallbackIds = await fetchStaffIdsFromOrganization();
-    if (fallbackIds.length) {
-      ids = Array.from(new Set([...ids, ...fallbackIds]));
-    }
+  let organizationIds = [];
+  if (CLERK_ORGANIZATION_ID) {
+    organizationIds = await fetchStaffIdsFromOrganization();
+  } else {
+    console.warn(
+      "[NotificationService] CLERK_ORGANIZATION_ID missing, relying only on metadata roles."
+    );
   }
+
+  const ids = Array.from(new Set([...metadataIds, ...organizationIds]));
 
   if (!ids.length) {
     console.warn(
@@ -352,6 +361,7 @@ async function notifyPasswordChanged({
 
 async function notifyStaffOfNewBooking(booking) {
   const bookingDoc = await ensureBookingContext(booking);
+  console.log("[NotificationService] notifyStaffOfNewBooking", bookingDoc);
   if (!bookingDoc) return;
 
   const plate = bookingDoc.vehicle_id?.license_plate || "không xác định";
@@ -406,6 +416,34 @@ async function notifyCustomerBookingCancelled(booking) {
     title: "Hủy đặt lịch thành công",
     message: `Quý khách ${customerName} đã hủy đặt lịch thành công. Rất mong được phục vụ quý khách trong lần sau.`,
     linkTo: "/booking",
+  });
+}
+
+async function notifyStaffOfBookingCancelled(booking) {
+  const bookingDoc = await ensureBookingContext(booking);
+  console.log(
+    "[NotificationService] notifyStaffOfBookingCancelled",
+    bookingDoc
+  );
+  if (!bookingDoc) return;
+
+  const plate = bookingDoc.vehicle_id?.license_plate || "không xác định";
+  const customerName = await resolveCustomerName(bookingDoc.customer_clerk_id);
+  const bookingCode = getShortId(bookingDoc._id);
+  console.log(
+    "[NotificationService] Staff booking cancellation notification payload:",
+    JSON.stringify({
+      customerName,
+      bookingCode,
+      plate,
+    })
+  );
+  await notifyStaffGroup({
+    type: "BOOKING_CANCELLED",
+    title: "Đơn đặt lịch đã bị hủy",
+    message: `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.`,
+    linkTo: STAFF_BOOKING_LIST_PATH,
+    actorClerkId: bookingDoc.customer_clerk_id,
   });
 }
 
@@ -779,6 +817,7 @@ module.exports = {
   notifyStaffOfNewBooking,
   notifyCustomerBookingCreated,
   notifyCustomerBookingCancelled,
+  notifyStaffOfBookingCancelled,
   notifyServiceOrderStatusChange,
   notifyCustomerNewQuote,
   notifyQuoteApproved,

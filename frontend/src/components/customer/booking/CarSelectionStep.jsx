@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Car } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 /** @typedef {import("./index").CarSelectionStepProps} CarSelectionStepProps */
 
@@ -14,6 +15,7 @@ import { Link } from "react-router-dom";
  */
 const CarSelectionStep = ({ vehicles, className, ...props }) => {
   const { setValue, watch } = useFormContext();
+  const navigate = useNavigate();
   const selectedVehicle = watch("vehicle");
 
   const handleVehicleSelect = (vehicle) => {
@@ -103,7 +105,13 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
                   className="gap-2"
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (vehicle.activeBooking?.id) {
+                      navigate(`/booking/${vehicle.activeBooking.id}`);
+                    } else {
+                      toast.info("Đơn hiện tại đang được cập nhật, vui lòng thử lại sau.");
+                    }
                   }}
+                  disabled={!vehicle.activeBooking?.id}
                 >
                   Xem tình trạng
                 </Button>
