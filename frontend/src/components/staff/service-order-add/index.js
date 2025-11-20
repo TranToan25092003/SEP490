@@ -5,11 +5,12 @@
  * @property {string} licensePlate
  * @property {string[]} serviceIds
  * @property {string} note
+ * @property {string} address
  */
 
 /**
  * @typedef {object} ServiceInfo
- * @property {string} sid
+ * @property {string} id
  * @property {string} name
  * @property {number} basePrice
  * @property {string} description

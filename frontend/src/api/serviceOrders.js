@@ -42,3 +42,15 @@ export const updateServiceOrderItems = async (serviceOrderId, items) => {
 
   return response.data;
 };
+
+export const createWalkInServiceOrder = async (payload) => {
+  const response = await customFetch("/service-orders/walk-in", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: payload,
+  });
+
+  return response.data.data;
+};

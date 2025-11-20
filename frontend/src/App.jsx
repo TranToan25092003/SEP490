@@ -267,7 +267,11 @@ const router = createBrowserRouter([
         element: <ServiceOrderList />,
         loader: ServiceOrderList.loader,
       },
-      { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "service-order/add",
+        element: <ServiceOrderAdd />,
+        loader: ServiceOrderAdd.loader,
+      },
       {
         path: "booking/:id",
         element: <BookingDetail />,
