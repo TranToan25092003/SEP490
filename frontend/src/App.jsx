@@ -52,6 +52,7 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
+  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -246,7 +247,11 @@ const router = createBrowserRouter([
     element: <StaffLayout />,
     // loader: authenTicationForStaffLoader,
     children: [
-      { index: true, element: <StaffDashboardPage /> },
+      {
+        index: true,
+        element: <StaffDashboardPage />,
+        loader: staffDashboardLoader
+      },
       {
         path: "service-order/:id",
         element: <ServiceOrderDetail />,
