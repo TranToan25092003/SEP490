@@ -1,8 +1,8 @@
 import React from "react";
 import {
-  sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
 } from "@/assets/admin/sidebar_new";
+import imgLogo from "@/assets/logo-with-brand.png";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -68,7 +68,7 @@ export default function ManagerSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => {},
+  onExpandToggle = () => { },
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -90,10 +90,19 @@ export default function ManagerSidebar({
       style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
+        <img alt="imgLine" src={imgLine} className="w-px h-full" />
       </div>
       <div className="flex flex-col h-full item-start pl-7">
-        <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4" />
+        <div className="flex flex-col items-center pr-7">
+          <Link to={"/manager"}>
+            <img
+              alt="imgLogo"
+              src={imgLogo}
+              className="w-24 h-24 mt-4"
+            />
+
+          </Link>
+        </div>
         <TooltipProvider>
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
@@ -127,11 +136,10 @@ export default function ManagerSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${
-                            isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100" // Style nút khi active
-                              : "text-gray-500 hover:bg-gray-100" // Style nút khi không active
-                          }`}
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
+                            ? "bg-red-50 text-red-600 hover:bg-red-100" // Style nút khi active
+                            : "text-gray-500 hover:bg-gray-100" // Style nút khi không active
+                            }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (
@@ -191,6 +199,6 @@ export default function ManagerSidebar({
           </nav>
         </TooltipProvider>
       </div>
-    </aside>
+    </aside >
   );
 }

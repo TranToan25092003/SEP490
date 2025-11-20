@@ -851,3 +851,29 @@ export const adminBannersLoader = async ({ request }) => {
     };
   }
 };
+
+export const staffDashboardLoader = async () => {
+  try {
+    const response = await customFetch("/staff/dashboard");
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load dashboard data");
+    }
+
+    return apiResponse.data; 
+  } catch (error) {
+    console.error("Dashboard loader error:", error);
+    toast.error("Lỗi tải dữ liệu dashboard", {
+      description: error.message || "Không thể tải dữ liệu thống kê",
+    });
+    
+    return {
+        stats: { orders: 0, requests: 0, revenue: 0, customers: 0 },
+        lineChartData: [],
+        barChartData: [],
+        pieChartData: [],
+        potentialCustomers: []
+    };
+  }
+};
