@@ -13,7 +13,8 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   tempDiv.style.position = "fixed";
   tempDiv.style.top = "0";
   tempDiv.style.left = "-10000px";
-  tempDiv.style.width = "794px"; // 210mm = 794px at 96dpi
+  tempDiv.style.width = "210mm";
+  tempDiv.style.minHeight = "297mm";
   tempDiv.style.height = "auto";
   tempDiv.style.backgroundColor = "#ffffff";
   // Ensure element is renderable by html2canvas
@@ -22,18 +23,38 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   tempDiv.style.pointerEvents = "none";
   tempDiv.style.zIndex = "-1";
   tempDiv.style.overflow = "auto";
+  const documentDateLabel = formatDate(receiptData.documentDate || new Date());
+  const invoiceDateLabel = formatDate(
+    receiptData.invoiceDate || receiptData.documentDate || new Date()
+  );
+
   tempDiv.innerHTML = `
     <!DOCTYPE html>
     <html>
       <head>
         <style>
-          body {
-            font-family: Arial, sans-serif;
+          @page {
+            size: A4;
             margin: 0;
-            padding: 20px;
+          }
+
+          body {
+            font-family: "Times New Roman", "DejaVu Sans", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
             width: 210mm;
+            min-height: 297mm;
             background-color: #ffffff;
             color: #000000;
+            -webkit-font-smoothing: antialiased;
+          }
+
+          .page {
+            width: 190mm;
+            min-height: 277mm;
+            margin: 10mm auto;
+            padding: 12mm 10mm 18mm;
+            box-sizing: border-box;
           }
 
           .header {
@@ -44,11 +65,12 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
 
           .company-info {
             flex: 1;
+            text-transform: uppercase;
           }
 
           .company-name {
             font-weight: bold;
-            font-size: 11pt;
+            font-size: 12pt;
             margin-bottom: 5px;
           }
 
@@ -150,175 +172,200 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
           .signatures {
             display: flex;
             justify-content: space-between;
-            margin-top: 40px;
+            gap: 12px;
+            margin-top: 50px;
             text-align: center;
           }
 
           .signature-block {
             flex: 1;
             max-width: 25%;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 6px;
           }
 
           .signature-title {
             font-weight: bold;
-            margin-bottom: 30px;
+            margin-bottom: 8px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+          }
+
+          .signature-space {
+            flex: 1;
+            width: 100%;
           }
 
           .signature-line {
             color: #666;
             font-size: 8pt;
+            margin-top: 6px;
+            margin-bottom: 2px;
           }
 
           .signature-date {
             color: #666;
             font-size: 8pt;
-            margin-top: 10px;
+            margin-top: 2px;
           }
         </style>
       </head>
       <body>
-        <!-- Header -->
-        <div class="header">
-          <div class="company-info">
-            <div class="company-name">CONG TY CO PHAN DAU TU VA CONG NGHE VIET HUNG</div>
-            <div class="company-address">So 2, ngach 84/2 duong Tran Quang Dieu, Phuong O Cho Dua, Quan Dong da, Thanh pho Ha Noi, Viet Nam</div>
+        <div class="page">
+          <!-- Header -->
+          <div class="header">
+            <div class="company-info">
+              <div class="company-name">CỬA HÀNG MOTORMATE</div>
+              <div class="company-address">
+                Khu Công Nghệ Cao Hòa Lạc<br>
+                Km 29, Đại lộ Thăng Long<br>
+                Thành phố Hà Nội, Việt Nam
+              </div>
+            </div>
+            <div class="form-reference">Mẫu số: 01 - VT</div>
           </div>
-          <div class="form-reference">Mau so: 01 - VT</div>
-        </div>
+          <!-- Footnote -->
+          <div class="footnote">
+            (Ban hành theo Thông tư 133/2016/TT-BTC<br>
+            Ngày 26/08/2016 của Bộ Tài chính)
+          </div>
 
-        <!-- Footnote -->
-        <div class="footnote">
-          (Ban hanh theo Thong tu so 133/2016/TT-BTC<br>
-          Ngay 26/08/2016 cua Bo Tai chinh)
-        </div>
+          <!-- Title -->
+          <div class="title">PHIẾU NHẬP KHO</div>
+          <div class="title-date">${documentDateLabel}</div>
 
-        <!-- Title -->
-        <div class="title">PHIEU NHAP KHO</div>
-        <div class="title-date">${formatDate(
-          receiptData.documentDate || new Date()
-        )}</div>
+          <!-- Document Details -->
+          <div class="document-details">
+            Hóa đơn số: ${receiptData.receiptNumber || "NK00012"}
+          </div>
 
-        <!-- Document Details -->
-        <div class="document-details">
-          No: 156&nbsp;&nbsp;&nbsp;&nbsp;Co: 331<br>
-          So: ${receiptData.receiptNumber || "NK00012"}
-        </div>
+          <!-- Supplier Info -->
+          <div class="supplier-info">
+            <div>- Họ và tên người giao hàng: ${
+              receiptData.supplier?.name || "CÔNG TY TNHH THIẾT BỊ TÂN AN PHÁT"
+            }</div>
+            <div>
+              - Theo hóa đơn số ${
+                receiptData.invoiceNumber || "1379"
+              } ngày ${invoiceDateLabel} của ${
+    receiptData.supplier?.name || "CÔNG TY TNHH THIẾT BỊ TÂN AN PHÁT"
+  }
+            </div>
+            <div>- Nhập tại kho: ${
+              receiptData.warehouseLocation || "Kho NVL"
+            }</div>
+            <div>- Địa điểm: Cửa hàng Motormate</div>
+          </div>
 
-        <!-- Supplier Info -->
-        <div class="supplier-info">
-          <div>- Ho va ten nguoi giao: ${
-            receiptData.supplier?.name || "CONG TY TNHH THIET BI TAN AN PHAT"
-          }</div>
-          <div>- Theo hoa don so ${receiptData.invoiceNumber || "1379"} ngay ${
-    receiptData.invoiceDate || "14 thang 07 nam 2022"
-  } cua ${
-    receiptData.supplier?.name || "CONG TY TNHH THIET BI TAN AN PHAT"
-  }</div>
-          <div>- Nhap tai kho: ${
-            receiptData.warehouseLocation || "Kho NVL"
-          }</div>
-          <div>- Dia diem: _____________</div>
-        </div>
-
-        <!-- Table -->
-        <table class="table">
-          <thead>
-            <tr>
-              <th style="width: 35px;">STT</th>
-              <th style="width: 140px;">Ten san pham</th>
-              <th style="width: 70px;">Ma so</th>
-              <th style="width: 50px;">Don vi tinh</th>
-              <th colspan="2" style="width: 110px;">So luong</th>
-              <th style="width: 70px;">Don gia</th>
-              <th style="width: 75px;">Thanh tien</th>
-            </tr>
-            <tr class="sub-header">
-              <th></th>
-              <th></th>
-              <th></th>
-              <th></th>
-              <th style="width: 55px;">Theo chung tu</th>
-              <th style="width: 55px;">Thuc nhap</th>
-              <th></th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            ${
-              receiptData.items
-                ?.map(
-                  (item, index) => `
+          <!-- Table -->
+          <table class="table">
+            <thead>
               <tr>
-                <td>${index + 1}</td>
-                <td>${item.partName || ""}</td>
-                <td>${item.partCode || ""}</td>
-                <td>${item.unit || ""}</td>
-                <td>${item.quantityOnDocument || 0}</td>
-                <td>${item.quantityActuallyReceived || 0}</td>
-                <td>${(item.unitPrice || 0).toLocaleString("vi-VN")}</td>
-                <td>${(item.totalAmount || 0).toLocaleString("vi-VN")}</td>
+                <th style="width: 35px;">STT</th>
+                <th style="width: 140px;">Tên sản phẩm</th>
+                <th style="width: 70px;">Mã số</th>
+                <th style="width: 50px;">Đơn vị tính</th>
+                <th colspan="2" style="width: 110px;">Số lượng</th>
+                <th style="width: 70px;">Đơn giá</th>
+                <th style="width: 75px;">Thành tiền</th>
               </tr>
-            `
-                )
-                .join("") || ""
-            }
-          </tbody>
-          <tfoot>
-            <tr class="total-row">
-              <td>Cong</td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td></td>
-              <td>${
+              <tr class="sub-header">
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th style="width: 55px;">Theo chứng từ</th>
+                <th style="width: 55px;">Thực nhập</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${
                 receiptData.items
-                  ?.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
-                  .toLocaleString("vi-VN") || "0"
-              }</td>
-            </tr>
-          </tfoot>
-        </table>
+                  ?.map(
+                    (item, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${item.partName || ""}</td>
+                  <td>${item.partCode || ""}</td>
+                  <td>${item.unit || ""}</td>
+                  <td>${item.quantityOnDocument || 0}</td>
+                  <td>${item.quantityActuallyReceived || 0}</td>
+                  <td>${(item.unitPrice || 0).toLocaleString("vi-VN")}</td>
+                  <td>${(item.totalAmount || 0).toLocaleString("vi-VN")}</td>
+                </tr>
+              `
+                  )
+                  .join("") || ""
+              }
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>Cộng</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td>${
+                  receiptData.items
+                    ?.reduce((sum, item) => sum + (item.totalAmount || 0), 0)
+                    .toLocaleString("vi-VN") || "0"
+                }</td>
+              </tr>
+            </tfoot>
+          </table>
 
-        <!-- Summary -->
-        <div class="summary">
-          <div>Tong so tien (Viet bang chu): ${
-            receiptData.totalAmountInWords || ""
-          }</div>
-          <div style="margin-top: 10px;">So chung tu goc kem theo: ________________</div>
-        </div>
+          <!-- Summary -->
+          <div class="summary">
+            <div>Tổng số tiền (viết bằng chữ): ${
+              receiptData.totalAmountInWords || ""
+            }</div>
+            <div style="margin-top: 10px;">
+              Số chứng từ gốc kèm theo: ________________
+            </div>
+          </div>
 
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-title">Nguoi lap phieu</div>
-            <div class="signature-line">(Ky, ho ten)</div>
-            <div class="signature-date">${formatDate(
-              receiptData.documentDate || new Date()
-            )}</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-title">Nguoi giao hang</div>
-            <div class="signature-line">(Ky, ho ten)</div>
-            <div class="signature-date">${formatDate(
-              receiptData.documentDate || new Date()
-            )}</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-title">Thu kho</div>
-            <div class="signature-line">(Ky, ho ten)</div>
-            <div class="signature-date">${formatDate(
-              receiptData.documentDate || new Date()
-            )}</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-title">Ke toan truong</div>
-            <div class="signature-title" style="font-size: 7pt; margin-top: -10px;">(Hoac bo phan co nhu cau nhap)</div>
-            <div class="signature-line">(Ky, ho ten)</div>
-            <div class="signature-date">${formatDate(
-              receiptData.documentDate || new Date()
-            )}</div>
+          <!-- Signatures -->
+          <div class="signatures">
+            <div class="signature-block">
+              <div class="signature-title">Người lập phiếu</div>
+              <div class="signature-space"></div>
+              <div class="signature-line">(Ký, ghi rõ họ tên)</div>
+              <div class="signature-date">${documentDateLabel}</div>
+            </div>
+            <div class="signature-block">
+              <div class="signature-title">Người giao hàng</div>
+              <div class="signature-space"></div>
+              <div class="signature-line">(Ký, ghi rõ họ tên)</div>
+              <div class="signature-date">${documentDateLabel}</div>
+            </div>
+            <div class="signature-block">
+              <div class="signature-title">Thủ kho</div>
+              <div class="signature-space"></div>
+              <div class="signature-line">(Ký, ghi rõ họ tên)</div>
+              <div class="signature-date">${documentDateLabel}</div>
+            </div>
+            <div class="signature-block">
+              <div class="signature-title">Kế toán trưởng</div>
+              <div
+                class="signature-title"
+                style="font-size: 7pt; margin-top: -10px;"
+              >
+                (Hoặc bộ phận có nhu cầu nhập)
+              </div>
+              <div class="signature-space"></div>
+              <div class="signature-line">(Ký, ghi rõ họ tên)</div>
+              <div class="signature-date">${documentDateLabel}</div>
+            </div>
           </div>
         </div>
       </body>
@@ -349,7 +396,6 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
     const imgWidth = canvas.width;
     const imgHeight = canvas.height;
     const imgRatio = imgWidth / imgHeight;
-    const pdfRatio = pdfWidth / pdfHeight;
 
     let imgFinalWidth = pdfWidth;
     let imgFinalHeight = imgFinalWidth / imgRatio;
@@ -375,5 +421,5 @@ function formatDate(date) {
   const day = String(d.getDate()).padStart(2, "0");
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
-  return `Ngay ${day} thang ${month} nam ${year}`;
+  return `Ngày ${day} tháng ${month} năm ${year}`;
 }

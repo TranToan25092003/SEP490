@@ -86,8 +86,7 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
   // ===== HEADER SECTION =====
 
   // Company name (top-left)
-  const companyName =
-    receiptData.companyName || "CONG TY CO PHAN DAU TU VA CONG NGHE VIET HUNG";
+  const companyName = receiptData.companyName || "CUA HANG MOTORMATE";
   drawText(companyName, 50, height - 40, { font: boldFont, size: 11 });
 
   // Company address
@@ -321,15 +320,17 @@ export const generateGoodsReceiptPDF = async (receiptData) => {
     "Ke toan truong\n(Hoac bo phan co nhu cau nhap)",
   ];
 
+  const signatureGap = 70;
+
   signatures.forEach((sig, i) => {
     const x = 50 + i * sigWidth;
     drawText(sig, x, sigY, { size: 9, maxWidth: sigWidth - 10 });
-    drawText("(Ky, ho ten)", x, sigY - 25, {
+    drawText("(Ky, ho ten)", x, sigY - signatureGap, {
       size: 8,
       color: lightGray,
       maxWidth: sigWidth - 10,
     });
-    drawText(dateText, x, sigY - 45, {
+    drawText(dateText, x, sigY - signatureGap - 20, {
       size: 8,
       color: lightGray,
       maxWidth: sigWidth - 10,
