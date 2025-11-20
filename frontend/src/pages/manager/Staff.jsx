@@ -138,16 +138,17 @@ const StaffPage = () => {
     (async () => {
       try {
         setLoading(true);
-        const { data } = await organization.getMemberships({ limit: 100 });
+        const { data } = await organization.getMemberships({ pageSize: 100 });
 
         if (cancelled) return;
 
         console.log(data);
+
         const staffOnly = data.filter(
-          (membership) =>
-            membership.roleName === "staff" ||
-            membership.roleName === "technician"
+          (m) => m.roleName === "staff" || m.roleName === "technician"
         );
+
+        console.log(staffOnly);
 
         setMemberships(staffOnly);
       } catch (err) {
