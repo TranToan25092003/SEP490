@@ -1,45 +1,10 @@
 import React from 'react';
+import { useLoaderData } from 'react-router-dom'; // Import useLoaderData
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Sector } from 'recharts';
 import { ShoppingCart, FileText, DollarSign, Users, TrendingUp } from 'lucide-react';
-
-// --- Mock Data (Replace with data from loader) ---
-const mockStats = {
-    orders: 432,
-    requests: 525,
-    revenue: 100000000, // Example: 100M+
-    customers: 320,
-};
-
-const mockLineChartData = [
-    { name: 'Jan', YêuCầu: 400 }, { name: 'Feb', YêuCầu: 300 }, { name: 'Mar', YêuCầu: 450 },
-    { name: 'Apr', YêuCầu: 280 }, { name: 'May', YêuCầu: 500 }, { name: 'Jun', YêuCầu: 600 },
-    { name: 'Jul', YêuCầu: 550 }, { name: 'Aug', YêuCầu: 700 }, { name: 'Sep', YêuCầu: 650 },
-    { name: 'Oct', YêuCầu: 750 }, { name: 'Nov', YêuCầu: 800 }, { name: 'Dec', YêuCầu: 900 },
-];
-
-const mockBarChartData = [
-    { month: 'Jan', DoanhThu: 30000000 }, { month: 'Feb', DoanhThu: 20000000 }, { month: 'Mar', DoanhThu: 40000000 },
-    { month: 'Apr', DoanhThu: 35000000 }, { month: 'May', DoanhThu: 45000000 }, { month: 'Jun', DoanhThu: 70000000 },
-    { month: 'Jul', DoanhThu: 50000000 }, { month: 'Aug', DoanhThu: 30000000 }, { month: 'Sep', DoanhThu: 40000000 },
-    { month: 'Oct', DoanhThu: 38000000 }, { month: 'Nov', DoanhThu: 42000000 }, { month: 'Dec', DoanhThu: 60000000 },
-];
-
-const mockPieChartData = [
-    { name: 'Rửa xe', value: 55 },
-    { name: 'Sửa xe', value: 45 },
-    { name: 'Thay dầu phanh', value: 45 }, 
-];
-const COLORS = ['#DC2626', '#1F2937', '#6B7280']; 
-
-const mockPotentialCustomers = [
-    { id: '#123456', name: 'Nguyễn Văn A', spent: 3000000, phone: '0123456789' },
-    { id: '#123457', name: 'Trần Thị B', spent: 2500000, phone: '0987654321' },
-    { id: '#123458', name: 'Lê Văn C', spent: 4000000, phone: '0123123123' },
-    { id: '#123459', name: 'Phạm Thị D', spent: 1500000, phone: '0345678901' },
-];
 
 // Function to format currency
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
@@ -66,7 +31,7 @@ const renderActiveShape = (props) => {
 
     return (
         <g>
-            <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} fontSize={16} fontWeight="bold">
+            <text x={cx} y={cy} dy={8} textAnchor="middle" fill={fill} fontSize={14} fontWeight="bold">
                 {payload.name}
             </text>
             <Sector
@@ -94,8 +59,18 @@ const renderActiveShape = (props) => {
     );
 };
 
+const COLORS = ['#DC2626', '#1F2937', '#6B7280', '#F59E0B', '#10B981']; // Expanded colors
 
 export default function StaffDashboardPage() {
+    // 1. Lấy dữ liệu thật từ loader
+    const {
+        stats,
+        lineChartData,
+        barChartData,
+        pieChartData,
+        potentialCustomers
+    } = useLoaderData();
+
     const [activeIndex, setActiveIndex] = React.useState(0);
     const onPieEnter = (_, index) => {
         setActiveIndex(index);
@@ -109,30 +84,30 @@ export default function StaffDashboardPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Đơn Hàng</CardTitle>
+                        <CardTitle className="text-sm font-medium">Đơn Hàng Hoàn Thành</CardTitle>
                         <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{mockStats.orders}</div>
+                        <div className="text-2xl font-bold">{stats.orders}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Yêu Cầu</CardTitle>
+                        <CardTitle className="text-sm font-medium">Yêu Cầu Đang Xử Lý</CardTitle>
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{mockStats.requests}</div>
+                        <div className="text-2xl font-bold">{stats.requests}</div>
                     </CardContent>
                 </Card>
-                <Card className="lg:col-span-1"> {/* Spans 1 column on large screens */}
+                <Card className="lg:col-span-1">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Yêu cầu (Trend)</CardTitle>
+                        <CardTitle className="text-sm font-medium">Xu hướng Yêu cầu (Năm nay)</CardTitle>
                         <TrendingUp className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="h-[60px]">
                         <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={mockLineChartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                            <LineChart data={lineChartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                                 <Line type="monotone" dataKey="YêuCầu" stroke="#DC2626" strokeWidth={2} dot={false} />
                                 <Tooltip contentStyle={{ fontSize: '12px', padding: '4px 8px' }} />
                             </LineChart>
@@ -144,20 +119,20 @@ export default function StaffDashboardPage() {
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Doanh Thu</CardTitle>
+                        <CardTitle className="text-sm font-medium">Tổng Doanh Thu</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCompactCurrency(mockStats.revenue)}</div>
+                        <div className="text-2xl font-bold">{formatCompactCurrency(stats.revenue)}</div>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Khách Hàng</CardTitle>
+                        <CardTitle className="text-sm font-medium">Tổng Khách Hàng</CardTitle>
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{mockStats.customers}</div>
+                        <div className="text-2xl font-bold">{stats.customers}</div>
                     </CardContent>
                 </Card>
             </div>
@@ -167,32 +142,31 @@ export default function StaffDashboardPage() {
                 <CardHeader>
                     <div className="flex flex-wrap items-center justify-between gap-4">
                         <div>
-                            <CardTitle>Doanh Thu Bán Hàng</CardTitle>
-                            <p className="text-sm text-muted-foreground">345,678 VND <span className="text-green-600">(+10%)</span></p>
+                            <CardTitle>Doanh Thu Bán Hàng (Theo Tháng)</CardTitle>
+                            {/* <p className="text-sm text-muted-foreground">345,678 VND <span className="text-green-600">(+10%)</span></p> */}
                         </div>
-                        <Select defaultValue="this-month">
+                        <Select defaultValue="this-year">
                             <SelectTrigger className="w-[180px]">
                                 <SelectValue placeholder="Xem theo" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="this-month">Tháng này</SelectItem>
-                                <SelectItem value="last-month">Tháng trước</SelectItem>
                                 <SelectItem value="this-year">Năm nay</SelectItem>
+                                {/* TODO: Implement filtering logic later */}
                             </SelectContent>
                         </Select>
                     </div>
                 </CardHeader>
                 <CardContent className="h-[300px]">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={mockBarChartData}>
+                        <BarChart data={barChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
                             <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value / 1000000}M`} />
                             <Tooltip formatter={(value) => formatCurrency(value)} contentStyle={{ fontSize: '12px', padding: '4px 8px' }} />
                             <Bar dataKey="DoanhThu" fill="#FEE2E2" radius={[4, 4, 0, 0]} barSize={30}>
-                                {/* Highlight June */}
-                                {mockBarChartData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.month === 'Jun' ? '#DC2626' : '#FEE2E2'} />
+                                {barChartData.map((entry, index) => (
+                                    // Highlight current month (simplified logic)
+                                    <Cell key={`cell-${index}`} fill={index === barChartData.length - 1 ? '#DC2626' : '#FEE2E2'} />
                                 ))}
                             </Bar>
                         </BarChart>
@@ -205,56 +179,67 @@ export default function StaffDashboardPage() {
                 {/* Pie Chart */}
                 <Card className="lg:col-span-1">
                     <CardHeader>
-                        <CardTitle>Lệnh Sửa Chữa</CardTitle>
+                        <CardTitle>Dịch Vụ Phổ Biến</CardTitle>
                     </CardHeader>
                     <CardContent className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    activeIndex={activeIndex}
-                                    activeShape={renderActiveShape}
-                                    data={mockPieChartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                    onMouseEnter={onPieEnter}
-                                >
-                                    {mockPieChartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" />
-                            </PieChart>
-                        </ResponsiveContainer>
+                        {pieChartData.length > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        activeIndex={activeIndex}
+                                        activeShape={renderActiveShape}
+                                        data={pieChartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                        onMouseEnter={onPieEnter}
+                                    >
+                                        {pieChartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    {/* <Legend layout="vertical" align="right" verticalAlign="middle" iconType="circle" /> */}
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-gray-500">Chưa có dữ liệu dịch vụ</div>
+                        )}
                     </CardContent>
                 </Card>
+
                 {/* Potential Customers Table */}
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Khách Hàng Tiềm Năng</CardTitle>
+                        <CardTitle>Top 5 Khách Hàng Tiềm Năng</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Số Khách Hàng</TableHead>
+                                    <TableHead>Mã KH</TableHead>
                                     <TableHead>Họ Tên</TableHead>
-                                    <TableHead>Đã Chi</TableHead>
+                                    <TableHead>Tổng Chi Tiêu</TableHead>
                                     <TableHead>Số Điện Thoại</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {mockPotentialCustomers.map((customer) => (
-                                    <TableRow key={customer.id}>
-                                        <TableCell>{customer.id}</TableCell>
-                                        <TableCell>{customer.name}</TableCell>
-                                        <TableCell>{formatCurrency(customer.spent)}</TableCell>
-                                        <TableCell>{customer.phone}</TableCell>
+                                {potentialCustomers.length > 0 ? (
+                                    potentialCustomers.map((customer, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{customer.id}</TableCell>
+                                            <TableCell>{customer.name}</TableCell>
+                                            <TableCell className="font-medium text-green-600">{formatCurrency(customer.spent)}</TableCell>
+                                            <TableCell>{customer.phone}</TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="text-center py-4 text-gray-500">Chưa có dữ liệu khách hàng.</TableCell>
                                     </TableRow>
-                                ))}
+                                )}
                             </TableBody>
                         </Table>
                     </CardContent>
