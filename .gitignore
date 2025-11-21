@@ -5,6 +5,9 @@ node_modules/
 # Build outputs
 dist/
 build/
+examples/
+template/
+repomix-output.xml
 
 # Environment variables
 .env
