@@ -38,7 +38,7 @@ function mapServicingTask(task) {
   return {
     id: task._id.toString(),
     type: task.__t,
-    serviceOrderId: task.service_order_id.toString(),
+    serviceOrderId: task.service_order_id._id.toString(),
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
@@ -59,7 +59,7 @@ function mapInspectionTask(task) {
   return {
     id: task._id.toString(),
     type: task.__t,
-    serviceOrderId: task.service_order_id.toString(),
+    serviceOrderId: task.service_order_id._id.toString(),
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
@@ -469,6 +469,25 @@ class ServiceOrderTaskService {
     await servicingTask.save();
 
     return mapServicingTask(servicingTask);
+  }
+
+  async rescheduleTask(taskId, bayId, start, end) {
+    let task = await BaySchedulingService.rescheduleTask(
+      taskId,
+      bayId,
+      start,
+      end
+    );
+
+    task = await ServiceOrderTask.findById(taskId)
+      .populate("service_order_id")
+      .exec();
+
+    if (task.__t === "inspection") {
+      return mapInspectionTask(task);
+    } else if (task.__t === "servicing") {
+      return mapServicingTask(task);
+    }
   }
 }
 
