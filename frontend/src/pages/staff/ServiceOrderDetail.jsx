@@ -15,9 +15,6 @@ import {
   TabsList,
   TabsTrigger
 } from "@/components/ui/tabs";
-import NiceModal from "@ebay/nice-modal-react";
-import ChooseStaffModal from "@/components/staff/service-order-detail/ChooseStaffModal";
-import { beginInspectionTask, scheduleInspection } from "@/api/serviceTasks";
 
 function loader({ params }) {
   return {

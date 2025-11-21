@@ -24,8 +24,8 @@ function convertTimeSlotToDate(timeSlot) {
 
 class BookingsService {
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
-    const vehicleIdsInUse = await VehiclesService.getVehiclesInUse([vehicleId]);
-    if (vehicleIdsInUse.includes(vehicleId)) {
+    const activeBookingsMap = await VehiclesService.getActiveBookingsMap([vehicleId]);
+    if (vehicleId in activeBookingsMap) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
         ERROR_CODES.BOOKINGS_VEHICLE_ALREADY_BOOKED,
@@ -58,7 +58,7 @@ class BookingsService {
       timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
     );
 
-    const isAvailable = await this._isTimeslotAvailable(
+    const isAvailable = await this.isTimeslotAvailable(
       timeSlotStart,
       timeSlotEnd
     );
@@ -89,13 +89,13 @@ class BookingsService {
     return booking;
   }
 
-  async _isTimeslotAvailable(slotStartTime, slotEndTime) {
+  async isTimeslotAvailable(slotStartTime, slotEndTime) {
     const now = new Date();
     if (slotStartTime < now) {
       return false;
     }
 
-    const overlapCount = await this._getOverlappingBookingsCount(
+    const overlapCount = await this.getOverlappingBookingsCount(
       slotStartTime,
       slotEndTime
     );
@@ -103,7 +103,7 @@ class BookingsService {
     return overlapCount < config.MAX_BOOKINGS_PER_SLOT;
   }
 
-  async _getOverlappingBookingsCount(slotStartTime, slotEndTime) {
+  async getOverlappingBookingsCount(slotStartTime, slotEndTime) {
     const count = await Booking.countDocuments({
       slot_start_time: { $lt: slotEndTime },
       slot_end_time: { $gt: slotStartTime },
@@ -134,7 +134,7 @@ class BookingsService {
           slotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
         );
 
-        const isAvailable = await this._isTimeslotAvailable(slotStart, slotEnd);
+        const isAvailable = await this.isTimeslotAvailable(slotStart, slotEnd);
         timeSlots.push({ ...slot, isAvailable });
       }
     }
@@ -197,7 +197,7 @@ class BookingsService {
     }));
   }
 
-  async getAllBookingsSortedAscending({
+  async getAllBookingsSortedDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -244,7 +244,7 @@ class BookingsService {
       Booking.find(filters)
         .populate("service_ids")
         .populate("vehicle_id")
-        .sort({ slot_start_time: 1 })
+        .sort({ slot_start_time: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -293,7 +293,7 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService._createServiceOrderFromBooking(
+    await ServiceOrderService.createServiceOrderFromBooking(
       staffId,
       bookingId
     );

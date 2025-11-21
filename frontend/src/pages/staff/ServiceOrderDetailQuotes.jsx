@@ -26,10 +26,12 @@ async function loader({ params, request }) {
   const page = parseInt(url.searchParams.get("page"), 10) || 1;
   const limit = 10;
 
-  return {
-    quotesPromise: getQuotesForServiceOrder(params.id, page, limit),
-    serviceOrder: await getServiceOrderById(params.id),
-  };
+  const promises = Promise.all([
+    getQuotesForServiceOrder(params.id, page, limit),
+    getServiceOrderById(params.id),
+  ]);
+
+  return { promises };
 }
 
 
@@ -118,7 +120,7 @@ const ServiceOrderDetailQuotesContent = ({ quotesData, serviceOrder, revalidator
 };
 
 const ServiceOrderDetailQuotes = () => {
-  const { quotesPromise, serviceOrder } = useLoaderData();
+  const { promises } = useLoaderData();
   const revalidator = useRevalidator();
   const { id } = useParams();
 
@@ -154,14 +156,14 @@ const ServiceOrderDetailQuotes = () => {
         </div>
       }>
         <Await
-          resolve={quotesPromise}
+          resolve={promises}
           errorElement={
             <div className="text-center py-8 text-destructive">
               Không thể tải thông tin báo giá
             </div>
           }
         >
-          {(quotesData) => (
+          {([quotesData, serviceOrder]) => (
             <ServiceOrderDetailQuotesContent
               quotesData={quotesData}
               revalidator={revalidator}

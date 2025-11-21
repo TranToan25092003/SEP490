@@ -98,7 +98,7 @@ const BookingStatusTimeline = ({
               subtitle="Xe chưa được tiếp nhận, vui lòng đến gara đúng thời gian đã hẹn."
             />
           )}
-          {inspectionTask && (
+          {booking.status === "checked_in" && (
             <EmptyState
               icon={Check}
               title="Đã tiếp nhận"

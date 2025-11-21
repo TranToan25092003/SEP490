@@ -96,7 +96,7 @@ class BookingsController {
         startTimestamp,
         endTimestamp,
       } = req.query;
-      const bookings = await bookingsService.getAllBookingsSortedAscending({
+      const bookings = await bookingsService.getAllBookingsSortedDescending({
         page: parseInt(page, 10) || 1,
         limit: parseInt(limit, 10) || 20,
         customerName: customerName || null,

@@ -7,6 +7,7 @@ import {
   Await,
   Link,
   useRevalidator,
+  useNavigate,
 } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +29,8 @@ import {
   rejectQuote,
 } from "@/api/quotes";
 import { toast } from "sonner";
+import background from "@/assets/cool-motorcycle-indoors.png";
+import { ArrowLeft } from "lucide-react";
 
 function loader({ params, request }) {
   const url = new URL(request.url);
@@ -139,7 +142,7 @@ const BookingQuotesContent = ({ data }) => {
 
   if (!quotesData) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 bg-white p-6 rounded-lg text-muted-foreground">
         Lệnh sửa chữa chưa được tạo. Báo giá sẽ có sẵn sau khi xe được kiểm tra.
       </div>
     );
@@ -147,14 +150,14 @@ const BookingQuotesContent = ({ data }) => {
 
   if (!quotesData.quotes || quotesData.quotes.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="text-center py-8 bg-white p-6 rounded-lg text-muted-foreground">
         Chưa có báo giá nào cho lệnh sửa chữa này.
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 bg-white p-6 rounded-lg shadow">
       <CRUDTable columns={quotesTableDefinition} data={quotesData.quotes}>
         {(row) => {
           return (
@@ -173,42 +176,65 @@ const BookingQuotesContent = ({ data }) => {
 const BookingQuotes = () => {
   const { bookingPromise } = useLoaderData();
   const { id } = useParams();
+  const navigate = useNavigate();
 
   return (
-    <Container className="space-y-4 my-8">
-      <div className="flex justify-between items-center">
-        <H3>CHI TIẾT ĐƠN - BÁO GIÁ</H3>
-        <Tabs value="quotes">
-          <TabsList>
-            <TabsTrigger value="progress">
-              <Link to={`/booking/${id}`}>Tiến độ</Link>
-            </TabsTrigger>
-            <TabsTrigger value="quotes">
-              <Link to={`/booking/${id}/quotes`}>Báo giá</Link>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
-
-      <Suspense
-        fallback={
-          <div className="flex justify-center items-center py-8">
-            <Spinner className="h-8 w-8" />
+    <div
+      className="w-full min-h-screen flex justify-center p-4 md:p-8 bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `url(${background})`,
+        backgroundPosition: "65% 35%",
+      }}
+    >
+      <Container className="space-y-4 my-8 w-full max-w-7xl">
+        <div className="flex justify-between items-center">
+          <div>
+            <button
+              type="button"
+              onClick={() => navigate("/booking-tracking")}
+              className="inline-flex items-center gap-2 bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-4 py-2 shadow-lg transition-colors border border-gray-200"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Quay lại danh sách tiến độ sửa xe
+              </span>
+            </button>
+            <div className="bg-white ml-2 rounded-lg inline-block px-4 py-1 shadow-lg">
+              <H3 className="text-gray-900">CHI TIẾT ĐƠN</H3>
+            </div>
           </div>
-        }
-      >
-        <Await
-          resolve={bookingPromise}
-          errorElement={
-            <div className="text-center py-8 text-destructive">
-              Không thể tải thông tin báo giá
+          <Tabs value="quotes">
+            <TabsList>
+              <TabsTrigger value="progress">
+                <Link to={`/booking/${id}`}>Tiến độ</Link>
+              </TabsTrigger>
+              <TabsTrigger value="quotes">
+                <Link to={`/booking/${id}/quotes`}>Báo giá</Link>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        <Suspense
+          fallback={
+            <div className="flex justify-center bg-white items-center py-8">
+              <Spinner className="h-8 w-8" />
             </div>
           }
         >
-          {(data) => <BookingQuotesContent data={data} />}
-        </Await>
-      </Suspense>
-    </Container>
+          <Await
+            resolve={bookingPromise}
+            errorElement={
+              <div className="text-center py-8 text-destructive">
+                Không thể tải thông tin báo giá
+              </div>
+            }
+          >
+            {(data) => <BookingQuotesContent data={data} />}
+          </Await>
+        </Suspense>
+      </Container>
+    </div>
   );
 };
 

@@ -14,7 +14,7 @@ const ERROR_CODES = {
 };
 
 class ServiceOrderService {
-  async getAllServiceOrdersByCreatedDateAscending({
+  async getAllServiceOrdersByCreatedDateDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -103,7 +103,7 @@ class ServiceOrderService {
 
     const [serviceOrders, totalItems] = await Promise.all([
       ServiceOrder.aggregate(pipeline)
-        .sort({ createdAt: 1 })
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -341,7 +341,7 @@ class ServiceOrderService {
     await serviceOrder.save();
   }
 
-  async _createServiceOrderFromBooking(staffId, bookingId) {
+  async createServiceOrderFromBooking(staffId, bookingId) {
     const existingOrder = await ServiceOrder.findOne({
       booking_id: bookingId,
     }).exec();

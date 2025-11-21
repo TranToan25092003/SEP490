@@ -20,18 +20,14 @@ class VehiclesService {
     if (!vehicles.length) return [];
 
     const vehicleIds = vehicles.map((v) => v._id.toString());
-    const [vehicleIdsInUse, activeBookingsMap] = await Promise.all([
-      this.getVehiclesInUse(vehicleIds),
-      this.getActiveBookingsMap(vehicleIds),
-    ]);
-
+    const activeBookingsMap = await this.getActiveBookingsMap(vehicleIds);
+    
     return vehicles.map((vehicle) => {
       const vehicleId = vehicle._id.toString();
       const activeBooking = activeBookingsMap[vehicleId];
 
       return {
         ...mapToVehicleDTO(vehicle),
-        isAvailable: !vehicleIdsInUse.includes(vehicleId),
         activeBooking: activeBooking
           ? {
               id: activeBooking._id.toString(),
@@ -53,17 +49,6 @@ class VehiclesService {
       return null;
     }
     return mapToVehicleDTO(vehicle);
-  }
-
-  async getVehiclesInUse(vehicleIds) {
-    const bookings = await Booking.find({
-      vehicle_id: { $in: vehicleIds },
-      status: { $in: ["booked", "in_progress"] }
-    }).exec();
-
-    return vehicleIds.filter(vid => {
-      return bookings.some(b => b.vehicle_id.toString() === vid);
-    });
   }
 
   async getActiveBookingsMap(vehicleIds) {
