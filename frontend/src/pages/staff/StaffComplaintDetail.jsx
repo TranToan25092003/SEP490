@@ -162,7 +162,7 @@ export default function StaffComplaintDetailPage() {
                 <div className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 md:grid-cols-3">
                     <DetailField label="Mã Đơn Dịch Vụ">{complaint.so_id ? `#${complaint.so_id.toString().slice(-6)}` : 'N/A'}</DetailField>
                     <DetailField label="Tiêu đề khiếu nại">{complaint.title}</DetailField>
-                    <DetailField label="Danh mục khiếu nại">{complaint.category || 'N/A'}</DetailField>
+                    <DetailField label="Danh mục khiếu nại">{complaint.categoryName || complaint.category || 'N/A'}</DetailField>
                     <DetailField label="Tên Khách Hàng">{complaint.customerName}</DetailField>
                     <DetailField label="Số Điện Thoại">{complaint.customerPhone}</DetailField>
                     <DetailField label="Xe">{`${complaint.license_plate} - ${complaint.model}`}</DetailField>

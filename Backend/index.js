@@ -3,6 +3,7 @@ const express = require("express");
 const { createServer } = require("http");
 const app = express();
 const server = createServer(app);
+const DomainError = require("./errors/domainError");
 
 
 //end create server
@@ -71,7 +72,7 @@ app.use((err, _, res, __) => {
   if (err instanceof DomainError) {
     return res.status(err.statusCode).json({
       message: err.message,
-      code: err.code,
+      code: err.errorCode,
     });
   }
 
@@ -83,7 +84,6 @@ app.use((err, _, res, __) => {
 // Swagger
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./config/swagger");
-const DomainError = require("./errors/domainError");
 app.use("/api", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // Swagger
 

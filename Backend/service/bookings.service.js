@@ -9,6 +9,7 @@ const { UsersService } = require("./users.service");
 const ServiceOrderService = require("./service_order.service");
 const config = require("./config");
 const { Booking } = require("../model");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
@@ -79,6 +80,11 @@ class BookingsService {
     });
 
     await booking.save();
+
+    await Promise.all([
+      notificationService.notifyStaffOfNewBooking(booking),
+      notificationService.notifyCustomerBookingCreated(booking),
+    ]);
 
     return booking;
   }
@@ -331,6 +337,11 @@ class BookingsService {
 
     booking.status = "cancelled";
     await booking.save();
+
+    await Promise.all([
+      notificationService.notifyCustomerBookingCancelled(booking),
+      notificationService.notifyStaffOfBookingCancelled(booking),
+    ]);
 
     return booking;
   }

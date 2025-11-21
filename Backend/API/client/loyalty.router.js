@@ -143,7 +143,22 @@ router.post("/redeem", loyaltyController.redeemPoints);
  *               - clerkId
  *               - points
  *               - reason
- *             properties như trên...
+ *             properties:
+ *               clerkId:
+ *                 type: string
+ *               points:
+ *                 type: integer
+ *               reason:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *               sourceRef:
+ *                 type: object
+ *                 properties:
+ *                   kind:
+ *                     type: string
+ *                   refId:
+ *                     type: string
  *     responses:
  *       201:
  *         description: Cộng điểm thành công
@@ -173,6 +188,22 @@ router.post("/award", loyaltyController.awardPoints);
  *               - clerkId
  *               - points
  *               - reason
+ *             properties:
+ *               clerkId:
+ *                 type: string
+ *               points:
+ *                 type: integer
+ *               reason:
+ *                 type: string
+ *               metadata:
+ *                 type: object
+ *               sourceRef:
+ *                 type: object
+ *                 properties:
+ *                   kind:
+ *                     type: string
+ *                   refId:
+ *                     type: string
  *     responses:
  *       201:
  *         description: Điều chỉnh thành công

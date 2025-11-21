@@ -3,7 +3,7 @@ import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
 import { Suspense } from "react";
 import { useLoaderData, useParams, useRevalidator, Await, Link } from "react-router-dom";
-import { getQuotesForServiceOrder } from "@/api/quotes";
+import { getQuotesForServiceOrder, approveQuote } from "@/api/quotes";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Tabs,
@@ -18,14 +18,17 @@ import { formatDateTime, formatPrice } from "@/lib/utils";
 import NiceModal from "@ebay/nice-modal-react";
 import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
 import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
+import { getServiceOrderById } from "@/api/serviceOrders";
+import { toast } from "sonner";
 
-function loader({ params, request }) {
+async function loader({ params, request }) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page"), 10) || 1;
   const limit = 10;
 
   return {
-    quotesPromise: getQuotesForServiceOrder(params.id, page, limit)
+    quotesPromise: getQuotesForServiceOrder(params.id, page, limit),
+    serviceOrder: await getServiceOrderById(params.id),
   };
 }
 
@@ -67,12 +70,26 @@ const quotesTableDefinition = [
   },
 ];
 
-const ServiceOrderDetailQuotesContent = ({ quotesData }) => {
+const ServiceOrderDetailQuotesContent = ({ quotesData, serviceOrder, revalidator }) => {
+  const allowStaffConfirm = Boolean(serviceOrder?.isWalkIn);
   const handleViewDetail = async (quote) => {
     try {
-      await NiceModal.show(ViewQuoteDetailModal, {
-        quoteId: quote.id
+      const result = await NiceModal.show(ViewQuoteDetailModal, {
+        quoteId: quote.id,
+        allowStaffConfirm,
+        serviceOrder,
       });
+      if (result?.action === "staff-confirm") {
+        const approveTask = approveQuote(quote.id);
+        await toast
+          .promise(approveTask, {
+            loading: "Đang xác nhận báo giá...",
+            success: "Đã xác nhận báo giá cho khách!",
+            error: "Không thể xác nhận báo giá",
+          })
+          .unwrap();
+        revalidator.revalidate();
+      }
     } catch (error) {
       console.log("Modal closed:", error);
     }
@@ -101,7 +118,7 @@ const ServiceOrderDetailQuotesContent = ({ quotesData }) => {
 };
 
 const ServiceOrderDetailQuotes = () => {
-  const { quotesPromise } = useLoaderData();
+  const { quotesPromise, serviceOrder } = useLoaderData();
   const revalidator = useRevalidator();
   const { id } = useParams();
 
@@ -148,6 +165,7 @@ const ServiceOrderDetailQuotes = () => {
             <ServiceOrderDetailQuotesContent
               quotesData={quotesData}
               revalidator={revalidator}
+              serviceOrder={serviceOrder}
               serviceOrderId={id}
             />
           )}

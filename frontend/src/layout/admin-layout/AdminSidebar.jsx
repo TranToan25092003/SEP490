@@ -1,9 +1,8 @@
-
 import React from "react";
 import {
-  sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
 } from "@/assets/admin/sidebar_new";
+import imgLogo from "@/assets/logo-with-brand.png";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -20,6 +19,7 @@ import {
   Car,
   Image,
   Users,
+  ScrollText,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -32,31 +32,37 @@ const items = [
     key: "dashboard",
     label: "Tổng quát",
     icon: Home,
-    href: "/admin", 
+    href: "/admin",
   },
   {
     key: "services",
     label: "Quản lý service",
     icon: Cog,
-    href: "/admin/services", 
+    href: "/admin/services",
   },
   {
     key: "models",
     label: "Quản lý model",
     icon: Car,
-    href: "/admin/models", 
+    href: "/admin/models",
   },
   {
     key: "banners",
     label: "Quản lý banner",
     icon: Image,
-    href: "/admin/banners", 
+    href: "/admin/banners",
   },
+  // {
+  //   key: "staff",
+  //   label: "Quản lý staff",
+  //   icon: Users,
+  //   href: "/admin/staff",
+  // },
   {
-    key: "staff",
-    label: "Quản lý staff",
-    icon: Users,
-    href: "/admin/staff", 
+    key: "log",
+    label: "Log",
+    icon: ScrollText,
+    href: "/admin/activity-logs",
   },
 ];
 
@@ -86,10 +92,19 @@ export default function AdminSidebar({
       style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
+        <img alt="imgLine" src={imgLine} className="w-px h-full" />
       </div>
       <div className="flex flex-col h-full item-start pl-7">
-        <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4" />
+        <div className="flex flex-col items-center pr-7">
+          <Link to={"/admin"}>
+            <img
+              alt="imgLogo"
+              src={imgLogo}
+              className="w-24 h-24 mt-4"
+            />
+
+          </Link>
+        </div>
         <TooltipProvider>
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
@@ -99,9 +114,10 @@ export default function AdminSidebar({
               {items.map((it) => {
                 const Icon = it.icon;
                 // Cập nhật logic kiểm tra active
-                const isActive = (it.href === "/admin") 
-                  ? location.pathname === it.href
-                  : location.pathname.startsWith(it.href);
+                const isActive =
+                  it.href === "/admin"
+                    ? location.pathname === it.href
+                    : location.pathname.startsWith(it.href);
 
                 return (
                   <Tooltip key={it.key}>
@@ -113,7 +129,7 @@ export default function AdminSidebar({
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive, 
+                              "font-semibold text-red-600": isActive,
                               "text-gray-700": !isActive,
                             }
                           )}

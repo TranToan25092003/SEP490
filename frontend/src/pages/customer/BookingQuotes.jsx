@@ -1,13 +1,15 @@
 import Container from "@/components/global/Container";
 import { H3 } from "@/components/ui/headings";
 import { Suspense } from "react";
-import { useLoaderData, useParams, Await, Link, useRevalidator } from "react-router-dom";
-import { Spinner } from "@/components/ui/spinner";
 import {
-  Tabs,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
+  useLoaderData,
+  useParams,
+  Await,
+  Link,
+  useRevalidator,
+} from "react-router-dom";
+import { Spinner } from "@/components/ui/spinner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CRUDTable from "@/components/global/CRUDTable";
 import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
@@ -15,9 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import NiceModal from "@ebay/nice-modal-react";
 import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
-import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
+import {
+  getQuoteStatusBadgeVariant,
+  translateQuoteStatus,
+} from "@/utils/enumsTranslator";
 import { getBookingById } from "@/api/bookings";
-import { approveQuote, getQuotesForServiceOrder, rejectQuote } from "@/api/quotes";
+import {
+  approveQuote,
+  getQuotesForServiceOrder,
+  rejectQuote,
+} from "@/api/quotes";
 import { toast } from "sonner";
 
 function loader({ params, request }) {
@@ -28,11 +37,15 @@ function loader({ params, request }) {
   return {
     bookingPromise: getBookingById(params.id).then(async (booking) => {
       if (booking.serviceOrderId) {
-        const quotesData = await getQuotesForServiceOrder(booking.serviceOrderId, page, limit);
+        const quotesData = await getQuotesForServiceOrder(
+          booking.serviceOrderId,
+          page,
+          limit
+        );
         return { booking, quotesData };
       }
       return { booking, quotesData: null };
-    })
+    }),
   };
 }
 
@@ -41,9 +54,7 @@ const quotesTableDefinition = [
     header: "Mã báo giá",
     accessorKey: "id",
     cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.id.slice(-8)}
-      </span>
+      <span className="font-mono text-sm">{row.original.id.slice(-8)}</span>
     ),
   },
   {
@@ -59,7 +70,10 @@ const quotesTableDefinition = [
     header: "Trạng thái",
     accessorKey: "status",
     cell: ({ row }) => (
-      <Badge className="rounded-full" variant={getQuoteStatusBadgeVariant(row.original.status)}>
+      <Badge
+        className="rounded-full"
+        variant={getQuoteStatusBadgeVariant(row.original.status)}
+      >
         {translateQuoteStatus(row.original.status)}
       </Badge>
     ),
@@ -74,37 +88,47 @@ const quotesTableDefinition = [
 ];
 
 const BookingQuotesContent = ({ data }) => {
-  const { quotesData } = data;
+  const { quotesData, booking } = data;
   const revalidator = useRevalidator();
+  const bookingServiceOrderId = booking?.serviceOrderId
+    ? booking.serviceOrderId.toString()
+    : null;
+  const serviceOrderContext = bookingServiceOrderId
+    ? {
+        id: bookingServiceOrderId,
+        customerName: booking.customer?.customerName,
+        licensePlate: booking.vehicle?.licensePlate,
+        orderNumber: `#${bookingServiceOrderId.slice(-6)}`,
+      }
+    : null;
 
   const handleViewDetail = async (quote) => {
     try {
       const result = await NiceModal.show(ViewQuoteDetailModal, {
         quoteId: quote.id,
         allowAcceptReject: true,
+        serviceOrder: serviceOrderContext,
       });
 
       if (result.action === "accept") {
         const confirmPromise = approveQuote(quote.id);
-        await toast.promise(
-          confirmPromise,
-          {
+        await toast
+          .promise(confirmPromise, {
             loading: "Đang phê duyệt báo giá...",
             success: "Phê duyệt báo giá thành công!",
             error: "Phê duyệt báo giá thất bại.",
-          }
-        ).unwrap();
+          })
+          .unwrap();
       } else if (result.action === "reject") {
         const rejectPromise = rejectQuote(quote.id, result.reason);
 
-        await toast.promise(
-          rejectPromise,
-          {
+        await toast
+          .promise(rejectPromise, {
             loading: "Đang từ chối báo giá...",
             success: "Từ chối báo giá thành công!",
             error: "Từ chối báo giá thất bại.",
-          }
-        ).unwrap();
+          })
+          .unwrap();
       }
 
       revalidator.revalidate();
@@ -131,16 +155,11 @@ const BookingQuotesContent = ({ data }) => {
 
   return (
     <div className="space-y-4">
-      <CRUDTable
-        columns={quotesTableDefinition}
-        data={quotesData.quotes}
-      >
+      <CRUDTable columns={quotesTableDefinition} data={quotesData.quotes}>
         {(row) => {
           return (
-            <Button onClick={() => handleViewDetail(row)}>
-              Xem chi tiết
-            </Button>
-          )
+            <Button onClick={() => handleViewDetail(row)}>Xem chi tiết</Button>
+          );
         }}
       </CRUDTable>
 
@@ -162,24 +181,22 @@ const BookingQuotes = () => {
         <Tabs value="quotes">
           <TabsList>
             <TabsTrigger value="progress">
-              <Link to={`/booking/${id}`}>
-                Tiến độ
-              </Link>
+              <Link to={`/booking/${id}`}>Tiến độ</Link>
             </TabsTrigger>
             <TabsTrigger value="quotes">
-              <Link to={`/booking/${id}/quotes`}>
-                Báo giá
-              </Link>
+              <Link to={`/booking/${id}/quotes`}>Báo giá</Link>
             </TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
 
-      <Suspense fallback={
-        <div className="flex justify-center items-center py-8">
-          <Spinner className="h-8 w-8" />
-        </div>
-      }>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
+      >
         <Await
           resolve={bookingPromise}
           errorElement={
@@ -188,9 +205,7 @@ const BookingQuotes = () => {
             </div>
           }
         >
-          {(data) => (
-            <BookingQuotesContent data={data} />
-          )}
+          {(data) => <BookingQuotesContent data={data} />}
         </Await>
       </Suspense>
     </Container>

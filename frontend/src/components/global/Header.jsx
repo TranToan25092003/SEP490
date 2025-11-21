@@ -17,6 +17,7 @@ import {
 import headerImg from "@/assets/header-img.jpg";
 import MotorcycleIcon from "../icons/MotorcycleIcon";
 import avatarImg from "../../assets/avatar.png";
+import logo from "../../assets/logo-with-brand.png"
 import { LuAlignLeft } from "react-icons/lu"; // Giữ lại import nếu bạn dùng ở nơi khác, nhưng đã xóa khỏi nút
 import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
@@ -50,9 +51,13 @@ const Header = () => {
       <div className="mx-auto max-w-[1920px]">
         {/* Top section */}
         <div className="flex h-[70px] items-center gap-[8px] px-[8px] pl-[20px] md:h-[80px] md:pl-[36px] xl:h-[88px] xl:pl-[70px]">
-          <p className="select-none text-[22px] font-extrabold leading-none text-[#E82917] md:text-[28px] xl:text-[32px]">
-            MotorMate
-          </p>
+          <Link to="/" className="flex-shrink-0">
+            <img 
+              className="h-20 w-auto md:h-36" 
+              src={logo} 
+              alt="MotorMate Logo" 
+            />
+          </Link>
           <div className="hidden items-center justify-center md:flex">
             <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
@@ -65,7 +70,7 @@ const Header = () => {
             </p>
           </div>
           <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px]">
-            <SearchIcon />
+            {/* <SearchIcon /> */}
 
             {isSignedIn ? (
               <>
@@ -120,6 +125,10 @@ const Header = () => {
 
                       <DropdownMenuItem onSelect={() => navigate("/loyalty")}>
                         Điểm thưởng
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem onSelect={() => navigate("/complaint")}>
+                        Khiếu Nại
                       </DropdownMenuItem>
 
                       <DropdownMenuSeparator />

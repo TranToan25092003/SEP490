@@ -77,8 +77,6 @@ const AttendanceSchema = new Schema(
   { timestamps: true }
 );
 
-AttendanceSchema.index({ date: 1 }, { unique: true });
-
 const Attendance = mongoose.model("Attendance", AttendanceSchema);
 
 module.exports = Attendance;

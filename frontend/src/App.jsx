@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
@@ -14,6 +15,7 @@ import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
 import BookingHistoryDetail from "./pages/customer/BookingHistoryDetail";
 import BookingTracking from "./pages/customer/BookingTracking";
+import WarrantyBooking from "./pages/customer/WarrantyBooking";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
 import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
@@ -50,6 +52,7 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
+  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -61,14 +64,15 @@ import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
+import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
 import StaffPage from "./pages/manager/Staff";
-import ActivityLogs from "./pages/manager/ActivityLogs";
-import { activityLogsLoader } from "./utils/loaders";
+import AdminActivityLogs from "./pages/admin/ActivityLogs";
+import { adminActivityLogsLoader } from "./utils/loaders";
 import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
 import AttendanceTracking from "./pages/manager/AttendanceTracking";
@@ -119,6 +123,10 @@ const router = createBrowserRouter([
         path: "/booking/:id/history",
         element: <BookingHistoryDetail />,
         loader: BookingHistoryDetail.loader,
+      },
+      {
+        path: "/warranty-booking",
+        element: <WarrantyBooking />,
       },
       {
         path: "/about",
@@ -176,6 +184,10 @@ const router = createBrowserRouter([
     element: <Login></Login>,
   },
   {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
     path: "/register",
     element: <Register />,
   },
@@ -220,11 +232,6 @@ const router = createBrowserRouter([
         element: <ManagerBays />,
       },
       {
-        path: "activity-logs",
-        element: <ActivityLogs />,
-        loader: activityLogsLoader,
-      },
-      {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
       },
@@ -240,7 +247,11 @@ const router = createBrowserRouter([
     element: <StaffLayout />,
     // loader: authenTicationForStaffLoader,
     children: [
-      { index: true, element: <StaffDashboardPage /> },
+      {
+        index: true,
+        element: <StaffDashboardPage />,
+        loader: staffDashboardLoader
+      },
       {
         path: "service-order/:id",
         element: <ServiceOrderDetail />,
@@ -261,7 +272,11 @@ const router = createBrowserRouter([
         element: <ServiceOrderList />,
         loader: ServiceOrderList.loader,
       },
-      { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "service-order/add",
+        element: <ServiceOrderAdd />,
+        loader: ServiceOrderAdd.loader,
+      },
       {
         path: "booking/:id",
         element: <BookingDetail />,
@@ -291,6 +306,10 @@ const router = createBrowserRouter([
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "complaints/categories",
+        element: <ComplaintCategoryManager />,
       },
       {
         path: "invoices",
@@ -329,6 +348,11 @@ const router = createBrowserRouter([
         path: "banners",
         element: <AdminBannersPage />,
         loader: adminBannersLoader,
+      },
+      {
+        path: "activity-logs",
+        element: <AdminActivityLogs />,
+        loader: adminActivityLogsLoader,
       },
     ],
   },

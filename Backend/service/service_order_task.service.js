@@ -9,6 +9,7 @@ const DomainError = require("../errors/domainError");
 const { BaySchedulingService } = require("./bay_scheduling.service");
 const { MediaAssetService } = require("./media_asset.service");
 const { InvoiceService } = require("./invoice.service");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
@@ -179,6 +180,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "waiting_inspection";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+
     return mapInspectionTask(inspectionTask);
   }
 
@@ -276,6 +279,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "inspection_completed";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+
     return mapInspectionTask(inspectionTask);
   }
 
@@ -317,6 +322,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "scheduled";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+
     return mapServicingTask(servicingTask);
   }
 
@@ -354,6 +361,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "servicing";
     await serviceOrder.save();
 
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+
     return mapServicingTask(servicingTask);
   }
 
@@ -383,6 +392,8 @@ class ServiceOrderTaskService {
     serviceOrder.status = "completed";
     serviceOrder.completed_at = servicingTask.actual_end_time;
     await serviceOrder.save();
+
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
 
     await InvoiceService.ensureInvoiceForServiceOrder(serviceOrder._id);
 

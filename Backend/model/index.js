@@ -3,6 +3,7 @@ const Test = require("./test.model");
 const Banner = require("./banner.model");
 const Bay = require("./bay.model");
 const Complain = require("./complaint.model");
+const ComplaintCategory = require("./complaint_category.model");
 const DiscountCode = require("./discount_codes.model");
 const GoodsReceipt = require("./goods_receipt.model");
 const GoodsReceiptItem = require("./goods_receipt_item.model");
@@ -43,6 +44,7 @@ module.exports = {
   Banner,
   Bay,
   Complain,
+  ComplaintCategory,
   DiscountCode,
   GoodsReceipt,
   GoodsReceiptItem,

@@ -1,16 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const complaintCategories = [
-  "Chất lượng dịch vụ",
-  "Chất lượng phụ tùng",
-  "Thái độ nhân viên",
-  "Thời gian chờ đợi",
-  "Giá cả & Thanh toán",
-  "Cơ sở vật chất",
-  "Khác"
-];
-
 const ComplaintSchema = new Schema(
   {
     so_id: { type: Schema.Types.ObjectId, ref: "ServiceOrder", required: true }, // Reference to Service_Orders
@@ -25,16 +15,19 @@ const ComplaintSchema = new Schema(
       required: true,
     },
     category: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "ComplaintCategory",
       required: [true, "Vui lòng chọn danh mục khiếu nại"],
-      enum: complaintCategories,
-      default: "Khác"
+    },
+    categoryName: {
+      type: String,
+      required: true,
     },
     reply: {
       staffClerkId: { type: String },
       content: { type: String },
       repliedAt: { type: Date },
-      _id: false
+      _id: false,
     },
   },
   { timestamps: true }
