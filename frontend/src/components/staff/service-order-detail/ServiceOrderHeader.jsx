@@ -56,6 +56,30 @@ const ServiceOrderHeader = ({
           />
         </div>
       </CardContent>
+      {serviceOrder.status === "cancelled" && (
+        <CardContent className="border-t pt-4">
+          <div className="space-y-2">
+            <Label className="text-destructive">Thông tin hủy lệnh</Label>
+            <div className="space-y-1">
+              <div className="text-sm">
+                <span className="font-semibold">Người hủy: </span>
+                <span>{serviceOrder.cancelledBy === "staff" ? "Nhân viên" : serviceOrder.cancelledBy === "customer" ? "Khách hàng" : "Không xác định"}</span>
+              </div>
+              {serviceOrder.cancelReason && (
+                <div className="text-sm">
+                  <span className="font-semibold">Lý do: </span>
+                  <span>{serviceOrder.cancelReason}</span>
+                </div>
+              )}
+              {serviceOrder.cancelledAt && (
+                <div className="text-sm text-muted-foreground">
+                  Thời gian: {new Date(serviceOrder.cancelledAt).toLocaleString("vi-VN")}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 };

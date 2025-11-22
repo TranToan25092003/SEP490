@@ -168,31 +168,46 @@ const ServiceOrderList = () => {
           }
           resolve={serviceOrders}
         >
-          {(data) => (
-            <>
-              <Filters filters={filters} onFiltersChange={setFilters}>
-                <Filters.StringFilter
-                  filterKey="customerName"
-                  label={"Tên khách hàng"}
-                  placeholder={"Nhập tên khách hàng"}
-                />
-                <Filters.DropdownFilter
-                  filterKey="status"
-                  label={"Trạng thái"}
-                  placeholder={"Chọn trạng thái"}
-                  options={getServiceOrderStatusOptions()}
-                />
-                <Filters.DateRangeFilter
-                  filterKey="dateRange"
-                  label={"Khoảng ngày tạo"}
-                />
-              </Filters>
+          {(data) => {
+            // Sort: completed xuống dưới, các trạng thái khác lên trên
+            const sortedServiceOrders = [...(data.serviceOrders || [])].sort((a, b) => {
+              const aIsCompleted = a.status === "completed";
+              const bIsCompleted = b.status === "completed";
+              
+              if (aIsCompleted && !bIsCompleted) return 1; // a xuống dưới
+              if (!aIsCompleted && bIsCompleted) return -1; // b xuống dưới
+              
+              // Nếu cùng trạng thái, sort theo createdAt (mới nhất lên trên)
+              const aDate = new Date(a.createdAt || 0);
+              const bDate = new Date(b.createdAt || 0);
+              return bDate - aDate;
+            });
 
-              <CRUDTable
-                data={data.serviceOrders}
-                columns={serviceOrderListColumnDefinitions}
-                getRowId={(row) => row.id}
-              >
+            return (
+              <>
+                <Filters filters={filters} onFiltersChange={setFilters}>
+                  <Filters.StringFilter
+                    filterKey="customerName"
+                    label={"Tên khách hàng"}
+                    placeholder={"Nhập tên khách hàng"}
+                  />
+                  <Filters.DropdownFilter
+                    filterKey="status"
+                    label={"Trạng thái"}
+                    placeholder={"Chọn trạng thái"}
+                    options={getServiceOrderStatusOptions()}
+                  />
+                  <Filters.DateRangeFilter
+                    filterKey="dateRange"
+                    label={"Khoảng ngày tạo"}
+                  />
+                </Filters>
+
+                <CRUDTable
+                  data={sortedServiceOrders}
+                  columns={serviceOrderListColumnDefinitions}
+                  getRowId={(row) => row.id}
+                >
                 {(row) => (
                   <div className="flex justify-center">
                     <Link to={`/staff/service-order/${row.id}`}>
@@ -207,11 +222,12 @@ const ServiceOrderList = () => {
                 )}
               </CRUDTable>
 
-              {data.pagination.totalItems > 0 && (
-                <AdminPagination pagination={data.pagination} />
-              )}
-            </>
-          )}
+                {data.pagination.totalItems > 0 && (
+                  <AdminPagination pagination={data.pagination} />
+                )}
+              </>
+            );
+          }}
         </Await>
       </Suspense>
     </Container>

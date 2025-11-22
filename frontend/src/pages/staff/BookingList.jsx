@@ -206,27 +206,60 @@ const BookingList = () => {
             />
           }
         >
-          {(data) => (
-            <>
-              <Filters filters={filters} onFiltersChange={setFilters}>
-                <Filters.StringFilter
-                  filterKey="customerName"
-                  label={"Tên khách hàng"}
-                  placeholder={"Nhập tên khách hàng"}
-                />
-                <Filters.DropdownFilter
-                  filterKey="status"
-                  label={"Trạng thái"}
-                  placeholder={"Chọn trạng thái"}
-                  options={getBookingStatusOptions()}
-                />
-                <Filters.DateRangeFilter
-                  filterKey="dateRange"
-                  label={"Khoảng ngày đặt lịch"}
-                />
-              </Filters>
+          {(data) => {
+            // Sort theo thứ tự: booked -> checked_in -> cancelled -> completed
+            const getStatusPriority = (status) => {
+              switch (status) {
+                case "booked":
+                  return 1; // Đã đặt - lên đầu
+                case "checked_in":
+                case "in_progress":
+                  return 2; // Đã tiếp nhận - tiếp theo
+                case "cancelled":
+                  return 3; // Đã hủy - tiếp theo
+                case "completed":
+                  return 4; // Hoàn thành - cuối cùng
+                default:
+                  return 5; // Các trạng thái khác - cuối cùng
+              }
+            };
 
-              <CRUDTable data={data.bookings} columns={bookingListColumnDefinitions}>
+            const sortedBookings = [...(data.bookings || [])].sort((a, b) => {
+              const aPriority = getStatusPriority(a.status);
+              const bPriority = getStatusPriority(b.status);
+              
+              // Sort theo priority
+              if (aPriority !== bPriority) {
+                return aPriority - bPriority;
+              }
+              
+              // Nếu cùng priority, sort theo slotStartTime (sớm nhất lên trên)
+              const aDate = new Date(a.slotStartTime || 0);
+              const bDate = new Date(b.slotStartTime || 0);
+              return aDate - bDate;
+            });
+
+            return (
+              <>
+                <Filters filters={filters} onFiltersChange={setFilters}>
+                  <Filters.StringFilter
+                    filterKey="customerName"
+                    label={"Tên khách hàng"}
+                    placeholder={"Nhập tên khách hàng"}
+                  />
+                  <Filters.DropdownFilter
+                    filterKey="status"
+                    label={"Trạng thái"}
+                    placeholder={"Chọn trạng thái"}
+                    options={getBookingStatusOptions()}
+                  />
+                  <Filters.DateRangeFilter
+                    filterKey="dateRange"
+                    label={"Khoảng ngày đặt lịch"}
+                  />
+                </Filters>
+
+                <CRUDTable data={sortedBookings} columns={bookingListColumnDefinitions}>
                 {(row) => {
                   return (
                     <div className="flex justify-center">
@@ -243,11 +276,12 @@ const BookingList = () => {
                 }}
               </CRUDTable>
 
-              {data.pagination.totalItems > 0 && <AdminPagination
-                pagination={data.pagination}
-              />}
-            </>
-          )}
+                {data.pagination.totalItems > 0 && <AdminPagination
+                  pagination={data.pagination}
+                />}
+              </>
+            );
+          }}
         </Await>
       </Suspense>
     </Container>

@@ -463,7 +463,7 @@ function NotificationListPage() {
             </div>
 
             <div className="px-1 mb-4">
-              <TabsList className="grid w-full grid-cols-2 bg-rose-50/80 p-1 rounded-full border border-rose-100">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
                   value="all"
                   className="rounded-full py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-rose-600 data-[state=active]:shadow-inner"

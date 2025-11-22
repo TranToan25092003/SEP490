@@ -39,8 +39,10 @@ class BookingsController {
   async cancelBooking(req, res, next) {
     try {
       const { id } = req.params;
+      const userId = req.userId;
+      const { cancelReason } = req.body;
 
-      await bookingsService.cancelBooking(id);
+      await bookingsService.cancelBooking(id, userId, cancelReason);
 
       res.status(200).json({
         message: "Booking cancelled successfully",

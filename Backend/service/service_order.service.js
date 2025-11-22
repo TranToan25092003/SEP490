@@ -100,9 +100,20 @@ class ServiceOrderService {
       pipeline.push({ $match: { $or: matchConditions } });
     }
 
+    // Custom sort: completed status goes to bottom, others sorted by createdAt ascending
+    pipeline.push({
+      $addFields: {
+        sortPriority: {
+          $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
+        }
+      }
+    });
+    pipeline.push({
+      $sort: { sortPriority: 1, createdAt: 1 }
+    });
+
     const [serviceOrders, totalItems] = await Promise.all([
       ServiceOrder.aggregate(pipeline)
-        .sort({ createdAt: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -300,6 +311,9 @@ class ServiceOrderService {
       createdAt: serviceOrder.createdAt,
       completedAt: serviceOrder.completed_at,
       estimatedCompletedAt: serviceOrder.expected_completion_time,
+      cancelledAt: serviceOrder.cancelled_at || null,
+      cancelledBy: serviceOrder.cancelled_by || null,
+      cancelReason: serviceOrder.cancel_reason || null,
     };
   }
 

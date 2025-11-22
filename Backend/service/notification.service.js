@@ -203,6 +203,19 @@ async function getStaffClerkIds() {
   return cachedStaffIds;
 }
 
+async function isStaffUser(userId) {
+  try {
+    const staffIds = await getStaffClerkIds();
+    return staffIds.includes(userId);
+  } catch (error) {
+    console.error(
+      "[NotificationService] Error checking if user is staff:",
+      error
+    );
+    return false;
+  }
+}
+
 async function createNotification(notificationData) {
   try {
     const notification = new Notification(notificationData);
@@ -408,13 +421,26 @@ async function notifyCustomerBookingCancelled(booking) {
 
   const customerClerkId = bookingDoc.customer_clerk_id;
   const customerName = await resolveCustomerName(customerClerkId);
+  const cancelledBy = bookingDoc.cancelled_by || "customer";
+  const cancelReason = bookingDoc.cancel_reason
+    ? ` Lý do: ${bookingDoc.cancel_reason}.`
+    : "";
+
+  let title, message;
+  if (cancelledBy === "staff") {
+    title = "Đơn đặt lịch đã bị hủy";
+    message = `Đơn đặt lịch của quý khách ${customerName} đã bị nhân viên hủy.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+  } else {
+    title = "Hủy đặt lịch thành công";
+    message = `Quý khách ${customerName} đã hủy đặt lịch thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+  }
 
   await createNotification({
     recipientClerkId: customerClerkId,
     recipientType: "customer",
     type: "BOOKING_CANCELLED",
-    title: "Hủy đặt lịch thành công",
-    message: `Quý khách ${customerName} đã hủy đặt lịch thành công. Rất mong được phục vụ quý khách trong lần sau.`,
+    title,
+    message,
     linkTo: "/booking",
   });
 }
@@ -430,18 +456,31 @@ async function notifyStaffOfBookingCancelled(booking) {
   const plate = bookingDoc.vehicle_id?.license_plate || "không xác định";
   const customerName = await resolveCustomerName(bookingDoc.customer_clerk_id);
   const bookingCode = getShortId(bookingDoc._id);
+  const cancelledBy = bookingDoc.cancelled_by || "customer";
+  const cancelReason = bookingDoc.cancel_reason
+    ? ` Lý do: ${bookingDoc.cancel_reason}.`
+    : "";
+
+  let message;
+  if (cancelledBy === "staff") {
+    message = `Nhân viên đã hủy đặt lịch sửa xe cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
+  } else {
+    message = `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.${cancelReason}`;
+  }
+
   console.log(
     "[NotificationService] Staff booking cancellation notification payload:",
     JSON.stringify({
       customerName,
       bookingCode,
       plate,
+      cancelledBy,
     })
   );
   await notifyStaffGroup({
     type: "BOOKING_CANCELLED",
     title: "Đơn đặt lịch đã bị hủy",
-    message: `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.`,
+    message,
     linkTo: STAFF_BOOKING_LIST_PATH,
     actorClerkId: bookingDoc.customer_clerk_id,
   });
@@ -831,4 +870,5 @@ module.exports = {
   markNotificationsAsRead,
   markAllAsRead,
   createNotification,
+  isStaffUser,
 };

@@ -20,6 +20,7 @@ import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQu
 import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
 import { getServiceOrderById } from "@/api/serviceOrders";
 import { toast } from "sonner";
+import background from "@/assets/cool-motorcycle-indoors.png";
 
 async function loader({ params, request }) {
   const url = new URL(request.url);
@@ -123,21 +124,29 @@ const ServiceOrderDetailQuotes = () => {
   const { id } = useParams();
 
   return (
-    <Container pageContext="admin">
+    <div
+      className="min-h-screen bg-cover bg-center bg-fixed"
+      style={{
+        backgroundImage: `linear-gradient(135deg, rgba(8,8,8,0.82), rgba(8,8,8,0.35)), url(${background})`,
+      }}
+    >
+      <Container pageContext="admin" className="py-8">
+        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-6 space-y-6">
       <BackButton to="/staff/service-order" label="Quay lại trang quản lý lệnh" />
-      <div className="flex justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                MotorMate Workshop
+              </p>
         <H3>Chi Tiết Lệnh Sửa Chữa - Báo Giá</H3>
+            </div>
         <Tabs value="quotes">
-          <TabsList>
+              <TabsList className="bg-white border shadow-sm">
             <TabsTrigger value="main">
-              <Link to={`/staff/service-order/${id}`}>
-                Thông tin chung
-              </Link>
+                  <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
             </TabsTrigger>
             <TabsTrigger value="quotes">
-              <Link to={`/staff/service-order/${id}/quotes`}>
-                Báo giá
-              </Link>
+                  <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
             </TabsTrigger>
             <TabsTrigger value="progress">
               <Link to={`/staff/service-order/${id}/progress`}>
@@ -148,11 +157,13 @@ const ServiceOrderDetailQuotes = () => {
         </Tabs>
       </div>
 
-      <Suspense fallback={
-        <div className="flex justify-center items-center py-8">
-          <Spinner className="h-8 w-8" />
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center py-12">
+                <Spinner className="h-10 w-10 text-primary" />
         </div>
-      }>
+            }
+          >
         <Await
           resolve={quotesPromise}
           errorElement={
@@ -165,13 +176,15 @@ const ServiceOrderDetailQuotes = () => {
             <ServiceOrderDetailQuotesContent
               quotesData={quotesData}
               revalidator={revalidator}
-              serviceOrder={serviceOrder}
+                  serviceOrder={serviceOrder}
               serviceOrderId={id}
             />
           )}
         </Await>
       </Suspense>
+        </div>
     </Container>
+    </div>
   );
 };
 

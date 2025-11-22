@@ -429,6 +429,11 @@ class InvoiceService {
   _mapInvoiceSummary(invoice, serviceOrder, customerName = null) {
     const booking = serviceOrder?.booking_id;
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
 
     return {
       id: invoice._id.toString(),
@@ -447,7 +452,7 @@ class InvoiceService {
       tax: invoice.tax,
       createdAt: invoice.createdAt,
       customerName,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
     };
   }
 
@@ -459,6 +464,11 @@ class InvoiceService {
     confirmedByName = null
   ) {
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
 
     const items = (serviceOrder?.items || []).map((item) => ({
       type: item.item_type,
@@ -491,7 +501,7 @@ class InvoiceService {
       updatedAt: invoice.updatedAt,
       customerName,
       customerClerkId: booking?.customer_clerk_id || null,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
       vehicleId: vehicle?._id?.toString() || null,
       items,
     };

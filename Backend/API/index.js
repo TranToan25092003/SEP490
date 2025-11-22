@@ -10,6 +10,7 @@ const notificationRouter = require("./notification.router");
 const bannerRouter = require("./banner.router");
 const warrantyRouter = require("./warranty.router");
 const complaintCategoryRouter = require("./complaint-category.router");
+const managerRouter = require("./manager.router");
 
 module.exports = (app) => {
   app.use("/services", servicesRouter);
@@ -24,4 +25,5 @@ module.exports = (app) => {
   app.use("/banners", bannerRouter);
   app.use("/warranty", warrantyRouter);
   app.use("/complaint-categories", complaintCategoryRouter);
+  app.use("/manager", managerRouter);
 };

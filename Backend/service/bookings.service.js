@@ -240,14 +240,43 @@ class BookingsService {
       }
     }
 
+    // Custom sort: completed status goes to bottom, others sorted by slot_start_time ascending
     const [bookings, totalItems] = await Promise.all([
-      Booking.find(filters)
-        .populate("service_ids")
-        .populate("vehicle_id")
-        .sort({ slot_start_time: 1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .exec(),
+      Booking.aggregate([
+        { $match: filters },
+        {
+          $addFields: {
+            sortPriority: {
+              $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
+            }
+          }
+        },
+        { $sort: { sortPriority: 1, slot_start_time: 1 } },
+        { $skip: (page - 1) * limit },
+        { $limit: limit },
+        {
+          $lookup: {
+            from: "services",
+            localField: "service_ids",
+            foreignField: "_id",
+            as: "service_ids"
+          }
+        },
+        {
+          $lookup: {
+            from: "vehicles",
+            localField: "vehicle_id",
+            foreignField: "_id",
+            as: "vehicle_id"
+          }
+        },
+        {
+          $addFields: {
+            vehicle_id: { $arrayElemAt: ["$vehicle_id", 0] },
+            service_ids: "$service_ids"
+          }
+        }
+      ]).exec(),
       Booking.countDocuments(filters).exec(),
     ]);
 
@@ -304,7 +333,7 @@ class BookingsService {
     return booking;
   }
 
-  async cancelBooking(bookingId) {
+  async cancelBooking(bookingId, userId, cancelReason = null) {
     const booking = await Booking.findById(bookingId).exec();
     if (!booking) {
       throw new DomainError(
@@ -322,7 +351,14 @@ class BookingsService {
       );
     }
 
+    // Determine if user is staff or customer
+    const isStaff = await notificationService.isStaffUser(userId);
+    const cancelledBy = isStaff ? "staff" : "customer";
+
     booking.status = "cancelled";
+    booking.cancelled_by = cancelledBy;
+    booking.cancel_reason = cancelReason || null;
+    booking.cancelled_at = new Date();
     await booking.save();
 
     await Promise.all([
