@@ -100,6 +100,27 @@ class ServiceOrderController {
       next(error);
     }
   }
+
+  async cancelServiceOrder(req, res, next) {
+    try {
+      const serviceOrderId = req.params.id;
+      const staffId = req.userId;
+      const { cancelReason } = req.body;
+
+      const serviceOrder = await serviceOrderService.cancelServiceOrder(
+        serviceOrderId,
+        staffId,
+        cancelReason
+      );
+
+      res.status(200).json({
+        message: "Hủy lệnh sửa chữa thành công",
+        data: serviceOrder,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new ServiceOrderController();

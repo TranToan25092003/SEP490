@@ -706,6 +706,71 @@ async function notifyPaymentSuccess(invoiceDoc, { actorClerkId = null } = {}) {
       linkTo: receiptPath,
       actorClerkId,
     });
+
+    // Gửi email xác nhận thanh toán
+    try {
+      const { UsersService } = require("./users.service");
+      const emailService = require("./email.service");
+
+      console.log(
+        "[Notification] Attempting to send payment confirmation email"
+      );
+      console.log("[Notification] customerClerkId:", customerClerkId);
+
+      if (customerClerkId && !customerClerkId.startsWith("guest_")) {
+        console.log("[Notification] Fetching customer profile...");
+        const customerProfiles = await UsersService.getProfilesByIds([
+          customerClerkId,
+        ]);
+        const customerProfile = customerProfiles[customerClerkId];
+
+        console.log("[Notification] Customer profile:", {
+          email: customerProfile?.email,
+          fullName: customerProfile?.fullName,
+        });
+
+        if (customerProfile?.email) {
+          // Chuyển đổi invoiceDoc thành object để truyền vào email service
+          const invoiceData = {
+            id: invoiceId,
+            invoiceNumber,
+            paid_amount: invoiceDoc.paid_amount ?? invoiceDoc.amount,
+            amount: invoiceDoc.amount,
+            payment_method: invoiceDoc.payment_method,
+            confirmed_at: invoiceDoc.confirmed_at,
+            updatedAt: invoiceDoc.updatedAt,
+          };
+
+          console.log(
+            "[Notification] Sending payment confirmation email to:",
+            customerProfile.email
+          );
+          await emailService.sendPaymentConfirmationEmail(
+            invoiceData,
+            customerProfile.email,
+            customerName
+          );
+          console.log(
+            "[Notification] Payment confirmation email sent successfully"
+          );
+        } else {
+          console.log(
+            "[Notification] Customer has no email address, skipping email"
+          );
+        }
+      } else {
+        console.log(
+          "[Notification] Invalid customerClerkId or guest user, skipping email"
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[Notification] Failed to send payment confirmation email:",
+        error
+      );
+      console.error("[Notification] Error stack:", error.stack);
+      // Không throw error để không làm gián đoạn flow
+    }
   }
 
   await notifyStaffGroup({

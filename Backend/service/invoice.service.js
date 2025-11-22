@@ -374,6 +374,15 @@ class InvoiceService {
 
     await invoice.save();
 
+    // Populate lại invoice sau khi save để đảm bảo có đầy đủ thông tin
+    await invoice.populate({
+      path: "service_order_id",
+      populate: {
+        path: "booking_id",
+        populate: { path: "vehicle_id" },
+      },
+    });
+
     await notificationService.notifyPaymentSuccess(invoice, {
       actorClerkId: confirmedBy,
     });

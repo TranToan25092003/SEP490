@@ -2,7 +2,12 @@ import React, { useState, useEffect, useMemo } from "react"; // Thêm useEffect 
 import background from "../../assets/cool-motorcycle-indoors.png";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import avatarImg from "../../assets/avatar.png";
-import { useNavigate, useLoaderData, useSearchParams, Link } from "react-router-dom";
+import {
+  useNavigate,
+  useLoaderData,
+  useSearchParams,
+  Link,
+} from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
 import VehicleProfile from "./VehicleProfile";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
@@ -125,15 +130,9 @@ const LayoutProfile = () => {
         const searchLower = searchText.toLowerCase();
         const matchesSearch =
           booking.id?.toLowerCase().includes(searchLower) ||
-          booking.vehicle?.licensePlate
-            ?.toLowerCase()
-            .includes(searchLower) ||
-          booking.vehicle?.brand
-            ?.toLowerCase()
-            .includes(searchLower) ||
-          booking.vehicle?.model
-            ?.toLowerCase()
-            .includes(searchLower);
+          booking.vehicle?.licensePlate?.toLowerCase().includes(searchLower) ||
+          booking.vehicle?.brand?.toLowerCase().includes(searchLower) ||
+          booking.vehicle?.model?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 
@@ -164,7 +163,14 @@ const LayoutProfile = () => {
       currentBookings: current,
       totalPages: total,
     };
-  }, [bookings, searchText, selectedVehicleId, selectedStatus, currentPage, itemsPerPage]);
+  }, [
+    bookings,
+    searchText,
+    selectedVehicleId,
+    selectedStatus,
+    currentPage,
+    itemsPerPage,
+  ]);
 
   // Tải dữ liệu người dùng vào state của form
   useEffect(() => {
@@ -408,7 +414,7 @@ const LayoutProfile = () => {
                         <Input
                           id="name"
                           {...register("name")}
-                          placeholder="Ví dụ: Camry"
+                          placeholder="Ví dụ: Air Blade"
                           className="mt-1"
                         />
                         {errors.name && (
@@ -723,12 +729,22 @@ const LayoutProfile = () => {
                                 <SelectValue placeholder="Tất cả trạng thái" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                                <SelectItem value="all">
+                                  Tất cả trạng thái
+                                </SelectItem>
                                 <SelectItem value="booked">Đã đặt</SelectItem>
-                                <SelectItem value="checked_in">Đã tiếp nhận</SelectItem>
-                                <SelectItem value="in_progress">Đang thực hiện</SelectItem>
-                                <SelectItem value="completed">Hoàn thành</SelectItem>
-                                <SelectItem value="cancelled">Đã hủy</SelectItem>
+                                <SelectItem value="checked_in">
+                                  Đã tiếp nhận
+                                </SelectItem>
+                                <SelectItem value="in_progress">
+                                  Đang thực hiện
+                                </SelectItem>
+                                <SelectItem value="completed">
+                                  Hoàn thành
+                                </SelectItem>
+                                <SelectItem value="cancelled">
+                                  Đã hủy
+                                </SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
@@ -758,183 +774,194 @@ const LayoutProfile = () => {
 
                       {/* Hiển thị kết quả đã được tối ưu */}
                       {filteredBookings.length === 0 ? (
-                              <Card>
-                                <CardContent className="py-12 text-center">
-                                  <History className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                                  <p className="text-lg font-medium text-muted-foreground mb-2">
-                                    Không tìm thấy kết quả
-                                  </p>
-                                  <p className="text-sm text-muted-foreground mb-4">
-                                    Không có đơn đặt lịch nào phù hợp với bộ lọc của bạn.
-                                  </p>
-                                  <Button
-                                    variant="outline"
-                                    onClick={() => {
-                                      setSearchText("");
-                                      setSelectedVehicleId("all");
-                                      setSelectedStatus("all");
-                                      setCurrentPage(1);
-                                    }}
-                                  >
-                                    <X className="h-4 w-4 mr-2" />
-                                    Xóa bộ lọc
-                                  </Button>
-                                </CardContent>
-                              </Card>
-                            ) : (
-                              <>
-                                <div className="space-y-4">
-                                  {currentBookings.map((booking) => (
-                                    <Link
-                                      to={`/booking/${booking.id}/history`}
-                                      key={booking.id}
-                                      className="block group"
+                        <Card>
+                          <CardContent className="py-12 text-center">
+                            <History className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                            <p className="text-lg font-medium text-muted-foreground mb-2">
+                              Không tìm thấy kết quả
+                            </p>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              Không có đơn đặt lịch nào phù hợp với bộ lọc của
+                              bạn.
+                            </p>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setSearchText("");
+                                setSelectedVehicleId("all");
+                                setSelectedStatus("all");
+                                setCurrentPage(1);
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Xóa bộ lọc
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ) : (
+                        <>
+                          <div className="space-y-4">
+                            {currentBookings.map((booking) => (
+                              <Link
+                                to={`/booking/${booking.id}/history`}
+                                key={booking.id}
+                                className="block group"
+                              >
+                                <Card className="transition-all group-hover:border-primary group-hover:shadow-lg">
+                                  <CardHeader className="flex flex-row items-center justify-between pb-3">
+                                    <div>
+                                      <CardTitle className="text-lg">
+                                        Mã đơn: {booking.id?.slice(-8) || "N/A"}
+                                      </CardTitle>
+                                      <p className="text-sm text-muted-foreground mt-1">
+                                        Biển số:{" "}
+                                        {booking.vehicle?.licensePlate || "N/A"}
+                                      </p>
+                                    </div>
+                                    <Badge variant="outline">
+                                      {translateBookingStatus(booking.status)}
+                                    </Badge>
+                                  </CardHeader>
+                                  <CardContent className="grid gap-4 md:grid-cols-3 pt-0">
+                                    <div className="flex items-start gap-3">
+                                      <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">
+                                          Phương tiện
+                                        </p>
+                                        <p className="font-semibold">
+                                          {booking.vehicle?.brand || "N/A"}{" "}
+                                          {booking.vehicle?.model || ""}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                          Năm {booking.vehicle?.year || "N/A"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                      <Calendar className="size-5 text-primary flex-shrink-0 mt-0.5" />
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">
+                                          Ngày hẹn
+                                        </p>
+                                        <p className="font-semibold">
+                                          {booking.slotStartTime
+                                            ? new Date(
+                                                booking.slotStartTime
+                                              ).toLocaleDateString("vi-VN", {
+                                                weekday: "long",
+                                                year: "numeric",
+                                                month: "long",
+                                                day: "numeric",
+                                              })
+                                            : "N/A"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                      <Clock className="size-5 text-primary flex-shrink-0 mt-0.5" />
+                                      <div>
+                                        <p className="text-sm text-muted-foreground">
+                                          Khung giờ
+                                        </p>
+                                        <p className="font-semibold">
+                                          {booking.slotStartTime &&
+                                          booking.slotEndTime
+                                            ? (() => {
+                                                const s = new Date(
+                                                  booking.slotStartTime
+                                                );
+                                                const e = new Date(
+                                                  booking.slotEndTime
+                                                );
+                                                return `${s
+                                                  .getHours()
+                                                  .toString()
+                                                  .padStart(2, "0")}:${s
+                                                  .getMinutes()
+                                                  .toString()
+                                                  .padStart(2, "0")} - ${e
+                                                  .getHours()
+                                                  .toString()
+                                                  .padStart(2, "0")}:${e
+                                                  .getMinutes()
+                                                  .toString()
+                                                  .padStart(2, "0")}`;
+                                              })()
+                                            : "N/A"}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              </Link>
+                            ))}
+                          </div>
+
+                          {/* Phân trang */}
+                          {totalPages > 1 && (
+                            <div className="flex items-center justify-between pt-4 border-t">
+                              <div className="text-sm text-muted-foreground">
+                                Hiển thị {(currentPage - 1) * itemsPerPage + 1}{" "}
+                                -{" "}
+                                {Math.min(
+                                  currentPage * itemsPerPage,
+                                  filteredBookings.length
+                                )}{" "}
+                                trong tổng số {filteredBookings.length} đơn
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setCurrentPage((prev) =>
+                                      Math.max(1, prev - 1)
+                                    )
+                                  }
+                                  disabled={currentPage === 1}
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                  Trước
+                                </Button>
+                                <div className="flex items-center gap-1">
+                                  {Array.from(
+                                    { length: totalPages },
+                                    (_, i) => i + 1
+                                  ).map((page) => (
+                                    <Button
+                                      key={page}
+                                      variant={
+                                        currentPage === page
+                                          ? "default"
+                                          : "outline"
+                                      }
+                                      size="sm"
+                                      onClick={() => setCurrentPage(page)}
+                                      className="min-w-[2.5rem]"
                                     >
-                                      <Card className="transition-all group-hover:border-primary group-hover:shadow-lg">
-                                        <CardHeader className="flex flex-row items-center justify-between pb-3">
-                                          <div>
-                                            <CardTitle className="text-lg">
-                                              Mã đơn: {booking.id?.slice(-8) || "N/A"}
-                                            </CardTitle>
-                                            <p className="text-sm text-muted-foreground mt-1">
-                                              Biển số: {booking.vehicle?.licensePlate || "N/A"}
-                                            </p>
-                                          </div>
-                                          <Badge variant="outline">
-                                            {translateBookingStatus(booking.status)}
-                                          </Badge>
-                                        </CardHeader>
-                                        <CardContent className="grid gap-4 md:grid-cols-3 pt-0">
-                                          <div className="flex items-start gap-3">
-                                            <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                Phương tiện
-                                              </p>
-                                              <p className="font-semibold">
-                                                {booking.vehicle?.brand || "N/A"}{" "}
-                                                {booking.vehicle?.model || ""}
-                                              </p>
-                                              <p className="text-sm text-muted-foreground">
-                                                Năm {booking.vehicle?.year || "N/A"}
-                                              </p>
-                                            </div>
-                                          </div>
-                                          <div className="flex items-start gap-3">
-                                            <Calendar className="size-5 text-primary flex-shrink-0 mt-0.5" />
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                Ngày hẹn
-                                              </p>
-                                              <p className="font-semibold">
-                                                {booking.slotStartTime
-                                                  ? new Date(
-                                                      booking.slotStartTime
-                                                    ).toLocaleDateString("vi-VN", {
-                                                      weekday: "long",
-                                                      year: "numeric",
-                                                      month: "long",
-                                                      day: "numeric",
-                                                    })
-                                                  : "N/A"}
-                                              </p>
-                                            </div>
-                                          </div>
-                                          <div className="flex items-start gap-3">
-                                            <Clock className="size-5 text-primary flex-shrink-0 mt-0.5" />
-                                            <div>
-                                              <p className="text-sm text-muted-foreground">
-                                                Khung giờ
-                                              </p>
-                                              <p className="font-semibold">
-                                                {booking.slotStartTime && booking.slotEndTime
-                                                  ? (() => {
-                                                      const s = new Date(
-                                                        booking.slotStartTime
-                                                      );
-                                                      const e = new Date(
-                                                        booking.slotEndTime
-                                                      );
-                                                      return `${s
-                                                        .getHours()
-                                                        .toString()
-                                                        .padStart(2, "0")}:${s
-                                                        .getMinutes()
-                                                        .toString()
-                                                        .padStart(2, "0")} - ${e
-                                                        .getHours()
-                                                        .toString()
-                                                        .padStart(2, "0")}:${e
-                                                        .getMinutes()
-                                                        .toString()
-                                                        .padStart(2, "0")}`;
-                                                    })()
-                                                  : "N/A"}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </CardContent>
-                                      </Card>
-                                    </Link>
+                                      {page}
+                                    </Button>
                                   ))}
                                 </div>
-
-                                {/* Phân trang */}
-                                {totalPages > 1 && (
-                                  <div className="flex items-center justify-between pt-4 border-t">
-                                    <div className="text-sm text-muted-foreground">
-                                      Hiển thị {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                                      {Math.min(currentPage * itemsPerPage, filteredBookings.length)} trong tổng số{" "}
-                                      {filteredBookings.length} đơn
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          setCurrentPage((prev) => Math.max(1, prev - 1))
-                                        }
-                                        disabled={currentPage === 1}
-                                      >
-                                        <ChevronLeft className="h-4 w-4" />
-                                        Trước
-                                      </Button>
-                                      <div className="flex items-center gap-1">
-                                        {Array.from(
-                                          { length: totalPages },
-                                          (_, i) => i + 1
-                                        ).map((page) => (
-                                          <Button
-                                            key={page}
-                                            variant={
-                                              currentPage === page ? "default" : "outline"
-                                            }
-                                            size="sm"
-                                            onClick={() => setCurrentPage(page)}
-                                            className="min-w-[2.5rem]"
-                                          >
-                                            {page}
-                                          </Button>
-                                        ))}
-                                      </div>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          setCurrentPage((prev) =>
-                                            Math.min(totalPages, prev + 1)
-                                          )
-                                        }
-                                        disabled={currentPage === totalPages}
-                                      >
-                                        Sau
-                                        <ChevronRight className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )}
-                              </>
-                            )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setCurrentPage((prev) =>
+                                      Math.min(totalPages, prev + 1)
+                                    )
+                                  }
+                                  disabled={currentPage === totalPages}
+                                >
+                                  Sau
+                                  <ChevronRight className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </>
                   )}
                 </div>

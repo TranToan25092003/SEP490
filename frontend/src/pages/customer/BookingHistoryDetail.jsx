@@ -184,13 +184,13 @@ const BookingHistoryDetailContent = ({ data }) => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate("/profile?tab=history")}
+          <button
+            onClick={() => navigate("/profile?tab=history")}
               className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-3 py-1.5 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm font-medium">Quay lại lịch sử sửa xe</span>
-            </button>
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-medium">Quay lại lịch sử sửa xe</span>
+          </button>
             <Badge variant="outline">
               {translateBookingStatus(booking.status)}
             </Badge>
@@ -200,54 +200,54 @@ const BookingHistoryDetailContent = ({ data }) => {
         <CardContent className="space-y-6">
           {/* Thông tin đơn hàng */}
           <div className="grid gap-4 md:grid-cols-3 pb-6 border-b">
-            <div className="flex items-start gap-3">
-              <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-muted-foreground">Phương tiện</p>
-                <p className="font-semibold">
-                  {booking.vehicle?.brand || "N/A"} {booking.vehicle?.model || ""}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Biển số: {booking.vehicle?.licensePlate || "N/A"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Năm: {booking.vehicle?.year || "N/A"}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Calendar className="size-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-muted-foreground">Ngày hẹn</p>
-                <p className="font-semibold">
-                  {formatDate(booking.slotStartTime)}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Clock className="size-5 text-primary flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm text-muted-foreground">Khung giờ</p>
-                <p className="font-semibold">
-                  {formatTime(booking.slotStartTime, booking.slotEndTime)}
-                </p>
-              </div>
+          <div className="flex items-start gap-3">
+            <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-muted-foreground">Phương tiện</p>
+              <p className="font-semibold">
+                {booking.vehicle?.brand || "N/A"} {booking.vehicle?.model || ""}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Biển số: {booking.vehicle?.licensePlate || "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Năm: {booking.vehicle?.year || "N/A"}
+              </p>
             </div>
           </div>
+          <div className="flex items-start gap-3">
+            <Calendar className="size-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-muted-foreground">Ngày hẹn</p>
+              <p className="font-semibold">
+                {formatDate(booking.slotStartTime)}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Clock className="size-5 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm text-muted-foreground">Khung giờ</p>
+              <p className="font-semibold">
+                {formatTime(booking.slotStartTime, booking.slotEndTime)}
+              </p>
+            </div>
+          </div>
+          </div>
 
-          {/* Layout 2 cột: Bảng bên trái, Tổng tiền bên phải */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Bảng dịch vụ và phụ tùng - Chiếm 2 cột */}
+      {/* Layout 2 cột: Bảng bên trái, Tổng tiền bên phải */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Bảng dịch vụ và phụ tùng - Chiếm 2 cột */}
             <div className="lg:col-span-2">
               <div className="flex items-center gap-2 mb-4">
-                <Package className="size-5" />
+              <Package className="size-5" />
                 <h4 className="font-semibold text-lg">
-                  Dịch Vụ & Phụ Tùng Đã Sử Dụng
-                  {allItems.length > 0 && (
+              Dịch Vụ & Phụ Tùng Đã Sử Dụng
+              {allItems.length > 0 && (
                     <span className="text-muted-foreground font-normal text-sm ml-2">
-                      ({allItems.length})
-                    </span>
-                  )}
+                  ({allItems.length})
+                </span>
+              )}
                 </h4>
               </div>
               <div>
@@ -431,60 +431,60 @@ const BookingHistoryDetailContent = ({ data }) => {
               </div>
             </div>
 
-            {/* Tổng tiền - Chiếm 1 cột */}
-            {serviceOrder && allItems.length > 0 && (
+        {/* Tổng tiền - Chiếm 1 cột */}
+        {serviceOrder && allItems.length > 0 && (
               <div className="lg:col-span-1">
                 <h4 className="font-semibold text-lg mb-4">Tổng Kết</h4>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Tổng tiền dịch vụ:
-                      </span>
-                      <span className="font-semibold">
-                        {formatPrice(totalServices)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Tổng tiền phụ tùng:
-                      </span>
-                      <span className="font-semibold">
-                        {formatPrice(totalParts)}
-                      </span>
-                    </div>
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Tổng tiền dịch vụ:
+                    </span>
+                    <span className="font-semibold">
+                      {formatPrice(totalServices)}
+                    </span>
                   </div>
-                  <div className="border-t pt-4">
-                    <div className="flex justify-between text-xl font-bold">
-                      <span>Tổng cộng:</span>
-                      <span className="text-primary">
-                        {formatPrice(grandTotal)}
-                      </span>
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">
+                      Tổng tiền phụ tùng:
+                    </span>
+                    <span className="font-semibold">
+                      {formatPrice(totalParts)}
+                    </span>
                   </div>
-                  
-                  {/* Chính sách bảo hành */}
-                  <div className="border-t pt-4 mt-4">
-                    <div className="space-y-2">
-                      <h4 className="font-semibold text-sm flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        Chính Sách Bảo Hành
-                      </h4>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>• Khách hàng có thể yêu cầu bảo hành trong vòng <strong>7 ngày</strong> kể từ ngày hoàn thành đơn sửa chữa.</p>
-                        <p>• Chỉ áp dụng cho các phụ tùng đã được sửa chữa/thay thế trong đơn.</p>
-                        <p>• Mỗi đơn sửa chữa chỉ được bảo hành <strong>1 lần duy nhất</strong>.</p>
-                        <p>• Dịch vụ bảo hành và phụ tùng bảo hành sẽ được miễn phí (giá = 0 đồng).</p>
-                        <p>• Thời gian bảo hành: <strong>6 tháng</strong> kể từ ngày bảo hành.</p>
-                      </div>
-                    </div>
+                </div>
+                <div className="border-t pt-4">
+                  <div className="flex justify-between text-xl font-bold">
+                    <span>Tổng cộng:</span>
+                    <span className="text-primary">
+                      {formatPrice(grandTotal)}
+                    </span>
+                </div>
+              </div>
+              
+              {/* Chính sách bảo hành */}
+              <div className="border-t pt-4 mt-4">
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-sm flex items-center gap-2">
+                    <Shield className="h-4 w-4" />
+                    Chính Sách Bảo Hành
+                  </h4>
+                  <div className="text-xs text-muted-foreground space-y-1">
+                    <p>• Khách hàng có thể yêu cầu bảo hành trong vòng <strong>7 ngày</strong> kể từ ngày hoàn thành đơn sửa chữa.</p>
+                    <p>• Chỉ áp dụng cho các phụ tùng đã được sửa chữa/thay thế trong đơn.</p>
+                    <p>• Mỗi đơn sửa chữa chỉ được bảo hành <strong>1 lần duy nhất</strong>.</p>
+                    <p>• Dịch vụ bảo hành và phụ tùng bảo hành sẽ được miễn phí (giá = 0 đồng).</p>
+                    <p>• Thời gian bảo hành: <strong>6 tháng</strong> kể từ ngày bảo hành.</p>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
       </Container>
     </div>
   );
