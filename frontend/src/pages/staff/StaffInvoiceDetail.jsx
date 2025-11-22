@@ -76,9 +76,9 @@ export default function StaffInvoiceDetail() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <Button variant="outline" onClick={() => navigate(-1)}>
-          Quay lại
-        </Button>
+      <Button variant="outline" onClick={() => navigate(-1)}>
+        Quay lại
+      </Button>
         {invoice && (
           <Button 
             onClick={handleDownloadPDF} 

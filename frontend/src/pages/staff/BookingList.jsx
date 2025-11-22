@@ -240,24 +240,24 @@ const BookingList = () => {
             });
 
             return (
-              <>
-                <Filters filters={filters} onFiltersChange={setFilters}>
-                  <Filters.StringFilter
-                    filterKey="customerName"
-                    label={"Tên khách hàng"}
-                    placeholder={"Nhập tên khách hàng"}
-                  />
-                  <Filters.DropdownFilter
-                    filterKey="status"
-                    label={"Trạng thái"}
-                    placeholder={"Chọn trạng thái"}
-                    options={getBookingStatusOptions()}
-                  />
-                  <Filters.DateRangeFilter
-                    filterKey="dateRange"
-                    label={"Khoảng ngày đặt lịch"}
-                  />
-                </Filters>
+            <>
+              <Filters filters={filters} onFiltersChange={setFilters}>
+                <Filters.StringFilter
+                  filterKey="customerName"
+                  label={"Tên khách hàng"}
+                  placeholder={"Nhập tên khách hàng"}
+                />
+                <Filters.DropdownFilter
+                  filterKey="status"
+                  label={"Trạng thái"}
+                  placeholder={"Chọn trạng thái"}
+                  options={getBookingStatusOptions()}
+                />
+                <Filters.DateRangeFilter
+                  filterKey="dateRange"
+                  label={"Khoảng ngày đặt lịch"}
+                />
+              </Filters>
 
                 <CRUDTable data={sortedBookings} columns={bookingListColumnDefinitions}>
                 {(row) => {
@@ -276,10 +276,10 @@ const BookingList = () => {
                 }}
               </CRUDTable>
 
-                {data.pagination.totalItems > 0 && <AdminPagination
-                  pagination={data.pagination}
-                />}
-              </>
+              {data.pagination.totalItems > 0 && <AdminPagination
+                pagination={data.pagination}
+              />}
+            </>
             );
           }}
         </Await>

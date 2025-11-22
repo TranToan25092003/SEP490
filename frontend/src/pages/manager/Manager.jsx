@@ -156,21 +156,21 @@ function Manager() {
             {/* Mini bar chart */}
             {barChartData && barChartData.length > 0 ? (
               <>
-                <div className="flex items-end gap-2 h-40">
+            <div className="flex items-end gap-2 h-40">
                   {barChartData.map((item, i) => {
                     const maxValue = Math.max(...barChartData.map(d => d.DoanhThu), 1);
                     const h = maxValue > 0 ? (item.DoanhThu / maxValue) * 100 : 0;
-                    return (
-                      <div key={i} className="flex-1 bg-gray-100 rounded">
-                        <div
-                          style={{ height: `${h}%` }}
-                          className="bg-blue-500 rounded-t"
-                        ></div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                return (
+                  <div key={i} className="flex-1 bg-gray-100 rounded">
+                    <div
+                      style={{ height: `${h}%` }}
+                      className="bg-blue-500 rounded-t"
+                    ></div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex justify-between text-xs text-muted-foreground mt-2">
                   {barChartData.map((item, i) => (
                     <span key={i}>{item.month}</span>
                   ))}
@@ -179,7 +179,7 @@ function Manager() {
             ) : (
               <div className="flex items-center justify-center h-40 text-muted-foreground">
                 Chưa có dữ liệu
-              </div>
+            </div>
             )}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <div className="flex justify-between items-center">

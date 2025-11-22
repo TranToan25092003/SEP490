@@ -116,6 +116,56 @@ const LayoutProfile = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
+  // Tối ưu: Sử dụng useMemo để cache kết quả filter và pagination
+  const { filteredBookings, currentBookings, totalPages } = useMemo(() => {
+    // Áp dụng filter
+    let filtered = bookings.filter((booking) => {
+      // Filter theo tìm kiếm
+      if (searchText) {
+        const searchLower = searchText.toLowerCase();
+        const matchesSearch =
+          booking.id?.toLowerCase().includes(searchLower) ||
+          booking.vehicle?.licensePlate
+            ?.toLowerCase()
+            .includes(searchLower) ||
+          booking.vehicle?.brand
+            ?.toLowerCase()
+            .includes(searchLower) ||
+          booking.vehicle?.model
+            ?.toLowerCase()
+            .includes(searchLower);
+        if (!matchesSearch) return false;
+      }
+
+      // Filter theo xe
+      if (selectedVehicleId !== "all") {
+        const vehicleId = booking.vehicle?.id || booking.vehicle?._id;
+        if (vehicleId !== selectedVehicleId) {
+          return false;
+        }
+      }
+
+      // Filter theo trạng thái
+      if (selectedStatus !== "all") {
+        if (booking.status !== selectedStatus) return false;
+      }
+
+      return true;
+    });
+
+    // Tính toán pagination
+    const total = Math.ceil(filtered.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const current = filtered.slice(startIndex, endIndex);
+
+    return {
+      filteredBookings: filtered,
+      currentBookings: current,
+      totalPages: total,
+    };
+  }, [bookings, searchText, selectedVehicleId, selectedStatus, currentPage, itemsPerPage]);
+
   // Tải dữ liệu người dùng vào state của form
   useEffect(() => {
     if (user) {
@@ -706,56 +756,8 @@ const LayoutProfile = () => {
                         </CardContent>
                       </Card>
 
-                      {/* Tính toán filter và phân trang */}
-                      {(() => {
-                        // Áp dụng filter
-                        let filteredBookings = bookings.filter((booking) => {
-                          // Filter theo tìm kiếm
-                          if (searchText) {
-                            const searchLower = searchText.toLowerCase();
-                            const matchesSearch =
-                              booking.id?.toLowerCase().includes(searchLower) ||
-                              booking.vehicle?.licensePlate
-                                ?.toLowerCase()
-                                .includes(searchLower) ||
-                              booking.vehicle?.brand
-                                ?.toLowerCase()
-                                .includes(searchLower) ||
-                              booking.vehicle?.model
-                                ?.toLowerCase()
-                                .includes(searchLower);
-                            if (!matchesSearch) return false;
-                          }
-
-                          // Filter theo xe
-                          if (selectedVehicleId !== "all") {
-                            const vehicleId = booking.vehicle?.id || booking.vehicle?._id;
-                            if (vehicleId !== selectedVehicleId) {
-                              return false;
-                            }
-                          }
-
-                          // Filter theo trạng thái
-                          if (selectedStatus !== "all") {
-                            if (booking.status !== selectedStatus) return false;
-                          }
-
-                          return true;
-                        });
-
-                        const totalPages = Math.ceil(
-                          filteredBookings.length / itemsPerPage
-                        );
-                        const startIndex = (currentPage - 1) * itemsPerPage;
-                        const endIndex = startIndex + itemsPerPage;
-                        const currentBookings = filteredBookings.slice(
-                          startIndex,
-                          endIndex
-                        );
-
-                        return (
-                          <>
-                            {filteredBookings.length === 0 ? (
+                      {/* Hiển thị kết quả đã được tối ưu */}
+                      {filteredBookings.length === 0 ? (
                               <Card>
                                 <CardContent className="py-12 text-center">
                                   <History className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -881,8 +883,8 @@ const LayoutProfile = () => {
                                 {totalPages > 1 && (
                                   <div className="flex items-center justify-between pt-4 border-t">
                                     <div className="text-sm text-muted-foreground">
-                                      Hiển thị {startIndex + 1} -{" "}
-                                      {Math.min(endIndex, filteredBookings.length)} trong tổng số{" "}
+                                      Hiển thị {(currentPage - 1) * itemsPerPage + 1} -{" "}
+                                      {Math.min(currentPage * itemsPerPage, filteredBookings.length)} trong tổng số{" "}
                                       {filteredBookings.length} đơn
                                     </div>
                                     <div className="flex items-center gap-2">
@@ -933,9 +935,6 @@ const LayoutProfile = () => {
                                 )}
                               </>
                             )}
-                          </>
-                        );
-                      })()}
                     </>
                   )}
                 </div>

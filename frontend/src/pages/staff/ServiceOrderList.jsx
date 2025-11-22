@@ -184,30 +184,30 @@ const ServiceOrderList = () => {
             });
 
             return (
-              <>
-                <Filters filters={filters} onFiltersChange={setFilters}>
-                  <Filters.StringFilter
-                    filterKey="customerName"
-                    label={"Tên khách hàng"}
-                    placeholder={"Nhập tên khách hàng"}
-                  />
-                  <Filters.DropdownFilter
-                    filterKey="status"
-                    label={"Trạng thái"}
-                    placeholder={"Chọn trạng thái"}
-                    options={getServiceOrderStatusOptions()}
-                  />
-                  <Filters.DateRangeFilter
-                    filterKey="dateRange"
-                    label={"Khoảng ngày tạo"}
-                  />
-                </Filters>
+            <>
+              <Filters filters={filters} onFiltersChange={setFilters}>
+                <Filters.StringFilter
+                  filterKey="customerName"
+                  label={"Tên khách hàng"}
+                  placeholder={"Nhập tên khách hàng"}
+                />
+                <Filters.DropdownFilter
+                  filterKey="status"
+                  label={"Trạng thái"}
+                  placeholder={"Chọn trạng thái"}
+                  options={getServiceOrderStatusOptions()}
+                />
+                <Filters.DateRangeFilter
+                  filterKey="dateRange"
+                  label={"Khoảng ngày tạo"}
+                />
+              </Filters>
 
-                <CRUDTable
+              <CRUDTable
                   data={sortedServiceOrders}
-                  columns={serviceOrderListColumnDefinitions}
-                  getRowId={(row) => row.id}
-                >
+                columns={serviceOrderListColumnDefinitions}
+                getRowId={(row) => row.id}
+              >
                 {(row) => (
                   <div className="flex justify-center">
                     <Link to={`/staff/service-order/${row.id}`}>
@@ -222,10 +222,10 @@ const ServiceOrderList = () => {
                 )}
               </CRUDTable>
 
-                {data.pagination.totalItems > 0 && (
-                  <AdminPagination pagination={data.pagination} />
-                )}
-              </>
+              {data.pagination.totalItems > 0 && (
+                <AdminPagination pagination={data.pagination} />
+              )}
+            </>
             );
           }}
         </Await>

@@ -177,19 +177,29 @@ class BookingsService {
   }
 
   async getUserBookings(customerClerkId) {
+    // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
-      .populate("service_ids")
+      .select("_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id")
+      .populate({
+        path: "service_ids",
+        select: "_id name price description", // Chỉ lấy các field cần thiết của service
+      })
       .populate({
         path: "vehicle_id",
-        populate: { path: "model_id" },
+        select: "_id license_plate brand name year model_id", // Chỉ lấy các field cần thiết của vehicle
+        populate: { 
+          path: "model_id",
+          select: "_id name brand", // Chỉ lấy các field cần thiết của model
+        },
       })
       .sort({ slot_start_time: -1 })
+      .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
       .exec();
 
     return bookings.map((booking) => ({
       id: booking._id,
       vehicle: mapToVehicleDTO(booking.vehicle_id),
-      services: booking.service_ids.map(mapServiceToDTO),
+      services: booking.service_ids ? booking.service_ids.map(mapServiceToDTO) : [],
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
