@@ -89,6 +89,8 @@ const sendPaymentConfirmationEmail = async (
       ? "Tiền mặt"
       : invoiceData.payment_method === "bank_transfer"
       ? "Chuyển khoản"
+      : invoiceData.payment_method === "qr_code"
+      ? "Quét QR"
       : "Không xác định";
   const paymentDate = formatDate(
     invoiceData.confirmed_at || invoiceData.updatedAt

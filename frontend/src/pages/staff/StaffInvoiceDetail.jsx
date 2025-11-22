@@ -2,7 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { fetchInvoiceDetail } from "@/api/invoices";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -76,12 +83,12 @@ export default function StaffInvoiceDetail() {
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-      <Button variant="outline" onClick={() => navigate(-1)}>
-        Quay lại
-      </Button>
+        <Button variant="outline" onClick={() => navigate(-1)}>
+          Quay lại
+        </Button>
         {invoice && (
-          <Button 
-            onClick={handleDownloadPDF} 
+          <Button
+            onClick={handleDownloadPDF}
             className="flex items-center gap-2"
             disabled={isGeneratingPDF}
           >
@@ -103,53 +110,88 @@ export default function StaffInvoiceDetail() {
             <div className="space-y-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Mã hóa đơn</div>
-                  <div className="text-lg font-semibold font-mono">{invoice.invoiceNumber || invoice.id}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Mã hóa đơn
+                  </div>
+                  <div className="text-lg font-semibold font-mono">
+                    {invoice.invoiceNumber || invoice.id}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Trạng thái</div>
+                  <div className="text-sm text-muted-foreground">
+                    Trạng thái
+                  </div>
                   <div>{statusBadge(invoice.status)}</div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Lệnh sửa chữa</div>
-                  <div className="font-mono">{invoice.serviceOrderNumber || invoice.serviceOrderId}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Lệnh sửa chữa
+                  </div>
+                  <div className="font-mono">
+                    {invoice.serviceOrderNumber || invoice.serviceOrderId}
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Khách hàng</div>
+                  <div className="text-sm text-muted-foreground">
+                    Khách hàng
+                  </div>
                   <div>{invoice.customerName || "-"}</div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Biển số</div>
-                  <div>{invoice.licensePlate || invoice.vehicleLicensePlate || invoice.vehicle?.licensePlate || "-"}</div>
+                  <div>
+                    {invoice.licensePlate ||
+                      invoice.vehicleLicensePlate ||
+                      invoice.vehicle?.licensePlate ||
+                      "-"}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <div className="text-sm text-muted-foreground">Ngày tạo</div>
                   <div>{formatDateTime(invoice.createdAt)}</div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Ngày cập nhật</div>
+                  <div className="text-sm text-muted-foreground">
+                    Ngày cập nhật
+                  </div>
                   <div>{formatDateTime(invoice.updatedAt)}</div>
                 </div>
                 <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Phương thức thanh toán</div>
-                  <div>{invoice.paymentMethod ? invoice.paymentMethod === "cash" ? "Tiền mặt" : "Chuyển khoản" : "-"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Phương thức thanh toán
+                  </div>
+                  <div>
+                    {invoice.paymentMethod
+                      ? invoice.paymentMethod === "cash"
+                        ? "Tiền mặt"
+                        : invoice.paymentMethod === "qr_code"
+                        ? "Quét QR"
+                        : "Chuyển khoản"
+                      : "-"}
+                  </div>
                 </div>
                 {invoice.confirmedBy && (
                   <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Người xác nhận</div>
+                    <div className="text-sm text-muted-foreground">
+                      Người xác nhận
+                    </div>
                     <div>{invoice.confirmedBy}</div>
                   </div>
                 )}
                 {invoice.confirmedAt && (
                   <div className="space-y-2">
-                    <div className="text-sm text-muted-foreground">Thời gian xác nhận</div>
+                    <div className="text-sm text-muted-foreground">
+                      Thời gian xác nhận
+                    </div>
                     <div>{formatDateTime(invoice.confirmedAt)}</div>
                   </div>
                 )}
               </div>
 
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">Tóm tắt thanh toán</div>
+                <div className="text-sm text-muted-foreground">
+                  Tóm tắt thanh toán
+                </div>
                 <div className="rounded-lg border p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Tạm tính</span>
@@ -167,7 +209,9 @@ export default function StaffInvoiceDetail() {
               </div>
 
               <div className="space-y-3">
-                <div className="text-sm text-muted-foreground">Chi tiết hạng mục</div>
+                <div className="text-sm text-muted-foreground">
+                  Chi tiết hạng mục
+                </div>
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -183,10 +227,18 @@ export default function StaffInvoiceDetail() {
                       {(invoice.items ?? []).map((item, index) => (
                         <TableRow key={`${item.name}-${index}`}>
                           <TableCell>{item.name}</TableCell>
-                          <TableCell>{item.type === "part" ? "Phụ tùng" : "Dịch vụ"}</TableCell>
-                          <TableCell className="text-right">{item.quantity}</TableCell>
-                          <TableCell className="text-right">{formatPrice(item.price)}</TableCell>
-                          <TableCell className="text-right">{formatPrice(item.lineTotal)}</TableCell>
+                          <TableCell>
+                            {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item.quantity}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatPrice(item.price)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatPrice(item.lineTotal)}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>

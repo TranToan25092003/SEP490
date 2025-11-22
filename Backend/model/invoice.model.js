@@ -27,7 +27,7 @@ const InvoiceSchema = new Schema(
     amount: { type: Number, required: true }, // Total invoice amount (after tax)
     payment_method: {
       type: String,
-      enum: ["cash", "bank_transfer"],
+      enum: ["cash", "bank_transfer", "qr_code"],
       required: false,
     }, // Payment method
     discount_code: { type: String, required: false }, // Discount code applied (optional)
