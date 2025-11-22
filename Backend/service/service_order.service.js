@@ -100,9 +100,20 @@ class ServiceOrderService {
       pipeline.push({ $match: { $or: matchConditions } });
     }
 
+    // Custom sort: completed status goes to bottom, others sorted by createdAt ascending
+    pipeline.push({
+      $addFields: {
+        sortPriority: {
+          $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
+        }
+      }
+    });
+    pipeline.push({
+      $sort: { sortPriority: 1, createdAt: 1 }
+    });
+
     const [serviceOrders, totalItems] = await Promise.all([
       ServiceOrder.aggregate(pipeline)
-        .sort({ createdAt: 1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -300,6 +311,9 @@ class ServiceOrderService {
       createdAt: serviceOrder.createdAt,
       completedAt: serviceOrder.completed_at,
       estimatedCompletedAt: serviceOrder.expected_completion_time,
+      cancelledAt: serviceOrder.cancelled_at || null,
+      cancelledBy: serviceOrder.cancelled_by || null,
+      cancelReason: serviceOrder.cancel_reason || null,
     };
   }
 
@@ -417,6 +431,69 @@ class ServiceOrderService {
         item_type: "service",
       };
     });
+  }
+
+  async cancelServiceOrder(serviceOrderId, staffId, cancelReason) {
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
+    
+    if (!serviceOrder) {
+      throw new DomainError(
+        "Lệnh sửa chữa không tồn tại",
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+        404
+      );
+    }
+
+    if (serviceOrder.status === "cancelled") {
+      throw new DomainError(
+        "Lệnh sửa chữa đã bị hủy",
+        "SERVICE_ORDER_ALREADY_CANCELLED",
+        400
+      );
+    }
+
+    if (serviceOrder.status === "completed") {
+      throw new DomainError(
+        "Không thể hủy lệnh sửa chữa đã hoàn thành",
+        "SERVICE_ORDER_ALREADY_COMPLETED",
+        400
+      );
+    }
+
+    // Cập nhật trạng thái
+    serviceOrder.status = "cancelled";
+    serviceOrder.cancelled_by = "staff";
+    serviceOrder.cancel_reason = cancelReason || "Nhân viên hủy lệnh";
+    serviceOrder.cancelled_at = new Date();
+    await serviceOrder.save();
+
+    // Nếu có booking liên quan, cập nhật trạng thái booking
+    if (serviceOrder.booking_id) {
+      const booking = await Booking.findById(serviceOrder.booking_id).exec();
+      if (booking && booking.status !== "cancelled" && booking.status !== "completed") {
+        booking.status = "cancelled";
+        booking.cancelled_by = "staff";
+        booking.cancel_reason = cancelReason || "Lệnh sửa chữa bị hủy";
+        booking.cancelled_at = new Date();
+        await booking.save();
+      }
+    }
+
+    // Gửi thông báo
+    const notificationService = require("./notification.service");
+    await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
+    if (serviceOrder.booking_id) {
+      const booking = await Booking.findById(serviceOrder.booking_id).exec();
+      if (booking) {
+        await notificationService.notifyCustomerBookingCancelled(
+          booking,
+          "staff",
+          cancelReason || "Lệnh sửa chữa bị hủy"
+        );
+      }
+    }
+
+    return this.getServiceOrderById(serviceOrderId);
   }
 }
 

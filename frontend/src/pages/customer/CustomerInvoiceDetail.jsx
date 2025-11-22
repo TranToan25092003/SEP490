@@ -80,7 +80,10 @@ const renderStatusBadge = (status) => {
 
 const renderPaymentMethod = (method) => {
   if (!method) return "Chưa xác định";
-  return method === "cash" ? "Tiền mặt" : "Chuyển khoản";
+  if (method === "cash") return "Tiền mặt";
+  if (method === "qr_code") return "Quét QR";
+  if (method === "bank_transfer") return "Chuyển khoản";
+  return "Chưa xác định";
 };
 
 // Thông tin ngân hàng cho QR code
@@ -626,7 +629,7 @@ const CustomerInvoiceDetail = () => {
                     </div>
                     <div>
                       <div className="text-muted-foreground">
-                        Trạng thái thanh toán
+                        Phương Thức Thanh Toán
                       </div>
                       <div className="font-medium text-foreground">
                         {renderPaymentMethod(invoice.paymentMethod)}

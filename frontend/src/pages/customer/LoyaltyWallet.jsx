@@ -75,8 +75,8 @@ const normalizeReward = (reward) => {
     stockLabel =
       reward.remainingStock > 0
         ? `Còn ${new Intl.NumberFormat("vi-VN").format(
-          reward.remainingStock
-        )} mã`
+            reward.remainingStock
+          )} mã`
         : "Đã hết mã";
   } else if (typeof reward.stock === "number") {
     stockLabel = `Giới hạn ${new Intl.NumberFormat("vi-VN").format(
@@ -356,7 +356,6 @@ const LoyaltyWallet = () => {
     >
       {/* Main Card Wrapper */}
       <Card className="w-full max-w-6xl shadow-lg rounded-2xl overflow-hidden bg-gray-50/95 backdrop-blur-sm">
-
         {/* 1. Header Section (Gradient Card) */}
         <div className="p-6">
           <div className="rounded-3xl bg-gradient-to-br from-red-500 via-rose-500 to-amber-400 text-white p-6 shadow-xl">
@@ -366,17 +365,19 @@ const LoyaltyWallet = () => {
                   Ví điểm MotorMate
                 </p>
                 <h1 className="mt-2 text-4xl font-bold">
-                  {loadingBalance ? "Đang tải..." : formatPoints(wallet.balance)}
+                  {loadingBalance
+                    ? "Đang tải..."
+                    : formatPoints(wallet.balance)}
                 </h1>
                 <p className="text-sm mt-2 opacity-90 font-medium">
                   {wallet.balance >= wallet.nextRewardThreshold
                     ? "Bạn đã đủ điểm để đổi voucher!"
                     : `Cần thêm ${formatPoints(
-                      Math.max(
-                        0,
-                        (wallet.nextRewardThreshold || 0) - wallet.balance
-                      )
-                    )} điểm để nhận quà tiếp theo.`}
+                        Math.max(
+                          0,
+                          (wallet.nextRewardThreshold || 0) - wallet.balance
+                        )
+                      )} điểm để nhận quà tiếp theo.`}
                 </p>
                 {wallet.updatedAt && (
                   <p className="text-xs mt-1 opacity-70">
@@ -391,7 +392,10 @@ const LoyaltyWallet = () => {
                   <p className="text-xs uppercase opacity-80">Voucher</p>
                 </div>
                 <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 text-center min-w-[100px]">
-                  <p className="text-2xl font-bold">{wallet.streakDays} <span className="text-sm font-normal">ngày</span></p>
+                  <p className="text-2xl font-bold">
+                    {wallet.streakDays}{" "}
+                    <span className="text-sm font-normal">ngày</span>
+                  </p>
                   <p className="text-xs uppercase opacity-80">Chuỗi</p>
                 </div>
               </div>
@@ -400,45 +404,66 @@ const LoyaltyWallet = () => {
         </div>
 
         <CardContent className="p-6 pt-0 space-y-8">
-
           {/* 2. Voucher của tôi & Ưu đãi (Grid Layout) */}
           <div className="grid gap-6 lg:grid-cols-2">
-
             {/* Cột Trái: Voucher của tôi */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                  <TicketCheck className="size-5 text-red-500" /> Voucher của tôi
+                  <TicketCheck className="size-5 text-red-500" /> Voucher của
+                  tôi
                 </h2>
                 <Badge variant="secondary">{ownedVouchers.length} mã</Badge>
               </div>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {loadingBalance ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Đang tải...</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Đang tải...
+                  </p>
                 ) : !ownedVouchers.length ? (
                   <div className="text-center py-8 border-2 border-dashed rounded-xl border-gray-300">
                     <p className="text-gray-500">Bạn chưa có voucher nào.</p>
                   </div>
                 ) : (
                   ownedVouchers.map((voucher) => (
-                    <div key={voucher.id || voucher.code} className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div
+                      key={voucher.id || voucher.code}
+                      className="rounded-xl border bg-white p-4 shadow-sm hover:shadow-md transition-shadow"
+                    >
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <p className="font-bold text-gray-900">{voucher.rewardName}</p>
-                          <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">{voucher.code}</p>
+                          <p className="font-bold text-gray-900">
+                            {voucher.rewardName}
+                          </p>
+                          <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit mt-1">
+                            {voucher.code}
+                          </p>
                         </div>
-                        <Badge variant={VOUCHER_STATUS_VARIANTS[voucher.status] || "outline"}>
-                          {VOUCHER_STATUS_LABELS[voucher.status] || voucher.status}
+                        <Badge
+                          variant={
+                            VOUCHER_STATUS_VARIANTS[voucher.status] || "outline"
+                          }
+                        >
+                          {VOUCHER_STATUS_LABELS[voucher.status] ||
+                            voucher.status}
                         </Badge>
                       </div>
                       <div className="flex justify-between items-end text-sm mt-3">
                         <div>
                           <p className="text-gray-500 text-xs">Giá trị</p>
-                          <p className="font-semibold">{formatVoucherValue(voucher)}</p>
+                          <p className="font-semibold">
+                            {formatVoucherValue(voucher)}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-gray-500 text-xs">Hết hạn</p>
-                          <p className="font-medium">{voucher.expiresAt ? new Date(voucher.expiresAt).toLocaleDateString('vi-VN') : "Vô thời hạn"}</p>
+                          <p className="font-medium">
+                            {voucher.expiresAt
+                              ? new Date(voucher.expiresAt).toLocaleDateString(
+                                  "vi-VN"
+                                )
+                              : "Vô thời hạn"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -456,7 +481,9 @@ const LoyaltyWallet = () => {
               </div>
               <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                 {loadingRewards ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Đang tải ưu đãi...</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Đang tải ưu đãi...
+                  </p>
                 ) : !displayedRewards.length ? (
                   <div className="text-center py-8 border-2 border-dashed rounded-xl border-gray-300">
                     <p className="text-gray-500">Chưa có ưu đãi nào.</p>
@@ -467,23 +494,44 @@ const LoyaltyWallet = () => {
                     const canRedeem = currentBalance >= reward.cost;
 
                     return (
-                      <div key={reward.id} className="rounded-xl border bg-white p-4 shadow-sm flex items-center justify-between gap-4">
+                      <div
+                        key={reward.id}
+                        className="rounded-xl border bg-white p-4 shadow-sm flex items-center justify-between gap-4"
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <p className="font-bold text-gray-900">{reward.title}</p>
+                            <p className="font-bold text-gray-900">
+                              {reward.title}
+                            </p>
                             {/* <Badge variant="outline" className="text-[10px] h-5">Stock: {reward.stock}</Badge> */}
                           </div>
-                          <p className="text-sm text-gray-600 line-clamp-1">{reward.desc}</p>
-                          <p className="text-sm font-semibold text-red-600 mt-1">{formatPoints(reward.cost)} điểm</p>
+                          <p className="text-sm text-gray-600 line-clamp-1">
+                            {reward.desc}
+                          </p>
+                          <p className="text-sm font-semibold text-red-600 mt-1">
+                            {formatPoints(reward.cost)} điểm
+                          </p>
                         </div>
                         <Button
                           size="sm"
                           variant={canRedeem ? "default" : "outline"}
-                          className={canRedeem ? "bg-red-600 hover:bg-red-700 text-white" : ""}
-                          disabled={loadingRewards || !canRedeem || redeemingRewardId === reward.id}
+                          className={
+                            canRedeem
+                              ? "bg-red-600 hover:bg-red-700 text-white"
+                              : ""
+                          }
+                          disabled={
+                            loadingRewards ||
+                            !canRedeem ||
+                            redeemingRewardId === reward.id
+                          }
                           onClick={() => handleRedeemReward(reward)}
                         >
-                          {redeemingRewardId === reward.id ? <Loader2 className="animate-spin h-4 w-4" /> : "Đổi"}
+                          {redeemingRewardId === reward.id ? (
+                            <Loader2 className="animate-spin h-4 w-4" />
+                          ) : (
+                            "Đổi"
+                          )}
                         </Button>
                       </div>
                     );
@@ -535,7 +583,7 @@ const LoyaltyWallet = () => {
               <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                 <History className="size-5 text-gray-600" /> Lịch sử giao dịch
               </h2>
-              <Button variant="ghost" size="sm" className="text-gray-500">Xuất file</Button>
+              {/* <Button variant="ghost" size="sm" className="text-gray-500">Xuất file</Button> */}
             </div>
             <div className="rounded-xl border bg-white overflow-hidden">
               <Table>
@@ -550,32 +598,59 @@ const LoyaltyWallet = () => {
                 <TableBody>
                   {loadingHistory ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">Đang tải lịch sử...</TableCell>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Đang tải lịch sử...
+                      </TableCell>
                     </TableRow>
                   ) : transactions.length > 0 ? (
                     transactions.map((tx) => (
                       <TableRow key={tx._id}>
-                        <TableCell className="text-gray-500">{formatDateTime(tx.createdAt)}</TableCell>
-                        <TableCell>
-                          <p className="font-medium text-gray-900">{tx.reason}</p>
-                          <Badge variant="outline" className="text-[10px] mt-1 scale-90 origin-left opacity-70">{SOURCE_CHANNEL_LABELS[tx?.sourceRef?.kind] || 'Hệ thống'}</Badge>
+                        <TableCell className="text-gray-500">
+                          {formatDateTime(tx.createdAt)}
                         </TableCell>
-                        <TableCell className={`text-right font-bold ${Number(tx.points) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <TableCell>
+                          <p className="font-medium text-gray-900">
+                            {tx.reason}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] mt-1 scale-90 origin-left opacity-70"
+                          >
+                            {SOURCE_CHANNEL_LABELS[tx?.sourceRef?.kind] ||
+                              "Hệ thống"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell
+                          className={`text-right font-bold ${
+                            Number(tx.points) > 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
                           {formatDeltaPoints(tx.points)}
                         </TableCell>
-                        <TableCell className="text-right text-gray-600">{formatPoints(tx.balanceAfter ?? wallet.balance)}</TableCell>
+                        <TableCell className="text-right text-gray-600">
+                          {formatPoints(tx.balanceAfter ?? wallet.balance)}
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-8 text-gray-500">Chưa có giao dịch nào.</TableCell>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Chưa có giao dịch nào.
+                      </TableCell>
                     </TableRow>
                   )}
                 </TableBody>
               </Table>
             </div>
           </div>
-
         </CardContent>
       </Card>
     </div>

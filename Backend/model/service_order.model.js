@@ -96,7 +96,14 @@ const ServiceOrderSchema = new Schema(
     expected_completion_time: { type: Date, required: false },
     completed_at: { type: Date, required: false },
     cancelled_at: { type: Date, required: false },
+    cancelled_by: {
+      type: String,
+      enum: ["customer", "staff"],
+      required: false,
+    },
+    cancel_reason: { type: String, required: false },
     maintenance_reminder_sent_at: { type: Date, required: false },
+    waiting_approval_at: { type: Date, required: false }, // Thời gian chuyển sang waiting_customer_approval
   },
   { timestamps: true }
 );

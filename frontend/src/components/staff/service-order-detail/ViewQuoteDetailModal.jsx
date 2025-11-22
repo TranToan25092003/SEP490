@@ -376,33 +376,33 @@ const ViewQuoteDetailModal = NiceModal.create(({
             )}
             {allowAcceptReject && quote && quote.status === "pending" && (
               <>
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    const reason = await NiceModal.show(RejectionReasonModal);
-                    if (reason) {
-                      modal.resolve({ action: "reject", reason });
-                      handleClose();
-                    }
-                  }}
-                >
-                  Từ Chối
-                </Button>
-                <Button
-                  onClick={() => {
-                    modal.resolve({ action: "accept" });
+              <Button
+                variant="outline"
+                onClick={async () => {
+                  const reason = await NiceModal.show(RejectionReasonModal);
+                  if (reason) {
+                    modal.resolve({ action: "reject", reason });
                     handleClose();
-                  }}
-                >
-                  Chấp Nhận
-                </Button>
+                  }
+                }}
+              >
+                Từ Chối
+              </Button>
+              <Button
+                onClick={() => {
+                  modal.resolve({ action: "accept" });
+                  handleClose();
+                }}
+              >
+                Chấp Nhận
+              </Button>
               </>
-            )}
+          )}
             <Button
               variant="secondary"
               onClick={() => {
-                modal.resolve({ action: "close" });
-                handleClose();
+              modal.resolve({ action: "close" });
+              handleClose();
               }}
             >
               Đóng

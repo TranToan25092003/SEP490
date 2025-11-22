@@ -180,30 +180,26 @@ const BookingHistoryDetailContent = ({ data }) => {
       }}
     >
       <Container className="space-y-6 my-8 w-full max-w-7xl">
-        <div className="flex items-center gap-4">
+      {/* Tất cả nội dung trong một Card duy nhất */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => navigate("/profile?tab=history")}
-            className="inline-flex items-center gap-2 bg-white text-gray-900 hover:bg-gray-100 rounded-lg px-4 py-2 shadow-lg transition-colors border border-gray-200"
+              className="inline-flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg px-3 py-1.5 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
             <span className="text-sm font-medium">Quay lại lịch sử sửa xe</span>
           </button>
-          <div className="bg-white rounded-lg px-4 py-2 shadow-lg">
-            <H3 className="text-gray-900">Chi Tiết Lịch Sử Sửa Xe</H3>
-          </div>
-        </div>
-
-      {/* Thông tin đơn hàng */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>Thông Tin Đơn Hàng</span>
             <Badge variant="outline">
               {translateBookingStatus(booking.status)}
             </Badge>
-          </CardTitle>
+          </div>
+          <CardTitle>Chi Tiết Lịch Sử Sửa Xe</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-4 md:grid-cols-3">
+        <CardContent className="space-y-6">
+          {/* Thông tin đơn hàng */}
+          <div className="grid gap-4 md:grid-cols-3 pb-6 border-b">
           <div className="flex items-start gap-3">
             <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
             <div>
@@ -237,25 +233,24 @@ const BookingHistoryDetailContent = ({ data }) => {
               </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          </div>
 
       {/* Layout 2 cột: Bảng bên trái, Tổng tiền bên phải */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Bảng dịch vụ và phụ tùng - Chiếm 2 cột */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-2 mb-4">
               <Package className="size-5" />
+                <h4 className="font-semibold text-lg">
               Dịch Vụ & Phụ Tùng Đã Sử Dụng
               {allItems.length > 0 && (
-                <span className="text-muted-foreground font-normal text-sm">
+                    <span className="text-muted-foreground font-normal text-sm ml-2">
                   ({allItems.length})
                 </span>
               )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+                </h4>
+              </div>
+              <div>
             {allItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <Package className="w-12 h-12 text-muted-foreground/50 mb-3" />
@@ -433,16 +428,13 @@ const BookingHistoryDetailContent = ({ data }) => {
                 </div>
               </div>
             )}
-          </CardContent>
-        </Card>
+              </div>
+            </div>
 
         {/* Tổng tiền - Chiếm 1 cột */}
         {serviceOrder && allItems.length > 0 && (
-          <Card className="lg:col-span-1">
-            <CardHeader>
-              <CardTitle>Tổng Kết</CardTitle>
-            </CardHeader>
-            <CardContent>
+              <div className="lg:col-span-1">
+                <h4 className="font-semibold text-lg mb-4">Tổng Kết</h4>
               <div className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex justify-between">
@@ -468,7 +460,6 @@ const BookingHistoryDetailContent = ({ data }) => {
                     <span className="text-primary">
                       {formatPrice(grandTotal)}
                     </span>
-                  </div>
                 </div>
               </div>
               
@@ -487,11 +478,13 @@ const BookingHistoryDetailContent = ({ data }) => {
                     <p>• Thời gian bảo hành: <strong>6 tháng</strong> kể từ ngày bảo hành.</p>
                   </div>
                 </div>
+                  </div>
+                </div>
+              </div>
+            )}
               </div>
             </CardContent>
           </Card>
-        )}
-      </div>
       </Container>
     </div>
   );

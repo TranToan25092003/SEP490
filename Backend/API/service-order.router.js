@@ -196,4 +196,54 @@ router.put(
   serviceOrderController.updateServiceOrderItems
 );
 
+/**
+ * @swagger
+ * /service-orders/{id}/cancel:
+ *   post:
+ *     summary: Cancel a service order (staff only)
+ *     tags:
+ *       - Service Orders
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the service order
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cancelReason:
+ *                 type: string
+ *                 description: Reason for cancellation
+ *     responses:
+ *       200:
+ *         description: Service order cancelled successfully
+ *       404:
+ *         description: Service order not found
+ */
+router.post(
+  "/:id/cancel",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Service order ID is required")
+      .isMongoId()
+      .withMessage("Service order ID must be a valid MongoDB ObjectId"),
+    body("cancelReason")
+      .optional()
+      .isString()
+      .withMessage("Cancel reason must be a string"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderController.cancelServiceOrder
+);
+
 module.exports = router;

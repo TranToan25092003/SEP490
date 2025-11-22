@@ -206,7 +206,40 @@ const BookingList = () => {
             />
           }
         >
-          {(data) => (
+          {(data) => {
+            // Sort theo thứ tự: booked -> checked_in -> cancelled -> completed
+            const getStatusPriority = (status) => {
+              switch (status) {
+                case "booked":
+                  return 1; // Đã đặt - lên đầu
+                case "checked_in":
+                case "in_progress":
+                  return 2; // Đã tiếp nhận - tiếp theo
+                case "cancelled":
+                  return 3; // Đã hủy - tiếp theo
+                case "completed":
+                  return 4; // Hoàn thành - cuối cùng
+                default:
+                  return 5; // Các trạng thái khác - cuối cùng
+              }
+            };
+
+            const sortedBookings = [...(data.bookings || [])].sort((a, b) => {
+              const aPriority = getStatusPriority(a.status);
+              const bPriority = getStatusPriority(b.status);
+              
+              // Sort theo priority
+              if (aPriority !== bPriority) {
+                return aPriority - bPriority;
+              }
+              
+              // Nếu cùng priority, sort theo slotStartTime (sớm nhất lên trên)
+              const aDate = new Date(a.slotStartTime || 0);
+              const bDate = new Date(b.slotStartTime || 0);
+              return aDate - bDate;
+            });
+
+            return (
             <>
               <Filters filters={filters} onFiltersChange={setFilters}>
                 <Filters.StringFilter
@@ -226,7 +259,7 @@ const BookingList = () => {
                 />
               </Filters>
 
-              <CRUDTable data={data.bookings} columns={bookingListColumnDefinitions}>
+                <CRUDTable data={sortedBookings} columns={bookingListColumnDefinitions}>
                 {(row) => {
                   return (
                     <div className="flex justify-center">
@@ -247,7 +280,8 @@ const BookingList = () => {
                 pagination={data.pagination}
               />}
             </>
-          )}
+            );
+          }}
         </Await>
       </Suspense>
     </Container>
