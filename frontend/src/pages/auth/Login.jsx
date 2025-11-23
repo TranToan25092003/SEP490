@@ -75,16 +75,6 @@ const Login = () => {
     } catch (error) {}
   };
 
-  const handleGoogleSignup = async () => {
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
-    } catch (error) {}
-  };
-
   const handleGoogleSignin = async () => {
     try {
       await signIn.authenticateWithRedirect({

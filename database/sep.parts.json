@@ -1,0 +1,2173 @@
+[{
+  "_id": {
+    "$oid": "6918469d1e93ad6bea5b42c4"
+  },
+  "name": "Phụ gia xăng Liqui Moly E10 Additive 150ml",
+  "code": "PART-1763198621615-9A2K8",
+  "sellingPrice": 185000,
+  "costPrice": 120000,
+  "description": "Phụ gia xăng Liqui Moly E10 Additive 150ml là dung dịch tăng chỉ số xăng, bảo vệ động cơ khi đổ xăng E10 của hãng Liqui Moly sản xuất.\nPhụ gia xăng Liqui Moly E10 Additive tạo ra lớp màng để chống ăn mòn, ngăn ngừa tích tụ cặn bẩn có trong các chi tiết máy như: bình xăng, kim phun, buồng đốt...do Ethanol có trong xăng E10.\nPhụ gia xăng Liqui Moly E10 Additive là sản phẩm chính hãng của Liqui Moly sản xuất tại Đức.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c06"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c21"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c22"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c11"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0c"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c23"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c14"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "6918469d1e93ad6bea5b42c0"
+    },
+    {
+      "$oid": "6918469d1e93ad6bea5b42c1"
+    },
+    {
+      "$oid": "6918469d1e93ad6bea5b42c2"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-15T09:23:41.622Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T09:23:41.622Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69184dfd1e93ad6bea5b431b"
+  },
+  "name": "Nhớt Liqui Moly T410 Scooter 10W40 1L",
+  "code": "PART-1763200509269-QCPI3",
+  "sellingPrice": 210000,
+  "costPrice": 149998,
+  "description": "- Nhớt Liqui Moly T410 Scooter 10W40 1L là sản phẩm mới dành cho các dòng xe tay ga cao cấp với cấp nhớt full tổng hợp và chỉ số API SP đang là cấp nhớt tốt nhất cho thị trường xe máy.\n- Nhớt Liqui Moly T410 Scooter 10W40 được sinh ra để bảo vệ động cơ tuyệt đối, cho xe vận hành vô cùng êm ái trong mọi cung đường.\n- Nhớt Liqui Moly T410 Scooter 10W40 được sản xuất tại Thái Lan với công nghệ tiên tiến đi cùng cấp độ nhớt phù hợp riêng cho thị trường Châu Á. Bên cạnh đó đảm bảo giá cả cạnh tranh tốt với các sản phẩm cùng phân khúc đang có mặt trên thị trường.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "69144633dfb6923806247f76"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c06"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c21"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c22"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1c"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c23"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1d"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c15"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c16"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c19"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c18"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "69184dfd1e93ad6bea5b4316"
+    },
+    {
+      "$oid": "69184dfd1e93ad6bea5b4317"
+    },
+    {
+      "$oid": "69184dfd1e93ad6bea5b4318"
+    },
+    {
+      "$oid": "69184dfd1e93ad6bea5b4319"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-15T09:55:09.272Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T09:55:09.272Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69184ed31e93ad6bea5b432e"
+  },
+  "name": "Vỏ Michelin Pilot Street 2 90/90-14",
+  "code": "PART-1763200723234-VSZQO",
+  "sellingPrice": 720000,
+  "costPrice": 59999,
+  "description": "Vỏ Michelin Pilot Street 2 hoàn toàn mới được thiết kế sử dụng hàng ngày, có tuổi thọ cao nhờ có kết cấu chắc chắn. Gai vỏ rất sâu có rảnh dày từ trong ra ngoài nên có khả năng bám tốt trên đường đô thị kể cả đường trơn trượt giúp cho hành trình lái xe và người lái được an toàn.\nVỏ Michelin Pilot Street 2 có quãng đường đi trung bình vượt trội trên 20.000 km. Đảm bảo độ bám đường tuyệt vời ngay cả trên bề mặt đường trơn ướt nhờ thiết kế mặt gai mới, cấu trúc lốp và thiết kế rãnh.\nVỏ Michelin Pilot Street 2 size 90/90-14 gắn được bánh sau các loại xe: Air Blade, Click, Vario, Vision, Luvias...\nVỏ Michelin Pilot Street 2 hoàn toàn mới được sản xuất tại Thái Lan.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c26"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c14"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "69184ed31e93ad6bea5b4329"
+    },
+    {
+      "$oid": "69184ed31e93ad6bea5b432a"
+    },
+    {
+      "$oid": "69184ed31e93ad6bea5b432b"
+    },
+    {
+      "$oid": "69184ed31e93ad6bea5b432c"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-15T09:58:43.238Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T09:58:43.238Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69184f901e93ad6bea5b4340"
+  },
+  "name": "Nhớt Shell Advance City Scooter 10W30 0,8L",
+  "code": "PART-1763200912764-F8NXA",
+  "sellingPrice": 180000,
+  "costPrice": 100000,
+  "description": "Nhớt Shell Advance City Scooter 10W30 0,8L là loại nhớt tổng hợp toàn phần dành cho các dòng xe tay ga hiện đại của Honda. Phù hợp di chuyển hằng ngày trong thành phố, đặc biệt là cho các tài xế công nghệ, xe giao hàng, dừng chạy liên tục,......\nNhớt Shell Advance City Scooter 10W30 0,8L với công nghệ độc quyền Shell Pureplus - chiết xuất khí tự nhiên thành dầu gốc siêu sạch tinh khiết đến 99,5% cho hiệu suất tối đa và bảo vệ động cơ vượt trội.\nNhớt Shell Advance City Scooter 10W30 0,8L xuất sứ tại Thái Lan.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c11"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    }
+  ],
+  "quantity": 99,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "69184f901e93ad6bea5b433c"
+    },
+    {
+      "$oid": "69184f901e93ad6bea5b433d"
+    },
+    {
+      "$oid": "69184f901e93ad6bea5b433e"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-15T10:01:52.767Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T10:01:52.767Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691850271e93ad6bea5b4352"
+  },
+  "name": "Bao tay RCB HG55 chính hãng",
+  "code": "PART-1763201063247-YM65Z",
+  "sellingPrice": 120000,
+  "costPrice": 79999,
+  "description": "Bao tay RCB HG55 chính hãng, thiết khá đẹp, nhìn đơn giản nhưng tinh tế, cao su mềm tay cầm cực êm, bám tốt, an toàn khi vận hành.\nBao tay RCB HG55 là hàng chính hãng của Racing Boy, gắn được tất cả loại xe trên thị trường.\n",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "69144633dfb6923806247f76"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c06"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c24"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c21"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c27"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c26"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c11"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0c"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c14"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c13"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0d"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c12"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c15"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c16"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c19"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c18"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691850271e93ad6bea5b434e"
+    },
+    {
+      "$oid": "691850271e93ad6bea5b434f"
+    },
+    {
+      "$oid": "691850271e93ad6bea5b4350"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-15T10:04:23.251Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T10:04:23.251Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691beb7844cf1793765009a2"
+  },
+  "name": "Bình dầu GH Racing",
+  "code": "PART-1763437432584-0DNVQ",
+  "sellingPrice": 195000,
+  "costPrice": 130000,
+  "description": "Bình dầu GH Racing mẫu mới cực chất, thiết kế tinh xảo đẹp từng nét CNC, nhôm nguyên khối, chắc chắn, không chảy dầu, lên xe rất gọn đẹp.\nThương hiệu GH Racing đang thịnh hành bởi nhiều sản phẩm CNC đẹp, giá hợp lí tại Việt Nam.\nBình dầu GH Racing có thể gắn cho nhiều loại xe và nhiều có màu sắc dành cho khách hàng lựa chọn.\n",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "69144633dfb6923806247f76"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c06"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691beb7844cf17937650099e"
+    },
+    {
+      "$oid": "691beb7844cf17937650099f"
+    },
+    {
+      "$oid": "691beb7844cf1793765009a0"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T03:43:52.589Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T03:43:52.589Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691becaa44cf1793765009bd"
+  },
+  "name": "Phuộc RCB C2 đen ty vàng cho Honda Air Blade chính hãng",
+  "code": "PART-1763437738668-DTP8H",
+  "sellingPrice": 2100000,
+  "costPrice": 1500000,
+  "description": "- Phuộc RCB C2 đen ty vàng cho Honda Air Blade (mẫu 2 val) chính hãng, mẫu phuộc mới thay thế cho dòng C Series với thiết kế mới vô cùng sắc xảo cùng với loxo phuộc to, chắc chắn, có chế độ tăng chỉnh loxo nặng nhẹ phù hợp với trọng tải cũng như cung đường mình vận hành.\n- Phuộc RCB Premium C2 cho AB có thiết kế ty phuộc được mạ vàng rất đẹp, là hàng chính hãng Racing Boy bảo hành 12 tháng.\n- Phuộc sau RCB C2 chính hãng gắn được cho AB có chiều cao 320mm bằng với phuộc zin.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c26"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691becaa44cf1793765009b9"
+    },
+    {
+      "$oid": "691becaa44cf1793765009ba"
+    },
+    {
+      "$oid": "691becaa44cf1793765009bb"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T03:48:58.671Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T03:48:58.671Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691bed5a44cf1793765009ce"
+  },
+  "name": "Dây curoa zin Thái Honda AB125 (2013 - 2015) (23100KZR601XX)",
+  "code": "PART-1763437914719-5VCIC",
+  "sellingPrice": 400000,
+  "costPrice": 320000,
+  "description": "Dây curoa zin Thái Honda AB125 (2013 - 2015) (23100KZR601XX).\nTheo khuyến cáo của hãng sản xuất, nên định kỳ kiểm tra, vệ sinh dây curoa sau khoảng 8.000 km và thay thế dây curoa mới sau khoảng 20.000 - 25.000 km.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691bed5a44cf1793765009cb"
+    },
+    {
+      "$oid": "691bed5a44cf1793765009cc"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T03:51:54.721Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T03:51:54.721Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691bee1244cf1793765009e0"
+  },
+  "name": "Gù trung nhôm GH Racing",
+  "code": "PART-1763438098084-A5UWL",
+  "sellingPrice": 160000,
+  "costPrice": 99999,
+  "description": "Gù trung nhôm GH Racing có thiết kế mới đẹp, được tiện CNC sắc sảo với chất liệu nhôm cao cấp.\nGù trung nhôm GH Racing có thể gắn được nhiều loại xe, là sản phẩm trang trì đến từ thương hiệu GH Racing với giá thành vô cùng hợp lí.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "69144633dfb6923806247f76"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c23"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c22"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c20"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c26"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c13"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0d"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c16"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c18"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691bee1244cf1793765009dc"
+    },
+    {
+      "$oid": "691bee1244cf1793765009dd"
+    },
+    {
+      "$oid": "691bee1244cf1793765009de"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T03:54:58.087Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T03:54:58.087Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691bee8344cf1793765009f1"
+  },
+  "name": "Bao tay Daytona Taperd Base chính hãng",
+  "code": "PART-1763438211792-GHWOH",
+  "sellingPrice": 370000,
+  "costPrice": 289999,
+  "description": "Bao tay Daytona Taperd Base chính hãng, thiết kế đơn giản có logo Daytona cùng các đường sóng ngang nổi bật tạo điểm nhấn trên bao tay, dành cho khách hàng nào thích sự đơn giản nhưng chất lượng, cao su chống trơn trượt cực tốt, nhất là cho các bạn có mồ hôi tay nhiều.\nPhù hợp với ghi đông 7/8 / 22,2mm. Chiều dài 122 mm.\nBao tay Daytona Taperd Base gắn được tất cả các loại xe, thương hiệu đến từ Nhật rất nổi tiếng trong việc sản xuất phụ tùng xe máy.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c06"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c24"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c20"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c22"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c26"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c16"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c12"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691bee8344cf1793765009ed"
+    },
+    {
+      "$oid": "691bee8344cf1793765009ee"
+    },
+    {
+      "$oid": "691bee8344cf1793765009ef"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T03:56:51.794Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T03:56:51.794Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c7da91bd0374c890a6ec5"
+  },
+  "name": "Lốp Deli SB170 Power Storm XP (90/80-17 - 120/70-17)",
+  "code": "PART-1763474857515-LELVO",
+  "sellingPrice": 600000,
+  "costPrice": 479998,
+  "description": "- Lốp Deli SB170 Power Storm XP 90/80-17 - 120/70-17 dành cho xe Winner 150 V1, Winner X, Exciter 150, Exciter 155, Fz150i... các đời.\n- Vỏ Deli SB 170 Power Storm XP với thiết kế rãnh đôi ở giữa, gai dày và sâu 2 bên giúp vỏ bám cực tốt trên đường ướt.\n- Lốp Deli SB170 Power Storm XP 90/80-17 - 120/70-17 sản xuất tại Indonesia.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c7da91bd0374c890a6ec1"
+    },
+    {
+      "$oid": "691c7da91bd0374c890a6ec2"
+    },
+    {
+      "$oid": "691c7da91bd0374c890a6ec3"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:07:37.538Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:07:37.538Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c7e381bd0374c890a6ed6"
+  },
+  "name": "Nhớt chiết lẻ Liqui Moly Motorbike Street 4T 10W40 (100ml)",
+  "code": "PART-1763475000405-AR8OZ",
+  "sellingPrice": 31000,
+  "costPrice": 20000,
+  "description": "Nhớt chiết lẻ Liqui Moly Motorbike Street 4T 10W40 (100ml) là loại nhớt chuyên dùng cho các dòng xe số 4 thì hiện đại hiện nay trên thị trường Việt Nam. Liqui Moly Motorbike Street 4T 10W40 luôn mang lại sự tin cậy cho động cơ xe số 4 thì của bạn, nhớt có khả năng chịu nhiệt tốt và bảo vệ động cơ tối ưu. Bạn sẽ thật sự hài lòng khi chọn Liqui Moly Motorbike Street 4T 10W40 bởi lẽ đây là loại nhớt chất lượng cao cho xe số 4 thì và luôn đảm bảo đầy đủ các tiêu chuẩn mà động cơ của các loại xe số 4 thì đòi hỏi.\nNhớt Liqui Moly Motorbike Street 4T 10W40 dung tích 100ml dùng cho các dòng xe dung tich trên 1 lít, tiện cho khách đỡ phải mua 2 chai 1 lít như: Winner 150, Winner X, Sonic 150, Raider 150, Satria, Fz150i, CBR 150, GSX-R150 ...\nLưu ý: Theo như nhà sản xuất Liqui Moly Motorbike Street 4T 10W40 có thể kéo dài thời gian thay nhớt khi xe đi được 3000km. Nhưng theo khuyến cao của các chuyên gia dầu nhớt, các bạn nên thay nhớt khi xe đi được từ 2000 - 2500 km",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c7e381bd0374c890a6ed3"
+    },
+    {
+      "$oid": "691c7e381bd0374c890a6ed4"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:10:00.407Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:10:00.407Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c7fd91bd0374c890a6eec"
+  },
+  "name": "Sên vàng DID 9 ly 428D 124 mắc chính hãng",
+  "code": "PART-1763475417971-FBSQP",
+  "sellingPrice": 490000,
+  "costPrice": 380000,
+  "description": "Sên vàng DID 9 ly 428D 124 mắc chính hãng\nMã SP:\n070680\n \nDùng cho xe: Exciter 150 Exciter 135 Axelo 125 Raider 150 Winner R Sonic 150 Satria F150 Winner X Quantum S1 S2 S3\n- Sên DID chính hãng nhập khẩu từ Nhật Bản, với độ bền khá cao, sên rất lâu giãn, màu vàng rất đẹp phù hợp với các loại xe đi sên trần như Exciter, Raider, Sport, FX...là một trong những sản phẩm được ưu chuộng nhất hiện nay.\n- DID là thương hiệu nổi tiếng trên thế giới, chuyên sản xuất sên dành cho các giải đua xe hàng đầu vì thế chất lượng không thể chê được, sản phẩm cũng đã được nhiều anh em Biker tin dùng để thay để thay thế cho sên hãng rất nhanh bị giản, phải tốn nhiều công sức tăng sên thường xuyên, ngoài ra sên DID vàng còn là món phụ tùng trang trí tuyệt vời.\n- Sên vàng DID 428D 124 mắc (9mm) dành cho các loại xe sử dụng sên tải Winner 150, Sonic , Exciter 150, Exciter 135, Axelo 125, Raider, Satria 150, Fz150i...",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c7fd91bd0374c890a6ee7"
+    },
+    {
+      "$oid": "691c7fd91bd0374c890a6ee8"
+    },
+    {
+      "$oid": "691c7fd91bd0374c890a6ee9"
+    },
+    {
+      "$oid": "691c7fd91bd0374c890a6eea"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:16:57.974Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:16:57.974Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c80db1bd0374c890a6eff"
+  },
+  "name": "Phuộc X1R Standard cho Winner, Sonic chính hãng",
+  "code": "PART-1763475675511-VD0N5",
+  "sellingPrice": 900000,
+  "costPrice": 749999,
+  "description": "- Phuộc X1R Standard cho Honda Winner, Sonic chính hãng Việt Nam, phuộc có tín năng tăng giảm độ nén loxo phù hợp cho việc canh chỉnh tuỳ theo nhu cầu sử dụng của mỗi người, thiết kế loxo to nhìn cứng cáp khi lên xe và ty phuộc được mạ vàng rất đẹp, giá thành cũng khá tốt trong cùng phân khúc.\n- Phuộc sau X1R Standard dành cho Winner, Sonic...có chiều cao 230mm, có các màu: vàng, đen ty vàng, ...\n- Phuộc X1R C được bảo hành chính hãng 1 năm.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c80db1bd0374c890a6efc"
+    },
+    {
+      "$oid": "691c80db1bd0374c890a6efd"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:21:15.513Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:21:15.513Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c83151bd0374c890a6f17"
+  },
+  "name": "Phuộc trước RCB dành cho Honda Winner 150, Winner X",
+  "code": "PART-1763476245892-U22FR",
+  "sellingPrice": 2450000,
+  "costPrice": 2000000,
+  "description": "- Phuộc trước RCB dành cho Honda Winner, Winner X... hàng chính hãng RCB, phuộc được thiết kế khá đẹp, logo RCB nổi bật tăng độ thẩm mỹ.\n- Phuộc trước RCB hoạt động khá ổn định, chắc chắn khi vận hành trên tất cả cung đường.\n- Phuộc trước RCB dành cho Honda Winner có ty phuộc 31mm, phuộc được bảo hành 1 năm.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c83151bd0374c890a6f13"
+    },
+    {
+      "$oid": "691c83151bd0374c890a6f14"
+    },
+    {
+      "$oid": "691c83151bd0374c890a6f15"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:30:45.894Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:30:45.894Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c83ad1bd0374c890a6f2e"
+  },
+  "name": "Móc treo đồ GH Racing V3 cho Honda SH",
+  "code": "PART-1763476397462-WLYG0",
+  "sellingPrice": 330000,
+  "costPrice": 270000,
+  "description": "Móc treo đồ GH Racing V3 cho Honda SH các đời, với thiết kế nhôm cao cấp T6061 cùng chất lượng CNC 3D cực đẹp, móc chắc chắn, treo đồ cực tốt.\nMóc treo đồ GH Racing V3 cho Honda SH có nhiều màu cho khách hàng lựa chọn.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2a"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c83ad1bd0374c890a6f2a"
+    },
+    {
+      "$oid": "691c83ad1bd0374c890a6f2b"
+    },
+    {
+      "$oid": "691c83ad1bd0374c890a6f2c"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:33:17.465Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:33:17.465Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c85221bd0374c890a6f89"
+  },
+  "name": "Pát kẹp dây dầu GH Racing (bên trái)",
+  "code": "PART-1763476770574-TDQ63",
+  "sellingPrice": 200000,
+  "costPrice": 150000,
+  "description": "Pát kẹp dây dầu GH Racing (bên trái)\n- Chuyên dùng cho các mẫu xe tay ga có hệ thống thắng đĩa bên trái như: SH, Vario, Lead...\n- Giúp cố định dây dầu chắc chắn – tăng độ ngầu cho dàn chân.\n- Chất liệu nhôm cao cấp, độ nét CNC đẹp cùng nhiều màu sắc thời trang.\nPát kẹp dây dầu GH Racing là sản phẩm trang trì đến từ thương hiệu GH Racing với giá thành vô cùng hợp lí.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    }
+  ],
+  "quantity": 100,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c85221bd0374c890a6f85"
+    },
+    {
+      "$oid": "691c85221bd0374c890a6f86"
+    },
+    {
+      "$oid": "691c85221bd0374c890a6f87"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:39:30.576Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:39:30.576Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c86c81bd0374c890a6f9f"
+  },
+  "name": "Lọc gió trụ X1R gắn được các xe",
+  "code": "PART-1763477192663-9V4RK",
+  "sellingPrice": 195000,
+  "costPrice": 150000,
+  "description": "- Lọc gió trụ X1R tăng lưu lượng gió nạp vào bình xăng, cải thiện hiệu suất hòa trộn nhiên liệu, giúp xe hoạt động mạnh mẽ hơn.\n- Lọc gió trụ phù hợp cho các dòng xe đi bài zin nhẹ cho đến độ nặng nhằm tăng công suất động cơ.\n- Lọc gió trụ X1R có lưới lọc có thể vệ sinh sử dụng nhiều lần rất tiết kiệm chi phí.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bf6"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf7"
+    },
+    {
+      "$oid": "69144633dfb6923806247f76"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c05"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c08"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfa"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c28"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c29"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c2a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c20"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c27"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c25"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0c"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c15"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c16"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c18"
+    }
+  ],
+  "quantity": 99,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c86c81bd0374c890a6f9b"
+    },
+    {
+      "$oid": "691c86c81bd0374c890a6f9c"
+    },
+    {
+      "$oid": "691c86c81bd0374c890a6f9d"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:46:32.666Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:46:32.666Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c87161bd0374c890a6fae"
+  },
+  "name": "Bộ công tắc đèn Sunfa cho SH350i, SH160i 2025",
+  "code": "PART-1763477270132-MJGCS",
+  "sellingPrice": 280000,
+  "costPrice": 200000,
+  "description": "Bộ công tắc đèn Sunfa cho Honda SH350i, SH160i 2025 gắn trực tiếp và nút pha cos (passing) rất tiện dụng, full bộ gắn không cần phải khoét dàn nhựa hoặc chế cháo.\nBộ công tắc đèn Sunfa phù hợp cho khách không thích mở đèn trời sáng hoặc tạm tắt khi vào đường nhỏ đông người tránh chiếu đèn vào mặt người khác.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bfb"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bfc"
+    }
+  ],
+  "quantity": 98,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c87161bd0374c890a6fab"
+    },
+    {
+      "$oid": "691c87161bd0374c890a6fac"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:47:50.134Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:47:50.134Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c87e31bd0374c890a6fc1"
+  },
+  "name": "Phuộc Ohlins HO 173 cho SH Mode",
+  "code": "PART-1763477475083-AF33G",
+  "sellingPrice": 11200000,
+  "costPrice": 9000000,
+  "description": "- Phuộc Ohlins HO 173 cho SH Mode chính hãng có đầy đủ núm rebound vs Compression tăng chỉnh độ nhún, phù hợp cho việc tải nặng nhẹ trên mọi cung đường. Đặc biệt Ohlins HO 173 mã dành riêng cho SH Mode gắn không cần chế cháo mài chân.\n- Thương hiệu Ohlins là thương hiệu phuộc nổi tiếng nhất thế giới chuyện sản xuất phuộc dành cho tất cả các dòng xe máy từ PKL đến PKN, đỉnh cao từ chất lượng đến mẫu mã thiết kế.\n- Phuộc Ohlins HO 173 cho SH Mode chính hãng có 2 loxo để cho khách hàng thay thế và được bảo hành chính hãng 2 năm.\n- Phuộc Ohlins HO 173 cho SH Mode có chiều cao 318mm và có thể gắn trên nhiều dòng xe 1 phuộc khác.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181bfd"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c11"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c13"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    }
+  ],
+  "quantity": 8,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c87e31bd0374c890a6fbd"
+    },
+    {
+      "$oid": "691c87e31bd0374c890a6fbe"
+    },
+    {
+      "$oid": "691c87e31bd0374c890a6fbf"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:51:15.085Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:51:15.085Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c89491bd0374c890a6fd5"
+  },
+  "name": "Dây Curoa Michelin cho Lead 4val, Vario 160",
+  "code": "PART-1763477833626-7D7NA",
+  "sellingPrice": 585000,
+  "costPrice": 420000,
+  "description": "Dây Curoa Michelin cho Honda Lead 4 val, Vario 160.\nDây curoa mẫu mới thương hiệu Michelin mặt trong viền Cacbon tăng 30% công suất, sản phẩm thay thế hoàn hảo dành cho dây curoa zin hư hỏng trong quá trình sử dụng.\nTÍNH NĂNG NỔI BẬT CỦA SẢN PHẨM:\n- Nhiệt độ sử dụng: -40 ~ 130 độ C.\n- Độ cứng và độ dẻo tốt.\n- Độ chống nhão cao, hạn chế mài mòn tốt.\n- Chuyển động ổn định, ít tiếng ồn.\n- Ít lão hóa, tuổi thọ cao.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c01"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c02"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c89491bd0374c890a6fd2"
+    },
+    {
+      "$oid": "691c89491bd0374c890a6fd3"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:57:13.628Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:57:13.628Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c89ac1bd0374c890a6fe4"
+  },
+  "name": "Mâm RCB 5 cây cho Vario, Click 125/150 chính hãng (01S0403G)",
+  "code": "PART-1763477932467-8YH19",
+  "sellingPrice": 2240000,
+  "costPrice": 1800000,
+  "description": "Mâm RCB 5 cây chính hãng cho Vario, Click, hàng khá hot trên thị trường, thiết kế bản nhỏ, 5 cây mạnh mẽ dành cho dòng xe tay ga nhỏ. Hàng RCB chất lượng tốt đã được nhiều biker tin dùng.\nMâm 5 cây RCB chính hãng cho Vario, Click có bản mâm nhỏ thông số là: 1.4 - 1.6, mâm có màu vàng.\nMâm 5 cây RCB là hàng chính hãng RCB được bảo hành chính hãng 1 năm.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c03"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c00"
+    }
+  ],
+  "quantity": 8,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c89ac1bd0374c890a6fe1"
+    },
+    {
+      "$oid": "691c89ac1bd0374c890a6fe2"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T14:58:52.469Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T14:58:52.469Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8a041bd0374c890a6ff4"
+  },
+  "name": "Mâm RCB 8 cây chính hãng cho Honda Scoopy 110 (01S0360W)",
+  "code": "PART-1763478020308-8DZWB",
+  "sellingPrice": 2200000,
+  "costPrice": 1800000,
+  "description": "- Mâm RCB 8 cây cho Honda Click, Beat, Scoopy 110 với bản trước 1.85 và sau 2.15 lên xe cực chất, dành cho Biker thích phong cách racing, mâm kiểu dáng khá phù hợp cho các dòng xe tay ga nhỏ trên.\n- Mâm RCB 8 cây gắn lên xe như zin không cần chế cháo và là mẫu mâm khá được ưa chuộng trên thị trường.\n- Mâm RCB 8 cây chính hãng cho Honda Click, Beat, Scoopy 110 (01S0360W) có màu trắng và là hàng chính hãng RCB được bảo hành 1 năm.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c07"
+    }
+  ],
+  "quantity": 10,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8a041bd0374c890a6ff1"
+    },
+    {
+      "$oid": "691c8a041bd0374c890a6ff2"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:00:20.311Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:00:20.311Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8a701bd0374c890a7005"
+  },
+  "name": "Đèn pha Led 2 tầng cho Wave 100/110/110S (1997 - 2004) chính hãng Zhi.Pat",
+  "code": "PART-1763478128214-QIKFZ",
+  "sellingPrice": 1195000,
+  "costPrice": 799999,
+  "description": "Đèn pha Led 2 tầng cho Wave 100/110/110S (1997 - 2004) chính hãng Zhi.Pat W110 THA.\n- Màu đèn:\n+ Đen khói đèn định vị: cam/ xanh dương /đỏ.\n+ Si bạc đèn định vị: cam.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8a701bd0374c890a7001"
+    },
+    {
+      "$oid": "691c8a701bd0374c890a7002"
+    },
+    {
+      "$oid": "691c8a701bd0374c890a7003"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:02:08.216Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:02:08.216Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8aab1bd0374c890a7014"
+  },
+  "name": "Cao su đùm chính hãng cho Honda Wave RS 110",
+  "code": "PART-1763478187955-P4AKW",
+  "sellingPrice": 50000,
+  "costPrice": 35000,
+  "description": "Cao su đùm chính hãng cho Honda Wave RS 110 (hay còn gọi là cao su giảm giật nhông sau) để thay thế cao su đùm zin lâu ngày bị hao mòn, vỡ nát, giúp xe vận hành êm ái hơn.",
+  "brand": "",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    }
+  ],
+  "quantity": 40,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8aab1bd0374c890a7011"
+    },
+    {
+      "$oid": "691c8aab1bd0374c890a7012"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:03:07.957Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:03:07.957Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8afa1bd0374c890a7023"
+  },
+  "name": "Bộ nhông sên dĩa Pro-Bike cho Wave, Dream 14T - 36T- Sên 428S 108L (sên tán đúc)",
+  "code": "PART-1763478266060-FK8YF",
+  "sellingPrice": 240000,
+  "costPrice": 190000,
+  "description": "- Bộ nhông sên dĩa Pro-Bike cho Wave, Dream có thông số 14T - 36T- Sên 428S (sên 9ly tán đúc mẫu mới nâng cấp, dài 108 mắc).\n- Nhông dĩa Pro-Bike thiết kế mới đẹp hơn và có độ bền từ 20.000 km - 25.000 km tùy theo cách chạy ổn định của người lái và quá trình bảo dưỡng vệ sinh, bôi trơn định kỳ.\n- Sên Pro-Bike 428S được sản xuất tại Thái Lan.",
+  "brand": "Honda",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    }
+  ],
+  "quantity": 30,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8afa1bd0374c890a7020"
+    },
+    {
+      "$oid": "691c8afa1bd0374c890a7021"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:04:26.063Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:04:26.063Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8b851bd0374c890a7034"
+  },
+  "name": "Phuộc Profender X Series cho Exciter 150-155 chính hãng",
+  "code": "PART-1763478405981-G0VGS",
+  "sellingPrice": 8500000,
+  "costPrice": 7000000,
+  "description": " Phuộc Profender X Series cho Exciter 150/155, hàng chính hãng Profender sản xuất tại Thái Lan.\n- Phuộc Profender X Series cho Exciter 150/155,... là dòng phuộc có bình dầu phụ, 2 nút tăng chỉnh rebound và độ nhún, chân phuộc và trên bình dầu hiển thị số rõ ràng , dễ tăng chỉnh có thể giúp rất nhiều chế độ cho bạn tùy chỉnh khi đi phố, khi chở nặng...\n- Phuộc Profender X Series 2 tăng chỉnh cho Exciter 150/155,... có chiều cao 205mm, phuộc có màu: Đỏ, được bảo hành 3 năm chính hãng.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8b851bd0374c890a7030"
+    },
+    {
+      "$oid": "691c8b851bd0374c890a7031"
+    },
+    {
+      "$oid": "691c8b851bd0374c890a7032"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:06:45.983Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:06:45.983Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8bd51bd0374c890a7045"
+  },
+  "name": "Mâm RCB 5 cây cho Exciter 150 bản 1.85-2.5 (01S0366G)",
+  "code": "PART-1763478485935-BPS75",
+  "sellingPrice": 2850000,
+  "costPrice": 2399999,
+  "description": "- Mâm RCB 5 cây bản nhỏ cho Exciter 150 với bản trước 1.85 sau 2.5 lên xe cực chất, gắn lên xe như zin không cần chế cháo.\n- Mâm RCB 5 cây Exciter 150 bản 1.85-2.5 thích hợp anh em đi bánh nhỏ gọn, nhìn xe thanh thoát.\n- Hàng chính hãng Racingboy. Bảo hành 12 tháng.\n- Mâm RCB 5 cây cho Exciter 150 có màu vàng.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c09"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8bd51bd0374c890a7041"
+    },
+    {
+      "$oid": "691c8bd51bd0374c890a7042"
+    },
+    {
+      "$oid": "691c8bd51bd0374c890a7043"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:08:05.937Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:08:05.937Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8c441bd0374c890a7055"
+  },
+  "name": "Phuộc trước LCM cho Exciter 135 (2011) heo 1 pis",
+  "code": "PART-1763478596421-C6A9Z",
+  "sellingPrice": 1500000,
+  "costPrice": 1150000,
+  "description": "Phuộc trước LCM cho Exciter 135 (2011 Exciter 1S9A), heo 1 pis côn tự động, gắn vừa chảng ba zin không độ chế, phuộc nhún cứng cáp, đầm chắc hơn zin rất nhiều, phù hợp cho mọi cung đường di chuyển.\nPhuộc LCM quan trọng nhất là ráp như zin cho Exciter 135 (5 số) không cần chế cháo.\nPhuộc LCM cho Exciter 135 được sản xuất tại Taiwan, bảo hành 12 tháng.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8c441bd0374c890a7051"
+    },
+    {
+      "$oid": "691c8c441bd0374c890a7052"
+    },
+    {
+      "$oid": "691c8c441bd0374c890a7053"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:09:56.423Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:09:56.423Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8e3d1bd0374c890a706c"
+  },
+  "name": "Phuộc RCB S3 cho Exciter 135 bản kỷ niệm 30 năm chính hãng",
+  "code": "PART-1763479101184-FBG2J",
+  "sellingPrice": 2500000,
+  "costPrice": 1999999,
+  "description": "Phuộc RCB S3 cho Exciter 135 bản kỷ niệm 30 năm, hàng chính hãng Racing Boy, phuộc khá chắc chắn, cứng cáp hơn rất nhiều so với phuộc zin. Phối màu đen – đỏ giới hạn. Card label chính hãng đi kèm mỗi sản phẩm.\nPhuộc RCB S3 cho Exciter 135 có nút tăng chỉnh rebound nhanh hoặc chậm dưới chân phuộc, thích hợp với mọi nhu cầu vận hành.\nPhuộc RCB S3-Line Suspension chiều cao 203mm, được bảo hành 12 tháng chính hãng RCB 1 đổi 1.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0b"
+    }
+  ],
+  "quantity": 10,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8e3d1bd0374c890a7069"
+    },
+    {
+      "$oid": "691c8e3d1bd0374c890a706a"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:18:21.187Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:18:21.187Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691c8f191bd0374c890a707e"
+  },
+  "name": "Dây curoa zin Yamaha Grande đời cũ",
+  "code": "PART-1763479321116-1PDMD",
+  "sellingPrice": 410000,
+  "costPrice": 350000,
+  "description": "Dây curoa zin Yamaha Grande đời cũ.\nTheo khuyến cáo của các hãng sản xuất, tốt nhất nên định kỳ kiểm tra, vệ sinh dây curoa sau khoảng 8.000 km và thay thế dây curoa mới sau khoảng 20.000 - 25.000 km.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0c"
+    }
+  ],
+  "quantity": 30,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691c8f191bd0374c890a707b"
+    },
+    {
+      "$oid": "691c8f191bd0374c890a707c"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-18T15:22:01.119Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-18T15:22:01.119Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0c33c80c888597aa90d2"
+  },
+  "name": "Lọc gió zin cho Yamaha NVX V2",
+  "code": "PART-1763642419367-5QNO3",
+  "sellingPrice": 160000,
+  "costPrice": 110000,
+  "description": "Lọc gió zin cho Yamaha NVX V2.\nTheo khuyến cáo của hãng, không vệ sinh lọc gió zin mà nên thay thế định kỳ sau mỗi 8.000 - 10.000 km tùy điều kiện vận hành.\nViệc thay lọc gió đúng định kỳ sẽ giúp động cơ luôn vận hành trong tình trạng tốt, ổn định nhất.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0d"
+    }
+  ],
+  "quantity": 50,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0c33c80c888597aa90ce"
+    },
+    {
+      "$oid": "691f0c33c80c888597aa90cf"
+    },
+    {
+      "$oid": "691f0c33c80c888597aa90d0"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:40:19.401Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:40:19.401Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0c8bc80c888597aa90e2"
+  },
+  "name": "Lọc gió zin cho Yamaha Janus 2017",
+  "code": "PART-1763642507668-A20CL",
+  "sellingPrice": 130000,
+  "costPrice": 90000,
+  "description": "Lọc gió zin cho Yamaha Janus 2017.\nTheo khuyến cáo của hãng, không vệ sinh lọc gió zin mà nên thay thế định kỳ sau mỗi 8.000 - 10.000 km tùy điều kiện vận hành.\nViệc thay lọc gió đúng định kỳ sẽ giúp động cơ luôn vận hành trong tình trạng tốt, ổn định nhất.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0e"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0c8bc80c888597aa90de"
+    },
+    {
+      "$oid": "691f0c8bc80c888597aa90df"
+    },
+    {
+      "$oid": "691f0c8bc80c888597aa90e0"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:41:47.672Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:41:47.672Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0cf8c80c888597aa90f3"
+  },
+  "name": "Bộ nhông sên dĩa Pro-Bike cho Sirius 15T - 35T - Sên 428",
+  "code": "PART-1763642616048-T9INW",
+  "sellingPrice": 220000,
+  "costPrice": 170000,
+  "description": "- Bộ nhông sên dĩa Pro-Bike cho Sirius, Jupiter có thông số 15T - 35T - Sên 428 (sên 9ly dài 108 mắc).\n- Nhông dĩa Pro-Bike thiết kế mới đẹp hơn và có độ bền từ 15.000 km - 25.000 km tùy theo cách chạy ổn định của người lái và quá trình bảo dưỡng vệ sinh, bôi trơn định kỳ.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c0f"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    }
+  ],
+  "quantity": 10,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0cf8c80c888597aa90ef"
+    },
+    {
+      "$oid": "691f0cf8c80c888597aa90f0"
+    },
+    {
+      "$oid": "691f0cf8c80c888597aa90f1"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:43:36.051Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:43:36.051Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0d3bc80c888597aa9103"
+  },
+  "name": "Lọc gió zin cho Yamaha Freego",
+  "code": "PART-1763642683786-2PH1W",
+  "sellingPrice": 130000,
+  "costPrice": 95000,
+  "description": "Lọc gió zin cho Yamaha Freego.\nTheo khuyến cáo của hãng, không vệ sinh lọc gió zin mà nên thay thế định kỳ sau mỗi 8.000 - 10.000 km tùy điều kiện vận hành.\nViệc thay lọc gió đúng định kỳ sẽ giúp động cơ luôn vận hành trong tình trạng tốt, ổn định nhất.",
+  "brand": "Yamaha",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c11"
+    }
+  ],
+  "quantity": 20,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0d3bc80c888597aa90ff"
+    },
+    {
+      "$oid": "691f0d3bc80c888597aa9100"
+    },
+    {
+      "$oid": "691f0d3bc80c888597aa9101"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:44:43.788Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:44:43.788Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0df0c80c888597aa9115"
+  },
+  "name": "Nhớt Wolver Racing Synthetic 10W40 1L",
+  "code": "PART-1763642864450-LC5K5",
+  "sellingPrice": 205000,
+  "costPrice": 165000,
+  "description": "Nhớt Wolver Racing Synthetic 10W40, nhớt bôi trơn tổng hợp đặc biệt dành riêng cho động cơ xe máy 4 thì được nhập khẩu chính hãng từ Đức.\nWolver Racing nhớt được ứng dụng đặc biệt cho các loại xe máy phân khối lớn, bên cạnh đó còn có thể dùng tốt cho tất cả các loại xe máy có bộ ly hợp khô và ướt (xe số và xe tay ga).\n- Nhớt tổng hợp 100%.\n- API SL, JASO MA2.",
+  "brand": "Suzuki",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c04"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf9"
+    },
+    {
+      "$oid": "68f35424179b888aa3181bf8"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c19"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c17"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c18"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c10"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c13"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c12"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1a"
+    },
+    {
+      "$oid": "68f35424179b888aa3181c1c"
+    }
+  ],
+  "quantity": 10,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0df0c80c888597aa9111"
+    },
+    {
+      "$oid": "691f0df0c80c888597aa9112"
+    },
+    {
+      "$oid": "691f0df0c80c888597aa9113"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:47:44.454Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:47:44.454Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "691f0eeec80c888597aa9127"
+  },
+  "name": "Vỏ Dunlop D307 size 100/90-10",
+  "code": "PART-1763643118834-W6PT4",
+  "sellingPrice": 720000,
+  "costPrice": 630000,
+  "description": "Vỏ Dunlop D307 size 100/90-10. Vỏ không ruột dành cho bánh trước sau Attila hoặc sau của Lead, SCR, Dunlop là thương hiệu nổi tiếng với chất lượng tuyệt vời, đảm bảo cho xe bám đường rất tốt.\nVỏ được sản xuất tại Indonesia.",
+  "brand": "SYM",
+  "compatible_model_ids": [
+    {
+      "$oid": "68f35424179b888aa3181c23"
+    }
+  ],
+  "quantity": 10,
+  "minStock": 0,
+  "media": [
+    {
+      "$oid": "691f0eeec80c888597aa9124"
+    },
+    {
+      "$oid": "691f0eeec80c888597aa9125"
+    }
+  ],
+  "status": "active",
+  "createdAt": {
+    "$date": "2025-11-20T12:51:58.837Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-20T12:51:58.837Z"
+  },
+  "__v": 0
+}]
