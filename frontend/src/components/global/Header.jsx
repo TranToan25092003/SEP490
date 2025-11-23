@@ -15,7 +15,6 @@ import {
 
 // Icons and Assets
 import headerImg from "@/assets/header-img.jpg";
-import headerBackground from "@/assets/headerr-background.jpg";
 import MotorcycleIcon from "../icons/MotorcycleIcon";
 import avatarImg from "../../assets/avatar.png";
 import logo from "../../assets/logo-with-brand-rmbg.png";
@@ -48,15 +47,8 @@ const Header = () => {
   }, []);
 
   return (
-    <header
-      className="relative z-50 w-full bg-cover bg-no-repeat"
-      style={{
-        backgroundImage: `url(${headerBackground})`,
-        backgroundPosition: "center 32%",
-      }}
-    >
-      <div className="absolute inset-0 bg-white/60 z-0"></div>
-      <div className="relative mx-auto max-w-[1920px] z-10">
+    <header className="relative z-50 w-full bg-white">
+      <div className="mx-auto max-w-[1920px]">
         {/* Top section */}
         <div className="flex h-[70px] items-center gap-[8px] px-[8px] pl-[20px] md:h-[80px] md:pl-[36px] xl:h-[88px] xl:pl-[70px]">
           <Link to="/" className="flex-shrink-0">
@@ -69,15 +61,8 @@ const Header = () => {
           <div className="hidden items-center justify-center md:flex">
             <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
-          <div
-            className="flex-1 flex items-center justify-between relative bg-cover bg-no-repeat"
-            style={{
-              backgroundImage: `url(${headerBackground})`,
-              backgroundPosition: "center 35%",
-            }}
-          >
-            <div className="absolute inset-0 bg-white/60 z-0"></div>
-            <div className="hidden select-none flex-col items-center justify-center p-[5px] text-foreground/70 sm:flex md:p-[8px] relative z-10">
+          <div className="flex-1 flex items-center justify-between">
+            <div className="hidden select-none flex-col items-center justify-center p-[5px] text-foreground/70 sm:flex md:p-[8px]">
               <p className="text-[15px] font-extrabold leading-[1.2] md:text-[18px] xl:text-[22px]">
                 How we move you
               </p>
@@ -85,7 +70,7 @@ const Header = () => {
                 MotorMate
               </p>
             </div>
-            <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px] relative z-10">
+            <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px]">
               {/* <SearchIcon /> */}
 
               {isSignedIn ? (
@@ -209,14 +194,15 @@ const Header = () => {
                 onMouseEnter={() => setIsPartsMenuOpen(true)}
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
-                <button
+                <Link
+                  to="/items"
                   className={`flex h-full w-[80px] sm:w-[120px] md:w-[150px] lg:w-[170px] xl:w-[190px] items-center justify-center bg-[#323B44] text-[10px] sm:text-[12px] md:text-[13px] lg:text-[15px] xl:text-[17px] font-semibold text-slate-100 hover:bg-[#3a454f] ${
                     isPartsMenuOpen ? "bg-[#3a454f]" : ""
                   }`}
                 >
                   Phụ Tùng{" "}
                   <ChevronsUpDown className="ml-0.5 sm:ml-2 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
-                </button>
+                </Link>
                 {isPartsMenuOpen && (
                   <div className="absolute top-full left-0 w-full bg-zinc-800 shadow-lg border-t border-zinc-700">
                     <div className="mx-auto max-w-7xl p-6 columns-2 md:columns-3 lg:columns-4 gap-x-8">
