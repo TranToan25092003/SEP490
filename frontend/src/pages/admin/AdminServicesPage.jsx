@@ -29,7 +29,7 @@ import {
     DialogClose,
 } from "@/components/ui/dialog";
 import { AdminPagination } from "@/components/global/AdminPagination";
-import { Search, Pen, Trash2, Loader2 } from "lucide-react";
+import { Search, Pen, XCircle, CheckCircle, Loader2 } from "lucide-react";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 
@@ -60,7 +60,7 @@ export default function AdminServicesPage() {
         `${searchParams.get("sortBy") || "createdAt"},${searchParams.get("sortOrder") || "desc"}`
     );
 
-    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeactivating, setIsDeactivating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false); // Đổi tên từ isEditing
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -167,23 +167,54 @@ export default function AdminServicesPage() {
         }
     };
 
-    const handleDeleteService = async (serviceId) => {
-        if (!window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) return;
-        setIsDeleting(true);
+    const handleDeactivateService = async (service) => {
+        if (
+            !window.confirm(
+                "Bạn có chắc chắn muốn vô hiệu hóa dịch vụ này? Dịch vụ sẽ không thể sử dụng cho các đơn hàng mới."
+            )
+        )
+            return;
+        setIsDeactivating(true);
         try {
-            const response = await customFetch.delete(`/admin/services/${serviceId}`);
+            const response = await customFetch(`/admin/services/${service._id}`, {
+                method: "PATCH",
+                data: { status: "inactive" },
+            });
             if (response.data.success) {
-                toast.success("Dịch vụ đã được xóa thành công.");
+                toast.success("Đã vô hiệu hóa dịch vụ");
                 navigate(0);
             } else {
                 throw new Error(response.data.message);
             }
         } catch (error) {
-            toast.error("Lỗi khi xóa dịch vụ", {
-                description: error.message || "Không thể xóa dịch vụ.",
+            toast.error("Lỗi khi vô hiệu hóa dịch vụ", {
+                description: error.message || "Không thể vô hiệu hóa dịch vụ.",
             });
         } finally {
-            setIsDeleting(false);
+            setIsDeactivating(false);
+        }
+    };
+
+    const handleActivateService = async (service) => {
+        if (!window.confirm("Bạn có chắc chắn muốn kích hoạt lại dịch vụ này?")) return;
+        setIsDeactivating(true);
+        try {
+            const response = await customFetch(`/admin/services/${service._id}`, {
+                method: "PATCH",
+                data: { status: "active" },
+            });
+            if (response.data.success) {
+                toast.success("Đã kích hoạt dịch vụ");
+                navigate(0);
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Lỗi khi kích hoạt dịch vụ", {
+                description: error.message || "Không thể kích hoạt dịch vụ.",
+            });
+        } finally {
+            setIsDeactivating(false);
         }
     };
 
@@ -240,6 +271,7 @@ export default function AdminServicesPage() {
                             <TableHead>Mô tả</TableHead>
                             <TableHead>Giá cơ bản</TableHead>
                             <TableHead>Thời gian (phút)</TableHead>
+                            <TableHead>Trạng thái</TableHead>
                             <TableHead>Ngày tạo</TableHead>
                             <TableHead className="text-right">Hành động</TableHead>
                         </TableRow>
@@ -247,7 +279,7 @@ export default function AdminServicesPage() {
                     <TableBody>
                         {services.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                                     Không có dịch vụ nào
                                 </TableCell>
                             </TableRow>
@@ -261,6 +293,17 @@ export default function AdminServicesPage() {
                                     <TableCell className="max-w-xs truncate">{service.description || "N/A"}</TableCell>
                                     <TableCell>{formatPrice(service.base_price)}</TableCell>
                                     <TableCell>{service.estimated_time} phút</TableCell>
+                                    <TableCell>
+                                        <span
+                                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                (service.status || "active") === "active"
+                                                    ? "text-green-600 bg-green-100"
+                                                    : "text-red-600 bg-red-100"
+                                            }`}
+                                        >
+                                            {(service.status || "active") === "active" ? "Hoạt động" : "Vô hiệu hóa"}
+                                        </span>
+                                    </TableCell>
                                     <TableCell>{formatDate(service.createdAt)}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
@@ -271,18 +314,35 @@ export default function AdminServicesPage() {
                                             >
                                                 <Pen className="h-4 w-4 text-blue-500" />
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleDeleteService(service._id)}
-                                                disabled={isDeleting}
-                                            >
-                                                {isDeleting ? (
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                ) : (
-                                                    <Trash2 className="h-4 w-4 text-red-500" />
-                                                )}
-                                            </Button>
+                                            {(service.status || "active") === "inactive" ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleActivateService(service)}
+                                                    disabled={isDeactivating}
+                                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                >
+                                                    {isDeactivating ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <CheckCircle className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => handleDeactivateService(service)}
+                                                    disabled={isDeactivating}
+                                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                >
+                                                    {isDeactivating ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : (
+                                                        <XCircle className="h-4 w-4" />
+                                                    )}
+                                                </Button>
+                                            )}
                                         </div>
                                     </TableCell>
                                 </TableRow>
