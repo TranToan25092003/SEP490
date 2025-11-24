@@ -1,6 +1,8 @@
 const { ServiceOrder, Complain, ComplaintCategory } = require("../../model");
 const notificationService = require("../notification.service");
 const DomainError = require("../../errors/domainError");
+const mongoose = require("mongoose");
+const { Types } = mongoose;
 
 class ComplaintService {
   async createComplaint(complaintData) {
@@ -19,6 +21,19 @@ class ComplaintService {
       throw new Error(
         "Missing required fields: so_id, clerkId, title, content, categoryId."
       );
+    }
+
+    if (!Types.ObjectId.isValid(so_id)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid Service Order ID (so_id) format: ${so_id}`,
+      });
+    }
+    if (!Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid Complaint Category ID format: ${category}`,
+      });
     }
 
     try {
@@ -124,9 +139,9 @@ class ComplaintService {
       reply:
         complaint.reply && complaint.reply.content
           ? {
-              content: complaint.reply.content,
-              repliedAt: complaint.reply.repliedAt,
-            }
+            content: complaint.reply.content,
+            repliedAt: complaint.reply.repliedAt,
+          }
           : null,
     };
   }
