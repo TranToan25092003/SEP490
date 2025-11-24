@@ -51,6 +51,8 @@ export default function ManagerItems() {
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingPart, setEditingPart] = useState(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [detailPart, setDetailPart] = useState(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
     sellingPrice: "",
@@ -226,6 +228,11 @@ export default function ManagerItems() {
     });
     setNewImagePreviews([]); // Reset image previews when opening dialog
     setIsEditDialogOpen(true);
+  };
+
+  const handleOpenDetailDialog = (part) => {
+    setDetailPart(part);
+    setIsDetailDialogOpen(true);
   };
 
   // Handle image file selection (multiple files)
@@ -551,12 +558,17 @@ export default function ManagerItems() {
                       )}
                     </div>
                     <div className="leading-4 min-w-0 flex-1 overflow-hidden">
-                      <div
-                        className="text-[#2e2e3a] text-[14px] font-bold tracking-[-0.126px] truncate"
+                      <button
+                        type="button"
+                        className="text-left text-[#2e2e3a] text-[14px] font-bold tracking-[-0.126px] truncate hover:text-red-600"
                         title={part.name}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleOpenDetailDialog(part);
+                        }}
                       >
                         {part.name}
-                      </div>
+                      </button>
                       <div className="text-[#9a9aaf] text-[12px]">
                         #{part._id.slice(-6).toUpperCase()}
                       </div>
@@ -937,6 +949,118 @@ export default function ManagerItems() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Detail Dialog */}
+      <Dialog
+        open={isDetailDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDetailPart(null);
+          }
+          setIsDetailDialogOpen(open);
+        }}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Chi tiết phụ tùng</DialogTitle>
+            <DialogDescription>
+              Xem nhanh thông tin phụ tùng. Không thể chỉnh sửa tại đây.
+            </DialogDescription>
+          </DialogHeader>
+          {detailPart ? (
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Tên sản phẩm</label>
+                <Input value={detailPart.name || "Chưa cập nhật"} readOnly disabled />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Thương hiệu</label>
+                  <Input value={detailPart.brand || "Chưa rõ"} readOnly disabled />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Mã sản phẩm</label>
+                  <Input
+                    value={`#${detailPart._id?.slice(-6).toUpperCase()}`}
+                    readOnly
+                    disabled
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Giá bán</label>
+                  <Input
+                    value={formatPrice(detailPart.sellingPrice || 0)}
+                    readOnly
+                    disabled
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Giá nhập</label>
+                  <Input
+                    value={formatPrice(detailPart.costPrice || 0)}
+                    readOnly
+                    disabled
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Số lượng tồn</label>
+                  <Input value={`${detailPart.quantity || 0} cái`} readOnly disabled />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Trạng thái</label>
+                  {(() => {
+                    const statusInfo = getDisplayStatus(detailPart);
+                    return (
+                      <div className="px-3 py-2 rounded border text-sm bg-gray-50">
+                        <span className={statusInfo.color}>{statusInfo.text}</span>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Mô tả</label>
+                <Textarea
+                  value={detailPart.description || "Chưa có mô tả"}
+                  readOnly
+                  disabled
+                  className="min-h-[120px]"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Hình ảnh</label>
+                {detailPart.media && detailPart.media.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    {detailPart.media.map((media) => (
+                      <img
+                        key={media.publicId || media.url}
+                        src={media.url}
+                        alt={detailPart.name}
+                        className="w-full h-32 object-cover rounded-lg border"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Chưa có hình ảnh</p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-center text-sm text-gray-500">
+              Không thể tải thông tin phụ tùng.
+            </p>
+          )}
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+              Đóng
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

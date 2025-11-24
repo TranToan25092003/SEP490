@@ -5,6 +5,7 @@ const chatHistoryByCustomer = new Map();
 const MAX_MESSAGES_PER_CHAT = 100;
 let guestCounter = 0; // server-scoped incremental counter for Guest naming
 let ioInstance = null; // Store io instance for broadcasting
+const notificationService = require("../service/notification.service");
 
 // Socket.IO event handlers
 const handleConnection = (socket) => {
@@ -116,6 +117,16 @@ const handleConnection = (socket) => {
       console.log(
         `Staff message sent to room ${room} for customer ${customerId}`
       );
+      if (
+        notificationService &&
+        typeof notificationService.notifyCustomerChatMessage === "function"
+      ) {
+        notificationService
+          .notifyCustomerChatMessage(customerId, message)
+          .catch((error) =>
+            console.error("Failed to notify customer chat message:", error)
+          );
+      }
     } else {
       // Customer sending: broadcast to customer room and notify staff room
       socket.to(room).emit("newMessage", { ...message, customerId });
@@ -154,6 +165,16 @@ const handleConnection = (socket) => {
         );
       }
       console.log(`Customer ${customerId} sent message to room ${room}`);
+      if (
+        notificationService &&
+        typeof notificationService.notifyStaffChatMessage === "function"
+      ) {
+        notificationService
+          .notifyStaffChatMessage(customerId, message)
+          .catch((error) =>
+            console.error("Failed to notify staff chat message:", error)
+          );
+      }
     }
   });
 

@@ -61,15 +61,41 @@ const renderActiveShape = (props) => {
 
 const COLORS = ['#DC2626', '#1F2937', '#6B7280', '#F59E0B', '#10B981']; // Expanded colors
 
+const fallbackDashboardData = {
+    stats: {
+        orders: 0,
+        requests: 0,
+        revenue: 0,
+        customers: 0,
+    },
+    lineChartData: [
+        { name: 'T1', 'YêuCầu': 0 },
+        { name: 'T2', 'YêuCầu': 0 },
+        { name: 'T3', 'YêuCầu': 0 },
+    ],
+    barChartData: [
+        { month: 'T1', DoanhThu: 0 },
+        { month: 'T2', DoanhThu: 0 },
+        { month: 'T3', DoanhThu: 0 },
+    ],
+    pieChartData: [],
+    potentialCustomers: [],
+};
+
+export async function staffDashboardLoader() {
+    return fallbackDashboardData;
+}
+
 export default function StaffDashboardPage() {
     // 1. Lấy dữ liệu thật từ loader
+    const loaderData = useLoaderData() || fallbackDashboardData;
     const {
         stats,
         lineChartData,
         barChartData,
         pieChartData,
         potentialCustomers
-    } = useLoaderData();
+    } = loaderData;
 
     const [activeIndex, setActiveIndex] = React.useState(0);
     const onPieEnter = (_, index) => {

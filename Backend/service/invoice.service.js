@@ -1,6 +1,7 @@
 const { Invoice, ServiceOrder } = require("../model");
 const DomainError = require("../errors/domainError");
 const { UsersService } = require("./users.service");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   INVOICE_NOT_FOUND: "INVOICE_NOT_FOUND",
@@ -373,6 +374,19 @@ class InvoiceService {
 
     await invoice.save();
 
+    // Populate lại invoice sau khi save để đảm bảo có đầy đủ thông tin
+    await invoice.populate({
+      path: "service_order_id",
+      populate: {
+        path: "booking_id",
+        populate: { path: "vehicle_id" },
+      },
+    });
+
+    await notificationService.notifyPaymentSuccess(invoice, {
+      actorClerkId: confirmedBy,
+    });
+
     // Đảm bảo invoice và serviceOrder đều có số format
     await this._ensureInvoiceNumber(invoice);
     if (invoice.service_order_id) {
@@ -424,6 +438,11 @@ class InvoiceService {
   _mapInvoiceSummary(invoice, serviceOrder, customerName = null) {
     const booking = serviceOrder?.booking_id;
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
 
     return {
       id: invoice._id.toString(),
@@ -442,7 +461,7 @@ class InvoiceService {
       tax: invoice.tax,
       createdAt: invoice.createdAt,
       customerName,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
     };
   }
 
@@ -454,6 +473,11 @@ class InvoiceService {
     confirmedByName = null
   ) {
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
 
     const items = (serviceOrder?.items || []).map((item) => ({
       type: item.item_type,
@@ -486,7 +510,7 @@ class InvoiceService {
       updatedAt: invoice.updatedAt,
       customerName,
       customerClerkId: booking?.customer_clerk_id || null,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
       vehicleId: vehicle?._id?.toString() || null,
       items,
     };

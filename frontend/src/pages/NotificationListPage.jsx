@@ -9,13 +9,18 @@ import { io } from "socket.io-client";
 import {
   Loader2,
   CalendarCheck,
+  CalendarX,
   Flag,
   Wrench,
   MessageSquareWarning,
+  MessageCircle,
   Megaphone,
   PackageMinus,
   Info,
   DollarSign,
+  FileText,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import {
   Tooltip,
@@ -59,7 +64,18 @@ const NotificationIcon = ({ type }) => {
       iconColor = "bg-blue-500";
       break;
 
+    case "BOOKING_CANCELLED":
+      IconComponent = CalendarX;
+      iconColor = "bg-gray-500";
+      break;
+
+    case "PASSWORD_CHANGED":
+      IconComponent = Lock;
+      iconColor = "bg-slate-600";
+      break;
+
     case "COMPLAINT_REPLIED":
+    case "COMPLAINT_SUBMITTED":
     case "NEW_COMPLAINT_RECEIVED":
       IconComponent = MessageSquareWarning;
       iconColor = "bg-red-500";
@@ -71,8 +87,66 @@ const NotificationIcon = ({ type }) => {
       break;
 
     case "PAYMENT_SUCCESSFUL":
+    case "PAYMENT_CONFIRMED":
       IconComponent = DollarSign;
-      iconColor = "bg-green-500";
+      iconColor = "bg-red-600";
+      break;
+
+    case "QUOTE_READY":
+    case "QUOTE_REVISED":
+      IconComponent = FileText;
+      iconColor = "bg-rose-500";
+      break;
+
+    case "QUOTE_APPROVED":
+      IconComponent = FileText;
+      iconColor = "bg-emerald-600";
+      break;
+
+    case "QUOTE_REVISION_REQUESTED":
+      IconComponent = FileText;
+      iconColor = "bg-amber-500";
+      break;
+
+    case "QUOTE_DECLINED":
+      IconComponent = FileText;
+      iconColor = "bg-gray-500";
+      break;
+
+    case "QUOTE_ADDITIONAL_REQUESTED":
+      IconComponent = FileText;
+      iconColor = "bg-indigo-500";
+      break;
+
+    case "QUOTE_ADDITIONAL_APPROVED":
+      IconComponent = FileText;
+      iconColor = "bg-teal-500";
+      break;
+
+    case "QUOTE_ADDITIONAL_DECLINED":
+      IconComponent = FileText;
+      iconColor = "bg-orange-500";
+      break;
+
+    case "SERVICE_ORDER_STATUS_UPDATED":
+      IconComponent = Flag;
+      iconColor = "bg-amber-500";
+      break;
+
+    case "CHAT_MESSAGE":
+      IconComponent = MessageCircle;
+      iconColor = "bg-pink-500";
+      break;
+
+    case "WARRANTY_BOOKING_CONFIRMED":
+    case "WARRANTY_REQUEST_ACCEPTED":
+      IconComponent = ShieldCheck;
+      iconColor = "bg-emerald-600";
+      break;
+
+    case "WARRANTY_REQUEST_REJECTED":
+      IconComponent = ShieldCheck;
+      iconColor = "bg-red-600";
       break;
 
     case "STOCK_LEVEL_LOW":
@@ -81,6 +155,7 @@ const NotificationIcon = ({ type }) => {
       break;
 
     case "GENERAL_ANNOUNCEMENT":
+    case "CAMPAIGN_ANNOUNCEMENT":
       IconComponent = Megaphone;
       iconColor = "bg-indigo-500";
       break;
@@ -104,7 +179,11 @@ const NotificationItem = ({ notification, onNotificationClick }) => {
 
   return (
     <div
-      className="flex items-center gap-4 p-3 cursor-pointer rounded-lg bg-white hover:bg-gray-100"
+      className={`flex items-center gap-4 p-4 cursor-pointer rounded-xl border transition-colors ${
+        isUnread
+          ? "bg-rose-50 border-rose-100 hover:bg-rose-100/70"
+          : "bg-white border-gray-100 hover:bg-gray-50"
+      }`}
       onClick={() => onNotificationClick(notification)}
     >
       {/* Thêm Icon vào đây */}
@@ -113,7 +192,7 @@ const NotificationItem = ({ notification, onNotificationClick }) => {
       <div className="flex-1">
         <p
           className={`text-sm leading-snug ${
-            isUnread ? "text-gray-900" : "text-gray-500"
+            isUnread ? "text-rose-900" : "text-gray-500"
           }`}
           style={{ whiteSpace: "normal" }}
         >
@@ -124,14 +203,14 @@ const NotificationItem = ({ notification, onNotificationClick }) => {
         </p>
         <span
           className={`text-xs ${
-            isUnread ? "text-blue-600 font-bold" : "text-gray-500"
+            isUnread ? "text-rose-600 font-semibold" : "text-gray-500"
           }`}
         >
           {timeAgo(notification.createdAt)}
         </span>
       </div>
       {isUnread && (
-        <div className="h-3 w-3 rounded-full bg-blue-500 self-center flex-shrink-0 ml-2"></div>
+        <div className="h-3 w-3 rounded-full bg-rose-500 self-center flex-shrink-0 ml-2"></div>
       )}
     </div>
   );
@@ -383,20 +462,22 @@ function NotificationListPage() {
               </TooltipProvider>
             </div>
 
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 h-auto mb-4 rounded-lg">
-              <TabsTrigger
-                value="all"
-                className="rounded-md py-2 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
-              >
-                Tất cả
-              </TabsTrigger>
-              <TabsTrigger
-                value="unread"
-                className="rounded-md py-2 data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700 data-[state=active]:shadow-none"
-              >
-                Chưa đọc
-              </TabsTrigger>
-            </TabsList>
+            <div className="px-1 mb-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger
+                  value="all"
+                  className="rounded-full py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-rose-600 data-[state=active]:shadow-inner"
+                >
+                  Tất cả
+                </TabsTrigger>
+                <TabsTrigger
+                  value="unread"
+                  className="rounded-full py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-rose-600 data-[state=active]:shadow-inner"
+                >
+                  Chưa đọc
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="all" className="m-0 space-y-2">
               {isLoading && allNotifications.list.length === 0 ? (

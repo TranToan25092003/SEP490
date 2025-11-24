@@ -78,9 +78,12 @@ class InvoiceController {
       const { paymentMethod, voucherCode, paidAmount } = req.body || {};
       const confirmedBy = req.userId || null;
 
+      // Mặc định là "cash" (tiền mặt) khi staff xác nhận
+      const finalPaymentMethod = paymentMethod || "cash";
+
       const invoice = await InvoiceService.confirmInvoicePayment(
         id,
-        paymentMethod,
+        finalPaymentMethod,
         confirmedBy,
         { voucherCode, paidAmount }
       );
@@ -125,11 +128,11 @@ class InvoiceController {
         });
       }
 
-      // Cập nhật trạng thái thanh toán với paymentMethod mặc định là bank_transfer
+      // Cập nhật trạng thái thanh toán với paymentMethod là qr_code (quét QR)
       // confirmedBy = "SYSTEM" để đánh dấu là hệ thống tự động xác nhận
       const updatedInvoice = await InvoiceService.confirmInvoicePayment(
         id,
-        "bank_transfer",
+        "qr_code",
         "SYSTEM", // Hệ thống tự động xác nhận
         { voucherCode, paidAmount }
       );
@@ -148,7 +151,6 @@ class InvoiceController {
       next(error);
     }
   }
-
 }
 
 async function handleLoyaltyAfterPayment(
@@ -160,7 +162,7 @@ async function handleLoyaltyAfterPayment(
       return;
     }
 
-  const amountToUse =
+    const amountToUse =
       paidAmount !== undefined && paidAmount !== null
         ? paidAmount
         : invoice.totalAmount;

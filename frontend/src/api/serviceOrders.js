@@ -42,3 +42,27 @@ export const updateServiceOrderItems = async (serviceOrderId, items) => {
 
   return response.data;
 };
+
+export const createWalkInServiceOrder = async (payload) => {
+  const response = await customFetch("/service-orders/walk-in", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: payload,
+  });
+
+  return response.data.data;
+};
+
+export const cancelServiceOrder = async (serviceOrderId, cancelReason) => {
+  const response = await customFetch(`/service-orders/${serviceOrderId}/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: { cancelReason },
+  });
+
+  return response.data.data;
+};

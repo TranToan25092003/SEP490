@@ -40,7 +40,10 @@ export const generateInvoicePDF = async (invoiceData) => {
 
   const renderPaymentMethod = (method) => {
     if (!method) return "Chưa xác định";
-    return method === "cash" ? "Tiền mặt" : "Chuyển khoản";
+    if (method === "cash") return "Tiền mặt";
+    if (method === "qr_code") return "Quét QR";
+    if (method === "bank_transfer") return "Chuyển khoản";
+    return "Chưa xác định";
   };
 
   const renderStatus = (status) => {

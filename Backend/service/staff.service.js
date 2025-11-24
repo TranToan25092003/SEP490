@@ -85,7 +85,7 @@ async function fetchTechniciansFromClerk() {
     chunkUsers.forEach((user) => {
       const orgRole = staffRolesById.get(user.id);
       const position = resolvePosition(user, orgRole);
-      if (position !== "technician") {
+      if (position !== "technician" && position != "staff") {
         return;
       }
 
@@ -137,7 +137,9 @@ class StaffService {
 
     // circular dependency fix: import inside the method
     const { AttendanceService } = require("./attendance.service");
-    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(technicians);
+    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(
+      technicians
+    );
 
     return technicians.map((technician) => {
       const info = map[technician.technicianClerkId] || {

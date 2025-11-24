@@ -52,7 +52,6 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
-  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -66,7 +65,9 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
+import StaffDashboardPage, {
+  staffDashboardLoader,
+} from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
@@ -202,7 +203,7 @@ const router = createBrowserRouter([
     element: <ManagerLayout />,
     // loader: authenTicationLoader,
     children: [
-      { index: true, element: <Manager /> },
+      { index: true, element: <Manager />, loader: Manager.loader },
       { path: "staff", element: <StaffPage /> },
       {
         path: "items",
@@ -250,7 +251,7 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <StaffDashboardPage />,
-        loader: staffDashboardLoader
+        loader: staffDashboardLoader,
       },
       {
         path: "service-order/:id",
@@ -272,7 +273,11 @@ const router = createBrowserRouter([
         element: <ServiceOrderList />,
         loader: ServiceOrderList.loader,
       },
-      { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "service-order/add",
+        element: <ServiceOrderAdd />,
+        loader: ServiceOrderAdd.loader,
+      },
       {
         path: "booking/:id",
         element: <BookingDetail />,

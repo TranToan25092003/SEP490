@@ -122,6 +122,15 @@ const Booking = () => {
                     model: v.model,
                     year: v.year,
                     isAvailable: v.isAvailable,
+                    activeBooking: v.activeBooking
+                      ? {
+                          id: v.activeBooking.id,
+                          status: v.activeBooking.status,
+                          slotStartTime: v.activeBooking.slotStartTime,
+                          slotEndTime: v.activeBooking.slotEndTime,
+                          serviceOrderId: v.activeBooking.serviceOrderId,
+                        }
+                      : null,
                   }))}
                   services={services.map((s) => ({
                     sid: s.id,

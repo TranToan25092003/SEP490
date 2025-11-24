@@ -1,6 +1,45 @@
 const serviceOrderService = require("../service/service_order.service");
 
 class ServiceOrderController {
+  async createWalkInServiceOrder(req, res, next) {
+    try {
+      const staffId = req.userId;
+      const {
+        customerName,
+        customerPhone,
+        customerAddress,
+        licensePlate,
+        serviceIds,
+        note,
+        vehicleModel,
+        vehicleColor,
+      } = req.body;
+
+      const serviceOrder = await serviceOrderService.createWalkInServiceOrder({
+        staffId,
+        customer: {
+          name: customerName,
+          phone: customerPhone,
+          address: customerAddress,
+        },
+        vehicle: {
+          licensePlate,
+          model: vehicleModel,
+          color: vehicleColor,
+        },
+        serviceIds,
+        note,
+      });
+
+      res.status(201).json({
+        message: "Tạo lệnh sửa chữa thành công",
+        data: serviceOrder,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getAllServiceOrders(req, res, next) {
     try {
       const {
@@ -56,6 +95,27 @@ class ServiceOrderController {
 
       res.status(200).json({
         message: "Service order items updated successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async cancelServiceOrder(req, res, next) {
+    try {
+      const serviceOrderId = req.params.id;
+      const staffId = req.userId;
+      const { cancelReason } = req.body;
+
+      const serviceOrder = await serviceOrderService.cancelServiceOrder(
+        serviceOrderId,
+        staffId,
+        cancelReason
+      );
+
+      res.status(200).json({
+        message: "Hủy lệnh sửa chữa thành công",
+        data: serviceOrder,
       });
     } catch (error) {
       next(error);
