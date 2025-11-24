@@ -243,8 +243,8 @@ export default function ManagerBays() {
                       </Button>
                       {bay.status === "inactive" ? (
                         <Button
-                          variant="outline"
-                          size="sm"
+                      variant="outline"
+                      size="sm"
                           onClick={() => handleActivate(bay)}
                           className="text-green-600 hover:text-green-700 hover:bg-green-50"
                         >
@@ -252,15 +252,15 @@ export default function ManagerBays() {
                           Kích hoạt
                         </Button>
                       ) : (
-                        <Button
+                    <Button
                           variant="outline"
-                          size="sm"
+                      size="sm"
                           onClick={() => handleDeactivate(bay)}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
+                    >
                           <XCircle className="h-4 w-4 mr-1" />
                           Vô hiệu hóa
-                        </Button>
+                    </Button>
                       )}
                     </div>
                   </TableCell>

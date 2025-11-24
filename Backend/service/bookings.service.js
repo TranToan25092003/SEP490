@@ -179,7 +179,9 @@ class BookingsService {
   async getUserBookings(customerClerkId) {
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
-      .select("_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id")
+      .select(
+        "_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id"
+      )
       .populate({
         path: "service_ids",
         select: "_id name price description", // Chỉ lấy các field cần thiết của service
@@ -187,7 +189,7 @@ class BookingsService {
       .populate({
         path: "vehicle_id",
         select: "_id license_plate brand name year model_id", // Chỉ lấy các field cần thiết của vehicle
-        populate: { 
+        populate: {
           path: "model_id",
           select: "_id name brand", // Chỉ lấy các field cần thiết của model
         },
@@ -199,7 +201,9 @@ class BookingsService {
     return bookings.map((booking) => ({
       id: booking._id,
       vehicle: mapToVehicleDTO(booking.vehicle_id),
-      services: booking.service_ids ? booking.service_ids.map(mapServiceToDTO) : [],
+      services: booking.service_ids
+        ? booking.service_ids.map(mapServiceToDTO)
+        : [],
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
@@ -250,16 +254,35 @@ class BookingsService {
       }
     }
 
-    // Custom sort: completed status goes to bottom, others sorted by slot_start_time ascending
+    // Custom sort priority:
+    // 0 - booked (Đã đặt)
+    // 1 - checked_in/in_progress (Đã tiếp nhận)
+    // 2 - cancelled (Đã hủy)
+    // 3 - others (completed, etc.)
     const [bookings, totalItems] = await Promise.all([
       Booking.aggregate([
         { $match: filters },
         {
           $addFields: {
             sortPriority: {
-              $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
-            }
-          }
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "booked"] }, then: 0 },
+                  {
+                    case: {
+                      $or: [
+                        { $eq: ["$status", "checked_in"] },
+                        { $eq: ["$status", "in_progress"] },
+                      ],
+                    },
+                    then: 1,
+                  },
+                  { case: { $eq: ["$status", "cancelled"] }, then: 2 },
+                ],
+                default: 3,
+              },
+            },
+          },
         },
         { $sort: { sortPriority: 1, slot_start_time: 1 } },
         { $skip: (page - 1) * limit },
@@ -269,23 +292,23 @@ class BookingsService {
             from: "services",
             localField: "service_ids",
             foreignField: "_id",
-            as: "service_ids"
-          }
+            as: "service_ids",
+          },
         },
         {
           $lookup: {
             from: "vehicles",
             localField: "vehicle_id",
             foreignField: "_id",
-            as: "vehicle_id"
-          }
+            as: "vehicle_id",
+          },
         },
         {
           $addFields: {
             vehicle_id: { $arrayElemAt: ["$vehicle_id", 0] },
-            service_ids: "$service_ids"
-          }
-        }
+            service_ids: "$service_ids",
+          },
+        },
       ]).exec(),
       Booking.countDocuments(filters).exec(),
     ]);

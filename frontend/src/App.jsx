@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import RoleRedirect from "./pages/auth/RoleRedirect";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
@@ -197,6 +198,10 @@ const router = createBrowserRouter([
     element: (
       <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
     ),
+  },
+  {
+    path: "/auth/role-redirect",
+    element: <RoleRedirect />,
   },
   {
     path: "/manager",

@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import photo from "../../assets/image.png";
 import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
+import { getRoleRedirectPath } from "@/utils/roleRedirect";
 
 import { useNavigate, Route, Routes, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { signIn, isLoaded, setActive } = useSignIn();
+  const { signIn, isLoaded: isSignInLoaded, setActive } = useSignIn();
   const { signUp } = useSignUp();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, user } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -16,12 +17,14 @@ const Login = () => {
   const [hide, setHide] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn) {
-      navigate("/");
+    if (!isUserLoaded) return;
+    if (isSignedIn && user) {
+      const destination = getRoleRedirectPath(user);
+      navigate(destination, { replace: true });
     }
-  }, [isSignedIn, navigate]);
+  }, [isSignedIn, user, isUserLoaded, navigate]);
 
-  if (!isLoaded) return null;
+  if (!isSignInLoaded) return null;
 
   const handleEmailSignin = async (e) => {
     e.preventDefault();
@@ -39,7 +42,6 @@ const Login = () => {
       });
       if (result.status == "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/");
         return;
       }
 
@@ -51,12 +53,10 @@ const Login = () => {
 
         if (final.status == "complete") {
           await setActive({ session: final.createdSessionId });
-          navigate("/");
           return;
         }
       }
 
-      navigate("/");
       toast.error("Không thể hoàn tất đăng nhập. Hãy thử lại.");
     } catch (error) {
       toast.warning(error.errors?.[0]?.message || error.message);
@@ -70,7 +70,7 @@ const Login = () => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_facebook",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {}
   };
@@ -80,7 +80,7 @@ const Login = () => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {}
   };
