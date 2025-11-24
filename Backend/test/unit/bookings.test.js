@@ -10,60 +10,8 @@ const ServiceOrderService = require("../../service/service_order.service");
 jest.mock("../../service/notification.service");
 jest.mock("../../service/service_order.service");
 
-const CUSTOMER_CLERK_ID = "user_2w2a6PJC4T4BfXDsg72AQsLNEyU";
-const OTHER_CUSTOMER_CLERK_ID = "user_3x3b7QKD5U5CgeYth83BRtMOFzV";
-
-const VEHICLE_IDS = [
-  new mongoose.Types.ObjectId("507f1f77bcf86cd799439012"),
-  new mongoose.Types.ObjectId("507f1f77bcf86cd799439015"),
-  new mongoose.Types.ObjectId("507f1f77bcf86cd799439016"),
-]
-
-const SERVICE_IDS = [
-  [
-    new mongoose.Types.ObjectId("507f1f77bcf86cd799439013"),
-  ],
-  [
-    new mongoose.Types.ObjectId("507f1f77bcf86cd799439015"),
-  ],
-  [
-    new mongoose.Types.ObjectId("507f1f77bcf86cd799439016"),
-    new mongoose.Types.ObjectId("507f1f77bcf86cd799439014"),
-  ]
-]
-
-const TIME_SLOTS = [
-  {year: 2027, month: 9, day: 25, hours: 10, minutes: 0},
-  {year: 2027, month: 9, day: 25, hours: 14, minutes: 0}
-]
-
 beforeAll(async () => {
   await db.connect();
-});
-
-beforeEach(async () => {
-  await Vehicle.collection.insertMany([
-    {
-      _id: VEHICLE_IDS[0],
-      OwnerClerkId: CUSTOMER_CLERK_ID,
-    },
-    {
-      _id: VEHICLE_IDS[2],
-      OwnerClerkId: OTHER_CUSTOMER_CLERK_ID
-    },
-  ]);
-
-  await Service.collection.insertMany([
-    {
-      _id: SERVICE_IDS[0][0],
-    },
-    {
-      _id: SERVICE_IDS[2][0],
-    },
-    {
-      _id: SERVICE_IDS[2][1],
-    },
-  ]);
 });
 
 afterAll(async () => {
@@ -81,6 +29,59 @@ function createDateFromTimeSlot(timeSlot) {
 
 describe("BookingsService", () => {
   describe("createBooking method", () => {
+
+    const CUSTOMER_CLERK_ID = "user_2w2a6PJC4T4BfXDsg72AQsLNEyU";
+    const OTHER_CUSTOMER_CLERK_ID = "user_3x3b7QKD5U5CgeYth83BRtMOFzV";
+
+    const VEHICLE_IDS = [
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439012"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439015"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439016"),
+    ]
+
+    const SERVICE_IDS = [
+      [
+        new mongoose.Types.ObjectId("507f1f77bcf86cd799439013"),
+      ],
+      [
+        new mongoose.Types.ObjectId("507f1f77bcf86cd799439015"),
+      ],
+      [
+        new mongoose.Types.ObjectId("507f1f77bcf86cd799439016"),
+        new mongoose.Types.ObjectId("507f1f77bcf86cd799439014"),
+      ]
+    ]
+
+    const TIME_SLOTS = [
+      {year: 2027, month: 9, day: 25, hours: 10, minutes: 0},
+      {year: 2027, month: 9, day: 25, hours: 14, minutes: 0}
+    ]
+
+    beforeEach(async () => {
+      await Vehicle.collection.insertMany([
+        {
+          _id: VEHICLE_IDS[0],
+          OwnerClerkId: CUSTOMER_CLERK_ID,
+        },
+        {
+          _id: VEHICLE_IDS[2],
+          OwnerClerkId: OTHER_CUSTOMER_CLERK_ID
+        },
+      ]);
+
+      await Service.collection.insertMany([
+        {
+          _id: SERVICE_IDS[0][0],
+        },
+        {
+          _id: SERVICE_IDS[2][0],
+        },
+        {
+          _id: SERVICE_IDS[2][1],
+        },
+      ]);
+    });
+
     test("UC0001_checkVehicleNotExists", async () => {
       const promise = BookingsService.createBooking(
         CUSTOMER_CLERK_ID,
@@ -212,7 +213,7 @@ describe("BookingsService", () => {
       new mongoose.Types.ObjectId("507f1f77bcf86cd799439093"),
     ];
 
-    test("checkInBooking_UC0001_bookingNotFound", async () => {
+    test("UC0001_bookingNotFound", async () => {
       const promise = BookingsService.checkInBooking(STAFF_ID, BOOKING_IDS[0]);
 
       await expect(promise).rejects.toThrow(DomainError);
@@ -220,17 +221,9 @@ describe("BookingsService", () => {
       expect(error.errorCode).toBe("BOOKINGS_NOT_FOUND");
     });
 
-    test("checkInBooking_UC0002_bookingNotInBookedState", async () => {
+    test("UC0002_bookingNotInBookedState", async () => {
       await Booking.collection.insertOne({
         _id: BOOKING_IDS[1],
-        customer_clerk_id: CUSTOMER_CLERK_ID,
-        vehicle_id: VEHICLE_IDS[0],
-        service_ids: SERVICE_IDS[0],
-        slot_start_time: createDateFromTimeSlot(TIME_SLOTS[0]),
-        slot_end_time: new Date(
-          createDateFromTimeSlot(TIME_SLOTS[0]).getTime() +
-            config.TIMESLOT_INTERVAL_MILLISECONDS
-        ),
         status: "cancelled",
       });
 
@@ -241,17 +234,14 @@ describe("BookingsService", () => {
       expect(error.errorCode).toBe("BOOKINGS_STATE_INVALID");
     });
 
-    test("checkInBooking_UC0003_successfulCheckIn", async () => {
+    test("UC0003_successfulCheckIn", async () => {
       await Booking.collection.insertOne({
         _id: BOOKING_IDS[2],
-        customer_clerk_id: CUSTOMER_CLERK_ID,
-        vehicle_id: VEHICLE_IDS[0],
-        service_ids: SERVICE_IDS[0],
-        slot_start_time: createDateFromTimeSlot(TIME_SLOTS[0]),
-        slot_end_time: new Date(
-          createDateFromTimeSlot(TIME_SLOTS[0]).getTime() +
-            config.TIMESLOT_INTERVAL_MILLISECONDS
-        ),
+        customer_clerk_id: "user_2w2a6PJC4T4BfXDsg72AQsLNEyU",
+        vehicle_id: "507f1f77bcf86cd799439012",
+        service_ids: ["507f1f77bcf86cd799439013"],
+        slot_start_time: createDateFromTimeSlot({year: 2027, month: 9, day: 25, hours: 10, minutes: 0}),
+        slot_end_time: createDateFromTimeSlot({year: 2027, month: 9, day: 25, hours: 11, minutes: 0}),
         status: "booked",
       });
 
@@ -377,6 +367,68 @@ describe("BookingsService", () => {
       expect(timeSlots).toBeDefined();
       expect(Array.isArray(timeSlots)).toBe(true);
       expect(timeSlots.every((slot) => slot.isAvailable === false)).toBe(true);
+    });
+  });
+
+  describe("cancelBooking method", () => {
+    const CANCEL_BOOKING_IDS = [
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439101"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439102"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439103"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439104"),
+    ];
+
+    test("UC0001_bookingNotFound", async () => {
+      const promise = BookingsService.cancelBooking(CANCEL_BOOKING_IDS[0]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch((e) => e);
+      expect(error.errorCode).toBe("BOOKINGS_NOT_FOUND");
+    });
+
+    test("UC0002_bookingAlreadyCancelled", async () => {
+      await Booking.collection.insertOne({
+        _id: CANCEL_BOOKING_IDS[1],
+        status: "cancelled",
+      });
+
+      const promise = BookingsService.cancelBooking(CANCEL_BOOKING_IDS[1]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch((e) => e);
+      expect(error.errorCode).toBe("BOOKINGS_STATE_INVALID");
+    });
+
+    test("UC0003_bookingCompleted", async () => {
+      await Booking.collection.insertOne({
+        _id: CANCEL_BOOKING_IDS[2],
+        status: "completed",
+      });
+
+      const promise = BookingsService.cancelBooking(CANCEL_BOOKING_IDS[2]);
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch((e) => e);
+      expect(error.errorCode).toBe("BOOKINGS_STATE_INVALID");
+    });
+
+    test("UC0004_successfulCancellation", async () => {
+      //successful case needs full booking data
+      await Booking.collection.insertOne({
+        _id: CANCEL_BOOKING_IDS[3],
+        customer_clerk_id: "user_2w2a6PJC4T4BfXDsg72AQsLNEyU",
+        vehicle_id: "507f1f77bcf86cd799439012",
+        service_ids: ["507f1f77bcf86cd799439013"],
+        slot_start_time: createDateFromTimeSlot({year: 2027, month: 9, day: 25, hours: 10, minutes: 0}),
+        slot_end_time: createDateFromTimeSlot({year: 2027, month: 9, day: 25, hours: 11, minutes: 0}),
+        status: "booked",
+      });
+
+      const booking = await BookingsService.cancelBooking(
+        CANCEL_BOOKING_IDS[3]
+      );
+
+      expect(booking).toBeDefined();
+      expect(booking.status).toBe("cancelled");
     });
   });
 });

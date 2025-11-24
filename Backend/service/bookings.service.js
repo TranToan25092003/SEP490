@@ -310,7 +310,7 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }
