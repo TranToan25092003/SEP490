@@ -15,6 +15,7 @@ const ERROR_CODES = {
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
   BOOKINGS_STATE_INVALID: "BOOKINGS_STATE_INVALID",
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
+  BOOKINGS_NOT_FOUND: "BOOKINGS_NOT_FOUND",
 };
 
 function convertTimeSlotToDate(timeSlot) {
@@ -280,7 +281,7 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }

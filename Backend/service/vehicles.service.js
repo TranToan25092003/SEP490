@@ -1,4 +1,5 @@
 const { Vehicle, Booking } = require("../model");
+const DomainError = require("../errors/domainError");
 
 function mapToVehicleDTO(vehicle) {
   return {
@@ -11,6 +12,11 @@ function mapToVehicleDTO(vehicle) {
   };
 }
 
+const ERROR_CODES = {
+  VEHICLE_NOT_FOUND: "VEHICLE_NOT_FOUND",
+  VEHICLE_NOT_BELONG_TO_USER: "VEHICLE_NOT_BELONG_TO_USER"
+}
+
 class VehiclesService {
   async getUserVehiclesWithAvailability(userId) {
     const vehicles = await Vehicle.find({ OwnerClerkId: userId })
@@ -21,7 +27,7 @@ class VehiclesService {
 
     const vehicleIds = vehicles.map((v) => v._id.toString());
     const activeBookingsMap = await this.getActiveBookingsMap(vehicleIds);
-    
+
     return vehicles.map((vehicle) => {
       const vehicleId = vehicle._id.toString();
       const activeBooking = activeBookingsMap[vehicleId];
@@ -71,6 +77,25 @@ class VehiclesService {
       }
       return acc;
     }, {});
+  }
+
+  async verifyVehicleOwnership(vehicleId, userId) {
+    const vehicle = await Vehicle.findById(vehicleId).lean();
+    if (!vehicle) {
+      throw new DomainError(
+        "Phương tiện không tồn tại",
+        ERROR_CODES.VEHICLE_NOT_FOUND,
+        404
+      );
+    }
+
+    if (vehicle.OwnerClerkId !== userId) {
+      throw new DomainError(
+        "Phương tiện không thuộc về người dùng",
+        ERROR_CODES.VEHICLE_NOT_BELONG_TO_USER,
+        403
+      );
+    }
   }
 }
 

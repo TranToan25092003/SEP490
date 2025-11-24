@@ -140,19 +140,7 @@ ServiceOrderSchema.pre("save", async function (next) {
   next();
 });
 
-ServiceOrderSchema.index(
-  { booking_id: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { booking_id: { $exists: true, $ne: null } },
-  }
-);
-
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
-
-ServiceOrder.syncIndexes().catch((error) => {
-  console.error("[ServiceOrder] Failed to sync indexes:", error.message);
-});
 
 module.exports = {
   ServiceOrder,
