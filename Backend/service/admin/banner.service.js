@@ -63,7 +63,7 @@ class BannerService {
 
     async getBannerById(bannerId) {
         if (!mongoose.Types.ObjectId.isValid(bannerId)) {
-            throw new Error(`Invalid Part ID format: ${bannerId}`);
+            throw new Error(`Invalid Banner ID format: ${bannerId}`);
         }
 
         try {
@@ -79,7 +79,7 @@ class BannerService {
 
     async updateBanner(bannerId, updateData) {
         if (!mongoose.Types.ObjectId.isValid(bannerId)) {
-            throw new Error(`Invalid Part ID format: ${bannerId}`);
+            throw new Error(`Invalid Banner ID format: ${bannerId}`);
         }
 
         try {
@@ -103,7 +103,7 @@ class BannerService {
 
     async deleteBanner(bannerId) {
         if (!mongoose.Types.ObjectId.isValid(bannerId)) {
-            throw new Error(`Invalid Part ID format: ${bannerId}`);
+            throw new Error(`Invalid Banner ID format: ${bannerId}`);
         }
         
         try {

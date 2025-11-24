@@ -71,7 +71,7 @@ class ServiceService {
 
     async getServiceById(serviceId) {
         if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-            throw new Error(`Invalid Part ID format: ${serviceId}`);
+            throw new Error(`Invalid Service ID format: ${serviceId}`);
         }
 
         try {
@@ -87,7 +87,7 @@ class ServiceService {
 
     async updateService(serviceId, updateData) {
         if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-            throw new Error(`Invalid Part ID format: ${serviceId}`);
+            throw new Error(`Invalid Service ID format: ${serviceId}`);
         }
 
         try {
@@ -111,7 +111,7 @@ class ServiceService {
 
     async deleteService(serviceId) {
         if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-            throw new Error(`Invalid Part ID format: ${serviceId}`);
+            throw new Error(`Invalid Service ID format: ${serviceId}`);
         }
 
         try {

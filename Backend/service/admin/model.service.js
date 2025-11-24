@@ -71,7 +71,7 @@ class ModelService {
 
     async getModelById(modelId) {
         if (!mongoose.Types.ObjectId.isValid(modelId)) {
-            throw new Error(`Invalid Part ID format: ${modelId}`);
+            throw new Error(`Invalid Model ID format: ${modelId}`);
         }
 
         try {
@@ -87,7 +87,7 @@ class ModelService {
 
     async updateModel(modelId, updateData) {
         if (!mongoose.Types.ObjectId.isValid(modelId)) {
-            throw new Error(`Invalid Part ID format: ${modelId}`);
+            throw new Error(`Invalid Model ID format: ${modelId}`);
         }
 
         try {
@@ -111,7 +111,7 @@ class ModelService {
 
     async deleteModel(modelId) {
         if (!mongoose.Types.ObjectId.isValid(modelId)) {
-            throw new Error(`Invalid Part ID format: ${modelId}`);
+            throw new Error(`Invalid Model ID format: ${modelId}`);
         }
 
         try {
