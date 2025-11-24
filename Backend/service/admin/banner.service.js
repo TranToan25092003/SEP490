@@ -1,4 +1,5 @@
 const { Banner } = require("../../model"); 
+const mongoose = require("mongoose")
 
 class BannerService {
     async createBanner(bannerData) {
@@ -61,6 +62,10 @@ class BannerService {
     }
 
     async getBannerById(bannerId) {
+        if (!mongoose.Types.ObjectId.isValid(bannerId)) {
+            throw new Error(`Invalid Part ID format: ${bannerId}`);
+        }
+
         try {
             const banner = await Banner.findById(bannerId).lean();
             if (!banner) {
@@ -73,6 +78,10 @@ class BannerService {
     }
 
     async updateBanner(bannerId, updateData) {
+        if (!mongoose.Types.ObjectId.isValid(bannerId)) {
+            throw new Error(`Invalid Part ID format: ${bannerId}`);
+        }
+
         try {
             const updatedBanner = await Banner.findByIdAndUpdate(
                 bannerId,
@@ -93,6 +102,10 @@ class BannerService {
     }
 
     async deleteBanner(bannerId) {
+        if (!mongoose.Types.ObjectId.isValid(bannerId)) {
+            throw new Error(`Invalid Part ID format: ${bannerId}`);
+        }
+        
         try {
             const deletedBanner = await Banner.findByIdAndDelete(bannerId);
 

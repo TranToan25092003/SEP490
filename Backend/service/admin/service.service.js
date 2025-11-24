@@ -1,4 +1,5 @@
-const { Service } = require("../../model"); 
+const { Service } = require("../../model");
+const mongoose = require("mongoose")
 
 class ServiceService {
 
@@ -69,6 +70,10 @@ class ServiceService {
     }
 
     async getServiceById(serviceId) {
+        if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+            throw new Error(`Invalid Part ID format: ${serviceId}`);
+        }
+
         try {
             const service = await Service.findById(serviceId).lean();
             if (!service) {
@@ -81,6 +86,10 @@ class ServiceService {
     }
 
     async updateService(serviceId, updateData) {
+        if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+            throw new Error(`Invalid Part ID format: ${serviceId}`);
+        }
+
         try {
             const updatedService = await Service.findByIdAndUpdate(
                 serviceId,
@@ -101,6 +110,10 @@ class ServiceService {
     }
 
     async deleteService(serviceId) {
+        if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+            throw new Error(`Invalid Part ID format: ${serviceId}`);
+        }
+
         try {
             const deletedService = await Service.findByIdAndDelete(serviceId);
 

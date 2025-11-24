@@ -257,7 +257,23 @@ export default function AdminBannersPage() {
     };
 
     const handleDeleteBanner = async (bannerId) => {
-        // ... (Giữ nguyên logic)
+        if (!window.confirm("Bạn có chắc chắn muốn xóa banner này?")) return;
+        setIsDeleting(true);
+        try {
+            const response = await customFetch.delete(`/admin/banners/${bannerId}`); 
+            if (response.data.success) {
+                toast.success("Banner đã được xóa thành công.");
+                navigate(0);
+            } else {
+                throw new Error(response.data.message);
+            }
+        } catch (error) {
+            toast.error("Lỗi khi xóa banner", {
+                description: error.message || "Không thể xóa banner.",
+            });
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (

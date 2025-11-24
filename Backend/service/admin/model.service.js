@@ -1,4 +1,5 @@
 const { ModelVehicle, Vehicle } = require("../../model");
+const mongoose = require("mongoose")
 
 class ModelService {
 
@@ -69,6 +70,10 @@ class ModelService {
 
 
     async getModelById(modelId) {
+        if (!mongoose.Types.ObjectId.isValid(modelId)) {
+            throw new Error(`Invalid Part ID format: ${modelId}`);
+        }
+
         try {
             const model = await ModelVehicle.findById(modelId).lean();
             if (!model) {
@@ -81,6 +86,10 @@ class ModelService {
     }
 
     async updateModel(modelId, updateData) {
+        if (!mongoose.Types.ObjectId.isValid(modelId)) {
+            throw new Error(`Invalid Part ID format: ${modelId}`);
+        }
+
         try {
             const updatedModel = await ModelVehicle.findByIdAndUpdate(
                 modelId,
@@ -101,6 +110,10 @@ class ModelService {
     }
 
     async deleteModel(modelId) {
+        if (!mongoose.Types.ObjectId.isValid(modelId)) {
+            throw new Error(`Invalid Part ID format: ${modelId}`);
+        }
+
         try {
 
             const vehiclesUsingModel = await Vehicle.countDocuments({ model_id: modelId });
