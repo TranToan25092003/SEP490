@@ -452,16 +452,16 @@ function NotificationBell() {
         <Button
           variant="ghost"
           size="icon"
-          className="relative h-12 w-12 md:h-[52px] md:w-[52px] text-gray-900 hover:text-gray-900"
+          className="relative h-12 w-12 md:h-14 md:w-14 lg:h-16 lg:w-16 text-gray-900 hover:text-gray-900"
         >
           {unreadCount > 0 ? (
             <>
               <BellRing
                 strokeWidth={1.4}
-                className="text-rose-700 size-[20px] md:size-[24px]"
+                className="text-rose-700 size-[24px] md:size-[28px] lg:size-[32px]"
               />
               <Badge
-                className="absolute -top-1 -right-1 h-5 w-5 justify-center rounded-full p-1 text-xs shadow shadow-rose-400"
+                className="absolute -top-1 -right-1 h-4 w-4 md:h-5 md:w-5 justify-center rounded-full p-1 text-[10px] md:text-xs shadow shadow-rose-400"
                 variant="destructive"
               >
                 {unreadCount > 9 ? "9+" : unreadCount}
@@ -470,7 +470,7 @@ function NotificationBell() {
           ) : (
             <Bell
               strokeWidth={1.4}
-              className="text-gray-900 size-[20px] md:size-[24px]"
+              className="text-gray-900 size-[24px] md:size-[28px] lg:size-[32px]"
             />
           )}
         </Button>

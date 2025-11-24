@@ -20,7 +20,7 @@ const SERVICE_ORDER_STATUS_LABELS = {
   created: "được tạo",
   waiting_inspection: "đang chờ kiểm tra",
   inspection_completed: "đã hoàn tất kiểm tra",
-  waiting_customer_approval: "chờ bạn xác nhận",
+  waiting_customer_approval: "chờ khách xác nhận",
   approved: "được phê duyệt",
   scheduled: "đã được xếp lịch",
   servicing: "đang sửa chữa",
@@ -509,9 +509,7 @@ async function notifyServiceOrderStatusChange({
 
     if (serviceOrderDoc.status === "servicing") {
       customerTitle = "Xe đang được sửa chữa";
-      customerMessage = `Xe ${plate} của quý khách đang được sửa chữa/bảo dưỡng. Vui lòng theo dõi tiến độ tại: ${buildAbsoluteLink(
-        linkTo
-      )}.`;
+      customerMessage = `Xe ${plate} của quý khách đang được sửa chữa/bảo dưỡng. Bấm vào đây để theo dõi tiến độ.`;
     } else if (serviceOrderDoc.status === "completed") {
       customerTitle = "Xe đã hoàn thành";
       let invoicePath = "/invoices";
@@ -524,9 +522,7 @@ async function notifyServiceOrderStatusChange({
         invoicePath = `/invoices/${invoice._id}`;
       }
       linkTo = invoicePath;
-      customerMessage = `Xe ${plate} của quý khách đã hoàn thành. Quý khách vui lòng đến nhận xe tại cửa hàng. Xem hóa đơn chi tiết tại: ${buildAbsoluteLink(
-        invoicePath
-      )}.`;
+      customerMessage = `Xe ${plate} của quý khách đã hoàn thành. Quý khách vui lòng đến nhận xe tại cửa hàng. Bấm vào đây để xem hóa đơn chi tiết.`;
     }
 
     await createNotification({
@@ -569,12 +565,8 @@ async function notifyCustomerNewQuote(
     type: "QUOTE_READY",
     title: isRevision ? "Báo giá đã được cập nhật" : "Báo giá mới đã sẵn sàng",
     message: isRevision
-      ? `Thông tin báo giá đã được chỉnh sửa lại theo yêu cầu của quý khách. Vui lòng kiểm tra và duyệt lại tại: ${buildAbsoluteLink(
-          quoteLink
-        )}.`
-      : `Quý khách vui lòng duyệt hạng mục sửa chữa cho xe ${plate}. Duyệt tại: ${buildAbsoluteLink(
-          quoteLink
-        )}.`,
+      ? "Thông tin báo giá đã được chỉnh sửa theo yêu cầu của quý khách. Bấm vào đây để xem và duyệt lại."
+      : `Quý khách vui lòng duyệt hạng mục sửa chữa cho xe ${plate}. Bấm vào đây để duyệt ngay.`,
     linkTo: quoteLink,
     actorClerkId: serviceOrderDoc.staff_clerk_id || null,
   });
@@ -599,9 +591,7 @@ async function notifyQuoteApproved(serviceOrder, quote = null) {
     recipientType: "customer",
     type: "QUOTE_APPROVED",
     title: "Đã xác nhận sửa chữa",
-    message: `Quý khách đã duyệt hạng mục sửa chữa cho xe ${plate} thành công. Vui lòng theo dõi tiến độ tại: ${buildAbsoluteLink(
-      progressLink
-    )}.`,
+    message: `Quý khách đã duyệt hạng mục sửa chữa cho xe ${plate} thành công. Bấm vào đây để theo dõi tiến độ.`,
     linkTo: progressLink,
   });
 
@@ -700,9 +690,7 @@ async function notifyPaymentSuccess(invoiceDoc, { actorClerkId = null } = {}) {
       recipientType: "customer",
       type: "PAYMENT_SUCCESSFUL",
       title: "Thanh toán thành công",
-      message: `Đã nhận thanh toán ${formattedAmount} cho hóa đơn ${invoiceNumber}. Cảm ơn quý khách! Biên lai: ${buildAbsoluteLink(
-        receiptPath
-      )}`,
+      message: `Đã nhận thanh toán ${formattedAmount} cho hóa đơn ${invoiceNumber}. Cảm ơn quý khách! Bấm vào đây để xem biên lai.`,
       linkTo: receiptPath,
       actorClerkId,
     });

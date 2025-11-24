@@ -3,10 +3,11 @@ import photo from "../../assets/image.png";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useSignUp, useUser } from "@clerk/clerk-react";
+import { getRoleRedirectPath } from "@/utils/roleRedirect";
 
 const Register = () => {
   const { signUp, isLoaded: isSignUpLoaded, setActive } = useSignUp();
-  const { isSignedIn, isLoaded: isUserLoaded } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, user } = useUser();
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -19,10 +20,12 @@ const Register = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
-    if (isUserLoaded && isSignedIn) {
-      navigate("/", { replace: true });
+    if (!isUserLoaded) return;
+    if (isSignedIn && user) {
+      const destination = getRoleRedirectPath(user);
+      navigate(destination, { replace: true });
     }
-  }, [isUserLoaded, isSignedIn, navigate]);
+  }, [isUserLoaded, isSignedIn, user, navigate]);
 
   if (!isUserLoaded) {
     return null;
@@ -34,7 +37,7 @@ const Register = () => {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {
       toast.error(error.message || "Không thể đăng ký bằng Google.");
@@ -47,7 +50,7 @@ const Register = () => {
       await signUp.authenticateWithRedirect({
         strategy: "oauth_facebook",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {
       toast.error(error.message || "Không thể đăng ký bằng Facebook.");
@@ -100,7 +103,6 @@ const Register = () => {
       if (completeSignUp.status === "complete") {
         await setActive({ session: completeSignUp.createdSessionId });
         toast.success("Đăng ký thành công!");
-        navigate("/");
       } else {
         toast.error("Xác nhận chưa hoàn tất, vui lòng thử lại.");
       }
