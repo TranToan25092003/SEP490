@@ -87,6 +87,11 @@ import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
 import LoyaltyWallet from "./pages/customer/LoyaltyWallet";
 import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
+import {
+  authenTicationLoader,
+  authenTicationForStaffLoader,
+  authenTicationForAdminLoader,
+} from "./utils/authentication.loader";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -206,7 +211,7 @@ const router = createBrowserRouter([
   {
     path: "/manager",
     element: <ManagerLayout />,
-    // loader: authenTicationLoader,
+    loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager />, loader: Manager.loader },
       { path: "staff", element: <StaffPage /> },
@@ -251,7 +256,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
-    // loader: authenTicationForStaffLoader,
+    loader: authenTicationForStaffLoader,
     children: [
       {
         index: true,
@@ -334,7 +339,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
-    // loader: authenTicationForAdminLoader,   //Add later
+    loader: authenTicationForAdminLoader,
     children: [
       {
         index: true,
