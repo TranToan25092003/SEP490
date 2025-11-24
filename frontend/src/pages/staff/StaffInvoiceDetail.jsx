@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { generateInvoicePDF } from "@/utils/invoicePdfGenerator";
 
 export default function StaffInvoiceDetail() {
@@ -81,7 +81,22 @@ export default function StaffInvoiceDetail() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 relative">
+      {isGeneratingPDF && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/90">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-red-600" />
+            <div className="text-center">
+              <p className="text-lg font-semibold text-gray-900">
+                Đang tạo file PDF...
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                Vui lòng đợi trong giây lát
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <Button variant="outline" onClick={() => navigate(-1)}>
           Quay lại

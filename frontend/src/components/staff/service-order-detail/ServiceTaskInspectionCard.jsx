@@ -103,7 +103,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
       await toast
         .promise(completeInspectionPromise, {
           loading: "Đang hoàn thành kiểm tra...",
-          success: "Hoàn thành kiểm tra thành công!",
+          // success: "Hoàn thành kiểm tra thành công!",
           error: "Hoàn thành kiểm tra thất bại.",
         })
         .unwrap();

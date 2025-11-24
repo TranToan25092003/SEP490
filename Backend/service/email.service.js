@@ -161,11 +161,12 @@ const sendPaymentConfirmationEmail = async (
         .button {
           display: inline-block;
           background-color: #DF1D01;
-          color: white;
+          color: #ffffff !important;
           padding: 12px 24px;
           text-decoration: none;
           border-radius: 5px;
           margin: 20px 0;
+          font-weight: 600;
         }
         .footer {
           text-align: center;
@@ -182,7 +183,7 @@ const sendPaymentConfirmationEmail = async (
         <div class="content">
           <p>Xin chào <strong>${customerName || "Quý khách"}</strong>,</p>
         <p>Cảm ơn bạn đã sử dụng dịch vụ của MotorMate. Chúng tôi xác nhận đã nhận được thanh toán của bạn.</p>
-          
+
         <div class="success-badge">✓ Thanh toán thành công</div>
 
         <div class="info-box">
