@@ -17,12 +17,14 @@ class BaysController {
  async getNSlots(req, res, next) {
     try {
       const { id } = req.params;
-      const { n, duration } = req.query;
+      const { n, duration, ignoredTaskIds } = req.query;
 
       const slots = await BaySchedulingService.findNextNSlotsForBayId(
         id,
         parseInt(n, 10),
-        parseInt(duration, 10)
+        parseInt(duration, 10),
+        req.query.from ? new Date(req.query.from) : undefined,
+        ignoredTaskIds
       )
 
       res.json({

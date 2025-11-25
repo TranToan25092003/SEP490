@@ -25,17 +25,18 @@ import {
 } from "@/utils/enumsTranslator";
 import { getServiceOrderById } from "@/api/serviceOrders";
 import { toast } from "sonner";
-import background from "@/assets/cool-motorcycle-indoors.png";
 
 async function loader({ params, request }) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page"), 10) || 1;
   const limit = 10;
 
-  return {
-    quotesPromise: getQuotesForServiceOrder(params.id, page, limit),
-    serviceOrder: await getServiceOrderById(params.id),
-  };
+  const promises = Promise.all([
+    getQuotesForServiceOrder(params.id, page, limit),
+    getServiceOrderById(params.id),
+  ]);
+
+  return { promises };
 }
 
 const quotesTableDefinition = [
@@ -123,75 +124,65 @@ const ServiceOrderDetailQuotesContent = ({
 };
 
 const ServiceOrderDetailQuotes = () => {
-  const { quotesPromise, serviceOrder } = useLoaderData();
+  const { promises } = useLoaderData();
   const revalidator = useRevalidator();
   const { id } = useParams();
 
   return (
-    // <div
-    //   className="min-h-screen bg-cover bg-center bg-fixed"
-    //   style={{
-    //     backgroundImage: `linear-gradient(135deg, rgba(8,8,8,0.82), rgba(8,8,8,0.35)), url(${background})`,
-    //   }}
-    // >
-    <Container pageContext="admin" className="py-8">
-      <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-6 space-y-6">
-        <BackButton
-          to="/staff/service-order"
-          label="Quay lại trang quản lý lệnh"
-        />
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-              MotorMate Workshop
-            </p>
-            <H3>Chi Tiết Lệnh Sửa Chữa - Báo Giá</H3>
-          </div>
-          <Tabs value="quotes">
-            <TabsList className="bg-white border shadow-sm">
-              <TabsTrigger value="main">
-                <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
-              </TabsTrigger>
-              <TabsTrigger value="quotes">
-                <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
-              </TabsTrigger>
-              <TabsTrigger value="progress">
-                <Link to={`/staff/service-order/${id}/progress`}>
-                  Tiến trình sửa chữa
-                </Link>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+    <Container pageContext="admin">
+      <BackButton
+        to="/staff/service-order"
+        label="Quay lại trang quản lý lệnh"
+      />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <H3>Chi Tiết Lệnh Sửa Chữa - Báo Giá</H3>
         </div>
+        <Tabs value="quotes">
+          <TabsList>
+            <TabsTrigger value="main">
+              <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
+            </TabsTrigger>
+            <TabsTrigger value="quotes">
+              <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
+            </TabsTrigger>
+            <TabsTrigger value="progress">
+              <Link to={`/staff/service-order/${id}/progress`}>
+                Tiến trình sửa chữa
+              </Link>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
 
-        <Suspense
-          fallback={
-            <div className="flex justify-center items-center py-12">
-              <Spinner className="h-10 w-10 text-primary" />
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
+      >
+        <Await
+          resolve={promises}
+          errorElement={
+            <div className="text-center py-8 text-destructive">
+              Không thể tải thông tin báo giá
             </div>
           }
         >
-          <Await
-            resolve={quotesPromise}
-            errorElement={
-              <div className="text-center py-8 text-destructive">
-                Không thể tải thông tin báo giá
-              </div>
-            }
-          >
-            {(quotesData) => (
-              <ServiceOrderDetailQuotesContent
-                quotesData={quotesData}
-                revalidator={revalidator}
-                serviceOrder={serviceOrder}
-                serviceOrderId={id}
-              />
-            )}
-          </Await>
-        </Suspense>
-      </div>
+          {([quotesData, serviceOrder]) => {
+            return (
+                <ServiceOrderDetailQuotesContent
+                  quotesData={quotesData}
+                  revalidator={revalidator}
+                  serviceOrder={serviceOrder}
+                  serviceOrderId={id}
+                />
+            );
+          }}
+        </Await>
+      </Suspense>
     </Container>
-    // </div>
   );
 };
 

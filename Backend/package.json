@@ -9,7 +9,8 @@
   "scripts": {
     "dev": "nodemon --inspect index.js",
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test:unit": "jest test/unit --runInBand --verbose",
+    "test:download": "node -e \"require('./test/db').download()\""
   },
   "dependencies": {
     "@clerk/backend": "^1.29.0",
@@ -38,6 +39,8 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.3.0",
     "nodemon": "^3.1.4"
   }
 }
