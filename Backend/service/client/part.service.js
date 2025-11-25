@@ -1,4 +1,5 @@
 const { Part } = require("../../model");
+const mongoose = require("mongoose")
 
 class PartService {
     //Get all parts for client
@@ -14,6 +15,10 @@ class PartService {
         } = query;
 
         const filter = { status: "active" };
+
+        if (vehicleModel && !mongoose.Types.ObjectId.isValid(vehicleModel)) {
+            throw new Error(`Invalid Part ID format: ${vehicleModel}`);
+        }
 
         if (search) {
             filter.$or = [
@@ -59,8 +64,12 @@ class PartService {
     }
 
     async getPartByIdByClient(id) {
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            throw new Error(`Invalid Part ID format: ${id}`);
+        }
+
         try {
-           
+
             const part = await Part.findOne({ _id: id, status: "active" })
                 .populate("compatible_model_ids", "name brand year")
                 .populate("media", "url kind publicId");
