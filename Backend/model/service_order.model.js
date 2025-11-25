@@ -148,19 +148,7 @@ ServiceOrderSchema.pre("save", async function (next) {
   next();
 });
 
-ServiceOrderSchema.index(
-  { booking_id: 1 },
-  {
-    unique: true,
-    sparse: true, // Allow multiple null values, only enforce uniqueness for non-null values
-  }
-);
-
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
-
-ServiceOrder.syncIndexes().catch((error) => {
-  console.error("[ServiceOrder] Failed to sync indexes:", error.message);
-});
 
 module.exports = {
   ServiceOrder,

@@ -9,11 +9,12 @@ const { UsersService } = require("./users.service");
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
   SERVICE_ORDER_ALREADY_EXISTS: "SERVICE_ORDER_ALREADY_EXISTS",
+  SERVICE_ORDER_INVALID_STATE: "SERVICE_ORDER_INVALID_STATE",
   INVALID_WALK_IN_PAYLOAD: "INVALID_WALK_IN_PAYLOAD",
 };
 
 class ServiceOrderService {
-  async getAllServiceOrdersByCreatedDateAscending({
+  async getAllServiceOrdersByCreatedDateDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -114,6 +115,7 @@ class ServiceOrderService {
 
     const [serviceOrders, totalItems] = await Promise.all([
       ServiceOrder.aggregate(pipeline)
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -182,7 +184,7 @@ class ServiceOrderService {
     }
 
     const warrantyPartIds =
-      warranty && warranty.warranty_parts
+      warranty?.warranty_parts
         ? warranty.warranty_parts.map((wp) => wp.part_id?._id?.toString())
         : [];
 
@@ -218,7 +220,7 @@ class ServiceOrderService {
 
     let customerName = serviceOrder.walk_in_customer?.name || "Khách vãng lai";
     let customerClerkId = null;
-    let customerPhone = serviceOrder.walk_in_customer?.phone || null;
+    const customerPhone = serviceOrder.walk_in_customer?.phone || null;
     let licensePlateInfo = serviceOrder.walk_in_vehicle?.license_plate || "—";
     let vehicleId = null;
 
@@ -263,8 +265,7 @@ class ServiceOrderService {
 
     // Nếu có warranty, thêm warranty parts vào items với giá = 0
     if (
-      warranty &&
-      warranty.warranty_parts &&
+      warranty?.warranty_parts &&
       warranty.warranty_parts.length > 0
     ) {
       warranty.warranty_parts.forEach((wp) => {
@@ -314,7 +315,7 @@ class ServiceOrderService {
     };
   }
 
-  async _createServiceOrderFromBooking(staffId, bookingId) {
+  async createServiceOrderFromBooking(staffId, bookingId) {
     const existingOrder = await ServiceOrder.findOne({
       booking_id: bookingId,
     }).exec();

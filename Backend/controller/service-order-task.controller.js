@@ -228,6 +228,27 @@ class ServiceOrderTaskController {
       next(error);
     }
   }
+
+  async rescheduleTask(req, res, next) {
+    try {
+      const { taskId } = req.params;
+      const { bayId, start, end } = req.body;
+
+      const result = await serviceOrderTaskService.rescheduleTask(
+        taskId,
+        bayId,
+        new Date(start),
+        new Date(end)
+      );
+
+      res.status(200).json({
+        data: result,
+        message: "Task rescheduled successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = new ServiceOrderTaskController();

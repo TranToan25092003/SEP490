@@ -105,7 +105,7 @@ const BookingStatusTimeline = ({
               subtitle="Xe đã được tiếp nhận"
             />
           )}
-          {booking.status === "cancelled" && (
+          {booking.status === "cancelled" && !inspectionTask && (
             <EmptyState
               icon={XCircle}
               title="Đã hủy"

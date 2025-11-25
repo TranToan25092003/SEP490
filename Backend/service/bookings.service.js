@@ -15,6 +15,7 @@ const ERROR_CODES = {
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
   BOOKINGS_STATE_INVALID: "BOOKINGS_STATE_INVALID",
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
+  BOOKINGS_NOT_FOUND: "BOOKINGS_NOT_FOUND",
 };
 
 function convertTimeSlotToDate(timeSlot) {
@@ -24,8 +25,8 @@ function convertTimeSlotToDate(timeSlot) {
 
 class BookingsService {
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
-    const vehicleIdsInUse = await VehiclesService.getVehiclesInUse([vehicleId]);
-    if (vehicleIdsInUse.includes(vehicleId)) {
+    const activeBookingsMap = await VehiclesService.getActiveBookingsMap([vehicleId]);
+    if (vehicleId in activeBookingsMap) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
         ERROR_CODES.BOOKINGS_VEHICLE_ALREADY_BOOKED,
@@ -58,7 +59,7 @@ class BookingsService {
       timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
     );
 
-    const isAvailable = await this._isTimeslotAvailable(
+    const isAvailable = await this.isTimeslotAvailable(
       timeSlotStart,
       timeSlotEnd
     );
@@ -89,13 +90,13 @@ class BookingsService {
     return booking;
   }
 
-  async _isTimeslotAvailable(slotStartTime, slotEndTime) {
+  async isTimeslotAvailable(slotStartTime, slotEndTime) {
     const now = new Date();
     if (slotStartTime < now) {
       return false;
     }
 
-    const overlapCount = await this._getOverlappingBookingsCount(
+    const overlapCount = await this.getOverlappingBookingsCount(
       slotStartTime,
       slotEndTime
     );
@@ -103,7 +104,7 @@ class BookingsService {
     return overlapCount < config.MAX_BOOKINGS_PER_SLOT;
   }
 
-  async _getOverlappingBookingsCount(slotStartTime, slotEndTime) {
+  async getOverlappingBookingsCount(slotStartTime, slotEndTime) {
     const count = await Booking.countDocuments({
       slot_start_time: { $lt: slotEndTime },
       slot_end_time: { $gt: slotStartTime },
@@ -134,7 +135,7 @@ class BookingsService {
           slotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
         );
 
-        const isAvailable = await this._isTimeslotAvailable(slotStart, slotEnd);
+        const isAvailable = await this.isTimeslotAvailable(slotStart, slotEnd);
         timeSlots.push({ ...slot, isAvailable });
       }
     }
@@ -211,7 +212,7 @@ class BookingsService {
     }));
   }
 
-  async getAllBookingsSortedAscending({
+  async getAllBookingsSortedDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -342,7 +343,7 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }
@@ -355,7 +356,7 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService._createServiceOrderFromBooking(
+    await ServiceOrderService.createServiceOrderFromBooking(
       staffId,
       bookingId
     );
@@ -371,14 +372,22 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }
 
-    if (booking.status !== "booked") {
+    if (booking.status === "completed") {
       throw new DomainError(
-        "Chỉ có thể hủy các booking ở trạng thái 'booked'",
+        "Không thể hủy booking đã hoàn thành",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        400
+      );
+    }
+
+    if (booking.status === "cancelled") {
+      throw new DomainError(
+        "Booking đã bị hủy trước đó",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
         400
       );

@@ -77,6 +77,13 @@ router.get(
     query("duration")
       .isInt({ min: 1 })
       .withMessage("duration must be a positive integer."),
+    query("from")
+      .optional()
+      .isISO8601()
+      .withMessage("from must be a valid ISO 8601 date string."),
+    query("ignoredTaskIds")
+      .optional()
+      .isArray()
   ],
   throwErrors,
   baysController.getNSlots

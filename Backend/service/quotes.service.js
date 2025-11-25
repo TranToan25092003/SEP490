@@ -10,6 +10,36 @@ const ERROR_CODES = {
   QUOTE_ITEMS_REQUIRED: "QUOTE_ITEMS_REQUIRED",
 };
 
+function mapToQuoteDTO(quote) {
+  return {
+    id: quote._id.toString(),
+    serviceOrderId: quote.so_id.toString(),
+    items: quote.items.map((item) => ({
+      type: item.type,
+      name: item.name,
+      quantity: item.quantity,
+      price: item.price,
+    })),
+    subtotal: quote.subtotal,
+    tax: quote.tax,
+    grandTotal: quote.subtotal + quote.tax,
+    status: quote.status,
+    rejectedReason: quote.rejected_reason,
+    createdAt: quote.createdAt,
+    updatedAt: quote.updatedAt,
+  };
+}
+
+function mapToQuoteSummaryDTO(quote) {
+  return {
+    id: quote._id.toString(),
+    serviceOrderId: quote.so_id.toString(),
+    grandTotal: quote.subtotal + quote.tax,
+    status: quote.status,
+    createdAt: quote.createdAt,
+  };
+}
+
 class QuotesService {
   async createQuote(serviceOrderId) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)
@@ -53,8 +83,7 @@ class QuotesService {
 
     // Nếu có warranty, thêm warranty parts vào items với giá = 0
     if (
-      warranty &&
-      warranty.warranty_parts &&
+      warranty?.warranty_parts &&
       warranty.warranty_parts.length > 0
     ) {
       warranty.warranty_parts.forEach((wp) => {
@@ -110,7 +139,7 @@ class QuotesService {
       isRevision: existingQuoteCount > 0,
     });
 
-    return this._mapToQuoteDTO(quote);
+    return mapToQuoteDTO(quote);
   }
 
   async approveQuote(quoteId) {
@@ -149,7 +178,7 @@ class QuotesService {
     await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
     await notificationService.notifyQuoteApproved(serviceOrder, quote);
 
-    return this._mapToQuoteDTO(quote);
+    return mapToQuoteDTO(quote);
   }
 
   async rejectQuote(quoteId, reason) {
@@ -190,7 +219,7 @@ class QuotesService {
       );
     }
 
-    return this._mapToQuoteDTO(quote);
+    return mapToQuoteDTO(quote);
   }
 
   async listQuotes(page = 1, limit = 10, serviceOrderId = null) {
@@ -205,7 +234,7 @@ class QuotesService {
     const totalPages = Math.ceil(totalItems / limit);
 
     return {
-      quotes: quotes.map(this._mapToQuoteSummaryDTO),
+      quotes: quotes.map(mapToQuoteSummaryDTO),
       pagination: {
         currentPage: page,
         totalPages,
@@ -220,38 +249,9 @@ class QuotesService {
     if (!quote) {
       return null;
     }
-    return this._mapToQuoteDTO(quote);
+    return mapToQuoteDTO(quote);
   }
 
-  _mapToQuoteDTO(quote) {
-    return {
-      id: quote._id.toString(),
-      serviceOrderId: quote.so_id.toString(),
-      items: quote.items.map((item) => ({
-        type: item.type,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-      })),
-      subtotal: quote.subtotal,
-      tax: quote.tax,
-      grandTotal: quote.subtotal + quote.tax,
-      status: quote.status,
-      rejectedReason: quote.rejected_reason,
-      createdAt: quote.createdAt,
-      updatedAt: quote.updatedAt,
-    };
-  }
-
-  _mapToQuoteSummaryDTO(quote) {
-    return {
-      id: quote._id.toString(),
-      serviceOrderId: quote.so_id.toString(),
-      grandTotal: quote.subtotal + quote.tax,
-      status: quote.status,
-      createdAt: quote.createdAt,
-    };
-  }
 }
 
 module.exports = { QuotesService: new QuotesService(), ERROR_CODES };

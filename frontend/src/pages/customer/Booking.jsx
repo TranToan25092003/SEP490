@@ -121,7 +121,6 @@ const Booking = () => {
                     brand: v.brand,
                     model: v.model,
                     year: v.year,
-                    isAvailable: v.isAvailable,
                     activeBooking: v.activeBooking
                       ? {
                           id: v.activeBooking.id,
