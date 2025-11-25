@@ -1,4 +1,4 @@
-const { Service } = require("../../model");
+const { Service, Booking } = require("../../model");
 const mongoose = require("mongoose")
 
 class ServiceService {
@@ -115,6 +115,14 @@ class ServiceService {
         }
 
         try {
+            const bookingCount = await Booking.countDocuments({ service_ids: serviceId });
+
+            if (bookingCount > 0) {
+                throw new Error(
+                    `Cannot delete service. It is currently used in ${bookingCount} booking(s).`
+                );
+            }
+
             const deletedService = await Service.findByIdAndDelete(serviceId);
 
             if (!deletedService) {
@@ -122,7 +130,7 @@ class ServiceService {
             }
             return deletedService;
         } catch (error) {
-            throw new Error(`Failed to delete service: ${error.message}`);
+            throw new Error(error.message); 
         }
     }
 }

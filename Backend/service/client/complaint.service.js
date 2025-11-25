@@ -32,7 +32,7 @@ class ComplaintService {
     if (!Types.ObjectId.isValid(categoryId)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid Complaint Category ID format: ${category}`,
+        message: `Invalid Complaint Category ID format: ${categoryId}`,
       });
     }
 

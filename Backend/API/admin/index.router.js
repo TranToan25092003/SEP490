@@ -5,8 +5,8 @@ const bannerRouter = require("./banner.router");
 const activityLogRouter = require("./activity-log.router");
 
 module.exports = (app) => {
-  app.use("/admin/services",  authenticate, serviceRouter); 
-  app.use("/admin/models",  authenticate, modelRouter); 
-  app.use("/admin/banners",  authenticate, bannerRouter); 
+  app.use("/admin/services",  serviceRouter); 
+  app.use("/admin/models",  modelRouter); 
+  app.use("/admin/banners",  bannerRouter); 
   app.use("/admin/activity-logs", activityLogRouter);
 };

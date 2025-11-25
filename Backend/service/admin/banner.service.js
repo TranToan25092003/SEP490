@@ -1,18 +1,30 @@
-const { Banner } = require("../../model"); 
+const { Banner } = require("../../model");
 const mongoose = require("mongoose")
 
 class BannerService {
     async createBanner(bannerData) {
-        const { title, image_url } = bannerData;
+        const { title, image_url, is_active, display_order } = bannerData;
 
-        if (!title || !image_url) {
+        if (!title || !image_url || !is_active || !display_order) {
             throw new Error(
-                "Missing required fields: title and image_url are required."
+                "Missing required fields: title, image_url, isActive and display_order are required."
             );
         }
 
+        if (typeof is_active !== 'boolean') {
+            throw new Error("Invalid data type: is_active must be a boolean.");
+        }
+
+        const orderNumber = Number(display_order);
+        if (isNaN(orderNumber) || !Number.isInteger(orderNumber)) {
+            throw new Error("Invalid data type: display_order must be an integer.");
+        }
+
         try {
-            const newBanner = new Banner(bannerData);
+            const newBanner = new Banner({
+                ...bannerData,
+                display_order: orderNumber
+            });
             const savedBanner = await newBanner.save();
             return savedBanner;
         } catch (error) {
@@ -78,8 +90,15 @@ class BannerService {
     }
 
     async updateBanner(bannerId, updateData) {
-        if (!mongoose.Types.ObjectId.isValid(bannerId)) {
-            throw new Error(`Invalid Banner ID format: ${bannerId}`);
+        if (updateData.is_active !== undefined && typeof updateData.is_active !== 'boolean') {
+            throw new Error("Invalid data type: is_active must be a boolean.");
+        }
+        if (updateData.display_order !== undefined) {
+            const orderNumber = Number(updateData.display_order);
+            if (isNaN(orderNumber) || !Number.isInteger(orderNumber)) {
+                throw new Error("Invalid data type: display_order must be an integer.");
+            }
+            updateData.display_order = orderNumber;
         }
 
         try {
@@ -105,7 +124,7 @@ class BannerService {
         if (!mongoose.Types.ObjectId.isValid(bannerId)) {
             throw new Error(`Invalid Banner ID format: ${bannerId}`);
         }
-        
+
         try {
             const deletedBanner = await Banner.findByIdAndDelete(bannerId);
 
