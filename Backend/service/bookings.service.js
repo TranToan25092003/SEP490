@@ -15,6 +15,7 @@ const ERROR_CODES = {
   BOOKINGS_INVALID_TIME_SLOT: "BOOKINGS_INVALID_TIME_SLOT",
   BOOKINGS_STATE_INVALID: "BOOKINGS_STATE_INVALID",
   BOOKINGS_VEHICLE_ALREADY_BOOKED: "BOOKINGS_VEHICLE_ALREADY_BOOKED",
+  BOOKINGS_NOT_FOUND: "BOOKINGS_NOT_FOUND",
 };
 
 function convertTimeSlotToDate(timeSlot) {
@@ -24,8 +25,8 @@ function convertTimeSlotToDate(timeSlot) {
 
 class BookingsService {
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
-    const vehicleIdsInUse = await VehiclesService.getVehiclesInUse([vehicleId]);
-    if (vehicleIdsInUse.includes(vehicleId)) {
+    const activeBookingsMap = await VehiclesService.getActiveBookingsMap([vehicleId]);
+    if (vehicleId in activeBookingsMap) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
         ERROR_CODES.BOOKINGS_VEHICLE_ALREADY_BOOKED,
@@ -58,7 +59,7 @@ class BookingsService {
       timeSlotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
     );
 
-    const isAvailable = await this._isTimeslotAvailable(
+    const isAvailable = await this.isTimeslotAvailable(
       timeSlotStart,
       timeSlotEnd
     );
@@ -89,13 +90,13 @@ class BookingsService {
     return booking;
   }
 
-  async _isTimeslotAvailable(slotStartTime, slotEndTime) {
+  async isTimeslotAvailable(slotStartTime, slotEndTime) {
     const now = new Date();
     if (slotStartTime < now) {
       return false;
     }
 
-    const overlapCount = await this._getOverlappingBookingsCount(
+    const overlapCount = await this.getOverlappingBookingsCount(
       slotStartTime,
       slotEndTime
     );
@@ -103,7 +104,7 @@ class BookingsService {
     return overlapCount < config.MAX_BOOKINGS_PER_SLOT;
   }
 
-  async _getOverlappingBookingsCount(slotStartTime, slotEndTime) {
+  async getOverlappingBookingsCount(slotStartTime, slotEndTime) {
     const count = await Booking.countDocuments({
       slot_start_time: { $lt: slotEndTime },
       slot_end_time: { $gt: slotStartTime },
@@ -134,7 +135,7 @@ class BookingsService {
           slotStart.getTime() + config.TIMESLOT_INTERVAL_MILLISECONDS
         );
 
-        const isAvailable = await this._isTimeslotAvailable(slotStart, slotEnd);
+        const isAvailable = await this.isTimeslotAvailable(slotStart, slotEnd);
         timeSlots.push({ ...slot, isAvailable });
       }
     }
@@ -179,7 +180,9 @@ class BookingsService {
   async getUserBookings(customerClerkId) {
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
-      .select("_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id")
+      .select(
+        "_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id"
+      )
       .populate({
         path: "service_ids",
         select: "_id name price description", // Chỉ lấy các field cần thiết của service
@@ -187,7 +190,7 @@ class BookingsService {
       .populate({
         path: "vehicle_id",
         select: "_id license_plate brand name year model_id", // Chỉ lấy các field cần thiết của vehicle
-        populate: { 
+        populate: {
           path: "model_id",
           select: "_id name brand", // Chỉ lấy các field cần thiết của model
         },
@@ -199,7 +202,9 @@ class BookingsService {
     return bookings.map((booking) => ({
       id: booking._id,
       vehicle: mapToVehicleDTO(booking.vehicle_id),
-      services: booking.service_ids ? booking.service_ids.map(mapServiceToDTO) : [],
+      services: booking.service_ids
+        ? booking.service_ids.map(mapServiceToDTO)
+        : [],
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
@@ -207,7 +212,7 @@ class BookingsService {
     }));
   }
 
-  async getAllBookingsSortedAscending({
+  async getAllBookingsSortedDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -250,16 +255,35 @@ class BookingsService {
       }
     }
 
-    // Custom sort: completed status goes to bottom, others sorted by slot_start_time ascending
+    // Custom sort priority:
+    // 0 - booked (Đã đặt)
+    // 1 - checked_in/in_progress (Đã tiếp nhận)
+    // 2 - cancelled (Đã hủy)
+    // 3 - others (completed, etc.)
     const [bookings, totalItems] = await Promise.all([
       Booking.aggregate([
         { $match: filters },
         {
           $addFields: {
             sortPriority: {
-              $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
-            }
-          }
+              $switch: {
+                branches: [
+                  { case: { $eq: ["$status", "booked"] }, then: 0 },
+                  {
+                    case: {
+                      $or: [
+                        { $eq: ["$status", "checked_in"] },
+                        { $eq: ["$status", "in_progress"] },
+                      ],
+                    },
+                    then: 1,
+                  },
+                  { case: { $eq: ["$status", "cancelled"] }, then: 2 },
+                ],
+                default: 3,
+              },
+            },
+          },
         },
         { $sort: { sortPriority: 1, slot_start_time: 1 } },
         { $skip: (page - 1) * limit },
@@ -269,23 +293,23 @@ class BookingsService {
             from: "services",
             localField: "service_ids",
             foreignField: "_id",
-            as: "service_ids"
-          }
+            as: "service_ids",
+          },
         },
         {
           $lookup: {
             from: "vehicles",
             localField: "vehicle_id",
             foreignField: "_id",
-            as: "vehicle_id"
-          }
+            as: "vehicle_id",
+          },
         },
         {
           $addFields: {
             vehicle_id: { $arrayElemAt: ["$vehicle_id", 0] },
-            service_ids: "$service_ids"
-          }
-        }
+            service_ids: "$service_ids",
+          },
+        },
       ]).exec(),
       Booking.countDocuments(filters).exec(),
     ]);
@@ -319,7 +343,7 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }
@@ -332,7 +356,7 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService._createServiceOrderFromBooking(
+    await ServiceOrderService.createServiceOrderFromBooking(
       staffId,
       bookingId
     );
@@ -348,14 +372,22 @@ class BookingsService {
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_SERVICE_NOT_FOUND,
+        ERROR_CODES.BOOKINGS_NOT_FOUND,
         404
       );
     }
 
-    if (booking.status !== "booked") {
+    if (booking.status === "completed") {
       throw new DomainError(
-        "Chỉ có thể hủy các booking ở trạng thái 'booked'",
+        "Không thể hủy booking đã hoàn thành",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        400
+      );
+    }
+
+    if (booking.status === "cancelled") {
+      throw new DomainError(
+        "Booking đã bị hủy trước đó",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
         400
       );

@@ -133,22 +133,22 @@ class AttendanceService {
     return Array.from(entryMap.values());
   }
 
-  async getPresentStaffIdsNow(technicians) {
+  async getPresentStaffIdsNow(staffListPrefetched) {
     //avoid another round trip jesus
-    const document = await this.ensureAttendanceDocument(new Date(), technicians);
+    const document = await this.ensureAttendanceDocument(new Date(), staffListPrefetched);
     const currentShift = new Date().getHours() < 12 ? "morningShift" : "afternoonShift";
     return document.entries
       .filter((entry) => entry[currentShift])
       .map((entry) => entry.staffId);
   }
 
-  async ensureAttendanceDocument(dateInput, technicians) {
+  async ensureAttendanceDocument(dateInput, staffListPrefetched) {
     const { start, end } = this.getDateRange(dateInput);
     let attendance = await Attendance.findOne({
       date: { $gte: start, $lt: end },
     });
 
-    const staffList = technicians || await StaffService.getAllTechnicians();
+    const staffList = staffListPrefetched || await StaffService.getAllStaffIncludingTechnicians();
 
     if (!attendance) {
       const entries = staffList.map((staff) =>

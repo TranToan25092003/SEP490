@@ -51,7 +51,7 @@ class ServiceOrderController {
         endTimestamp,
       } = req.query;
       const serviceOrders =
-        await serviceOrderService.getAllServiceOrdersByCreatedDateAscending({
+        await serviceOrderService.getAllServiceOrdersByCreatedDateDescending({
           page: parseInt(page, 10) || 1,
           limit: parseInt(limit, 10) || 20,
           customerName: customerName || null,

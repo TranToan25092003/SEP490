@@ -11,15 +11,6 @@ import {
   Link,
 } from "react-router-dom";
 import {
-  getServiceOrderById,
-  updateServiceOrderItems,
-  cancelServiceOrder,
-} from "@/api/serviceOrders";
-import { createQuote } from "@/api/quotes";
-import { Spinner } from "@/components/ui/spinner";
-import { toast } from "sonner";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -29,11 +20,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import NiceModal from "@ebay/nice-modal-react";
-import ChooseStaffModal from "@/components/staff/service-order-detail/ChooseStaffModal";
-import { beginInspectionTask, scheduleInspection } from "@/api/serviceTasks";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  getServiceOrderById,
+  updateServiceOrderItems,
+  cancelServiceOrder,
+} from "@/api/serviceOrders";
+import { createQuote } from "@/api/quotes";
+import { Spinner } from "@/components/ui/spinner";
+import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function loader({ params }) {
   return {

@@ -74,3 +74,5 @@ export const authenTicationForStaffLoader = async () => {
     return redirect("/");
   }
 };
+
+export const authenTicationForAdminLoader = authenTicationLoader;

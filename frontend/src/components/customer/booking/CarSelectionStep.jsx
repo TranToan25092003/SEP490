@@ -55,12 +55,13 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
             key={vehicle.id}
             className={cn(
               "cursor-pointer transition-all hover:shadow-lg relative group",
-              isVehicleSelected(vehicle) && "ring-2 ring-primary",
-              vehicle.isAvailable === false && "opacity-50 cursor-not-allowed"
+              isVehicleSelected(vehicle) && "ring-2 ring-primary"
             )}
             onClick={() => handleVehicleSelect(vehicle)}
           >
-            <CardHeader className="pb-3">
+            <CardHeader
+              className={cn("pb-3", vehicle.activeBooking && "opacity-50")}
+            >
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Car className="w-5 h-5" />
@@ -68,7 +69,11 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent
+              className={
+                vehicle.activeBooking && "opacity-50 cursor-not-allowed"
+              }
+            >
               <div className="space-y-2 text-sm">
                 {vehicle.brand && (
                   <div className="flex justify-between">
@@ -97,7 +102,7 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
               </div>
             </CardContent>
 
-            {vehicle.isAvailable === false && (
+            {vehicle.activeBooking && (
               <div className="absolute inset-0 bg-black/20 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <Button
                   variant="secondary"
@@ -108,7 +113,9 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
                     if (vehicle.activeBooking?.id) {
                       navigate(`/booking/${vehicle.activeBooking.id}`);
                     } else {
-                      toast.info("Đơn hiện tại đang được cập nhật, vui lòng thử lại sau.");
+                      toast.info(
+                        "Đơn hiện tại đang được cập nhật, vui lòng thử lại sau."
+                      );
                     }
                   }}
                   disabled={!vehicle.activeBooking?.id}

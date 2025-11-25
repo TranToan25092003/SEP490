@@ -55,13 +55,13 @@ export default function ChatStaff() {
       setIsConnected(connected);
       if (connected) {
         // Join staff room if connected
-        socketInstance.emit("joinRoom", {
-          room: "staff_room",
-          userId: "staff_user",
-          userType: "staff",
-        });
-      } else {
-        // If not connected, try to connect
+      socketInstance.emit("joinRoom", {
+        room: "staff_room",
+        userId: "staff_user",
+        userType: "staff",
+      });
+    } else {
+      // If not connected, try to connect
         socketInstance.connect();
       }
     };

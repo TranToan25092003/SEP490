@@ -62,6 +62,7 @@ const ServiceOrderSchema = new Schema(
       type: String,
       required: false,
       unique: true,
+      sparse: true, // Allow multiple null values, only enforce uniqueness for non-null values
     }, // Số lệnh sửa chữa (VD: SC000001)
     staff_clerk_id: { type: String, required: true }, // Staff who created the order
     booking_id: {
@@ -147,19 +148,7 @@ ServiceOrderSchema.pre("save", async function (next) {
   next();
 });
 
-ServiceOrderSchema.index(
-  { booking_id: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { booking_id: { $exists: true, $ne: null } },
-  }
-);
-
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
-
-ServiceOrder.syncIndexes().catch((error) => {
-  console.error("[ServiceOrder] Failed to sync indexes:", error.message);
-});
 
 module.exports = {
   ServiceOrder,

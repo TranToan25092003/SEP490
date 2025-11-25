@@ -17,7 +17,7 @@ import {
 import headerImg from "@/assets/header-img.jpg";
 import MotorcycleIcon from "../icons/MotorcycleIcon";
 import avatarImg from "../../assets/avatar.png";
-import logo from "../../assets/logo-with-brand.png"
+import logo from "../../assets/logo-with-brand-rmbg.png";
 import { LuAlignLeft } from "react-icons/lu"; // Giữ lại import nếu bạn dùng ở nơi khác, nhưng đã xóa khỏi nút
 import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
@@ -52,15 +52,16 @@ const Header = () => {
         {/* Top section */}
         <div className="flex h-[70px] items-center gap-[8px] px-[8px] pl-[20px] md:h-[80px] md:pl-[36px] xl:h-[88px] xl:pl-[70px]">
           <Link to="/" className="flex-shrink-0">
-            <img 
-              className="h-20 w-auto md:h-36" 
-              src={logo} 
-              alt="MotorMate Logo" 
+            <img
+              className="h-20 w-auto md:h-36"
+              src={logo}
+              alt="MotorMate Logo"
             />
           </Link>
           <div className="hidden items-center justify-center md:flex">
             <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
+          <div className="flex-1 flex items-center justify-between">
           <div className="hidden select-none flex-col items-center justify-center p-[5px] text-foreground/70 sm:flex md:p-[8px]">
             <p className="text-[15px] font-extrabold leading-[1.2] md:text-[18px] xl:text-[22px]">
               How we move you
@@ -74,16 +75,18 @@ const Header = () => {
 
             {isSignedIn ? (
               <>
+                  <div className="mt-6 md:mt-12 lg:mt-14">
                 <NotificationBell />
+                  </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant={"ghost"}
-                      className="flex max-w-[100px] gap-4"
+                        className="mt-4 md:mt-10 lg:mt-12 flex max-w-[100px] gap-4 hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!border-0"
                     >
                       <img
                         src={profileImage}
-                        className="h-8 w-8 rounded-2xl object-cover"
+                          className="h-10 w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 rounded-full object-cover"
                         alt={user?.firstName || "User Avatar"}
                       ></img>
                     </Button>
@@ -119,7 +122,9 @@ const Header = () => {
                       >
                         Theo dõi tiến độ
                       </DropdownMenuItem>
-                      <DropdownMenuItem onSelect={() => navigate("/invoices")}>
+                        <DropdownMenuItem
+                          onSelect={() => navigate("/invoices")}
+                        >
                         Hóa Đơn - Thanh Toán
                       </DropdownMenuItem>
 
@@ -127,7 +132,9 @@ const Header = () => {
                         Điểm thưởng
                       </DropdownMenuItem>
 
-                      <DropdownMenuItem onSelect={() => navigate("/complaint")}>
+                        <DropdownMenuItem
+                          onSelect={() => navigate("/complaint")}
+                        >
                         Khiếu Nại
                       </DropdownMenuItem>
 
@@ -148,6 +155,7 @@ const Header = () => {
                 Đăng Nhập
               </button>
             )}
+            </div>
           </div>
         </div>
 
@@ -162,12 +170,12 @@ const Header = () => {
             <div className="absolute inset-0 bg-[rgba(255,28,28,0.2)]" />
           </div>
 
-          <nav className="h-[62px] flex-1">
-            <ul className="relative flex h-full items-stretch gap-0">
+          <nav className="h-[46px] sm:h-[56px] md:h-[62px] flex-1 bg-[#323B44]">
+            <ul className="relative flex h-full items-stretch gap-1 sm:gap-4 md:gap-6 lg:gap-8 xl:gap-10">
               <li className="shrink-0">
                 <Link
                   to="/"
-                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                  className="flex h-full w-[80px] sm:w-[120px] md:w-[150px] lg:w-[170px] xl:w-[190px] items-center justify-center bg-[#323B44] text-[10px] sm:text-[12px] md:text-[13px] lg:text-[15px] xl:text-[17px] font-semibold text-slate-100 hover:bg-[#3a454f]"
                 >
                   Trang Chủ
                 </Link>
@@ -175,7 +183,7 @@ const Header = () => {
               <li className="shrink-0">
                 <Link
                   to="/booking"
-                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                  className="flex h-full w-[80px] sm:w-[120px] md:w-[150px] lg:w-[170px] xl:w-[190px] items-center justify-center bg-[#323B44] text-[10px] sm:text-[12px] md:text-[13px] lg:text-[15px] xl:text-[17px] font-semibold text-slate-100 hover:bg-[#3a454f]"
                 >
                   Đặt Lịch
                 </Link>
@@ -186,13 +194,15 @@ const Header = () => {
                 onMouseEnter={() => setIsPartsMenuOpen(true)}
                 onMouseLeave={() => setIsPartsMenuOpen(false)}
               >
-                <button
-                  className={`flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px] ${
+                <Link
+                  to="/items"
+                  className={`flex h-full w-[80px] sm:w-[120px] md:w-[150px] lg:w-[170px] xl:w-[190px] items-center justify-center bg-[#323B44] text-[10px] sm:text-[12px] md:text-[13px] lg:text-[15px] xl:text-[17px] font-semibold text-slate-100 hover:bg-[#3a454f] ${
                     isPartsMenuOpen ? "bg-[#3a454f]" : ""
                   }`}
                 >
-                  Phụ Tùng <ChevronsUpDown className="ml-2 h-4 w-4" />
-                </button>
+                  Phụ Tùng{" "}
+                  <ChevronsUpDown className="ml-0.5 sm:ml-2 h-2.5 w-2.5 sm:h-3.5 sm:w-3.5 md:h-4 md:w-4" />
+                </Link>
                 {isPartsMenuOpen && (
                   <div className="absolute top-full left-0 w-full bg-zinc-800 shadow-lg border-t border-zinc-700">
                     <div className="mx-auto max-w-7xl p-6 columns-2 md:columns-3 lg:columns-4 gap-x-8">
@@ -231,14 +241,22 @@ const Header = () => {
               <li className="shrink-0">
                 <Link
                   to="/about"
-                  className="flex h-full w-[128px] items-center justify-center bg-[#323B44] text-[13px] font-semibold text-slate-100 hover:bg-[#3a454f] md:w-[148px] md:text-[15px] xl:w-[158px] xl:text-[17px]"
+                  className="flex h-full w-[80px] sm:w-[120px] md:w-[150px] lg:w-[170px] xl:w-[190px] items-center justify-center bg-[#323B44] text-[10px] sm:text-[12px] md:text-[13px] lg:text-[15px] xl:text-[17px] font-semibold text-slate-100 hover:bg-[#3a454f]"
                 >
                   Giới Thiệu
                 </Link>
               </li>
 
               <li className="flex-1">
-                <div className="h-[62px] w-full bg-[#323B44]" />
+                {/* <div
+                  className="relative h-[46px] sm:h-[56px] md:h-[62px] w-full bg-[#323B44] bg-cover bg-no-repeat"
+                  style={{
+                    backgroundImage: `url(${headerBackground})`,
+                    backgroundPosition: "center 35%",
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[#323B44]/80"></div>
+                </div> */}
               </li>
             </ul>
           </nav>

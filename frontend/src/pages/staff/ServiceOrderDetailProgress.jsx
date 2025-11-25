@@ -69,7 +69,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
       await toast
         .promise(task, {
           loading: "Đang lên lịch sửa chữa...",
-          success: "Lên lịch sửa chữa thành công!",
+          // success: "Lên lịch sửa chữa thành công!",
           error: "Lên lịch sửa chữa thất bại.",
         })
         .unwrap();
@@ -89,7 +89,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
       await toast
         .promise(task, {
           loading: "Đang lên lịch kiểm tra...",
-          success: "Lên lịch kiểm tra thành công!",
+          // success: "Lên lịch kiểm tra thành công!",
           error: "Lên lịch kiểm tra thất bại.",
         })
         .unwrap();

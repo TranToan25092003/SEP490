@@ -9,11 +9,12 @@ const { UsersService } = require("./users.service");
 const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
   SERVICE_ORDER_ALREADY_EXISTS: "SERVICE_ORDER_ALREADY_EXISTS",
+  SERVICE_ORDER_INVALID_STATE: "SERVICE_ORDER_INVALID_STATE",
   INVALID_WALK_IN_PAYLOAD: "INVALID_WALK_IN_PAYLOAD",
 };
 
 class ServiceOrderService {
-  async getAllServiceOrdersByCreatedDateAscending({
+  async getAllServiceOrdersByCreatedDateDescending({
     page = 1,
     limit = 20,
     customerName = null,
@@ -104,16 +105,17 @@ class ServiceOrderService {
     pipeline.push({
       $addFields: {
         sortPriority: {
-          $cond: [{ $eq: ["$status", "completed"] }, 1, 0]
-        }
-      }
+          $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
+        },
+      },
     });
     pipeline.push({
-      $sort: { sortPriority: 1, createdAt: 1 }
+      $sort: { sortPriority: 1, createdAt: 1 },
     });
 
     const [serviceOrders, totalItems] = await Promise.all([
       ServiceOrder.aggregate(pipeline)
+        .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .exec(),
@@ -171,7 +173,6 @@ class ServiceOrderService {
       );
     }
 
-    // Tìm warranty liên quan đến booking này (nếu đây là warranty booking)
     let warranty = null;
     if (serviceOrder.booking_id?._id) {
       const Warranty = require("../model/warranty.model");
@@ -182,14 +183,12 @@ class ServiceOrderService {
         .exec();
     }
 
-    // Lấy danh sách warranty part IDs
     const warrantyPartIds =
-      warranty && warranty.warranty_parts
+      warranty?.warranty_parts
         ? warranty.warranty_parts.map((wp) => wp.part_id?._id?.toString())
         : [];
 
     serviceOrder.items = items.map((item) => {
-      // Nếu item là warranty part, đảm bảo giá = 0
       const isWarrantyPart =
         item.type === "part" && warrantyPartIds.includes(item.partId);
       return {
@@ -221,7 +220,7 @@ class ServiceOrderService {
 
     let customerName = serviceOrder.walk_in_customer?.name || "Khách vãng lai";
     let customerClerkId = null;
-    let customerPhone = serviceOrder.walk_in_customer?.phone || null;
+    const customerPhone = serviceOrder.walk_in_customer?.phone || null;
     let licensePlateInfo = serviceOrder.walk_in_vehicle?.license_plate || "—";
     let vehicleId = null;
 
@@ -266,8 +265,7 @@ class ServiceOrderService {
 
     // Nếu có warranty, thêm warranty parts vào items với giá = 0
     if (
-      warranty &&
-      warranty.warranty_parts &&
+      warranty?.warranty_parts &&
       warranty.warranty_parts.length > 0
     ) {
       warranty.warranty_parts.forEach((wp) => {
@@ -317,7 +315,7 @@ class ServiceOrderService {
     };
   }
 
-  async _createServiceOrderFromBooking(staffId, bookingId) {
+  async createServiceOrderFromBooking(staffId, bookingId) {
     const existingOrder = await ServiceOrder.findOne({
       booking_id: bookingId,
     }).exec();
@@ -435,7 +433,7 @@ class ServiceOrderService {
 
   async cancelServiceOrder(serviceOrderId, staffId, cancelReason) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
-    
+
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh sửa chữa không tồn tại",
@@ -470,7 +468,11 @@ class ServiceOrderService {
     // Nếu có booking liên quan, cập nhật trạng thái booking
     if (serviceOrder.booking_id) {
       const booking = await Booking.findById(serviceOrder.booking_id).exec();
-      if (booking && booking.status !== "cancelled" && booking.status !== "completed") {
+      if (
+        booking &&
+        booking.status !== "cancelled" &&
+        booking.status !== "completed"
+      ) {
         booking.status = "cancelled";
         booking.cancelled_by = "staff";
         booking.cancel_reason = cancelReason || "Lệnh sửa chữa bị hủy";

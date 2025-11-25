@@ -41,11 +41,138 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Check, ChevronsUpDown, Plus, Search, Trash2 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { customFetch } from "@/utils/customAxios";
 import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
 import { toast } from "sonner";
 import DatePicker from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const ModelCompatibilityTree = ({
+  groupedModels,
+  selectedIds,
+  onSelectionChange,
+}) => {
+  const [filter, setFilter] = useState("");
+
+  const handleModelSelect = (modelId, isSelected) => {
+    const newIds = new Set(selectedIds);
+    if (isSelected) {
+      newIds.delete(modelId);
+    } else {
+      newIds.add(modelId);
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const handleBrandSelectAll = (brandModels, isAllSelected) => {
+    const modelIdsInBrand = brandModels.map((m) => m._id);
+    const newIds = new Set(selectedIds);
+
+    if (isAllSelected) {
+      modelIdsInBrand.forEach((id) => newIds.delete(id));
+    } else {
+      modelIdsInBrand.forEach((id) => newIds.add(id));
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const filteredGroups = groupedModels
+    .map((group) => ({
+      ...group,
+      models: group.models.filter((model) =>
+        model.name.toLowerCase().includes(filter.toLowerCase())
+      ),
+    }))
+    .filter(
+      (group) =>
+        group.brand.toLowerCase().includes(filter.toLowerCase()) ||
+        group.models.length > 0
+    );
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Tìm kiếm hãng hoặc dòng xe..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="h-9"
+      />
+      <div className="max-h-200 overflow-y-auto space-y-2 rounded-md border p-2">
+        {filteredGroups.length === 0 && (
+          <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>
+        )}
+
+        {filteredGroups.map((group) => {
+          const modelsInBrandIds = group.models.map((m) => m._id);
+          const selectedInBrandCount = modelsInBrandIds.filter((id) =>
+            selectedIds.includes(id)
+          ).length;
+          const isAllSelected =
+            selectedInBrandCount === modelsInBrandIds.length &&
+            modelsInBrandIds.length > 0;
+          const isIndeterminate =
+            selectedInBrandCount > 0 &&
+            selectedInBrandCount < modelsInBrandIds.length;
+
+          return (
+            <details key={group.brand} open>
+              <summary className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`brand-${group.brand}`}
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() =>
+                      handleBrandSelectAll(group.models, isAllSelected)
+                    }
+                  />
+                  <label
+                    htmlFor={`brand-${group.brand}`}
+                    className="flex-1 cursor-pointer text-sm font-semibold"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {group.brand} ({selectedInBrandCount}/
+                    {modelsInBrandIds.length})
+                  </label>
+                </div>
+                <div className="w-9 p-0">
+                  <ChevronsUpDown className="h-4 w-4" />
+                </div>
+              </summary>
+              <div className="py-2 pl-6">
+                {group.models.map((model) => {
+                  const isSelected = selectedIds.includes(model._id);
+                  return (
+                    <div
+                      key={model._id}
+                      className="flex items-center gap-2 py-1"
+                    >
+                      <Checkbox
+                        id={model._id}
+                        checked={isSelected}
+                        onCheckedChange={() =>
+                          handleModelSelect(model._id, isSelected)
+                        }
+                      />
+                      <label
+                        htmlFor={model._id}
+                        className="text-sm cursor-pointer"
+                      >
+                        {model.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function CreateGoodsReceipt() {
   const navigate = useNavigate();
@@ -81,11 +208,27 @@ export default function CreateGoodsReceipt() {
     brand: "",
     sellingPrice: "",
     costPrice: "",
-    quantity: "",
     description: "",
+    compatible_model_ids: [],
   });
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [previews, setPreviews] = useState([]); // { file, url, uploaded }
+  const [groupedModels, setGroupedModels] = useState([]);
+
+  // Load grouped models on mount
+  useEffect(() => {
+    const loadGroupedModels = async () => {
+      try {
+        const response = await customFetch("/models/grouped-by-brand");
+        if (response.data.success) {
+          setGroupedModels(response.data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to load grouped models:", error);
+      }
+    };
+    loadGroupedModels();
+  }, []);
 
   // Debounced search function
   let timeoutId;
@@ -217,10 +360,6 @@ export default function CreateGoodsReceipt() {
       toast.error("Vui lòng nhập giá nhập hợp lệ");
       return;
     }
-    if (!newProductData.quantity || newProductData.quantity < 0) {
-      toast.error("Vui lòng nhập số lượng hợp lệ");
-      return;
-    }
 
     setIsCreatingProduct(true);
     try {
@@ -251,9 +390,10 @@ export default function CreateGoodsReceipt() {
         brand: newProductData.brand || "",
         sellingPrice: parseFloat(newProductData.sellingPrice) || 0,
         costPrice: parseFloat(newProductData.costPrice) || 0,
-        quantity: parseInt(newProductData.quantity) || 0,
+        quantity: 0, // Set default quantity to 0, will be updated via goods receipt
         description: newProductData.description || "",
         status: "active",
+        compatible_model_ids: newProductData.compatible_model_ids || [],
         media: uploadedMedia,
       };
 
@@ -280,8 +420,8 @@ export default function CreateGoodsReceipt() {
           brand: "",
           sellingPrice: "",
           costPrice: "",
-          quantity: "",
           description: "",
+          compatible_model_ids: [],
         });
         setPreviews([]);
         setIsAddProductModalOpen(false);
@@ -833,38 +973,31 @@ export default function CreateGoodsReceipt() {
                 required
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Thương hiệu</label>
-                <Input
-                  placeholder="VD: Honda, Yamaha"
-                  value={newProductData.brand}
-                  onChange={(e) =>
-                    setNewProductData({
-                      ...newProductData,
-                      brand: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">
-                  Số lượng tồn kho *
-                </label>
-                <Input
-                  type="number"
-                  placeholder="VD: 100"
-                  value={newProductData.quantity}
-                  onChange={(e) =>
-                    setNewProductData({
-                      ...newProductData,
-                      quantity: e.target.value,
-                    })
-                  }
-                  required
-                  min="0"
-                />
-              </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Thương hiệu</label>
+              <Input
+                placeholder="VD: Honda, Yamaha"
+                value={newProductData.brand}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    brand: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Dòng xe tương thích</label>
+              <ModelCompatibilityTree
+                groupedModels={groupedModels}
+                selectedIds={newProductData.compatible_model_ids}
+                onSelectionChange={(newIds) =>
+                  setNewProductData({
+                    ...newProductData,
+                    compatible_model_ids: newIds,
+                  })
+                }
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">

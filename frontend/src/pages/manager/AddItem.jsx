@@ -29,7 +29,11 @@ import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 
-const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange }) => {
+const ModelCompatibilityTree = ({
+  groupedModels,
+  selectedIds,
+  onSelectionChange,
+}) => {
   const [filter, setFilter] = useState("");
 
   const handleModelSelect = (modelId, isSelected) => {
@@ -43,26 +47,28 @@ const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange 
   };
 
   const handleBrandSelectAll = (brandModels, isAllSelected) => {
-    const modelIdsInBrand = brandModels.map(m => m._id);
+    const modelIdsInBrand = brandModels.map((m) => m._id);
     const newIds = new Set(selectedIds);
 
     if (isAllSelected) {
-      modelIdsInBrand.forEach(id => newIds.delete(id));
+      modelIdsInBrand.forEach((id) => newIds.delete(id));
     } else {
-      modelIdsInBrand.forEach(id => newIds.add(id));
+      modelIdsInBrand.forEach((id) => newIds.add(id));
     }
     onSelectionChange(Array.from(newIds));
   };
 
   const filteredGroups = groupedModels
-    .map(group => ({
+    .map((group) => ({
       ...group,
-      models: group.models.filter(model =>
+      models: group.models.filter((model) =>
         model.name.toLowerCase().includes(filter.toLowerCase())
       ),
     }))
-    .filter(group =>
-      group.brand.toLowerCase().includes(filter.toLowerCase()) || group.models.length > 0
+    .filter(
+      (group) =>
+        group.brand.toLowerCase().includes(filter.toLowerCase()) ||
+        group.models.length > 0
     );
 
   return (
@@ -74,13 +80,21 @@ const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange 
         className="h-9"
       />
       <div className="max-h-200 overflow-y-auto space-y-2 rounded-md border p-2">
-        {filteredGroups.length === 0 && <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>}
+        {filteredGroups.length === 0 && (
+          <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>
+        )}
 
-        {filteredGroups.map(group => {
-          const modelsInBrandIds = group.models.map(m => m._id);
-          const selectedInBrandCount = modelsInBrandIds.filter(id => selectedIds.includes(id)).length;
-          const isAllSelected = selectedInBrandCount === modelsInBrandIds.length && modelsInBrandIds.length > 0;
-          const isIndeterminate = selectedInBrandCount > 0 && selectedInBrandCount < modelsInBrandIds.length;
+        {filteredGroups.map((group) => {
+          const modelsInBrandIds = group.models.map((m) => m._id);
+          const selectedInBrandCount = modelsInBrandIds.filter((id) =>
+            selectedIds.includes(id)
+          ).length;
+          const isAllSelected =
+            selectedInBrandCount === modelsInBrandIds.length &&
+            modelsInBrandIds.length > 0;
+          const isIndeterminate =
+            selectedInBrandCount > 0 &&
+            selectedInBrandCount < modelsInBrandIds.length;
 
           return (
             // Sử dụng thẻ <details> của HTML
@@ -94,7 +108,9 @@ const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange 
                     indeterminate={isIndeterminate}
                     // Ngăn sự kiện click của checkbox làm thu gọn <details>
                     onClick={(e) => e.stopPropagation()}
-                    onCheckedChange={() => handleBrandSelectAll(group.models, isAllSelected)}
+                    onCheckedChange={() =>
+                      handleBrandSelectAll(group.models, isAllSelected)
+                    }
                   />
                   <label
                     htmlFor={`brand-${group.brand}`}
@@ -102,7 +118,8 @@ const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange 
                     // Ngăn sự kiện click của label làm thu gọn <details>
                     onClick={(e) => e.preventDefault()}
                   >
-                    {group.brand} ({selectedInBrandCount}/{modelsInBrandIds.length})
+                    {group.brand} ({selectedInBrandCount}/
+                    {modelsInBrandIds.length})
                   </label>
                 </div>
                 <div className="w-9 p-0">
@@ -111,14 +128,19 @@ const ModelCompatibilityTree = ({ groupedModels, selectedIds, onSelectionChange 
               </summary>
               {/* Nội dung được thu gọn */}
               <div className="py-2 pl-6">
-                {group.models.map(model => {
+                {group.models.map((model) => {
                   const isSelected = selectedIds.includes(model._id);
                   return (
-                    <div key={model._id} className="flex items-center gap-2 py-1">
+                    <div
+                      key={model._id}
+                      className="flex items-center gap-2 py-1"
+                    >
                       <Checkbox
                         id={model._id}
                         checked={isSelected}
-                        onCheckedChange={() => handleModelSelect(model._id, isSelected)}
+                        onCheckedChange={() =>
+                          handleModelSelect(model._id, isSelected)
+                        }
                       />
                       <label
                         htmlFor={model._id}
@@ -151,7 +173,6 @@ export default function AddItem() {
     costPrice: "",
     description: "",
     brand: "",
-    quantity: "",
     compatible_model_ids: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -273,9 +294,6 @@ export default function AddItem() {
       if (!formData.costPrice || formData.costPrice <= 0) {
         newErrors.costPrice = "Giá nhập phải lớn hơn 0";
       }
-      if (!formData.quantity || formData.quantity < 0) {
-        newErrors.quantity = "Số lượng phải lớn hơn hoặc bằng 0";
-      }
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -310,7 +328,7 @@ export default function AddItem() {
         ...formData,
         sellingPrice: parseFloat(formData.sellingPrice) || 0,
         costPrice: parseFloat(formData.costPrice) || 0,
-        quantity: parseInt(formData.quantity) || 0,
+        quantity: 0, // Set default quantity to 0, will be updated via goods receipt
         media: uploadedMedia,
       };
 
@@ -400,34 +418,15 @@ export default function AddItem() {
                 </label>
                 <Input placeholder="VD: SP0001 (tự động tạo)" disabled />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label className="text-[14px] text-[#2e2e3a]">
-                    Thương hiệu
-                  </label>
-                  <Input
-                    placeholder="VD: Honda, Yamaha, Suzuki"
-                    value={formData.brand}
-                    onChange={(e) => handleInputChange("brand", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-[14px] text-[#2e2e3a]">
-                    Số lượng tồn kho *
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="VD: 100"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      handleInputChange("quantity", e.target.value)
-                    }
-                    className={errors.quantity ? "border-red-500" : ""}
-                  />
-                  {errors.quantity && (
-                    <p className="text-red-500 text-sm">{errors.quantity}</p>
-                  )}
-                </div>
+              <div className="grid gap-2">
+                <label className="text-[14px] text-[#2e2e3a]">
+                  Thương hiệu
+                </label>
+                <Input
+                  placeholder="VD: Honda, Yamaha, Suzuki"
+                  value={formData.brand}
+                  onChange={(e) => handleInputChange("brand", e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -486,7 +485,9 @@ export default function AddItem() {
                 <ModelCompatibilityTree
                   groupedModels={loaderData?.groupedModels || []}
                   selectedIds={formData.compatible_model_ids}
-                  onSelectionChange={(newIds) => handleInputChange("compatible_model_ids", newIds)}
+                  onSelectionChange={(newIds) =>
+                    handleInputChange("compatible_model_ids", newIds)
+                  }
                 />
               </div>
             </div>

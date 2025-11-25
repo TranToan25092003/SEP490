@@ -25,7 +25,7 @@ class ServicesService {
 
   async getValidServiceIds(serviceIds) {
     const services = await Service.find({ _id: { $in: serviceIds } }).exec();
-    return services.filter(s => serviceIds.includes(s._id.toString())).map(s => s._id.toString());
+    return services.map((s) => s._id.toString());
   }
 }
 

@@ -15,6 +15,7 @@ const ERROR_CODES = {
   SERVICE_ORDER_NOT_FOUND: "SERVICE_ORDER_NOT_FOUND",
   SERVICE_ORDER_INVALID_STATE: "SERVICE_ORDER_INVALID_STATE",
   SERVICE_TASK_NOT_FOUND: "SERVICE_TASK_NOT_FOUND",
+  SERVICE_TASK_INVALID_STATE: "SERVICE_TASK_INVALID_STATE",
 };
 
 function mapTimelineEntry(entry) {
@@ -38,7 +39,7 @@ function mapServicingTask(task) {
   return {
     id: task._id.toString(),
     type: task.__t,
-    serviceOrderId: task.service_order_id.toString(),
+    serviceOrderId: task.service_order_id._id.toString(),
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
@@ -59,7 +60,7 @@ function mapInspectionTask(task) {
   return {
     id: task._id.toString(),
     type: task.__t,
-    serviceOrderId: task.service_order_id.toString(),
+    serviceOrderId: task.service_order_id._id.toString(),
     serviceOrderStatus: task.service_order_id.status,
     expectedStartTime: task.expected_start_time.toISOString(),
     expectedEndTime: task.expected_end_time.toISOString(),
@@ -79,17 +80,28 @@ function mapInspectionTask(task) {
 
 class ServiceOrderTaskService {
   async completeTask(task) {
+    if (task.status !== "in_progress") {
+      throw new DomainError(
+        "Tác vụ không ở trạng thái 'in_progress'",
+        ERROR_CODES.SERVICE_TASK_INVALID_STATE,
+        409
+      );
+    }
+
     task.status = "completed";
     task.actual_end_time = new Date();
     await task.save();
   }
 
-  /**
-   * Function to transition state consistently
-   * @param {ServiceOrderTask} task
-   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
-   */
   async beginTask(task, techniciansInfoArray) {
+    if (task.status !== "scheduled") {
+      throw new DomainError(
+        "Tác vụ không ở trạng thái 'scheduled'",
+        ERROR_CODES.SERVICE_TASK_INVALID_STATE,
+        409
+      );
+    }
+
     task.assigned_technicians = techniciansInfoArray.map((ti) => ({
       technician_clerk_id: ti.technicianClerkId,
       role: ti.role,
@@ -144,14 +156,6 @@ class ServiceOrderTaskService {
     return tasks;
   }
 
-  /**
-   * Schedule inspection for a service order by creating an inspection task
-   * @param {string} serviceOrderId
-   * @param {string} bayId
-   * @param {Date} start
-   * @param {Date} end
-   * @returns {Promise<{ serviceOrder: ServiceOrder, inspectionTask: InspectionTask }>}
-   */
   async scheduleInspection(serviceOrderId, bayId, start, end) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
     if (!serviceOrder) {
@@ -182,15 +186,10 @@ class ServiceOrderTaskService {
 
     await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
 
+    await inspectionTask.populate("service_order_id");
     return mapInspectionTask(inspectionTask);
   }
 
-  /**
-   * Start the inspection task
-   * @param {string} taskId
-   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
-   * @returns {Promise<{ serviceOrder: ServiceOrder, inspectionTask: InspectionTask }>}task
-   */
   async beginInspectionTask(taskId, techniciansInfoArray) {
     const inspectionTask = await InspectionTask.findById(taskId).exec();
     if (!inspectionTask) {
@@ -204,6 +203,7 @@ class ServiceOrderTaskService {
     const serviceOrder = await ServiceOrder.findById(
       inspectionTask.service_order_id
     ).exec();
+
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
@@ -214,8 +214,11 @@ class ServiceOrderTaskService {
 
     await this.beginTask(inspectionTask, techniciansInfoArray);
 
-    serviceOrder.status = "waiting_inspection";
-    await serviceOrder.save();
+    const booking = await Booking.findById(serviceOrder.booking_id).exec();
+    if (booking) {
+      booking.status = "in_progress";
+      await booking.save();
+    }
 
     return mapInspectionTask(inspectionTask);
   }
@@ -278,16 +281,6 @@ class ServiceOrderTaskService {
     return mapInspectionTask(inspectionTask);
   }
 
-  /**
-   * Schedule servicing for a service order by creating a servicing task
-   * and moving order status to 'scheduled'.
-   * @param {string} serviceOrderId
-   * @param {string} bayId
-   * @param {Date} start
-   * @param {Date} end
-   *
-   * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
-   */
   async scheduleService(serviceOrderId, bayId, start, end) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
     if (!serviceOrder) {
@@ -321,14 +314,6 @@ class ServiceOrderTaskService {
     return mapServicingTask(servicingTask);
   }
 
-  /**
-   * Start the servicing task for the order, moving to 'servicing'.
-   * @param {string} taskId
-   * @param {import("./types").TechnicianInfo[]} techniciansInfoArray
-   * @return {Promise<ServiceOrder>}
-   *
-   * @returns {Promise<{ serviceOrder: ServiceOrder, servicingTask: ServicingTask }>}
-   */
   async startService(taskId, techniciansInfoArray) {
     const servicingTask = await ServicingTask.findById(taskId).exec();
     if (!servicingTask) {
@@ -373,12 +358,19 @@ class ServiceOrderTaskService {
     const serviceOrder = await ServiceOrder.findById(
       servicingTask.service_order_id
     ).exec();
+
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh không tồn tại",
         ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
         404
       );
+    }
+
+    const booking = await Booking.findById(serviceOrder.booking_id).exec();
+    if (booking) {
+      booking.status = "completed";
+      await booking.save();
     }
 
     await this.completeTask(servicingTask);
@@ -390,14 +382,6 @@ class ServiceOrderTaskService {
     await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
 
     await InvoiceService.ensureInvoiceForServiceOrder(serviceOrder._id);
-
-    if (serviceOrder.booking_id) {
-      await Booking.updateOne(
-        { _id: serviceOrder.booking_id },
-        { status: "completed" }
-      ).exec();
-    }
-
     return mapServicingTask(servicingTask);
   }
 
@@ -463,6 +447,25 @@ class ServiceOrderTaskService {
     await servicingTask.save();
 
     return mapServicingTask(servicingTask);
+  }
+
+  async rescheduleTask(taskId, bayId, start, end) {
+    let task = await BaySchedulingService.rescheduleTask(
+      taskId,
+      bayId,
+      start,
+      end
+    );
+
+    task = await ServiceOrderTask.findById(taskId)
+      .populate("service_order_id")
+      .exec();
+
+    if (task.__t === "inspection") {
+      return mapInspectionTask(task);
+    } else if (task.__t === "servicing") {
+      return mapServicingTask(task);
+    }
   }
 }
 

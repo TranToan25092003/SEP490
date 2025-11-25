@@ -2,14 +2,16 @@ import Container from "@/components/global/Container";
 import BackButton from "@/components/global/BackButton";
 import { H3 } from "@/components/ui/headings";
 import { Suspense } from "react";
-import { useLoaderData, useParams, useRevalidator, Await, Link } from "react-router-dom";
+import {
+  useLoaderData,
+  useParams,
+  useRevalidator,
+  Await,
+  Link,
+} from "react-router-dom";
 import { getQuotesForServiceOrder, approveQuote } from "@/api/quotes";
 import { Spinner } from "@/components/ui/spinner";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CRUDTable from "@/components/global/CRUDTable";
 import { AdminPagination } from "@/components/global/AdminPagination";
 import { Button } from "@/components/ui/button";
@@ -17,31 +19,32 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateTime, formatPrice } from "@/lib/utils";
 import NiceModal from "@ebay/nice-modal-react";
 import ViewQuoteDetailModal from "@/components/staff/service-order-detail/ViewQuoteDetailModal";
-import { getQuoteStatusBadgeVariant, translateQuoteStatus } from "@/utils/enumsTranslator";
+import {
+  getQuoteStatusBadgeVariant,
+  translateQuoteStatus,
+} from "@/utils/enumsTranslator";
 import { getServiceOrderById } from "@/api/serviceOrders";
 import { toast } from "sonner";
-import background from "@/assets/cool-motorcycle-indoors.png";
 
 async function loader({ params, request }) {
   const url = new URL(request.url);
   const page = parseInt(url.searchParams.get("page"), 10) || 1;
   const limit = 10;
 
-  return {
-    quotesPromise: getQuotesForServiceOrder(params.id, page, limit),
-    serviceOrder: await getServiceOrderById(params.id),
-  };
-}
+  const promises = Promise.all([
+    getQuotesForServiceOrder(params.id, page, limit),
+    getServiceOrderById(params.id),
+  ]);
 
+  return { promises };
+}
 
 const quotesTableDefinition = [
   {
     header: "Mã báo giá",
     accessorKey: "id",
     cell: ({ row }) => (
-      <span className="font-mono text-sm">
-        {row.original.id.slice(-8)}
-      </span>
+      <span className="font-mono text-sm">{row.original.id.slice(-8)}</span>
     ),
   },
   {
@@ -57,7 +60,10 @@ const quotesTableDefinition = [
     header: "Trạng thái",
     accessorKey: "status",
     cell: ({ row }) => (
-      <Badge className="rounded-full" variant={getQuoteStatusBadgeVariant(row.original.status)}>
+      <Badge
+        className="rounded-full"
+        variant={getQuoteStatusBadgeVariant(row.original.status)}
+      >
         {translateQuoteStatus(row.original.status)}
       </Badge>
     ),
@@ -71,7 +77,11 @@ const quotesTableDefinition = [
   },
 ];
 
-const ServiceOrderDetailQuotesContent = ({ quotesData, serviceOrder, revalidator }) => {
+const ServiceOrderDetailQuotesContent = ({
+  quotesData,
+  serviceOrder,
+  revalidator,
+}) => {
   const allowStaffConfirm = Boolean(serviceOrder?.isWalkIn);
   const handleViewDetail = async (quote) => {
     try {
@@ -98,16 +108,11 @@ const ServiceOrderDetailQuotesContent = ({ quotesData, serviceOrder, revalidator
 
   return (
     <div className="space-y-4">
-      <CRUDTable
-        columns={quotesTableDefinition}
-        data={quotesData.quotes}
-      >
+      <CRUDTable columns={quotesTableDefinition} data={quotesData.quotes}>
         {(row) => {
           return (
-            <Button onClick={() => handleViewDetail(row)}>
-              Xem chi tiết
-            </Button>
-          )
+            <Button onClick={() => handleViewDetail(row)}>Xem chi tiết</Button>
+          );
         }}
       </CRUDTable>
 
@@ -119,34 +124,27 @@ const ServiceOrderDetailQuotesContent = ({ quotesData, serviceOrder, revalidator
 };
 
 const ServiceOrderDetailQuotes = () => {
-  const { quotesPromise, serviceOrder } = useLoaderData();
+  const { promises } = useLoaderData();
   const revalidator = useRevalidator();
   const { id } = useParams();
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center bg-fixed"
-      style={{
-        backgroundImage: `linear-gradient(135deg, rgba(8,8,8,0.82), rgba(8,8,8,0.35)), url(${background})`,
-      }}
-    >
-      <Container pageContext="admin" className="py-8">
-        <div className="bg-white/90 backdrop-blur rounded-2xl shadow-2xl p-6 space-y-6">
-      <BackButton to="/staff/service-order" label="Quay lại trang quản lý lệnh" />
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                MotorMate Workshop
-              </p>
-        <H3>Chi Tiết Lệnh Sửa Chữa - Báo Giá</H3>
-            </div>
+    <Container pageContext="admin">
+      <BackButton
+        to="/staff/service-order"
+        label="Quay lại trang quản lý lệnh"
+      />
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <H3>Chi Tiết Lệnh Sửa Chữa - Báo Giá</H3>
+        </div>
         <Tabs value="quotes">
-              <TabsList className="bg-white border shadow-sm">
+          <TabsList>
             <TabsTrigger value="main">
-                  <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
+              <Link to={`/staff/service-order/${id}`}>Thông tin chung</Link>
             </TabsTrigger>
             <TabsTrigger value="quotes">
-                  <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
+              <Link to={`/staff/service-order/${id}/quotes`}>Báo giá</Link>
             </TabsTrigger>
             <TabsTrigger value="progress">
               <Link to={`/staff/service-order/${id}/progress`}>
@@ -157,34 +155,34 @@ const ServiceOrderDetailQuotes = () => {
         </Tabs>
       </div>
 
-          <Suspense
-            fallback={
-              <div className="flex justify-center items-center py-12">
-                <Spinner className="h-10 w-10 text-primary" />
-        </div>
-            }
-          >
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center py-8">
+            <Spinner className="h-8 w-8" />
+          </div>
+        }
+      >
         <Await
-          resolve={quotesPromise}
+          resolve={promises}
           errorElement={
             <div className="text-center py-8 text-destructive">
               Không thể tải thông tin báo giá
             </div>
           }
         >
-          {(quotesData) => (
-            <ServiceOrderDetailQuotesContent
-              quotesData={quotesData}
-              revalidator={revalidator}
+          {([quotesData, serviceOrder]) => {
+            return (
+                <ServiceOrderDetailQuotesContent
+                  quotesData={quotesData}
+                  revalidator={revalidator}
                   serviceOrder={serviceOrder}
-              serviceOrderId={id}
-            />
-          )}
+                  serviceOrderId={id}
+                />
+            );
+          }}
         </Await>
       </Suspense>
-        </div>
     </Container>
-    </div>
   );
 };
 

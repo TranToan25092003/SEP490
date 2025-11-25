@@ -34,7 +34,8 @@ const PartSchema = new Schema(
 PartSchema.index({ name: "text", description: "text" }); // Text search
 // code index is automatically created by unique: true
 PartSchema.index({ brand: 1 }); // Brand lookup
-PartSchema.index({ compatible_model_ids: 1 }); // Vehicle model lookup
+// Note: Index on compatible_model_ids removed to avoid duplicate key errors on array updates
+// PartSchema.index({ compatible_model_ids: 1 }); // Vehicle model lookup - DISABLED
 PartSchema.index({ status: 1 }); // Status filter
 
 const Part = mongoose.model("Part", PartSchema);

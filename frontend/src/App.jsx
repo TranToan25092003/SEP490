@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import RoleRedirect from "./pages/auth/RoleRedirect";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
@@ -86,6 +87,11 @@ import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
 import LoyaltyWallet from "./pages/customer/LoyaltyWallet";
 import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
+import {
+  authenTicationLoader,
+  authenTicationForStaffLoader,
+  authenTicationForAdminLoader,
+} from "./utils/authentication.loader";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -199,9 +205,13 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/auth/role-redirect",
+    element: <RoleRedirect />,
+  },
+  {
     path: "/manager",
     element: <ManagerLayout />,
-    // loader: authenTicationLoader,
+    loader: authenTicationLoader,
     children: [
       { index: true, element: <Manager />, loader: Manager.loader },
       { path: "staff", element: <StaffPage /> },
@@ -246,7 +256,7 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
-    // loader: authenTicationForStaffLoader,
+    loader: authenTicationForStaffLoader,
     children: [
       {
         index: true,
@@ -329,7 +339,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
-    // loader: authenTicationForAdminLoader,   //Add later
+    loader: authenTicationForAdminLoader,
     children: [
       {
         index: true,
