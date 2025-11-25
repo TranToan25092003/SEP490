@@ -10,6 +10,11 @@ const ModelSchema = new Schema(
     year: { type: Number, required: false }, // Year of manufacture (optional)
     engine_type: { type: String, required: false }, // Engine type (e.g., gasoline, diesel, optional)
     description: { type: String, required: false }, // Additional description (optional)
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    }, // Model status
   },
   { timestamps: true }
 );

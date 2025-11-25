@@ -54,3 +54,15 @@ export const createWalkInServiceOrder = async (payload) => {
 
   return response.data.data;
 };
+
+export const cancelServiceOrder = async (serviceOrderId, cancelReason) => {
+  const response = await customFetch(`/service-orders/${serviceOrderId}/cancel`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    data: { cancelReason },
+  });
+
+  return response.data.data;
+};

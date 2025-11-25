@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -9,12 +18,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { fetchBays, createBay, updateBay, deleteBay } from "@/api/bays";
+import { fetchBays, createBay, updateBay } from "@/api/bays";
 import { toast } from "sonner";
+import { Pencil, XCircle, CheckCircle } from "lucide-react";
 
 export default function ManagerBays() {
   const [bays, setBays] = useState([]);
-  const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [creating, setCreating] = useState(false);
@@ -23,6 +32,13 @@ export default function ManagerBays() {
     status: "available",
     description: "",
   });
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingBay, setEditingBay] = useState(null);
+  const [editFormData, setEditFormData] = useState({
+    bay_number: "",
+    description: "",
+  });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const load = async (params = {}) => {
     setLoading(true);
@@ -30,9 +46,8 @@ export default function ManagerBays() {
       const res = await fetchBays({ page: 1, limit: 10, search, ...params });
       if (res.success) {
         setBays(res.data);
-        setPagination(res.pagination);
       }
-    } catch (e) {
+    } catch {
       toast.error("Lỗi", { description: "Không tải được danh sách bay" });
     } finally {
       setLoading(false);
@@ -41,6 +56,7 @@ export default function ManagerBays() {
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCreate = async () => {
@@ -53,37 +69,78 @@ export default function ManagerBays() {
         setNewBay({ bay_number: "", status: "available", description: "" });
         load();
       }
-    } catch (e) {
+    } catch {
       toast.error("Tạo bay thất bại");
     } finally {
       setCreating(false);
     }
   };
 
-  const handleToggleStatus = async (bay) => {
+  const handleOpenEditDialog = (bay) => {
+    setEditingBay(bay);
+    setEditFormData({
+      bay_number: bay.bay_number || "",
+      description: bay.description || "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEdit = async () => {
+    if (!editFormData.bay_number.trim()) {
+      toast.error("Vui lòng nhập số bay");
+      return;
+    }
+    setIsUpdating(true);
     try {
-      const res = await updateBay(bay._id, {
-        status: bay.status === "available" ? "occupied" : "available",
+      const res = await updateBay(editingBay._id, {
+        bay_number: editFormData.bay_number,
+        description: editFormData.description,
       });
       if (res.success) {
-        toast.success("Cập nhật trạng thái");
+        toast.success("Đã cập nhật bay");
+        setIsEditDialogOpen(false);
+        setEditingBay(null);
         load();
       }
-    } catch (e) {
+    } catch {
       toast.error("Cập nhật thất bại");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleDelete = async (bay) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa bay này?")) return;
+  const handleDeactivate = async (bay) => {
+    if (
+      !confirm(
+        "Bạn có chắc chắn muốn vô hiệu hóa bay này? Bay sẽ không thể sử dụng cho các đơn hàng mới."
+      )
+    )
+      return;
     try {
-      const res = await deleteBay(bay._id);
+      const res = await updateBay(bay._id, {
+        status: "inactive",
+      });
       if (res.success) {
-        toast.success("Đã xóa bay");
+        toast.success("Đã vô hiệu hóa bay");
         load();
       }
-    } catch (e) {
-      toast.error("Xóa thất bại");
+    } catch {
+      toast.error("Vô hiệu hóa thất bại");
+    }
+  };
+
+  const handleActivate = async (bay) => {
+    if (!confirm("Bạn có chắc chắn muốn kích hoạt lại bay này?")) return;
+    try {
+      const res = await updateBay(bay._id, {
+        status: "available",
+      });
+      if (res.success) {
+        toast.success("Đã kích hoạt bay");
+        load();
+      }
+    } catch {
+      toast.error("Kích hoạt thất bại");
     }
   };
 
@@ -161,28 +218,51 @@ export default function ManagerBays() {
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         bay.status === "available"
                           ? "text-green-600 bg-green-100"
-                          : "text-yellow-700 bg-yellow-100"
+                          : bay.status === "occupied"
+                          ? "text-yellow-700 bg-yellow-100"
+                          : "text-red-600 bg-red-100"
                       }`}
                     >
-                      {bay.status === "available" ? "Trống" : "Đang dùng"}
+                      {bay.status === "available"
+                        ? "Trống"
+                        : bay.status === "occupied"
+                        ? "Đang dùng"
+                        : "Vô hiệu hóa"}
                     </span>
                   </TableCell>
                   <TableCell>{bay.description || "-"}</TableCell>
-                  <TableCell className="space-x-2">
-                    {/* <Button
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenEditDialog(bay)}
+                      >
+                        <Pencil className="h-4 w-4 mr-1" />
+                        Sửa
+                      </Button>
+                      {bay.status === "inactive" ? (
+                        <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleToggleStatus(bay)}
-                    >
-                      Đổi trạng thái
-                    </Button> */}
+                          onClick={() => handleActivate(bay)}
+                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Kích hoạt
+                        </Button>
+                      ) : (
                     <Button
-                      variant="destructive"
+                          variant="outline"
                       size="sm"
-                      onClick={() => handleDelete(bay)}
+                          onClick={() => handleDeactivate(bay)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
-                      Xóa
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Vô hiệu hóa
                     </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -190,6 +270,63 @@ export default function ManagerBays() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Chỉnh sửa Bay</DialogTitle>
+            <DialogDescription>
+              Cập nhật thông tin bay. Nhấn lưu để hoàn tất.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Số bay *</label>
+              <Input
+                placeholder="VD: Bay 1"
+                value={editFormData.bay_number}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    bay_number: e.target.value,
+                  })
+                }
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Mô tả</label>
+              <Textarea
+                placeholder="Mô tả bay (tuỳ chọn)"
+                value={editFormData.description}
+                onChange={(e) =>
+                  setEditFormData({
+                    ...editFormData,
+                    description: e.target.value,
+                  })
+                }
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditDialogOpen(false);
+                setEditingBay(null);
+              }}
+              disabled={isUpdating}
+            >
+              Hủy
+            </Button>
+            <Button onClick={handleEdit} disabled={isUpdating}>
+              {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

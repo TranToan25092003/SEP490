@@ -20,7 +20,7 @@ const SERVICE_ORDER_STATUS_LABELS = {
   created: "được tạo",
   waiting_inspection: "đang chờ kiểm tra",
   inspection_completed: "đã hoàn tất kiểm tra",
-  waiting_customer_approval: "chờ bạn xác nhận",
+  waiting_customer_approval: "chờ khách xác nhận",
   approved: "được phê duyệt",
   scheduled: "đã được xếp lịch",
   servicing: "đang sửa chữa",
@@ -201,6 +201,19 @@ async function getStaffClerkIds() {
   cachedStaffIds = ids;
   lastStaffFetch = now;
   return cachedStaffIds;
+}
+
+async function isStaffUser(userId) {
+  try {
+    const staffIds = await getStaffClerkIds();
+    return staffIds.includes(userId);
+  } catch (error) {
+    console.error(
+      "[NotificationService] Error checking if user is staff:",
+      error
+    );
+    return false;
+  }
 }
 
 async function createNotification(notificationData) {
@@ -408,13 +421,26 @@ async function notifyCustomerBookingCancelled(booking) {
 
   const customerClerkId = bookingDoc.customer_clerk_id;
   const customerName = await resolveCustomerName(customerClerkId);
+  const cancelledBy = bookingDoc.cancelled_by || "customer";
+  const cancelReason = bookingDoc.cancel_reason
+    ? ` Lý do: ${bookingDoc.cancel_reason}.`
+    : "";
+
+  let title, message;
+  if (cancelledBy === "staff") {
+    title = "Đơn đặt lịch đã bị hủy";
+    message = `Đơn đặt lịch của quý khách ${customerName} đã bị nhân viên hủy.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+  } else {
+    title = "Hủy đặt lịch thành công";
+    message = `Quý khách ${customerName} đã hủy đặt lịch thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+  }
 
   await createNotification({
     recipientClerkId: customerClerkId,
     recipientType: "customer",
     type: "BOOKING_CANCELLED",
-    title: "Hủy đặt lịch thành công",
-    message: `Quý khách ${customerName} đã hủy đặt lịch thành công. Rất mong được phục vụ quý khách trong lần sau.`,
+    title,
+    message,
     linkTo: "/booking",
   });
 }
@@ -430,18 +456,31 @@ async function notifyStaffOfBookingCancelled(booking) {
   const plate = bookingDoc.vehicle_id?.license_plate || "không xác định";
   const customerName = await resolveCustomerName(bookingDoc.customer_clerk_id);
   const bookingCode = getShortId(bookingDoc._id);
+  const cancelledBy = bookingDoc.cancelled_by || "customer";
+  const cancelReason = bookingDoc.cancel_reason
+    ? ` Lý do: ${bookingDoc.cancel_reason}.`
+    : "";
+
+  let message;
+  if (cancelledBy === "staff") {
+    message = `Nhân viên đã hủy đặt lịch sửa xe cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
+  } else {
+    message = `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.${cancelReason}`;
+  }
+
   console.log(
     "[NotificationService] Staff booking cancellation notification payload:",
     JSON.stringify({
       customerName,
       bookingCode,
       plate,
+      cancelledBy,
     })
   );
   await notifyStaffGroup({
     type: "BOOKING_CANCELLED",
     title: "Đơn đặt lịch đã bị hủy",
-    message: `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.`,
+    message,
     linkTo: STAFF_BOOKING_LIST_PATH,
     actorClerkId: bookingDoc.customer_clerk_id,
   });
@@ -470,9 +509,7 @@ async function notifyServiceOrderStatusChange({
 
     if (serviceOrderDoc.status === "servicing") {
       customerTitle = "Xe đang được sửa chữa";
-      customerMessage = `Xe ${plate} của quý khách đang được sửa chữa/bảo dưỡng. Vui lòng theo dõi tiến độ tại: ${buildAbsoluteLink(
-        linkTo
-      )}.`;
+      customerMessage = `Xe ${plate} của quý khách đang được sửa chữa/bảo dưỡng. Bấm vào đây để theo dõi tiến độ.`;
     } else if (serviceOrderDoc.status === "completed") {
       customerTitle = "Xe đã hoàn thành";
       let invoicePath = "/invoices";
@@ -485,9 +522,7 @@ async function notifyServiceOrderStatusChange({
         invoicePath = `/invoices/${invoice._id}`;
       }
       linkTo = invoicePath;
-      customerMessage = `Xe ${plate} của quý khách đã hoàn thành. Quý khách vui lòng đến nhận xe tại cửa hàng. Xem hóa đơn chi tiết tại: ${buildAbsoluteLink(
-        invoicePath
-      )}.`;
+      customerMessage = `Xe ${plate} của quý khách đã hoàn thành. Quý khách vui lòng đến nhận xe tại cửa hàng. Bấm vào đây để xem hóa đơn chi tiết.`;
     }
 
     await createNotification({
@@ -530,12 +565,8 @@ async function notifyCustomerNewQuote(
     type: "QUOTE_READY",
     title: isRevision ? "Báo giá đã được cập nhật" : "Báo giá mới đã sẵn sàng",
     message: isRevision
-      ? `Thông tin báo giá đã được chỉnh sửa lại theo yêu cầu của quý khách. Vui lòng kiểm tra và duyệt lại tại: ${buildAbsoluteLink(
-          quoteLink
-        )}.`
-      : `Quý khách vui lòng duyệt hạng mục sửa chữa cho xe ${plate}. Duyệt tại: ${buildAbsoluteLink(
-          quoteLink
-        )}.`,
+      ? "Thông tin báo giá đã được chỉnh sửa theo yêu cầu của quý khách. Bấm vào đây để xem và duyệt lại."
+      : `Quý khách vui lòng duyệt hạng mục sửa chữa cho xe ${plate}. Bấm vào đây để duyệt ngay.`,
     linkTo: quoteLink,
     actorClerkId: serviceOrderDoc.staff_clerk_id || null,
   });
@@ -560,9 +591,7 @@ async function notifyQuoteApproved(serviceOrder, quote = null) {
     recipientType: "customer",
     type: "QUOTE_APPROVED",
     title: "Đã xác nhận sửa chữa",
-    message: `Quý khách đã duyệt hạng mục sửa chữa cho xe ${plate} thành công. Vui lòng theo dõi tiến độ tại: ${buildAbsoluteLink(
-      progressLink
-    )}.`,
+    message: `Quý khách đã duyệt hạng mục sửa chữa cho xe ${plate} thành công. Bấm vào đây để theo dõi tiến độ.`,
     linkTo: progressLink,
   });
 
@@ -661,12 +690,75 @@ async function notifyPaymentSuccess(invoiceDoc, { actorClerkId = null } = {}) {
       recipientType: "customer",
       type: "PAYMENT_SUCCESSFUL",
       title: "Thanh toán thành công",
-      message: `Đã nhận thanh toán ${formattedAmount} cho hóa đơn ${invoiceNumber}. Cảm ơn quý khách! Biên lai: ${buildAbsoluteLink(
-        receiptPath
-      )}`,
+      message: `Đã nhận thanh toán ${formattedAmount} cho hóa đơn ${invoiceNumber}. Cảm ơn quý khách! Bấm vào đây để xem biên lai.`,
       linkTo: receiptPath,
       actorClerkId,
     });
+
+    // Gửi email xác nhận thanh toán
+    try {
+      const { UsersService } = require("./users.service");
+      const emailService = require("./email.service");
+
+      console.log(
+        "[Notification] Attempting to send payment confirmation email"
+      );
+      console.log("[Notification] customerClerkId:", customerClerkId);
+
+      if (customerClerkId && !customerClerkId.startsWith("guest_")) {
+        console.log("[Notification] Fetching customer profile...");
+        const customerProfiles = await UsersService.getProfilesByIds([
+          customerClerkId,
+        ]);
+        const customerProfile = customerProfiles[customerClerkId];
+
+        console.log("[Notification] Customer profile:", {
+          email: customerProfile?.email,
+          fullName: customerProfile?.fullName,
+        });
+
+        if (customerProfile?.email) {
+          // Chuyển đổi invoiceDoc thành object để truyền vào email service
+          const invoiceData = {
+            id: invoiceId,
+            invoiceNumber,
+            paid_amount: invoiceDoc.paid_amount ?? invoiceDoc.amount,
+            amount: invoiceDoc.amount,
+            payment_method: invoiceDoc.payment_method,
+            confirmed_at: invoiceDoc.confirmed_at,
+            updatedAt: invoiceDoc.updatedAt,
+          };
+
+          console.log(
+            "[Notification] Sending payment confirmation email to:",
+            customerProfile.email
+          );
+          await emailService.sendPaymentConfirmationEmail(
+            invoiceData,
+            customerProfile.email,
+            customerName
+          );
+          console.log(
+            "[Notification] Payment confirmation email sent successfully"
+          );
+        } else {
+          console.log(
+            "[Notification] Customer has no email address, skipping email"
+          );
+        }
+      } else {
+        console.log(
+          "[Notification] Invalid customerClerkId or guest user, skipping email"
+        );
+      }
+    } catch (error) {
+      console.error(
+        "[Notification] Failed to send payment confirmation email:",
+        error
+      );
+      console.error("[Notification] Error stack:", error.stack);
+      // Không throw error để không làm gián đoạn flow
+    }
   }
 
   await notifyStaffGroup({
@@ -831,4 +923,5 @@ module.exports = {
   markNotificationsAsRead,
   markAllAsRead,
   createNotification,
+  isStaffUser,
 };

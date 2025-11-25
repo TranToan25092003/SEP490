@@ -145,7 +145,9 @@ class StaffService {
 
     // circular dependency fix: import inside the method
     const { AttendanceService } = require("./attendance.service");
-    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(technicians);
+    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(
+      technicians
+    );
 
     return technicians.map((technician) => {
       const info = map[technician.technicianClerkId] || {

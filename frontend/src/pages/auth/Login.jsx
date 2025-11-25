@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from "react";
 import photo from "../../assets/image.png";
 import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
+import { getRoleRedirectPath } from "@/utils/roleRedirect";
 
-import { useNavigate, Route, Routes } from "react-router-dom";
+import { useNavigate, Route, Routes, Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const Login = () => {
-  const { signIn, isLoaded, setActive } = useSignIn();
+  const { signIn, isLoaded: isSignInLoaded, setActive } = useSignIn();
   const { signUp } = useSignUp();
-  const { isSignedIn } = useUser();
+  const { isSignedIn, isLoaded: isUserLoaded, user } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -16,12 +17,14 @@ const Login = () => {
   const [hide, setHide] = useState(false);
 
   useEffect(() => {
-    if (isSignedIn) {
-      navigate("/");
+    if (!isUserLoaded) return;
+    if (isSignedIn && user) {
+      const destination = getRoleRedirectPath(user);
+      navigate(destination, { replace: true });
     }
-  }, [isSignedIn, navigate]);
+  }, [isSignedIn, user, isUserLoaded, navigate]);
 
-  if (!isLoaded) return null;
+  if (!isSignInLoaded) return null;
 
   const handleEmailSignin = async (e) => {
     e.preventDefault();
@@ -39,7 +42,6 @@ const Login = () => {
       });
       if (result.status == "complete") {
         await setActive({ session: result.createdSessionId });
-        navigate("/");
         return;
       }
 
@@ -51,12 +53,10 @@ const Login = () => {
 
         if (final.status == "complete") {
           await setActive({ session: final.createdSessionId });
-          navigate("/");
           return;
         }
       }
 
-      navigate("/");
       toast.error("Không thể hoàn tất đăng nhập. Hãy thử lại.");
     } catch (error) {
       toast.warning(error.errors?.[0]?.message || error.message);
@@ -70,17 +70,7 @@ const Login = () => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_facebook",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
-      });
-    } catch (error) {}
-  };
-
-  const handleGoogleSignup = async () => {
-    try {
-      await signUp.authenticateWithRedirect({
-        strategy: "oauth_google",
-        redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {}
   };
@@ -90,7 +80,7 @@ const Login = () => {
       await signIn.authenticateWithRedirect({
         strategy: "oauth_google",
         redirectUrl: "/sso-callback",
-        redirectUrlComplete: "/",
+        redirectUrlComplete: "/auth/role-redirect",
       });
     } catch (error) {}
   };
@@ -110,16 +100,39 @@ const Login = () => {
               motormate
             </h1>
             <p className="font-normal leading-normal text-sm md:text-base whitespace-normal break-words">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Magni
-              illo minus, repellat eos in dicta error perspiciatis ad vero
-              asperiores, neque esse eligendi deleniti reiciendis cum distinctio
-              quo ratione facere!
+              MotorMate được thành lập từ niềm đam mê mãnh liệt với xe máy và
+              mong muốn tạo ra một địa chỉ đáng tin cậy cho cộng đồng. Chúng tôi
+              nhận thấy nhu cầu về một nơi không chỉ cung cấp phụ tùng chất
+              lượng mà còn mang đến dịch vụ tư vấn chuyên nghiệp.
             </p>
           </div>
         </div>
 
         {/* Cột phải (form đăng ký / đăng nhập) */}
         <div className="relative w-full md:w-1/2 bg-white border border-red-500 flex flex-col justify-center items-center py-8 md:py-0">
+          <div className="absolute top-4 left-4 md:top-4 md:left-4">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-gray-700 hover:text-[#DF1D01] transition-colors"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm md:text-base font-medium">
+                Trở lại trang chủ
+              </span>
+            </Link>
+          </div>
           <div className="absolute top-4 right-4 md:mt-[5px] md:ml-[40px] bg-white w-auto md:w-[260px] h-auto inline-flex text-sm md:text-base">
             <p className="font-normal leading-normal">Bạn chưa có tài khoản?</p>
             <button

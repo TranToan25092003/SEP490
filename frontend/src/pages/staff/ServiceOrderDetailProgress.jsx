@@ -9,7 +9,6 @@ import {
   Link,
   useRevalidator,
 } from "react-router-dom";
-import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   getAllTasksForServiceOrder,
@@ -25,6 +24,7 @@ import ServiceTaskInspectionCard from "@/components/staff/service-order-detail/S
 import ServiceTaskServicingCard from "@/components/staff/service-order-detail/ServiceTaskServicingCard";
 import BaySchedulingModal from "@/components/staff/service-order-detail/BaySchedulingModal";
 import { getServiceOrderById } from "@/api/serviceOrders";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function loader({ params }) {
   return {
@@ -32,6 +32,25 @@ function loader({ params }) {
     serviceOrder: getServiceOrderById(params.id),
   };
 }
+
+const ProgressLoading = () => (
+  <div className="mt-6 grid gap-4 lg:grid-cols-[220px_1fr]">
+    <div className="space-y-3">
+      {[1, 2].map((item) => (
+        <Skeleton key={item} className="h-16 w-full" />
+      ))}
+    </div>
+    <div className="space-y-4">
+      {[1, 2, 3].map((item) => (
+        <Skeleton key={item} className="h-28 w-full" />
+      ))}
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-48" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    </div>
+  </div>
+);
 
 const ServiceOrderDetailContent = ({ tasks }) => {
   const [activeTab, setActiveTab] = useState("inspection");
@@ -50,7 +69,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
       await toast
         .promise(task, {
           loading: "Đang lên lịch sửa chữa...",
-          success: "Lên lịch sửa chữa thành công!",
+          // success: "Lên lịch sửa chữa thành công!",
           error: "Lên lịch sửa chữa thất bại.",
         })
         .unwrap();
@@ -70,7 +89,7 @@ const ServiceOrderDetailContent = ({ tasks }) => {
       await toast
         .promise(task, {
           loading: "Đang lên lịch kiểm tra...",
-          success: "Lên lịch kiểm tra thành công!",
+          // success: "Lên lịch kiểm tra thành công!",
           error: "Lên lịch kiểm tra thất bại.",
         })
         .unwrap();
@@ -174,13 +193,7 @@ const ServiceOrderDetail = () => {
         </Tabs>
       </div>
 
-      <Suspense
-        fallback={
-          <div className="flex justify-center items-center py-8">
-            <Spinner className="h-8 w-8" />
-          </div>
-        }
-      >
+      <Suspense fallback={<ProgressLoading />}>
         <Await
           resolve={tasks}
           errorElement={

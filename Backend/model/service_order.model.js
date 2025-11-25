@@ -62,6 +62,7 @@ const ServiceOrderSchema = new Schema(
       type: String,
       required: false,
       unique: true,
+      sparse: true, // Allow multiple null values, only enforce uniqueness for non-null values
     }, // Số lệnh sửa chữa (VD: SC000001)
     staff_clerk_id: { type: String, required: true }, // Staff who created the order
     booking_id: {
@@ -96,7 +97,14 @@ const ServiceOrderSchema = new Schema(
     expected_completion_time: { type: Date, required: false },
     completed_at: { type: Date, required: false },
     cancelled_at: { type: Date, required: false },
+    cancelled_by: {
+      type: String,
+      enum: ["customer", "staff"],
+      required: false,
+    },
+    cancel_reason: { type: String, required: false },
     maintenance_reminder_sent_at: { type: Date, required: false },
+    waiting_approval_at: { type: Date, required: false }, // Thời gian chuyển sang waiting_customer_approval
   },
   { timestamps: true }
 );

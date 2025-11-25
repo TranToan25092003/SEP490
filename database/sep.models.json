@@ -1,0 +1,848 @@
+[{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bf6"
+  },
+  "name": "Air Blade 125/150",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.684Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.684Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bf7"
+  },
+  "name": "Air Blade 160",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bf8"
+  },
+  "name": "Winner X",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bf9"
+  },
+  "name": "Winner R",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bfa"
+  },
+  "name": "SH 125i/150i",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bfb"
+  },
+  "name": "SH 160i",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bfc"
+  },
+  "name": "SH350i",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181bfd"
+  },
+  "name": "SH Mode",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c00"
+  },
+  "name": "Vario 125/150",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-12T15:47:42.124Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c01"
+  },
+  "name": "Vario 160",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c02"
+  },
+  "name": "Stylo 160",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c03"
+  },
+  "name": "Click 125i/150i",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c04"
+  },
+  "name": "Wave",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c05"
+  },
+  "name": "Future",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c06"
+  },
+  "name": "PCX",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c07"
+  },
+  "name": "Scoopy",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c08"
+  },
+  "name": "ICON e:",
+  "brand": "Honda",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c09"
+  },
+  "name": "Exciter 155",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0a"
+  },
+  "name": "Exciter 150",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0b"
+  },
+  "name": "Exciter 135",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0c"
+  },
+  "name": "Grande",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0d"
+  },
+  "name": "NVX",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0e"
+  },
+  "name": "Janus",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.685Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c0f"
+  },
+  "name": "Sirius",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c10"
+  },
+  "name": "Jupiter",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c11"
+  },
+  "name": "Freego",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c12"
+  },
+  "name": "Nouvo",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c13"
+  },
+  "name": "Mio",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c14"
+  },
+  "name": "Lexi",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c15"
+  },
+  "name": "PG-1",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c16"
+  },
+  "name": "R15",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c17"
+  },
+  "name": "XS155R",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c18"
+  },
+  "name": "Xmax 300",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c19"
+  },
+  "name": "R6",
+  "brand": "Yamaha",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1a"
+  },
+  "name": "Raider 150",
+  "brand": "Suzuki",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1b"
+  },
+  "name": "Satria F150",
+  "brand": "Suzuki",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1c"
+  },
+  "name": "Axelo 125",
+  "brand": "Suzuki",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1d"
+  },
+  "name": "Liberty",
+  "brand": "Piaggio",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1e"
+  },
+  "name": "Medley",
+  "brand": "Piaggio",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c1f"
+  },
+  "name": "Vespa Sprint",
+  "brand": "Vespa",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c20"
+  },
+  "name": "Vespa Primavera",
+  "brand": "Vespa",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c21"
+  },
+  "name": "Vespa GTS",
+  "brand": "Vespa",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c22"
+  },
+  "name": "Vespa GTV",
+  "brand": "Vespa",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c23"
+  },
+  "name": "Elizabeth",
+  "brand": "SYM",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c24"
+  },
+  "name": "Shark",
+  "brand": "SYM",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c25"
+  },
+  "name": "Vinfast Feliz",
+  "brand": "Vinfast",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c26"
+  },
+  "name": "Vinfast Klara",
+  "brand": "Vinfast",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c27"
+  },
+  "name": "Vinfast Evo",
+  "brand": "Vinfast",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c28"
+  },
+  "name": "Quantum S1",
+  "brand": "Quantum",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c29"
+  },
+  "name": "Quantum S2",
+  "brand": "Quantum",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c2a"
+  },
+  "name": "Quantum S3",
+  "brand": "Quantum",
+  "year": 2023,
+  "engine_type": "electric",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68f35424179b888aa3181c2b"
+  },
+  "name": "Z1000",
+  "brand": "Kawasaki",
+  "year": 2023,
+  "engine_type": "gasoline",
+  "__v": 0,
+  "createdAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-18T08:47:32.686Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69144633dfb6923806247f76"
+  },
+  "name": "Air Blade 160",
+  "brand": "Honda",
+  "year": 2025,
+  "engine_type": "đốt trong",
+  "createdAt": {
+    "$date": "2025-11-12T08:32:51.059Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-12T08:33:45.977Z"
+  },
+  "__v": 0
+}]

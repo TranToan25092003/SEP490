@@ -80,7 +80,10 @@ const renderStatusBadge = (status) => {
 
 const renderPaymentMethod = (method) => {
   if (!method) return "Chưa xác định";
-  return method === "cash" ? "Tiền mặt" : "Chuyển khoản";
+  if (method === "cash") return "Tiền mặt";
+  if (method === "qr_code") return "Quét QR";
+  if (method === "bank_transfer") return "Chuyển khoản";
+  return "Chưa xác định";
 };
 
 // Thông tin ngân hàng cho QR code
@@ -626,7 +629,7 @@ const CustomerInvoiceDetail = () => {
                     </div>
                     <div>
                       <div className="text-muted-foreground">
-                        Trạng thái thanh toán
+                        Phương Thức Thanh Toán
                       </div>
                       <div className="font-medium text-foreground">
                         {renderPaymentMethod(invoice.paymentMethod)}
@@ -763,6 +766,89 @@ const CustomerInvoiceDetail = () => {
                     )}
                   </div>
                   {invoice.status === "unpaid" && (
+                    <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-medium">Sử dụng voucher</p>
+                          <p className="text-xs text-muted-foreground">
+                            Chọn voucher để giảm số tiền thanh toán trước khi mở
+                            QR.
+                          </p>
+                        </div>
+                        {selectedVoucherCode && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedVoucherCode("")}
+                          >
+                            Bỏ chọn
+                          </Button>
+                        )}
+                      </div>
+                      <Select
+                        value={selectedVoucherCode || undefined}
+                        onValueChange={setSelectedVoucherCode}
+                        disabled={
+                          voucherLoading || availableVouchers.length === 0
+                        }
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue
+                            placeholder={
+                              voucherLoading
+                                ? "Đang tải voucher..."
+                                : availableVouchers.length === 0
+                                ? "Chưa có voucher khả dụng"
+                                : "Chọn voucher"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableVouchers.map((voucher) => (
+                            <SelectItem key={voucher.code} value={voucher.code}>
+                              {voucher.rewardName} ({formatVoucherValue(voucher)})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {voucherError && (
+                        <p className="text-xs text-destructive">{voucherError}</p>
+                      )}
+                      {voucherLoading && !voucherError && (
+                        <p className="text-xs text-muted-foreground">
+                          Đang tải danh sách voucher...
+                        </p>
+                      )}
+                      {!voucherLoading &&
+                        availableVouchers.length === 0 &&
+                        !voucherError && (
+                          <p className="text-xs text-muted-foreground">
+                            Bạn chưa có voucher khả dụng.
+                          </p>
+                        )}
+                      {selectedVoucher && (
+                        <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
+                          <p className="font-medium">
+                            {selectedVoucher.rewardName}
+                          </p>
+                          <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
+                          <p>
+                            Mã:{" "}
+                            <span className="font-mono">
+                              {selectedVoucher.code}
+                            </span>
+                          </p>
+                          {selectedVoucher.expiresAt && (
+                            <p>
+                              Hạn sử dụng:{" "}
+                              {formatDateTime(selectedVoucher.expiresAt)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {invoice.status === "unpaid" && (
                     <Button
                       onClick={() => setPaymentModalOpen(true)}
                       className="w-full"
@@ -827,86 +913,6 @@ const CustomerInvoiceDetail = () => {
                   </span>
                 </div>
               </div>
-              {invoice?.status === "unpaid" && (
-                <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium">Sử dụng voucher</p>
-                      <p className="text-xs text-muted-foreground">
-                        Chọn voucher để giảm số tiền chuyển khoản.
-                      </p>
-                    </div>
-                    {selectedVoucherCode && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedVoucherCode("")}
-                      >
-                        Bỏ chọn
-                      </Button>
-                    )}
-                  </div>
-                  <Select
-                    value={selectedVoucherCode || undefined}
-                    onValueChange={setSelectedVoucherCode}
-                    disabled={voucherLoading || availableVouchers.length === 0}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue
-                        placeholder={
-                          voucherLoading
-                            ? "Đang tải voucher..."
-                            : availableVouchers.length === 0
-                            ? "Chưa có voucher khả dụng"
-                            : "Chọn voucher"
-                        }
-                      />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableVouchers.map((voucher) => (
-                        <SelectItem key={voucher.code} value={voucher.code}>
-                          {voucher.rewardName} ({formatVoucherValue(voucher)})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {voucherError && (
-                    <p className="text-xs text-destructive">{voucherError}</p>
-                  )}
-                  {voucherLoading && !voucherError && (
-                    <p className="text-xs text-muted-foreground">
-                      Đang tải danh sách voucher...
-                    </p>
-                  )}
-                  {!voucherLoading &&
-                    availableVouchers.length === 0 &&
-                    !voucherError && (
-                      <p className="text-xs text-muted-foreground">
-                        Bạn chưa có voucher khả dụng.
-                      </p>
-                    )}
-                  {selectedVoucher && (
-                    <div className="rounded-md border bg-background/70 p-3 text-xs space-y-1">
-                      <p className="font-medium">
-                        {selectedVoucher.rewardName}
-                      </p>
-                      <p>Giá trị: {formatVoucherValue(selectedVoucher)}</p>
-                      <p>
-                        Mã:{" "}
-                        <span className="font-mono">
-                          {selectedVoucher.code}
-                        </span>
-                      </p>
-                      {selectedVoucher.expiresAt && (
-                        <p>
-                          Hạn sử dụng:{" "}
-                          {formatDateTime(selectedVoucher.expiresAt)}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
               {invoice && (
                 <div className="flex flex-col items-center justify-center space-y-3">
                   <div className="rounded-lg border-2 border-border bg-white p-4 w-full max-w-[280px] min-h-[250px] flex items-center justify-center">
@@ -1000,7 +1006,7 @@ const CustomerInvoiceDetail = () => {
                         </>
                       )}
                     </Button>
-                    {/* DEV MODE: Button để fake thanh toán cho testing */}
+                    {/*
                     {(import.meta.env.DEV ||
                       import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
                       <Button
@@ -1027,6 +1033,7 @@ const CustomerInvoiceDetail = () => {
                         )}
                       </Button>
                     )}
+                    */}
                   </>
                 )}
                 {invoice && invoice.status === "paid" && (

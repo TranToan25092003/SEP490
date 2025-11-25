@@ -1,4 +1,3 @@
-import imgMagnifier from "@/assets/admin/topmenu_new/8a2d8145df476a9fdf886c059664e9cd77775dd4.svg";
 import { Input } from "@/components/ui/input";
 import NotificationBell from "@/components/global/NotificationBell";
 
@@ -9,10 +8,9 @@ export default function TopMenu({ height = 40, sidebarWidth = 80 }) {
       style={{ height, paddingLeft: sidebarWidth }}
     >
       <div className="flex items-center justify-between h-full px-6 w-full">
-        <div>
-        </div>
+        <div></div>
         <div className="flex items-center gap-4">
-          <div className="relative size-[32px] mb-2 mr-6">
+          <div className="relative size-[32px] -mt-7 mr-6">
             <NotificationBell />
           </div>
           <p

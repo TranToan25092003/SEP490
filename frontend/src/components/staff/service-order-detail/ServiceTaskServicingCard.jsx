@@ -87,7 +87,7 @@ const ServiceTaskServicingCard = ({ task }) => {
       await toast
         .promise(completePromise, {
           loading: "Đang hoàn thành sửa chữa...",
-          success: "Hoàn thành sửa chữa thành công!",
+          // success: "Hoàn thành sửa chữa thành công!",
           error: "Hoàn thành sửa chữa thất bại.",
         })
         .unwrap();
@@ -178,7 +178,7 @@ const ServiceTaskServicingCard = ({ task }) => {
       await toast
         .promise(startPromise, {
           loading: "Đang bắt đầu sửa chữa...",
-          success: "Bắt đầu sửa chữa thành công!",
+          // success: "Bắt đầu sửa chữa thành công!",
           error: "Bắt đầu sửa chữa thất bại.",
         })
         .unwrap();

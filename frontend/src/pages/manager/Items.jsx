@@ -38,7 +38,137 @@ import { Link } from "react-router-dom";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
-import { X } from "lucide-react";
+import { X, ChevronsUpDown } from "lucide-react";
+
+const ModelCompatibilityTree = ({
+  groupedModels,
+  selectedIds,
+  onSelectionChange,
+}) => {
+  const [filter, setFilter] = useState("");
+
+  const handleModelSelect = (modelId, isSelected) => {
+    const newIds = new Set(selectedIds.map((id) => String(id))); // Ensure all are strings
+    const modelIdStr = String(modelId);
+    if (isSelected) {
+      newIds.delete(modelIdStr);
+    } else {
+      newIds.add(modelIdStr);
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const handleBrandSelectAll = (brandModels, isAllSelected) => {
+    const modelIdsInBrand = brandModels.map((m) => String(m._id));
+    const newIds = new Set(selectedIds.map((id) => String(id))); // Ensure all are strings
+
+    if (isAllSelected) {
+      modelIdsInBrand.forEach((id) => newIds.delete(id));
+    } else {
+      modelIdsInBrand.forEach((id) => newIds.add(id));
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const filteredGroups = groupedModels
+    .map((group) => ({
+      ...group,
+      models: group.models.filter((model) =>
+        model.name.toLowerCase().includes(filter.toLowerCase())
+      ),
+    }))
+    .filter(
+      (group) =>
+        group.brand.toLowerCase().includes(filter.toLowerCase()) ||
+        group.models.length > 0
+    );
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Tìm kiếm hãng hoặc dòng xe..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="h-9"
+      />
+      <div className="max-h-200 overflow-y-auto space-y-2 rounded-md border p-2">
+        {filteredGroups.length === 0 && (
+          <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>
+        )}
+
+        {filteredGroups.map((group) => {
+          const modelsInBrandIds = group.models.map((m) => String(m._id));
+          const selectedInBrandCount = modelsInBrandIds.filter((id) =>
+            selectedIds.some((selectedId) => String(selectedId) === id)
+          ).length;
+          const isAllSelected =
+            selectedInBrandCount === modelsInBrandIds.length &&
+            modelsInBrandIds.length > 0;
+          const isIndeterminate =
+            selectedInBrandCount > 0 &&
+            selectedInBrandCount < modelsInBrandIds.length;
+
+          return (
+            <details key={group.brand} open>
+              <summary className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`brand-${group.brand}`}
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() =>
+                      handleBrandSelectAll(group.models, isAllSelected)
+                    }
+                  />
+                  <label
+                    htmlFor={`brand-${group.brand}`}
+                    className="flex-1 cursor-pointer text-sm font-semibold"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {group.brand} ({selectedInBrandCount}/
+                    {modelsInBrandIds.length})
+                  </label>
+                </div>
+                <div className="w-9 p-0">
+                  <ChevronsUpDown className="h-4 w-4" />
+                </div>
+              </summary>
+              <div className="py-2 pl-6">
+                {group.models.map((model) => {
+                  const modelIdStr = String(model._id);
+                  const isSelected = selectedIds.some(
+                    (id) => String(id) === modelIdStr
+                  );
+                  return (
+                    <div
+                      key={model._id}
+                      className="flex items-center gap-2 py-1"
+                    >
+                      <Checkbox
+                        id={model._id}
+                        checked={isSelected}
+                        onCheckedChange={() =>
+                          handleModelSelect(model._id, isSelected)
+                        }
+                      />
+                      <label
+                        htmlFor={model._id}
+                        className="text-sm cursor-pointer"
+                      >
+                        {model.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function ManagerItems() {
   const loaderData = useLoaderData();
@@ -61,12 +191,29 @@ export default function ManagerItems() {
     brand: "",
     quantity: "",
     status: "active",
+    compatible_model_ids: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newImagePreviews, setNewImagePreviews] = useState([]); // [{ file, url, id }]
   const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [groupedModels, setGroupedModels] = useState([]);
 
   const { parts = [], pagination = {} } = loaderData || {};
+
+  // Load grouped models on mount
+  useEffect(() => {
+    const loadGroupedModels = async () => {
+      try {
+        const response = await customFetch("/models/grouped-by-brand");
+        if (response.data.success) {
+          setGroupedModels(response.data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to load grouped models:", error);
+      }
+    };
+    loadGroupedModels();
+  }, []);
 
   // Cleanup image preview URLs when dialog closes
   useEffect(() => {
@@ -217,6 +364,23 @@ export default function ManagerItems() {
     // If quantity is 0, set status to discontinued
     const initialStatus =
       quantity === 0 ? "discontinued" : part.status || "active";
+
+    // Extract compatible_model_ids - handle both array of IDs and array of objects
+    // Remove duplicates and ensure all are strings
+    const compatibleModelIds = part.compatible_model_ids
+      ? Array.from(
+          new Set(
+            part.compatible_model_ids
+              .map((item) =>
+                typeof item === "object" && item._id
+                  ? String(item._id)
+                  : String(item)
+              )
+              .filter((id) => id && id !== "undefined" && id !== "null")
+          )
+        )
+      : [];
+
     setEditFormData({
       name: part.name || "",
       sellingPrice: part.sellingPrice || "",
@@ -225,6 +389,7 @@ export default function ManagerItems() {
       brand: part.brand || "",
       quantity: quantity,
       status: initialStatus,
+      compatible_model_ids: compatibleModelIds,
     });
     setNewImagePreviews([]); // Reset image previews when opening dialog
     setIsEditDialogOpen(true);
@@ -292,8 +457,21 @@ export default function ManagerItems() {
       // If quantity is 0, automatically set status to discontinued
       const finalStatus = quantity === 0 ? "discontinued" : editFormData.status;
 
+      // Handle media: only upload new images, keep existing media IDs
+      let media = [];
+
+      // Keep existing media IDs (from editingPart.media)
+      if (editingPart.media && Array.isArray(editingPart.media)) {
+        // Extract IDs from existing media (could be ObjectIds or objects with _id)
+        media = editingPart.media.map((item) => {
+          if (typeof item === "string") return item;
+          if (item._id) return item._id;
+          if (item.id) return item.id;
+          return item;
+        });
+      }
+
       // Upload new images if selected
-      let media = editingPart.media || [];
       if (newImagePreviews.length > 0) {
         setIsUploadingImage(true);
         try {
@@ -316,8 +494,9 @@ export default function ManagerItems() {
               return;
             }
           }
-          // Replace all existing media with new images
-          media = uploadedMedia;
+          // Add new media to existing media (don't replace, append)
+          // If user wants to replace, they should remove old images first
+          media = [...media, ...uploadedMedia];
         } catch (error) {
           console.error("Upload error:", error);
           toast.error("Lỗi upload ảnh", {
@@ -331,14 +510,34 @@ export default function ManagerItems() {
         }
       }
 
+      // Remove duplicates from compatible_model_ids and ensure they are strings
+      const uniqueCompatibleModelIds = Array.from(
+        new Set(
+          (editFormData.compatible_model_ids || []).map((id) =>
+            String(id).trim()
+          )
+        )
+      ).filter((id) => id); // Remove empty strings
+
       const submitData = {
-        ...editFormData,
+        name: editFormData.name,
+        code: editingPart.code, // Keep existing code to avoid unique constraint error
         sellingPrice: parseFloat(editFormData.sellingPrice) || 0,
         costPrice: parseFloat(editFormData.costPrice) || 0,
         quantity: quantity,
         status: finalStatus,
+        description: editFormData.description || "",
+        brand: editFormData.brand || "",
+        compatible_model_ids: uniqueCompatibleModelIds,
         media: media, // Include media array
       };
+
+      // Debug log
+      console.log("Submitting part update:", {
+        id: editingPart._id,
+        submitData,
+        compatible_model_ids: submitData.compatible_model_ids,
+      });
 
       const response = await customFetch(`/manager/parts/${editingPart._id}`, {
         method: "PUT",
@@ -806,6 +1005,21 @@ export default function ManagerItems() {
                 />
               </div>
               <div className="grid gap-2">
+                <label className="text-sm font-medium">
+                  Dòng xe tương thích
+                </label>
+                <ModelCompatibilityTree
+                  groupedModels={groupedModels}
+                  selectedIds={editFormData.compatible_model_ids}
+                  onSelectionChange={(newIds) =>
+                    setEditFormData({
+                      ...editFormData,
+                      compatible_model_ids: newIds,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
                 <label className="text-sm font-medium">Hình ảnh</label>
                 <div className="space-y-3">
                   {/* Current image */}
@@ -973,12 +1187,20 @@ export default function ManagerItems() {
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Tên sản phẩm</label>
-                <Input value={detailPart.name || "Chưa cập nhật"} readOnly disabled />
+                <Input
+                  value={detailPart.name || "Chưa cập nhật"}
+                  readOnly
+                  disabled
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Thương hiệu</label>
-                  <Input value={detailPart.brand || "Chưa rõ"} readOnly disabled />
+                  <Input
+                    value={detailPart.brand || "Chưa rõ"}
+                    readOnly
+                    disabled
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Mã sản phẩm</label>
@@ -1010,7 +1232,11 @@ export default function ManagerItems() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Số lượng tồn</label>
-                  <Input value={`${detailPart.quantity || 0} cái`} readOnly disabled />
+                  <Input
+                    value={`${detailPart.quantity || 0} cái`}
+                    readOnly
+                    disabled
+                  />
                 </div>
                 <div className="grid gap-2">
                   <label className="text-sm font-medium">Trạng thái</label>
@@ -1018,7 +1244,9 @@ export default function ManagerItems() {
                     const statusInfo = getDisplayStatus(detailPart);
                     return (
                       <div className="px-3 py-2 rounded border text-sm bg-gray-50">
-                        <span className={statusInfo.color}>{statusInfo.text}</span>
+                        <span className={statusInfo.color}>
+                          {statusInfo.text}
+                        </span>
                       </div>
                     );
                   })()}
@@ -1032,6 +1260,73 @@ export default function ManagerItems() {
                   disabled
                   className="min-h-[120px]"
                 />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">
+                  Dòng xe tương thích
+                </label>
+                {detailPart.compatible_model_ids &&
+                detailPart.compatible_model_ids.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {(() => {
+                      // Create a map of model IDs to model objects from groupedModels
+                      const modelMap = new Map();
+                      groupedModels.forEach((group) => {
+                        group.models.forEach((model) => {
+                          modelMap.set(model._id, {
+                            ...model,
+                            brand: group.brand,
+                          });
+                        });
+                      });
+
+                      // Extract model IDs from compatible_model_ids
+                      const modelIds = detailPart.compatible_model_ids.map(
+                        (item) =>
+                          typeof item === "object" && item._id ? item._id : item
+                      );
+
+                      // Get model info from map or use the original item
+                      const modelsWithInfo = modelIds.map((id) => {
+                        const modelInfo = modelMap.get(id);
+                        if (modelInfo) {
+                          return modelInfo;
+                        }
+                        // Fallback: try to find in original compatible_model_ids
+                        const originalItem =
+                          detailPart.compatible_model_ids.find(
+                            (item) =>
+                              (typeof item === "object" && item._id === id) ||
+                              item === id
+                          );
+                        return (
+                          originalItem || {
+                            _id: id,
+                            name: `Model ID: ${id}`,
+                            brand: "",
+                          }
+                        );
+                      });
+
+                      return modelsWithInfo.map((model, index) => (
+                        <div
+                          key={model._id || index}
+                          className="px-3 py-2 rounded border bg-gray-50 text-sm"
+                        >
+                          {model.brand && model.name
+                            ? `${model.brand} ${model.name}`
+                            : model.name
+                            ? model.name
+                            : `Model ID: ${model._id || model}`}
+                        </div>
+                      ));
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Chưa có dòng xe tương thích
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Hình ảnh</label>
@@ -1057,7 +1352,11 @@ export default function ManagerItems() {
             </p>
           )}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsDetailDialogOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDetailDialogOpen(false)}
+            >
               Đóng
             </Button>
           </DialogFooter>

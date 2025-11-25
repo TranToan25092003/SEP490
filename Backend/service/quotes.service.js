@@ -131,6 +131,7 @@ class QuotesService {
     await quote.save();
 
     serviceOrder.status = "waiting_customer_approval";
+    serviceOrder.waiting_approval_at = new Date(); // Lưu thời gian chuyển sang waiting_customer_approval
     await serviceOrder.save();
 
     await notificationService.notifyServiceOrderStatusChange({ serviceOrder });

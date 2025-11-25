@@ -83,7 +83,7 @@ const Booking = () => {
 
       const result = await createBooking(bookingRequest);
       console.log("Booking created:", result);
-      toast.success("Đặt lịch thành công!");
+      // toast.success("Đặt lịch thành công!");
       revalidator.revalidate();
     } catch (error) {
       if (error.response?.errorCode) {

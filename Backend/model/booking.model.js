@@ -37,6 +37,19 @@ const bookingSchema = new mongoose.Schema(
       ref: "ServiceOrder",
       required: false,
     },
+    cancelled_by: {
+      type: String,
+      enum: ["customer", "staff"],
+      required: false,
+    },
+    cancel_reason: {
+      type: String,
+      required: false,
+    },
+    cancelled_at: {
+      type: Date,
+      required: false,
+    },
   },
   { timestamps: true }
 );

@@ -54,8 +54,10 @@ router.patch(
       .withMessage("Invoice ID must be a valid MongoDB ObjectId"),
     body("paymentMethod")
       .optional()
-      .isIn(["cash", "bank_transfer"])
-      .withMessage("Payment method must be 'cash' or 'bank_transfer'"),
+      .isIn(["cash", "bank_transfer", "qr_code"])
+      .withMessage(
+        "Payment method must be 'cash', 'bank_transfer', or 'qr_code'"
+      ),
   ],
   throwErrors,
   invoiceController.confirmPayment

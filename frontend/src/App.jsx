@@ -7,6 +7,7 @@ import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import RoleRedirect from "./pages/auth/RoleRedirect";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
@@ -52,7 +53,6 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
-  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -66,7 +66,9 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
+import StaffDashboardPage, {
+  staffDashboardLoader,
+} from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
@@ -85,6 +87,11 @@ import CustomerInvoices from "./pages/customer/CustomerInvoices";
 import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
 import LoyaltyWallet from "./pages/customer/LoyaltyWallet";
 import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
+import {
+  authenTicationLoader,
+  authenTicationForStaffLoader,
+  authenTicationForAdminLoader,
+} from "./utils/authentication.loader";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -198,11 +205,15 @@ const router = createBrowserRouter([
     ),
   },
   {
+    path: "/auth/role-redirect",
+    element: <RoleRedirect />,
+  },
+  {
     path: "/manager",
     element: <ManagerLayout />,
-    // loader: authenTicationLoader,
+    loader: authenTicationLoader,
     children: [
-      { index: true, element: <Manager /> },
+      { index: true, element: <Manager />, loader: Manager.loader },
       { path: "staff", element: <StaffPage /> },
       {
         path: "items",
@@ -245,12 +256,12 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: <StaffLayout />,
-    // loader: authenTicationForStaffLoader,
+    loader: authenTicationForStaffLoader,
     children: [
       {
         index: true,
         element: <StaffDashboardPage />,
-        loader: staffDashboardLoader
+        loader: staffDashboardLoader,
       },
       {
         path: "service-order/:id",
@@ -328,7 +339,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
-    // loader: authenTicationForAdminLoader,   //Add later
+    loader: authenTicationForAdminLoader,
     children: [
       {
         index: true,
