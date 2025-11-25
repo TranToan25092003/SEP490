@@ -377,6 +377,14 @@ class BookingsService {
       );
     }
 
+    if (booking.status === "completed") {
+      throw new DomainError(
+        "Không thể hủy booking đã hoàn thành",
+        ERROR_CODES.BOOKINGS_STATE_INVALID,
+        400
+      );
+    }
+
     if (booking.status === "cancelled") {
       throw new DomainError(
         "Booking đã bị hủy trước đó",
