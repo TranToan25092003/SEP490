@@ -23,7 +23,7 @@ afterEach(async () => {
 });
 
 describe("Services Module", () => {
-  test("getValidServiceIds_UC0001_shouldReturnAllValidServiceIds", async () => {
+  test("UC0001_shouldReturnAllValidServiceIds", async () => {
     await Service.collection.insertMany([
       {
         _id: SERVICE_IDS[0],
@@ -51,7 +51,7 @@ describe("Services Module", () => {
     expect(validIds).toContain(SERVICE_IDS[1].toString());
   });
 
-  test("getValidServiceIds_UC0002_shouldReturnOnlyExistingServiceIds", async () => {
+  test("UC0002_shouldReturnOnlyExistingServiceIds", async () => {
     await Service.collection.insertOne({
       _id: SERVICE_IDS[0],
       name: "Thay dầu động cơ",
@@ -70,7 +70,7 @@ describe("Services Module", () => {
     expect(validIds).not.toContain(SERVICE_IDS[1].toString());
   });
 
-  test("getValidServiceIds_UC0003_shouldReturnEmptyArrayWhenNoServiceIdsMatch", async () => {
+  test("UC0003_shouldReturnEmptyArrayWhenNoServiceIdsMatch", async () => {
     await Service.collection.insertOne({
       _id: SERVICE_IDS[0],
       name: "Thay dầu động cơ",
@@ -88,14 +88,14 @@ describe("Services Module", () => {
     expect(Array.isArray(validIds)).toBe(true);
   });
 
-  test("getValidServiceIds_UC0004_shouldHandleEmptyInputArray", async () => {
+  test("UC0004_shouldHandleEmptyInputArray", async () => {
     const validIds = await ServicesService.getValidServiceIds([]);
 
     expect(validIds).toHaveLength(0);
     expect(Array.isArray(validIds)).toBe(true);
   });
 
-  test("getValidServiceIds_UC0005_shouldHandleDuplicateServiceIds", async () => {
+  test("UC0005_shouldHandleDuplicateServiceIds", async () => {
     await Service.collection.insertOne({
       _id: SERVICE_IDS[0],
       name: "Thay dầu động cơ",
