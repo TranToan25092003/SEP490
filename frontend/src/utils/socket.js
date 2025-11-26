@@ -4,7 +4,7 @@ let socket = null;
 
 export const initializeSocket = () => {
   if (!socket) {
-    const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
     console.log("Initializing socket connection to:", SOCKET_URL);
 
     socket = io(SOCKET_URL, {
@@ -15,7 +15,7 @@ export const initializeSocket = () => {
       timeout: 10000,
       autoConnect: true,
       transports: ["websocket", "polling"],
-      path: "/socket.io",
+      path: import.meta.env.VITE_SOCKET_PATH || "/socket.io",
       debug: true,
     });
 

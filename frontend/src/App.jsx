@@ -11,6 +11,7 @@ import RoleRedirect from "./pages/auth/RoleRedirect";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
+import { GlobalUndoHandler } from "./components/global/GlobalUndoHandler";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
@@ -381,11 +382,13 @@ function App() {
         afterSignOutUrl="/"
         localization={viVN}
       >
-        <NiceModal.Provider>
-          <Toaster></Toaster>
-          <GlobalLoginLogger />
-          <RouterProvider router={router} />
-        </NiceModal.Provider>
+        <GlobalUndoHandler>
+          <NiceModal.Provider>
+            <Toaster></Toaster>
+            <GlobalLoginLogger />
+            <RouterProvider router={router} />
+          </NiceModal.Provider>
+        </GlobalUndoHandler>
       </ClerkProvider>
     </ThemeProvider>
   );
