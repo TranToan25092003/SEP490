@@ -22,7 +22,10 @@ export const GlobalUndoHandler = ({ children }) => {
 
           toast.promise(promise, {
             loading: "Đang hoàn tác...",
-            success: "Hoàn tác thành công",
+            success: (message) => {
+              setTimeout(() => { window.location.reload(); }, 1000);
+              return message;
+            },
             error: "Hoàn tác thất bại",
           });
         }

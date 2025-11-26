@@ -5,5 +5,5 @@ export const undoLastAction = async () => {
     method: "POST",
   });
 
-  return response.data.data;
+  return response.data.message;
 }

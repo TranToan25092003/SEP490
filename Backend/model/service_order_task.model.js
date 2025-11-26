@@ -4,15 +4,15 @@ const assignedTechnicianSchema = new mongoose.Schema(
   {
     technician_clerk_id: {
       type: String,
-      required: true
+      required: true,
     },
     role: {
       type: String,
       enum: ["lead", "assistant"],
-      required: true
-    }
+      required: true,
+    },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "ServiceOrderTask" }
 );
 
 const serviceOrderTaskSchema = new mongoose.Schema(
@@ -61,6 +61,7 @@ const InspectionTask = ServiceOrderTask.discriminator("inspection", new mongoose
   }],
   comment: String
 }));
+InspectionTask.modelName = "ServiceOrderTask";
 
 const ServicingTask = ServiceOrderTask.discriminator(
   "servicing",
@@ -81,6 +82,7 @@ const ServicingTask = ServiceOrderTask.discriminator(
     },
   })
 );
+ServicingTask.modelName = "ServiceOrderTask";
 
 module.exports = {
   InspectionTask,
