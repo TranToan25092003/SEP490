@@ -60,33 +60,8 @@ if (process.env.ENABLE_VERSION_TRACKING && process.env.ENABLE_VERSION_TRACKING =
     });
   });
 
-  let historyCreated = false;
-
-  const mongooseProxy = new Proxy(mongoose, {
-    get: (target, prop) => {
-      if (prop === "model") {
-        return (name, schema) => {
-          if (name === "__histories") {
-            if (schema && !historyCreated) {
-              historyCreated = true;
-              return target.model(name, schema);
-            }
-            return target.model(name);
-          }
-
-          if (schema) {
-            return target.model(name, schema);
-          }
-          return target.model(name);
-        };
-      }
-
-      return target[prop];
-    },
-  });
-
   const config = {
-    mongoose: mongooseProxy,
+    mongoose,
     userFieldName: "requestId",
     userCollectionIdType: String,
     userCollection: "__requests",
@@ -98,12 +73,6 @@ if (process.env.ENABLE_VERSION_TRACKING && process.env.ENABLE_VERSION_TRACKING =
   mongoose.plugin((schema) => {
     if (schema.options.isEmbedded !== true) {
       historyPluginNormal(schema);
-    } else {
-      mongooseHistory({
-        ...config,
-        embeddedDocument: true,
-        embeddedModelName: schema.options.embeddedModelName
-      })(schema);
     }
   });
 }
@@ -158,6 +127,17 @@ managerRouter(app);
 const adminRouter = require("./API/admin/index.router");
 adminRouter(app);
 
+const cloneObjectByJson = (object) => object
+    ? JSON.parse(JSON.stringify(object))
+    : {};
+
+const cleanFields = (object) => {
+  delete object.__history;
+  delete object.__v;
+
+  return object;
+};
+
 app.post("/history/undo", async (req, res, next) => {
   try {
     const mongoose = require("mongoose");
@@ -182,9 +162,10 @@ app.post("/history/undo", async (req, res, next) => {
       if (record.version === "0.0.0") {
         await Model.collection.deleteOne({ _id: record.collectionId });
       } else {
-        const existingDoc = await Model.findOne({ _id: record.collectionId }).lean();
+        const existingDoc = cleanFields(cloneObjectByJson(await Model.findOne({ _id: record.collectionId })));
         const previousDoc = jsondiffpatch.unpatch(existingDoc, record.diff);
-        await Model.updateOne({ _id: record.collectionId }, previousDoc);
+        console.log("Previous Doc:", previousDoc);
+        await Model.replaceOne({ _id: record.collectionId }, previousDoc);
       }
     }
 

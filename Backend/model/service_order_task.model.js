@@ -63,21 +63,24 @@ const InspectionTask = ServiceOrderTask.discriminator("inspection", new mongoose
 }));
 InspectionTask.modelName = "ServiceOrderTask";
 
+const timelineSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    comment: { type: String, required: true },
+    timestamp: { type: Date, required: true, default: Date.now },
+    media: [{
+      type: mongoose.Types.ObjectId,
+      ref: "MediaAsset"
+    }]
+  },
+  { isEmbedded: true, embeddedModelName: "ServiceOrderTask" }
+);
+
 const ServicingTask = ServiceOrderTask.discriminator(
   "servicing",
   new mongoose.Schema({
     timeline: {
-      type: [
-        {
-          title: { type: String, required: true },
-          comment: { type: String, required: true },
-          timestamp: { type: Date, required: true, default: Date.now },
-          media: [{
-            type: mongoose.Types.ObjectId,
-            ref: "MediaAsset"
-          }]
-        },
-      ],
+      type: [timelineSchema],
       default: [],
     },
   })
