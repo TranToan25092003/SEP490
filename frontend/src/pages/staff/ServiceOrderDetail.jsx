@@ -69,7 +69,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
       await toast
         .promise(task, {
           loading: "Đang cập nhật và gửi báo giá...",
-          success: "Gửi báo giá thành công",
+          // success: "Gửi báo giá thành công",
           error: "Gửi báo giá thất bại",
         })
         .unwrap();
