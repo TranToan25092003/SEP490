@@ -119,7 +119,7 @@ const ServiceOrderTotal = ({
           serviceOrder.status !== "cancelled" && (
             <TooltipProvider>
               <Tooltip>
-                <TooltipTrigger className="m-0">
+                <TooltipTrigger asChild>
                   <Button
                     className="w-full"
                     type="button"

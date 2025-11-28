@@ -1,5 +1,6 @@
 const { InvoiceService } = require("../service/invoice.service");
 const { LoyaltyService } = require("../service/loyalty.service");
+const axios = require("axios");
 
 class InvoiceController {
   async list(req, res, next) {
@@ -149,6 +150,96 @@ class InvoiceController {
       });
     } catch (error) {
       next(error);
+    }
+  }
+
+  // Proxy endpoint để lấy danh sách giao dịch từ Sepay
+  async getSepayTransactions(req, res, next) {
+    try {
+      const { limit = 20 } = req.query;
+      const SEPAY_TOKEN = process.env.SEPAY_TOKEN;
+
+      if (!SEPAY_TOKEN) {
+        console.error("SEPAY_TOKEN is not configured");
+        return res.status(500).json({
+          message: "Sepay token chưa được cấu hình",
+        });
+      }
+
+      const response = await axios.get(
+        "https://my.sepay.vn/userapi/transactions/list",
+        {
+          params: { limit: parseInt(limit, 10) },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SEPAY_TOKEN}`,
+          },
+        }
+      );
+
+      // Trả về data theo format mà frontend mong đợi
+      res.status(200).json({
+        message: "Lấy lịch sử giao dịch thành công!",
+        data: response.data?.data || response.data || {},
+      });
+    } catch (error) {
+      console.error("Error fetching Sepay transactions:", error);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config,
+      });
+      res.status(error.response?.status || 500).json({
+        message:
+          error.response?.data?.message ||
+          "Không thể lấy lịch sử giao dịch từ Sepay",
+        error: error.message,
+      });
+    }
+  }
+
+  // Proxy endpoint để lấy chi tiết giao dịch từ Sepay
+  async getSepayTransactionDetail(req, res, next) {
+    try {
+      const { transaction_id } = req.query;
+      const SEPAY_TOKEN = process.env.SEPAY_TOKEN;
+
+      if (!SEPAY_TOKEN) {
+        return res.status(500).json({
+          message: "Sepay token chưa được cấu hình",
+        });
+      }
+
+      if (!transaction_id) {
+        return res.status(400).json({
+          message: "Thiếu transaction_id",
+        });
+      }
+
+      const response = await axios.get(
+        "https://my.sepay.vn/userapi/transactions/details",
+        {
+          params: { transaction_id },
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SEPAY_TOKEN}`,
+          },
+        }
+      );
+
+      res.status(200).json({
+        message: "Lấy chi tiết giao dịch thành công!",
+        data: response.data,
+      });
+    } catch (error) {
+      console.error("Error fetching Sepay transaction detail:", error);
+      res.status(error.response?.status || 500).json({
+        message:
+          error.response?.data?.message ||
+          "Không thể lấy chi tiết giao dịch từ Sepay",
+        error: error.message,
+      });
     }
   }
 }
