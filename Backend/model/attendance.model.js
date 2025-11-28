@@ -34,7 +34,7 @@ const AttendanceEntrySchema = new Schema(
       type: String,
     },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "Attendance" }
 );
 
 const AttendanceStatsSchema = new Schema(
@@ -44,7 +44,7 @@ const AttendanceStatsSchema = new Schema(
     presentAfternoon: { type: Number, default: 0 },
     fullDay: { type: Number, default: 0 },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "Attendance" }
 );
 
 const AttendanceSchema = new Schema(

@@ -30,7 +30,7 @@ const QuoteSchema = new Schema(
           min: 0,
           default: 0
         }
-      })
+      }, { _id: false, isEmbedded: true, embeddedModelName: "Quote" })
     ],
     status: {
       type: String,

@@ -14,7 +14,7 @@ const ItemsSchema = new Schema(
       default: 1,
     },
   },
-  { discriminatorKey: "item_type", _id: false }
+  { discriminatorKey: "item_type", _id: false, isEmbedded: true, embeddedModelName: "ServiceOrder" }
 );
 
 const ServiceItemSchema = new Schema(
@@ -26,14 +26,14 @@ const ServiceItemSchema = new Schema(
     },
     name: { type: String, required: true },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "ServiceOrder" }
 );
 
 const PartItemSchema = new Schema(
   {
     part_id: { type: Schema.Types.ObjectId, ref: "Part", required: true },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "ServiceOrder" }
 );
 
 const WalkInCustomerSchema = new Schema(
@@ -42,7 +42,7 @@ const WalkInCustomerSchema = new Schema(
     phone: { type: String, required: false },
     address: { type: String, required: false },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "ServiceOrder" }
 );
 
 const WalkInVehicleSchema = new Schema(
@@ -51,7 +51,7 @@ const WalkInVehicleSchema = new Schema(
     model: { type: String, required: false },
     color: { type: String, required: false },
   },
-  { _id: false }
+  { _id: false, isEmbedded: true, embeddedModelName: "ServiceOrder" }
 );
 
 // Service_Orders Schema
