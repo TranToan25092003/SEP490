@@ -46,8 +46,9 @@ function timeAgo(date) {
   return "Vài giây trước";
 }
 
-const socket = io(import.meta.env.VITE_API_URL, {
+const socket = io(import.meta.env.VITE_SOCKET_URL || "http://localhost:3000", {
   autoConnect: false,
+  path: import.meta.env.VITE_SOCKET_PATH || "/socket.io",
 });
 
 const NotificationIcon = ({ type }) => {
