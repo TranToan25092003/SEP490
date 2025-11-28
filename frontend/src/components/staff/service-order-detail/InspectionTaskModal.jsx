@@ -37,6 +37,7 @@ const MEDIA_FOLDER = "service_tasks_content";
 const InspectionTaskModal = NiceModal.create(({ taskId }) => {
   const modal = useModal();
   const [loading, setLoading] = useState(!!taskId);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -121,6 +122,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
             maxFilesCount={10}
             onFilesChange={(files) => setValue("media", files)}
             onFileAdded={handleFileUpload}
+            onUploadStatusChange={setIsUploading}
             renderInitial={(file) => (
               <img
                 src={file.url}
@@ -139,7 +141,9 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
         <Button variant="outline" onClick={handleCancel}>
           Hủy
         </Button>
-        <Button type="submit">Lưu kết quả</Button>
+        <Button type="submit" disabled={isUploading}>
+          {isUploading ? "Đang tải lên..." : "Lưu kết quả"}
+        </Button>
       </DialogFooter>
     </form>
   );

@@ -38,6 +38,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
   const modal = useModal();
   const [loading, setLoading] = useState(!!entryId && !!taskId);
   const [initialMedia, setInitialMedia] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -134,6 +135,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
             maxFilesCount={10}
             onFilesChange={(files) => setValue("media", files)}
             onFileAdded={handleFileUpload}
+            onUploadStatusChange={setIsUploading}
             renderInitial={(file) => (
               <img
                 src={file.url}
@@ -154,7 +156,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         <Button variant="outline" type="button" onClick={handleCancel}>
           Hủy
         </Button>
-        <Button type="submit">Lưu thay đổi</Button>
+        <Button type="submit" disabled={isUploading}>
+          {isUploading ? "Đang tải lên..." : "Lưu thay đổi"}
+        </Button>
       </DialogFooter>
     </form>
   );
