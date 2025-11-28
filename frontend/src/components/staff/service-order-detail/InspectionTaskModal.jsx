@@ -101,7 +101,9 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
       </DialogHeader>
       <FieldGroup className="max-h-[70vh] overflow-y-auto p-2">
         <Field>
-          <FieldLabel htmlFor="inspection-comment">Nhận xét</FieldLabel>
+          <FieldLabel htmlFor="inspection-comment" className="required-asterisk">
+            Nhận xét
+          </FieldLabel>
           <Textarea
             id="inspection-comment"
             placeholder="Nhập nhận xét về tình trạng xe..."

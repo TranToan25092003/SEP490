@@ -82,7 +82,7 @@ const PartItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`parts.${index}.quantity`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Số lượng
         </label>
@@ -131,7 +131,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.name`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Tên dịch vụ
         </label>
@@ -154,7 +154,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.price`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Giá
         </label>
@@ -190,7 +190,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.quantity`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Số lượng
         </label>

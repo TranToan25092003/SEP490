@@ -103,7 +103,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
       </DialogHeader>
       <FieldGroup className="max-h-[70vh] overflow-y-auto p-2 my-3">
         <Field>
-          <FieldLabel htmlFor="service-title">Tiêu đề công việc</FieldLabel>
+          <FieldLabel htmlFor="service-title" className="required-asterisk">
+            Tiêu đề công việc
+          </FieldLabel>
           <Textarea
             id="service-title"
             placeholder="Ví dụ: Thay lọc gió, Bảo dưỡng hệ thống treo..."
@@ -114,7 +116,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="service-comment">Mô tả chi tiết</FieldLabel>
+          <FieldLabel htmlFor="service-comment" className="required-asterisk">
+            Mô tả chi tiết
+          </FieldLabel>
           <Textarea
             id="service-comment"
             placeholder="Nhập mô tả chi tiết về công việc đã thực hiện..."
