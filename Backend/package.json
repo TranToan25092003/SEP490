@@ -10,6 +10,7 @@
     "dev": "nodemon --inspect index.js",
     "start": "node index.js",
     "test:unit": "jest test/unit --runInBand --verbose",
+    "test:only": "jest --runInBand --verbose",
     "test:download": "node -e \"require('./test/db').download()\""
   },
   "dependencies": {
