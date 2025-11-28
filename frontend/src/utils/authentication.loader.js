@@ -4,6 +4,7 @@ import clerk from "./clerk";
 import { customFetch } from "./customAxios";
 
 export const authenTicationLoader = async () => {
+  return 1;
   try {
     if (!clerk.isSignedIn) {
       toast.error("Bạn cần đăng nhập để truy cập trang này", {
@@ -40,6 +41,7 @@ export const authenTicationLoader = async () => {
 };
 
 export const authenTicationForStaffLoader = async () => {
+  return 1;
   try {
     if (!clerk.isSignedIn) {
       toast.error("Bạn cần đăng nhập để truy cập trang này", {

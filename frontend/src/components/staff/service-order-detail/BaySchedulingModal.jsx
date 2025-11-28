@@ -109,7 +109,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
     try {
       setIsLoadingBays(true);
       const baysData = await getAllBays();
-      setBays(baysData);
+      setBays(baysData.filter(bay => bay.status === "available"));
     } catch (error) {
       console.error("Error fetching bays:", error);
     } finally {
