@@ -69,7 +69,9 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
       <FieldSet>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field>
-            <FieldLabel htmlFor="customerName">Tên khách hàng</FieldLabel>
+            <FieldLabel htmlFor="customerName" className="required-asterisk">
+              Tên khách hàng
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="customerName"
@@ -84,7 +86,9 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="phone">Số điện thoại</FieldLabel>
+            <FieldLabel htmlFor="phone" className="required-asterisk">
+              Số điện thoại
+            </FieldLabel>
             <FieldContent>
               <Input
                 id="phone"
@@ -105,7 +109,9 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         </div>
 
         <Field>
-          <FieldLabel htmlFor="licensePlate">Biển số xe</FieldLabel>
+          <FieldLabel htmlFor="licensePlate" className="required-asterisk">
+            Biển số xe
+          </FieldLabel>
           <FieldContent>
             <Input
               id="licensePlate"
@@ -127,7 +133,9 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         </Field>
 
         <FieldGroup className="gap-2">
-          <FieldLegend>Loại lệnh</FieldLegend>
+          <FieldLegend className="required-asterisk">
+            Loại lệnh
+          </FieldLegend>
           {services?.length ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {services.map((service) => {

@@ -72,7 +72,7 @@ const RejectionReasonModal = NiceModal.create(() => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="reason">
+            <Label htmlFor="reason" className="required-asterisk">
               Lý do từ chối
             </Label>
             <Textarea

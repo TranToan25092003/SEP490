@@ -82,7 +82,7 @@ const PartItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`parts.${index}.quantity`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Số lượng
         </label>
@@ -131,7 +131,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.name`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Tên dịch vụ
         </label>
@@ -154,7 +154,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.price`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Giá
         </label>
@@ -190,7 +190,7 @@ const ServiceItemRow = ({
       {index === 0 && (
         <label
           htmlFor={`services.${index}.quantity`}
-          className="text-xs font-semibold text-muted-foreground"
+          className="text-xs font-semibold text-muted-foreground required-asterisk"
         >
           Số lượng
         </label>
@@ -235,7 +235,7 @@ const EmptyState = ({ icon: Icon, title }) => (
 
 const ServiceOrderServices = ({ className, ...props }) => {
   const { disabled } = useServiceOrder();
-  const { register, control, formState: { errors } } = useFormContext();
+  const { register, control, formState: { errors }, getValues, setValue } = useFormContext();
 
   const partsMethods = useFieldArray({
     name: "parts",
@@ -248,15 +248,25 @@ const ServiceOrderServices = ({ className, ...props }) => {
   const handleAddPart = async () => {
     try {
       const parts = await NiceModal.show(ChoosePartsModal);
+      const currentParts = getValues("parts") || [];
+      
       for (const part of parts) {
-        console.log(part);
-        partsMethods.append({
-          type: "part",
-          partId: part._id,
-          partName: part.name,
-          price: part.sellingPrice,
-          quantity: 1
-        });
+        const existingPartIndex = currentParts.findIndex(
+            (p) => p.partId === part._id
+        );
+
+        if (existingPartIndex !== -1) {
+            const currentQuantity = Number(currentParts[existingPartIndex].quantity) || 0;
+            setValue(`parts.${existingPartIndex}.quantity`, currentQuantity + 1);
+        } else {
+            partsMethods.append({
+                type: "part",
+                partId: part._id,
+                partName: part.name,
+                price: part.sellingPrice,
+                quantity: 1
+            });
+        }
       }
     } catch (error) {
       console.error("Failed to open ChoosePartsModal:", error);

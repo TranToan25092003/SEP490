@@ -207,7 +207,9 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
           <div className="space-y-4">
             <FieldGroup>
               <Field>
-                <FieldLabel>Chọn bay</FieldLabel>
+                <FieldLabel className="required-asterisk">
+                  Chọn bay
+                </FieldLabel>
                 {isLoadingBays ? (
                   <div className="flex flex-col items-center justify-center py-8 space-y-2">
                     <Spinner className="h-6 w-6" />
@@ -273,7 +275,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="duration">
+                <FieldLabel htmlFor="duration" className="required-asterisk">
                   Thời gian dự kiến (phút)
                 </FieldLabel>
                 <div className="flex items-center gap-2">
