@@ -110,7 +110,7 @@ export default function StaffSideBar({
 
           </Link>
         </div>
-        <TooltipProvider>
+        <TooltipProvider delayDuration={expanded ? 999999 : 700} disableHoverableContent>
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
@@ -126,12 +126,12 @@ export default function StaffSideBar({
                     : location.pathname.startsWith(it.href);
 
                 return (
-                  <Tooltip key={it.key}>
-                    <TooltipTrigger asChild>
-                      <div className="relative">
+                  <Tooltip key={it.key} open={expanded ? false : undefined}>
+                    <TooltipTrigger asChild disabled={expanded}>
+                      <div className="relative group">
                         <span
                           className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
@@ -146,8 +146,8 @@ export default function StaffSideBar({
                           variant="ghost"
                           size="icon"
                           className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100" // Style khi active
-                              : "text-gray-500 hover:bg-gray-100" // Style khi không active
+                              ? "bg-red-50 text-red-600 hover:text-red-600 hover:bg-red-50 active:bg-red-50 focus:bg-red-50 focus-visible:bg-red-50" // Style khi active - giữ background và màu đỏ
+                              : "text-gray-500 hover:text-red-600 hover:bg-transparent active:bg-transparent focus:bg-transparent focus-visible:bg-transparent" // Style khi không active - không có background, chỉ đổi màu chữ
                             }`}
                           asChild={Boolean(it.href)}
                         >
@@ -164,14 +164,14 @@ export default function StaffSideBar({
                         </Button>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="right">{it.label}</TooltipContent>
+                    {!expanded && <TooltipContent side="right">{it.label}</TooltipContent>}
                   </Tooltip>
                 );
               })}
             </div>
             <div className="flex flex-col gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <Tooltip open={expanded ? false : undefined}>
+                <TooltipTrigger asChild disabled={expanded}>
                   <div className="relative">
                     <span
                       className={cn(
@@ -194,7 +194,7 @@ export default function StaffSideBar({
                     </Button>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">Đăng xuất</TooltipContent>
+                {!expanded && <TooltipContent side="right">Đăng xuất</TooltipContent>}
               </Tooltip>
               <Button variant="ghost" onClick={onExpandToggle}>
                 <ChevronRight
