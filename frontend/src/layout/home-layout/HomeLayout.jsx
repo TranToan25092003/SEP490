@@ -34,9 +34,9 @@ const HomeLayout = () => {
 
   return (
     <>
-      <div className={`flex flex-col min-h-screen font-poppins`}>
+      <div className={`flex flex-col min-h-screen font-poppins overflow-x-hidden`}>
         <Header />
-        <div className={"flex-1"}>
+        <div className={"flex-1 w-full overflow-x-hidden"}>
           {state === "loading" ? (
             <>
               <Loading></Loading>
