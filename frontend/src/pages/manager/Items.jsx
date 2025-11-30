@@ -361,9 +361,16 @@ export default function ManagerItems() {
   const handleOpenEditDialog = (part) => {
     setEditingPart(part);
     const quantity = part.quantity || 0;
-    // If quantity is 0, set status to discontinued
-    const initialStatus =
-      quantity === 0 ? "discontinued" : part.status || "active";
+    // If quantity is 0, show "active" in form (discontinued will be set automatically on submit)
+    // If status is discontinued but quantity > 0, reset to active (discontinued can't be selected manually)
+    let initialStatus;
+    if (quantity === 0) {
+      initialStatus = "active"; // Show "active" in form, will be set to "discontinued" on submit
+    } else if (part.status === "discontinued") {
+      initialStatus = "active"; // Reset to active if discontinued but has quantity
+    } else {
+      initialStatus = part.status || "active";
+    }
 
     // Extract compatible_model_ids - handle both array of IDs and array of objects
     // Remove duplicates and ensure all are strings
@@ -977,18 +984,8 @@ export default function ManagerItems() {
                     <SelectItem value="inactive">
                       Đang bị vô hiệu hóa (Inactive)
                     </SelectItem>
-                    <SelectItem value="discontinued">
-                      Hết hàng (Discontinued)
-                    </SelectItem>
                   </SelectContent>
                 </Select>
-                {editFormData.quantity > 0 &&
-                  editFormData.status === "discontinued" && (
-                    <p className="text-xs text-amber-600">
-                      Lưu ý: Số lượng còn {editFormData.quantity}, trạng thái
-                      "Hết hàng" thường dùng khi số lượng = 0
-                    </p>
-                  )}
               </div>
               <div className="grid gap-2">
                 <label className="text-sm font-medium">Mô tả</label>

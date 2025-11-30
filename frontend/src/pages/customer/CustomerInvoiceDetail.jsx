@@ -37,7 +37,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatDateTime, formatPrice } from "@/lib/utils";
-import { fetchCustomerInvoiceDetail } from "@/api/invoices";
+import {
+  fetchCustomerInvoiceDetail,
+  getSepayTransactions,
+} from "@/api/invoices";
 import { getPointBalance } from "@/api/loyalty";
 import { customFetch } from "@/utils/customAxios";
 import AuthRequiredModal from "@/components/global/AuthRequiredModal";
@@ -88,8 +91,8 @@ const renderPaymentMethod = (method) => {
 
 // Thông tin ngân hàng cho QR code
 const BANK_CONFIG = {
-  BANK_ID: "MB",
-  ACCOUNT_NO: "motormate",
+  BANK_ID: "TPB",
+  ACCOUNT_NO: "00000111924",
   ACCOUNT_NAME: "NGUYEN TUONG HUY",
 };
 
@@ -119,30 +122,94 @@ const generateQRCodeUrl = (amount, invoiceNumber) => {
   return url;
 };
 
-// Google Apps Script URL để fetch dữ liệu thanh toán
-const GOOGLE_SCRIPT_URL = import.meta.env.VITE_GOOGLE_SCRIPT_URL;
-
-// Kiểm tra thanh toán từ Google Sheet
-const checkPaid = async (price, content) => {
+// Kiểm tra thanh toán từ Sepay webhook
+const checkPaid = async (amount, invoiceNumber) => {
   try {
-    const response = await fetch(GOOGLE_SCRIPT_URL);
-    const data = await response.json();
+    // Lấy 20 giao dịch gần nhất
+    const transactionsData = await getSepayTransactions(20);
 
-    if (!data || !data.data || data.data.length === 0) {
+    // Xử lý nhiều cấu trúc response khác nhau
+    let transactions = [];
+    if (transactionsData?.data?.transactions) {
+      transactions = transactionsData.data.transactions;
+    } else if (transactionsData?.data?.data?.transactions) {
+      transactions = transactionsData.data.data.transactions;
+    } else if (Array.isArray(transactionsData?.data)) {
+      transactions = transactionsData.data;
+    } else if (Array.isArray(transactionsData?.transactions)) {
+      transactions = transactionsData.transactions;
+    }
+
+    if (!transactions || transactions.length === 0) {
       return false;
     }
 
-    const lastPaid = data.data[data.data.length - 1];
-    const lastPrice = parseFloat(lastPaid["Giá trị"]) || 0;
-    const lastContent = lastPaid["Mô tả"] || "";
+    // Chuẩn hóa invoice number để so sánh
+    const normalizedInvoiceNumber = invoiceNumber
+      ? invoiceNumber.toString().trim().toUpperCase()
+      : "";
+    const invoiceNumberOnly = normalizedInvoiceNumber.replace(/\D/g, ""); // Chỉ số
+    const invoiceNumberAlphanumeric = normalizedInvoiceNumber.replace(
+      /[^A-Z0-9]/g,
+      ""
+    ); // Chữ và số
 
-    if (lastPrice >= price && lastContent.includes(content)) {
-      return true;
+    // Tìm giao dịch khớp với invoice number và amount
+    for (const transaction of transactions) {
+      // Lấy số tiền vào (amount_in) - đây là số tiền nhận được từ Sepay
+      const transactionAmountIn = parseFloat(transaction.amount_in || 0);
+
+      // Lấy nội dung chuyển khoản (transaction_content) - đây là nội dung từ Sepay
+      const transactionContent =
+        transaction.transaction_content || transaction.content || "";
+
+      // Kiểm tra số tiền vào khớp với số tiền cần thanh toán (cho phép sai số 1000 VND)
+      const amountMatch = Math.abs(transactionAmountIn - amount) < 1000;
+
+      if (!amountMatch) {
+        continue; // Bỏ qua nếu số tiền không khớp
+      }
+
+      // Chuẩn hóa nội dung chuyển khoản để so sánh
+      const normalizedContent = transactionContent
+        .toString()
+        .trim()
+        .toUpperCase();
+
+      // Kiểm tra nội dung chuyển khoản có khớp với invoice number không
+      const contentMatch =
+        normalizedContent === normalizedInvoiceNumber || // Khớp chính xác
+        normalizedContent === invoiceNumberOnly || // Khớp chỉ số
+        normalizedContent === invoiceNumberAlphanumeric || // Khớp chữ và số
+        normalizedContent.includes(normalizedInvoiceNumber) || // Chứa invoice number đầy đủ
+        (invoiceNumberOnly && normalizedContent.includes(invoiceNumberOnly)) || // Chứa chỉ số
+        (invoiceNumberAlphanumeric &&
+          normalizedContent.includes(invoiceNumberAlphanumeric)); // Chứa chữ và số
+
+      if (!contentMatch) {
+        continue; // Bỏ qua nếu nội dung không khớp
+      }
+
+      // Nếu số tiền vào khớp và nội dung chuyển khoản khớp → thanh toán thành công
+      if (amountMatch && contentMatch) {
+        console.log(
+          "✅ Tìm thấy giao dịch khớp - Tự động xác nhận thanh toán:",
+          {
+            transactionId: transaction.id,
+            transactionAmountIn,
+            transactionContent: normalizedContent,
+            invoiceNumber: normalizedInvoiceNumber,
+            amount,
+            transactionDate: transaction.transaction_date,
+          }
+        );
+        return true;
+      }
     }
 
     return false;
   } catch (error) {
-    console.error("Lỗi khi kiểm tra thanh toán:", error);
+    console.error("Lỗi khi kiểm tra thanh toán từ Sepay:", error);
     return false;
   }
 };
@@ -198,7 +265,6 @@ const CustomerInvoiceDetail = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [qrCodeError, setQrCodeError] = useState(false);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
-  const [isPolling, setIsPolling] = useState(false);
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [voucherError, setVoucherError] = useState(null);
   const [availableVouchers, setAvailableVouchers] = useState([]);
@@ -328,20 +394,21 @@ const CustomerInvoiceDetail = () => {
       return;
     }
 
-    // Dừng auto-polling khi user click manually
-    setIsPolling(false);
     setIsCheckingPayment(true);
 
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
-      const amountToVerify = Math.max(payableAmount || 0, 0);
+      const amountToVerify = Math.max(
+        payableAmount || invoice.totalAmount || 0,
+        0
+      );
       const isPaid = await checkPaid(amountToVerify, invoiceNumber);
 
       if (isPaid) {
         // Gọi API để cập nhật trạng thái hóa đơn
         try {
           const verifyPayload = {
-            paidAmount: payableAmount,
+            paidAmount: payableAmount || invoice.totalAmount,
           };
           if (selectedVoucher) {
             verifyPayload.voucherCode = selectedVoucher.code;
@@ -383,89 +450,6 @@ const CustomerInvoiceDetail = () => {
       setIsCheckingPayment(false);
     }
   };
-
-  // Function để fake thanh toán (dev mode)
-  const handleFakePayment = async () => {
-    if (!invoice || invoice.status === "paid") {
-      return;
-    }
-
-    // Dừng auto-polling khi user click manually
-    setIsPolling(false);
-    setIsCheckingPayment(true);
-
-    try {
-      const verifyPayload = { paidAmount: payableAmount };
-      if (selectedVoucher) {
-        verifyPayload.voucherCode = selectedVoucher.code;
-        verifyPayload.voucherDiscount = voucherDiscount;
-        verifyPayload.voucherType = selectedVoucher.discountType;
-        verifyPayload.voucherValue = selectedVoucher.value;
-      }
-
-      const response = await customFetch(
-        `/invoices/${invoice.id}/verify-payment`,
-        {
-          method: "POST",
-          data: verifyPayload,
-        }
-      );
-
-      if (response.data) {
-        toast.success("✅ [TEST] Đã fake thanh toán thành công!");
-        revalidator.revalidate();
-        setPaymentModalOpen(false);
-      } else {
-        console.log(response);
-        toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
-      }
-    } catch (error) {
-      console.error("Lỗi khi fake thanh toán:", error);
-      toast.error("Không thể fake thanh toán. Vui lòng thử lại.");
-    } finally {
-      setIsCheckingPayment(false);
-    }
-  };
-
-  // Auto-polling khi modal mở và hóa đơn chưa thanh toán
-  useEffect(() => {
-    if (!paymentModalOpen || !invoice || invoice.status === "paid") {
-      setIsPolling(false);
-      return;
-    }
-
-    setIsPolling(true);
-    const interval = setInterval(async () => {
-      const invoiceNumber = invoice.invoiceNumber || invoice.id;
-      const isPaid = await checkPaid(invoice.totalAmount, invoiceNumber);
-
-      if (isPaid) {
-        clearInterval(interval);
-        setIsPolling(false);
-        try {
-          const response = await customFetch(
-            `/invoices/${invoice.id}/verify-payment`,
-            {
-              method: "POST",
-            }
-          );
-
-          if (response.data) {
-            toast.success("Thanh toán thành công!");
-            revalidator.revalidate();
-            setPaymentModalOpen(false);
-          }
-        } catch (error) {
-          console.error("Lỗi khi cập nhật trạng thái:", error);
-        }
-      }
-    }, 5000); // Check mỗi 5 giây
-
-    return () => {
-      clearInterval(interval);
-      setIsPolling(false);
-    };
-  }, [paymentModalOpen, invoice, revalidator]);
 
   if (requiresAuth) {
     return (
@@ -806,13 +790,16 @@ const CustomerInvoiceDetail = () => {
                         <SelectContent>
                           {availableVouchers.map((voucher) => (
                             <SelectItem key={voucher.code} value={voucher.code}>
-                              {voucher.rewardName} ({formatVoucherValue(voucher)})
+                              {voucher.rewardName} (
+                              {formatVoucherValue(voucher)})
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                       {voucherError && (
-                        <p className="text-xs text-destructive">{voucherError}</p>
+                        <p className="text-xs text-destructive">
+                          {voucherError}
+                        </p>
                       )}
                       {voucherLoading && !voucherError && (
                         <p className="text-xs text-muted-foreground">
@@ -956,25 +943,10 @@ const CustomerInvoiceDetail = () => {
                   )}
                 </div>
               )}
-              {invoice && invoice.status === "unpaid" && (
-                <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/20 p-3">
-                  <div className="flex items-center gap-2 text-sm text-blue-700 dark:text-blue-300">
-                    {isPolling && (
-                      <RefreshCw className="h-4 w-4 animate-spin flex-shrink-0" />
-                    )}
-                    <span className="break-words">
-                      {isPolling
-                        ? "Đang tự động kiểm tra thanh toán..."
-                        : "Hệ thống sẽ tự động kiểm tra thanh toán mỗi 5 giây"}
-                    </span>
-                  </div>
-                </div>
-              )}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setIsPolling(false);
                     setPaymentModalOpen(false);
                   }}
                   className="w-full sm:flex-1 order-3 sm:order-1"

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Clock } from "lucide-react";
@@ -330,33 +329,31 @@ const BookingStatusTimeline = ({
   };
 
   return (
-    <Card className={className} {...props}>
-      <CardContent className="pt-3">
-        <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
+    <div className={className} {...props}>
+      <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
 
-        <div className="mb-12">
-          <Stepper currentStep={currentStepIndex} variant="destructive" className="w-full">
-            {steps.map((step, index) => (
-              <StepperItem
-                key={step.id}
-                step={index}
-                title={step.label}
-                className={cn(
-                  "flex-1 cursor-pointer transition-opacity",
-                  selectedStepIndex === index && "opacity-100",
-                  selectedStepIndex !== null && selectedStepIndex !== index && "opacity-50"
-                )}
-                onClick={() => handleStepClick(index)}
-              />
-            ))}
-          </Stepper>
-        </div>
+      <div className="mb-12">
+        <Stepper currentStep={currentStepIndex} variant="destructive" className="w-full">
+          {steps.map((step, index) => (
+            <StepperItem
+              key={step.id}
+              step={index}
+              title={step.label}
+              className={cn(
+                "flex-1 cursor-pointer transition-opacity",
+                selectedStepIndex === index && "opacity-100",
+                selectedStepIndex !== null && selectedStepIndex !== index && "opacity-50"
+              )}
+              onClick={() => handleStepClick(index)}
+            />
+          ))}
+        </Stepper>
+      </div>
 
-        <div className="mt-8 ">
-          {renderStepContent()}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="mt-8 ">
+        {renderStepContent()}
+      </div>
+    </div>
   );
 };
 

@@ -22,7 +22,10 @@ const PartnerLogos = () => {
       <div className="max-w-[1920px] mx-auto px-4 py-6">
         <div className="flex flex-wrap items-center justify-center gap-6">
           {logos.map((src, idx) => (
-            <div key={`${idx}`} className="w-32 h-20 flex items-center justify-center">
+            <div
+              key={`${idx}`}
+              className="w-32 h-20 flex items-center justify-center"
+            >
               <img
                 className="w-32 h-16 opacity-80 object-contain"
                 src={src}
@@ -40,11 +43,11 @@ const MainFooterContent = ({ footerInfo }) => {
   const { address, email, facebook, iframe, phone, zalo } = footerInfo || {};
 
   const links = [
-    { text: 'Trang Chủ', href: '/' },
-    { text: 'Phụ Tùng', href: '/items' },
-    { text: 'Dịch Vụ', href: '/' },
-    { text: 'Giới Thiệu', href: '/about' },
-    { text: 'Liên Hệ', href: '/' },
+    { text: "Trang Chủ", href: "/" },
+    { text: "Phụ Tùng", href: "/items" },
+    { text: "Dịch Vụ", href: "/" },
+    { text: "Giới Thiệu", href: "/about" },
+    { text: "Liên Hệ", href: "/" },
   ];
 
   return (
@@ -56,24 +59,46 @@ const MainFooterContent = ({ footerInfo }) => {
           <div>
             <div className="text-red-600 text-sm uppercase mb-3">MotorMATE</div>
             <div className="text-neutral-400 text-xs leading-tight mb-3">
-              {address || "Lorem Ipsum is simply dummy text of the printing and typesetting industry."}
+              {address ||
+                "MotorMate cam kết đồng hành lâu dài, trở thành đối tác tin cậy trong việc bảo dưỡng và chăm sóc xe của bạn."}
             </div>
             <div className="text-neutral-400 text-xs leading-tight">
               {phone || "(+84) 0377-043-903"}
             </div>
             {iframe && (
-              <div className="mt-3" dangerouslySetInnerHTML={{ __html: iframe }} />
+              <div
+                className="mt-3"
+                dangerouslySetInnerHTML={{ __html: iframe }}
+              />
             )}
           </div>
 
           {/* Photo Gallery */}
           <div>
-            <div className="text-white text-sm uppercase mb-4">Photo Gallery</div>
+            <div className="text-white text-sm uppercase mb-4">
+              Photo Gallery
+            </div>
             <div className="grid grid-cols-2 gap-2">
-              <img className="w-30 h-12 object-cover" src={g1} alt="gallery-1" />
-              <img className="w-30 h-12 object-cover" src={g2} alt="gallery-2" />
-              <img className="w-30 h-12 object-cover" src={g3} alt="gallery-3" />
-              <img className="w-30 h-12 object-cover" src={g4} alt="gallery-4" />
+              <img
+                className="w-30 h-12 object-cover"
+                src={g1}
+                alt="gallery-1"
+              />
+              <img
+                className="w-30 h-12 object-cover"
+                src={g2}
+                alt="gallery-2"
+              />
+              <img
+                className="w-30 h-12 object-cover"
+                src={g3}
+                alt="gallery-3"
+              />
+              <img
+                className="w-30 h-12 object-cover"
+                src={g4}
+                alt="gallery-4"
+              />
             </div>
           </div>
 
@@ -101,7 +126,9 @@ const MainFooterContent = ({ footerInfo }) => {
 
           {/* Contact / Subscribe */}
           <div className="lg:max-w-[240px] xl:max-w-[260px]">
-            <div className="text-white text-sm uppercase mb-4">Để lại lời nhắn</div>
+            <div className="text-white text-sm uppercase mb-4">
+              Để lại lời nhắn
+            </div>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
@@ -117,7 +144,9 @@ const MainFooterContent = ({ footerInfo }) => {
                   className="bg-white/80 text-neutral-600 placeholder-neutral-600 text-xs px-3 py-2  w-full"
                 />
               </div>
-              <div className="text-zinc-500 text-sm">Nhận thông tin mới nhất</div>
+              <div className="text-zinc-500 text-sm">
+                Nhận thông tin mới nhất
+              </div>
               <button className="bg-red-600/75 text-white text-sm font-bold tracking-tight uppercase px-4 py-2 rounded shadow-[0px_2px_0px_0px_rgba(223,29,1,0.75)]">
                 Gửi
               </button>
@@ -126,12 +155,26 @@ const MainFooterContent = ({ footerInfo }) => {
               </div>
               <div className="text-xs text-neutral-400">
                 {facebook ? (
-                  <a href={facebook} target="_blank" rel="noreferrer" className="underline">Facebook</a>
+                  <a
+                    href={facebook}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline"
+                  >
+                    Facebook
+                  </a>
                 ) : null}
                 {zalo ? (
                   <>
                     {facebook ? " • " : null}
-                    <a href={zalo} target="_blank" rel="noreferrer" className="underline">Zalo</a>
+                    <a
+                      href={zalo}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      Zalo
+                    </a>
                   </>
                 ) : null}
               </div>

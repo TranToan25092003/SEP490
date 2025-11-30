@@ -62,110 +62,110 @@ const Header = () => {
             <div className="mx-2 h-[20px] w-0 border-l-2 border-[rgba(170,168,173,0.6)]" />
           </div>
           <div className="flex-1 flex items-center justify-between">
-          <div className="hidden select-none flex-col items-center justify-center p-[5px] text-foreground/70 sm:flex md:p-[8px]">
-            <p className="text-[15px] font-extrabold leading-[1.2] md:text-[18px] xl:text-[22px]">
-              How we move you
-            </p>
-            <p className="text-[11px] font-medium leading-[1.2] md:text-[14px] xl:text-[16px]">
-              MotorMate
-            </p>
-          </div>
-          <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px]">
-            {/* <SearchIcon /> */}
+            <div className="hidden select-none flex-col items-center justify-center p-[5px] text-foreground/70 sm:flex md:p-[8px]">
+              <p className="text-[15px] font-extrabold leading-[1.2] md:text-[18px] xl:text-[22px]">
+                How we move you
+              </p>
+              <p className="text-[11px] font-medium leading-[1.2] md:text-[14px] xl:text-[16px]">
+                MotorMate
+              </p>
+            </div>
+            <div className="ml-auto flex items-center justify-center gap-[16px] p-[8px] md:gap-[20px]">
+              {/* <SearchIcon /> */}
 
-            {isSignedIn ? (
-              <>
-                  <div className="mt-6 md:mt-12 lg:mt-14">
-                <NotificationBell />
+              {isSignedIn ? (
+                <>
+                  <div className="mt-2 md:mt-6 lg:mt-10 scale-80 md:scale-85 lg:scale-90">
+                    <NotificationBell />
                   </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant={"ghost"}
-                        className="mt-4 md:mt-10 lg:mt-12 flex max-w-[100px] gap-4 hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!border-0"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant={"ghost"}
+                        className="mt-2 md:mt-6 lg:mt-8 flex max-w-[100px] gap-4 hover:!bg-transparent focus:!bg-transparent active:!bg-transparent focus-visible:!ring-0 focus-visible:!ring-offset-0 focus-visible:!border-0"
+                      >
+                        <img
+                          src={profileImage}
+                          className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12 rounded-full object-cover"
+                          alt={user?.firstName || "User Avatar"}
+                        ></img>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-60"
+                      align="end"
+                      sideOffset={10}
                     >
-                      <img
-                        src={profileImage}
-                          className="h-10 w-10 md:h-12 md:w-12 lg:h-14 lg:w-14 rounded-full object-cover"
-                        alt={user?.firstName || "User Avatar"}
-                      ></img>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    className="w-60"
-                    align="end"
-                    sideOffset={10}
-                  >
-                    <SignedIn>
-                      {/* Thêm thông tin người dùng ở đây nếu muốn */}
-                      <DropdownMenuItem className="focus:bg-transparent">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none">
-                            {user?.fullName || "Người dùng"}
-                          </p>
-                          <p className="text-xs leading-none text-muted-foreground">
-                            {user?.primaryEmailAddress?.emailAddress}
-                          </p>
-                        </div>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onSelect={() => navigate("/profile")}>
-                        Thông tin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => navigate("/profile?tab=history")}
-                      >
-                        Lịch sử sửa xe
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onSelect={() => navigate("/booking-tracking")}
-                      >
-                        Theo dõi tiến độ
-                      </DropdownMenuItem>
+                      <SignedIn>
+                        {/* Thêm thông tin người dùng ở đây nếu muốn */}
+                        <DropdownMenuItem className="focus:bg-transparent">
+                          <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">
+                              {user?.fullName || "Người dùng"}
+                            </p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                              {user?.primaryEmailAddress?.emailAddress}
+                            </p>
+                          </div>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => navigate("/profile")}>
+                          Thông tin
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => navigate("/profile?tab=history")}
+                        >
+                          Lịch sử sửa xe
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => navigate("/booking-tracking")}
+                        >
+                          Theo dõi tiến độ
+                        </DropdownMenuItem>
                         <DropdownMenuItem
                           onSelect={() => navigate("/invoices")}
                         >
-                        Hóa Đơn - Thanh Toán
-                      </DropdownMenuItem>
+                          Hóa Đơn - Thanh Toán
+                        </DropdownMenuItem>
 
-                      <DropdownMenuItem onSelect={() => navigate("/loyalty")}>
-                        Điểm thưởng
-                      </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => navigate("/loyalty")}>
+                          Điểm thưởng
+                        </DropdownMenuItem>
 
                         <DropdownMenuItem
                           onSelect={() => navigate("/complaint")}
                         >
-                        Khiếu Nại
-                      </DropdownMenuItem>
+                          Khiếu Nại
+                        </DropdownMenuItem>
 
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
-                        <SignOutLink></SignOutLink>
-                      </DropdownMenuItem>
-                    </SignedIn>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
-            ) : (
-              <button
-                onClick={() => navigate("/login")}
-                className="flex cursor-pointer items-center gap-2 rounded-[8px] bg-[#DF1D01] px-3 py-2 text-[14px] font-bold text-white hover:brightness-110 md:px-4 md:text-[16px] xl:text-[18px]"
-              >
-                <MotorcycleIcon />
-                Đăng Nhập
-              </button>
-            )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">
+                          <SignOutLink></SignOutLink>
+                        </DropdownMenuItem>
+                      </SignedIn>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex cursor-pointer items-center gap-2 rounded-[8px] bg-[#DF1D01] px-3 py-2 text-[14px] font-bold text-white hover:brightness-110 md:px-4 md:text-[16px] xl:text-[18px]"
+                >
+                  <MotorcycleIcon />
+                  Đăng Nhập
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Lower section with Navigation */}
         <div className="flex items-end gap-0">
-          <div className="relative hidden h-[124px] w-[340px] overflow-hidden rounded-tr-[36px] lg:block xl:w-[500px] xl:rounded-tr-[68px]">
+          <div className="relative hidden h-[90px] w-[340px] overflow-hidden rounded-tr-[35px] lg:block xl:w-[500px] xl:rounded-tr-[35px]">
             <img
               src={headerImg}
               alt="decorative"
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover "
             />
             <div className="absolute inset-0 bg-[rgba(255,28,28,0.2)]" />
           </div>
