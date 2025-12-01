@@ -330,7 +330,13 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     register={register}
                     control={control}
                     errors={errors}
-                    onRemove={{ onClick: () => partsMethods.remove(index) }}
+                    onRemove={{
+                      onClick: () => {
+                        if (window.confirm("Bạn có chắc chắn muốn xóa phụ tùng này?")) {
+                          partsMethods.remove(index);
+                        }
+                      },
+                    }}
                   />
                 );
               })
@@ -365,7 +371,13 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     control={control}
                     register={register}
                     errors={errors}
-                    onRemove={{ onClick: () => serviceItemsMethods.remove(index) }}
+                    onRemove={{
+                      onClick: () => {
+                        if (window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
+                          serviceItemsMethods.remove(index);
+                        }
+                      },
+                    }}
                   />
                 );
               })

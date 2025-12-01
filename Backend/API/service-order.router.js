@@ -11,15 +11,23 @@ router.post(
   [
     body("customerName")
       .notEmpty()
-      .withMessage("Tên khách hàng là bắt buộc"),
+      .withMessage("Tên khách hàng là bắt buộc")
+      .isLength({ max: 50 })
+      .withMessage("Tên khách hàng không hợp lệ"),
     body("customerPhone")
       .notEmpty()
       .withMessage("Số điện thoại là bắt buộc")
-      .matches(/^[0-9]{9,11}$/)
+      .matches(/^[0-9]{10,11}$/)
       .withMessage("Số điện thoại không hợp lệ"),
+    body("customerAddress")
+      .optional()
+      .isLength({ max: 100 })
+      .withMessage("Địa chỉ quá dài"),
     body("licensePlate")
       .notEmpty()
-      .withMessage("Biển số xe là bắt buộc"),
+      .withMessage("Biển số xe là bắt buộc")
+      .matches(/^[0-9]{2}-[A-Z]{1}[0-9A-Z]{1}[- ]([0-9]{3,4}|[0-9]{5}|[0-9]{3}\.[0-9]{2})$/)
+      .withMessage("Biển số xe không hợp lệ"),
     body("serviceIds")
       .isArray({ min: 1 })
       .withMessage("Vui lòng chọn ít nhất một dịch vụ"),
