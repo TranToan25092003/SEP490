@@ -38,6 +38,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
   const modal = useModal();
   const [loading, setLoading] = useState(!!entryId && !!taskId);
   const [initialMedia, setInitialMedia] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const {
     register,
@@ -102,7 +103,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
       </DialogHeader>
       <FieldGroup className="max-h-[70vh] overflow-y-auto p-2 my-3">
         <Field>
-          <FieldLabel htmlFor="service-title">Tiêu đề công việc</FieldLabel>
+          <FieldLabel htmlFor="service-title" className="required-asterisk">
+            Tiêu đề công việc
+          </FieldLabel>
           <Textarea
             id="service-title"
             placeholder="Ví dụ: Thay lọc gió, Bảo dưỡng hệ thống treo..."
@@ -113,7 +116,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="service-comment">Mô tả chi tiết</FieldLabel>
+          <FieldLabel htmlFor="service-comment" className="required-asterisk">
+            Mô tả chi tiết
+          </FieldLabel>
           <Textarea
             id="service-comment"
             placeholder="Nhập mô tả chi tiết về công việc đã thực hiện..."
@@ -134,6 +139,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
             maxFilesCount={10}
             onFilesChange={(files) => setValue("media", files)}
             onFileAdded={handleFileUpload}
+            onUploadStatusChange={setIsUploading}
             renderInitial={(file) => (
               <img
                 src={file.url}
@@ -154,7 +160,9 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         <Button variant="outline" type="button" onClick={handleCancel}>
           Hủy
         </Button>
-        <Button type="submit">Lưu thay đổi</Button>
+        <Button type="submit" disabled={isUploading}>
+          {isUploading ? "Đang tải lên..." : "Lưu thay đổi"}
+        </Button>
       </DialogFooter>
     </form>
   );

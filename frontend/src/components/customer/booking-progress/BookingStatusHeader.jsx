@@ -26,6 +26,8 @@ const BookingStatusHeader = ({
   const revalidator = useRevalidator();
 
   const handleCancel = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn đặt lịch này?")) return;
+
     try {
       setLoading(true);
 

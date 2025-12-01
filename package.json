@@ -12,6 +12,7 @@
     "start": "pnpm --filter backend start",
     "lint": "pnpm run --recursive lint",
     "test:unit": "pnpm run --recursive test:unit",
+    "test:only": "pnpm --filter backend test:only",
     "test:download": "pnpm --filter backend test:download"
   },
   "devDependencies": {
