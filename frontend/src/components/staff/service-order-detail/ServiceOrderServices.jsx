@@ -143,9 +143,9 @@ const ServiceItemRow = ({
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
         disabled={disabled}
       />
-      {errors?.services?.[index]?.serviceId && (
+      {errors?.services?.[index]?.name && (
         <p className="text-sm text-red-500 mt-1">
-          {errors.services[index].serviceId.message}
+          {errors.services[index].name.message}
         </p>
       )}
     </div>
@@ -249,7 +249,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
     try {
       const parts = await NiceModal.show(ChoosePartsModal);
       const currentParts = getValues("parts") || [];
-      
+
       for (const part of parts) {
         const existingPartIndex = currentParts.findIndex(
             (p) => p.partId === part._id
