@@ -1,5 +1,4 @@
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
-import { cn, formatDateTime } from "@/lib/utils";
+import { formatDateTime } from "@/lib/utils";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -19,9 +18,7 @@ const BookingStatusHeader = ({
   customerName,
   status,
   licensePlate,
-  technicianName,
   creationDate,
-  estimatedTime,
   className,
   ...props
 }) => {
@@ -29,15 +26,19 @@ const BookingStatusHeader = ({
   const revalidator = useRevalidator();
 
   const handleCancel = async () => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy đơn đặt lịch này?")) return;
+
     try {
       setLoading(true);
 
       const cancelPromise = cancelBooking(bookingId);
-      await toast.promise(cancelPromise, {
-        loading: "Đang hủy đơn...",
-        success: "Hủy đơn thành công!",
-        error: "Hủy đơn thất bại. Vui lòng thử lại.",
-      }).unwrap();
+      await toast
+        .promise(cancelPromise, {
+          loading: "Đang hủy đơn...",
+          success: "Hủy đơn thành công!",
+          error: "Hủy đơn thất bại. Vui lòng thử lại.",
+        })
+        .unwrap();
 
       revalidator.revalidate();
     } catch (error) {
@@ -45,14 +46,12 @@ const BookingStatusHeader = ({
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <Card className={className} {...props}>
-      <CardTitle className="px-6 flex justify-between items-center">
-        <h2 className="text-xl font-bold text-foreground mb-2">
-          Thông tin chung
-        </h2>
+    <div className={className} {...props}>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-foreground">Thông tin chung</h2>
 
         <Button
           variant="destructive"
@@ -61,11 +60,11 @@ const BookingStatusHeader = ({
         >
           Hủy đơn
         </Button>
-      </CardTitle>
-      <CardContent>
+      </div>
+      <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">WO</div>
+            <div className="text-sm text-muted-foreground">Mã Đặt</div>
             <div className="font-semibold text-foreground">{bookingId}</div>
           </div>
 
@@ -88,13 +87,13 @@ const BookingStatusHeader = ({
 
           <div className="space-y-1">
             <div className="text-sm text-muted-foreground">Trạng Thái</div>
-            <div className="font-semibold text-foreground rounded bg-accent text-foreground-accent px-3 inline-block rounded-full">
+            <div className="font-semibold text-foreground bg-accent text-foreground-accent px-3 inline-block rounded-full">
               {translateBookingStatus(status)}
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

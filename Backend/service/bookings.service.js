@@ -25,7 +25,11 @@ function convertTimeSlotToDate(timeSlot) {
 
 class BookingsService {
   async createBooking(customerClerkId, vehicleId, serviceIds, timeSlot) {
-    const activeBookingsMap = await VehiclesService.getActiveBookingsMap([vehicleId]);
+    await VehiclesService.verifyVehicleOwnership(vehicleId, customerClerkId);
+
+    const activeBookingsMap = await VehiclesService.getActiveBookingsMap([
+      vehicleId,
+    ]);
     if (vehicleId in activeBookingsMap) {
       throw new DomainError(
         "Người dùng đã có đơn dịch vụ cho phương tiện này",
@@ -356,11 +360,12 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService.createServiceOrderFromBooking(
+    const serviceOrder = await ServiceOrderService.createServiceOrderFromBooking(
       staffId,
       bookingId
     );
 
+    booking.service_order_id = serviceOrder._id;
     booking.status = "checked_in";
     await booking.save();
 

@@ -27,6 +27,7 @@ import { Trash } from "lucide-react"
  * @property {number} [maxFilesCount=10] - Maximum number of files allowed
  * @property {(data: T[]) => void} onFilesChange - Callback when uploaded files change
  * @property {(data: T[]) => void} onToBeRemovedChange - Callback when files are marked for deletion
+ * @property {(isUploading: boolean) => void} [onUploadStatusChange] - Callback when upload status changes
  * @property {(data: T) => import("react").ReactNode} renderInitial - Callback to render initial uploaded files
  * @property {T[]} [initial] - Initial uploaded files state
  * @property {(file: File, updateProgress: (progress: number) => void, abortController: AbortController) => Promise<T>} onFileAdded - Callback when a file is added, should return upload result
@@ -129,6 +130,7 @@ export function FileUpload({
   maxFilesCount = 10,
   onFilesChange,
   onToBeRemovedChange,
+  onUploadStatusChange,
   onFileAdded,
   renderInitial,
   init = [],
@@ -154,6 +156,13 @@ export function FileUpload({
       toBeDeleted: false,
     })));
   }, [init]);
+
+  useEffect(() => {
+    if (onUploadStatusChange) {
+      const isUploading = uploadedFiles.some((file) => file.status === "uploading")
+      onUploadStatusChange(isUploading)
+    }
+  }, [uploadedFiles, onUploadStatusChange])
 
   /**
    * Validate a file against MIME type and size constraints

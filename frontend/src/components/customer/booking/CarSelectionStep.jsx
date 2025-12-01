@@ -19,7 +19,7 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
   const selectedVehicle = watch("vehicle");
 
   const handleVehicleSelect = (vehicle) => {
-    if (vehicle.isAvailable !== false) {
+    if (!vehicle.activeBooking) {
       setValue("vehicle", vehicle);
     }
   };

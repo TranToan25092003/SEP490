@@ -115,7 +115,7 @@ function ItemListPage() {
 
   return (
     <main className="w-full bg-white">
-      <section className="relative w-full mb-32 md:mb-24">
+      <section className="relative w-full mb-20 md:mb-16">
         <div className="h-[500px] w-full md:h-[600px]">
           <img src={productHeroBg} alt="Motorcycle" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-black/60"></div>
@@ -198,11 +198,11 @@ function ItemListPage() {
         </div>
       </section>
 
-      <section className="w-full px-8 pb-24 md:px-12 lg:px-16">
+      <section className="w-full px-4 pb-16 md:px-8 lg:px-12">
         <div className="mx-auto max-w-6xl">
           <ItemList products={parts} />
           {pagination && pagination.totalPages > 1 && (
-            <div className="mt-12 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -252,12 +252,12 @@ function ItemListPage() {
         </div>
       </section>
 
-      <section className="w-full mb-20">
+      <section className="w-full mb-12">
         <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <div className="relative mx-auto max-w-[1920px]">
             <img src={statsBg} alt="Abstract background" className="absolute inset-0 h-full w-full object-cover" />
             <div className="absolute inset-0 bg-zinc-800/80"></div>
-            <div className="relative z-10 grid grid-cols-1 gap-12 px-8 py-28 text-white sm:grid-cols-2 lg:grid-cols-4">
+            <div className="relative z-10 grid grid-cols-1 gap-8 px-8 py-16 text-white sm:grid-cols-2 lg:grid-cols-4">
               {stats.map((stat, index) => (
                 <div key={index} className="flex items-center justify-center gap-4">
                   <stat.icon className="h-14 w-14 flex-shrink-0 text-white" strokeWidth={1.5} />

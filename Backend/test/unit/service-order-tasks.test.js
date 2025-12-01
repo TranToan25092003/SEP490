@@ -5,7 +5,8 @@ const {
   ServiceOrder,
   InspectionTask,
   ServicingTask,
-  Booking
+  Booking,
+  Bay
 } = require("../../model");
 const DomainError = require("../../errors/domainError");
 const { BaySchedulingService } = require("../../service/bay_scheduling.service");
@@ -39,14 +40,17 @@ describe("ServiceOrderTasks", () => {
       new mongoose.Types.ObjectId("507f1f77bcf86cd799439013")
     ];
 
-    const BAY_ID = new mongoose.Types.ObjectId("507f1f77bcf86cd799439012");
+    const BAY_IDS = [
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439012"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439013")
+    ];
     const START_TIME = new Date("2026-01-01T09:00:00Z");
     const END_TIME = new Date("2026-01-01T10:00:00Z");
 
     test("UC0001_serviceOrderNotFound", async () => {
       const promise = ServiceOrderTaskService.scheduleInspection(
         SERVICE_ORDER_IDS[1],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -65,7 +69,7 @@ describe("ServiceOrderTasks", () => {
 
       const promise = ServiceOrderTaskService.scheduleInspection(
         SERVICE_ORDER_IDS[2],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -88,7 +92,7 @@ describe("ServiceOrderTasks", () => {
 
       const promise = ServiceOrderTaskService.scheduleInspection(
         SERVICE_ORDER_IDS[0],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -102,12 +106,68 @@ describe("ServiceOrderTasks", () => {
       expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
     });
 
-    test("UC0004_successfulScheduling", async () => {
+    test("UC0004_bayInactive", async () => {
+      await ServiceOrder.collection.insertOne({
+        _id: SERVICE_ORDER_IDS[0],
+        status: "created",
+        items: [],
+      });
+
+      await Bay.collection.insertOne({
+        _id: BAY_IDS[1],
+        status: "inactive",
+      });
+
+      const promise = ServiceOrderTaskService.scheduleInspection(
+        SERVICE_ORDER_IDS[0],
+        BAY_IDS[1],
+        START_TIME,
+        END_TIME
+      );
+
+      BaySchedulingService.findOverlappingTasksForBayId = jest
+        .fn()
+        .mockResolvedValue([]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch(e => e);
+      expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
+    });
+
+    test("UC0005_baysNotFound", async () => {
+      await ServiceOrder.collection.insertOne({
+        _id: SERVICE_ORDER_IDS[0],
+        status: "created",
+        items: [],
+      });
+
+      const promise = ServiceOrderTaskService.scheduleInspection(
+        SERVICE_ORDER_IDS[0],
+        BAY_IDS[1],
+        START_TIME,
+        END_TIME
+      );
+
+      BaySchedulingService.findOverlappingTasksForBayId = jest
+        .fn()
+        .mockResolvedValue([]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch(e => e);
+      expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
+    });
+
+    test("UC0006_successfulScheduling", async () => {
       await ServiceOrder.collection.insertOne({
         _id: SERVICE_ORDER_IDS[0],
         status: "created",
         items: [],
         staff_clerk_id: "test-staff-clerk-id",
+      });
+
+      await Bay.collection.insertOne({
+        _id: BAY_IDS[0],
+        status: "available",
       });
 
       BaySchedulingService.findOverlappingTasksForBayId = jest
@@ -116,7 +176,7 @@ describe("ServiceOrderTasks", () => {
 
       const result = await ServiceOrderTaskService.scheduleInspection(
         SERVICE_ORDER_IDS[0],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -124,7 +184,7 @@ describe("ServiceOrderTasks", () => {
       expect(result).toBeDefined();
       expect(result.serviceOrderStatus).toBe("waiting_inspection");
       expect(result.status).toBe("scheduled");
-      expect(result.assignedBayId.toString()).toBe(BAY_ID.toString());
+      expect(result.assignedBayId.toString()).toBe(BAY_IDS[0].toString());
       expect(result.expectedStartTime).toBe(START_TIME.toISOString());
       expect(result.expectedEndTime).toBe(END_TIME.toISOString());
     });
@@ -418,14 +478,18 @@ describe("ServiceOrderTasks", () => {
       new mongoose.Types.ObjectId("507f1f77bcf86cd799439012"),
     ];
 
-    const BAY_ID = new mongoose.Types.ObjectId("507f1f77bcf86cd799439012");
+    const BAY_IDS = [
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439012"),
+      new mongoose.Types.ObjectId("507f1f77bcf86cd799439013"),
+    ];
+
     const START_TIME = new Date("2026-01-01T09:00:00Z");
     const END_TIME = new Date("2026-01-01T10:00:00Z");
 
     test("UC0001_serviceOrderNotFound", async () => {
       const promise = ServiceOrderTaskService.scheduleService(
         SERVICE_ORDER_IDS[1],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -444,7 +508,7 @@ describe("ServiceOrderTasks", () => {
 
       const promise = ServiceOrderTaskService.scheduleService(
         SERVICE_ORDER_IDS[0],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -467,7 +531,7 @@ describe("ServiceOrderTasks", () => {
 
       const promise = ServiceOrderTaskService.scheduleService(
         SERVICE_ORDER_IDS[0],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
@@ -477,7 +541,58 @@ describe("ServiceOrderTasks", () => {
       expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
     });
 
-    test("UC0004_successfulScheduling_InspectionCompleted", async () => {
+    test("UC0004_bayInactive", async () => {
+      await ServiceOrder.collection.insertOne({
+        _id: SERVICE_ORDER_IDS[0],
+        status: "inspection_completed",
+        items: [],
+      });
+
+      await Bay.collection.insertOne({
+        _id: BAY_IDS[1],
+        status: "inactive",
+      });
+
+      const promise = ServiceOrderTaskService.scheduleService(
+        SERVICE_ORDER_IDS[0],
+        BAY_IDS[1],
+        START_TIME,
+        END_TIME
+      );
+
+      BaySchedulingService.findOverlappingTasksForBayId = jest
+        .fn()
+        .mockResolvedValue([]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch(e => e);
+      expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
+    });
+
+    test("UC0005_baysNotFound", async () => {
+      await ServiceOrder.collection.insertOne({
+        _id: SERVICE_ORDER_IDS[0],
+        status: "inspection_completed",
+        items: [],
+      });
+
+      const promise = ServiceOrderTaskService.scheduleService(
+        SERVICE_ORDER_IDS[0],
+        BAY_IDS[1],
+        START_TIME,
+        END_TIME
+      );
+
+      BaySchedulingService.findOverlappingTasksForBayId = jest
+        .fn()
+        .mockResolvedValue([]);
+
+      await expect(promise).rejects.toThrow(DomainError);
+      const error = await promise.catch(e => e);
+      expect(error.errorCode).toBe("BAYS_UNAVAILABLE");
+    });
+
+    test("UC0006_successfulScheduling_InspectionCompleted", async () => {
       const serviceOrder = await ServiceOrder.collection.insertOne({
         _id: SERVICE_ORDER_IDS[0],
         status: "inspection_completed",
@@ -486,34 +601,9 @@ describe("ServiceOrderTasks", () => {
         booking_id: new mongoose.Types.ObjectId(),
       });
 
-      BaySchedulingService.findOverlappingTasksForBayId = jest
-        .fn()
-        .mockResolvedValue([]);
-
-      const result = await ServiceOrderTaskService.scheduleService(
-        SERVICE_ORDER_IDS[0],
-        BAY_ID,
-        START_TIME,
-        END_TIME
-      );
-
-      expect(result).toBeDefined();
-      expect(result.status).toBe("scheduled");
-      expect(result.assignedBayId.toString()).toBe(BAY_ID.toString());
-      expect(result.expectedStartTime).toBe(START_TIME.toISOString());
-      expect(result.expectedEndTime).toBe(END_TIME.toISOString());
-
-      const updatedServiceOrder = await ServiceOrder.findById(serviceOrder.insertedId).exec();
-      expect(updatedServiceOrder.status).toBe("scheduled");
-    });
-
-    test("UC0005_successfulScheduling_Approved", async () => {
-      const serviceOrder = await ServiceOrder.collection.insertOne({
-        _id: SERVICE_ORDER_IDS[0],
-        status: "approved",
-        items: [],
-        staff_clerk_id: "test-staff-clerk-id",
-        booking_id: new mongoose.Types.ObjectId(),
+      await Bay.collection.insertOne({
+        _id: BAY_IDS[0],
+        status: "available",
       });
 
       BaySchedulingService.findOverlappingTasksForBayId = jest
@@ -522,14 +612,49 @@ describe("ServiceOrderTasks", () => {
 
       const result = await ServiceOrderTaskService.scheduleService(
         SERVICE_ORDER_IDS[0],
-        BAY_ID,
+        BAY_IDS[0],
         START_TIME,
         END_TIME
       );
 
       expect(result).toBeDefined();
       expect(result.status).toBe("scheduled");
-      expect(result.assignedBayId.toString()).toBe(BAY_ID.toString());
+      expect(result.assignedBayId.toString()).toBe(BAY_IDS[0].toString());
+      expect(result.expectedStartTime).toBe(START_TIME.toISOString());
+      expect(result.expectedEndTime).toBe(END_TIME.toISOString());
+
+      const updatedServiceOrder = await ServiceOrder.findById(serviceOrder.insertedId).exec();
+      expect(updatedServiceOrder.status).toBe("scheduled");
+    });
+
+    test("UC0007_successfulScheduling_Approved", async () => {
+      const serviceOrder = await ServiceOrder.collection.insertOne({
+        _id: SERVICE_ORDER_IDS[0],
+        status: "approved",
+        items: [],
+        staff_clerk_id: "test-staff-clerk-id",
+        booking_id: new mongoose.Types.ObjectId(),
+      });
+
+      await Bay.collection.insertOne({
+        _id: BAY_IDS[0],
+        status: "available",
+      });
+
+      BaySchedulingService.findOverlappingTasksForBayId = jest
+        .fn()
+        .mockResolvedValue([]);
+
+      const result = await ServiceOrderTaskService.scheduleService(
+        SERVICE_ORDER_IDS[0],
+        BAY_IDS[0],
+        START_TIME,
+        END_TIME
+      );
+
+      expect(result).toBeDefined();
+      expect(result.status).toBe("scheduled");
+      expect(result.assignedBayId.toString()).toBe(BAY_IDS[0].toString());
       expect(result.expectedStartTime).toBe(START_TIME.toISOString());
       expect(result.expectedEndTime).toBe(END_TIME.toISOString());
 
