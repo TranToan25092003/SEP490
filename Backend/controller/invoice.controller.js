@@ -1,6 +1,5 @@
 const { InvoiceService } = require("../service/invoice.service");
 const { LoyaltyService } = require("../service/loyalty.service");
-const axios = require("axios");
 
 class InvoiceController {
   async list(req, res, next) {
@@ -166,34 +165,39 @@ class InvoiceController {
         });
       }
 
-      const response = await axios.get(
-        "https://my.sepay.vn/userapi/transactions/list",
-        {
-          params: { limit: parseInt(limit, 10) },
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SEPAY_TOKEN}`,
-          },
-        }
-      );
+      const url = new URL("https://my.sepay.vn/userapi/transactions/list");
+      url.searchParams.set("limit", parseInt(limit, 10));
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SEPAY_TOKEN}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => null);
+        console.error("Sepay transactions response not ok:", {
+          status: response.status,
+          body: errorBody,
+        });
+        return res.status(response.status).json({
+          message: "Không thể lấy lịch sử giao dịch từ Sepay",
+        });
+      }
+
+      const data = await response.json().catch(() => ({}));
 
       // Trả về data theo format mà frontend mong đợi
       res.status(200).json({
         message: "Lấy lịch sử giao dịch thành công!",
-        data: response.data?.data || response.data || {},
+        data: data?.data || data || {},
       });
     } catch (error) {
       console.error("Error fetching Sepay transactions:", error);
-      console.error("Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-        config: error.config,
-      });
-      res.status(error.response?.status || 500).json({
-        message:
-          error.response?.data?.message ||
-          "Không thể lấy lịch sử giao dịch từ Sepay",
+      res.status(500).json({
+        message: "Không thể lấy lịch sử giao dịch từ Sepay",
         error: error.message,
       });
     }
@@ -217,27 +221,38 @@ class InvoiceController {
         });
       }
 
-      const response = await axios.get(
-        "https://my.sepay.vn/userapi/transactions/details",
-        {
-          params: { transaction_id },
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${SEPAY_TOKEN}`,
-          },
-        }
-      );
+      const url = new URL("https://my.sepay.vn/userapi/transactions/details");
+      url.searchParams.set("transaction_id", transaction_id);
+
+      const response = await fetch(url.toString(), {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${SEPAY_TOKEN}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => null);
+        console.error("Sepay transaction detail response not ok:", {
+          status: response.status,
+          body: errorBody,
+        });
+        return res.status(response.status).json({
+          message: "Không thể lấy chi tiết giao dịch từ Sepay",
+        });
+      }
+
+      const data = await response.json().catch(() => ({}));
 
       res.status(200).json({
         message: "Lấy chi tiết giao dịch thành công!",
-        data: response.data,
+        data,
       });
     } catch (error) {
       console.error("Error fetching Sepay transaction detail:", error);
-      res.status(error.response?.status || 500).json({
-        message:
-          error.response?.data?.message ||
-          "Không thể lấy chi tiết giao dịch từ Sepay",
+      res.status(500).json({
+        message: "Không thể lấy chi tiết giao dịch từ Sepay",
         error: error.message,
       });
     }

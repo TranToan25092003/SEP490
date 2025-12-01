@@ -330,29 +330,29 @@ const BookingStatusTimeline = ({
 
   return (
     <div className={className} {...props}>
-      <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
+        <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
 
-      <div className="mb-12">
-        <Stepper currentStep={currentStepIndex} variant="destructive" className="w-full">
-          {steps.map((step, index) => (
-            <StepperItem
-              key={step.id}
-              step={index}
-              title={step.label}
-              className={cn(
-                "flex-1 cursor-pointer transition-opacity",
-                selectedStepIndex === index && "opacity-100",
-                selectedStepIndex !== null && selectedStepIndex !== index && "opacity-50"
-              )}
-              onClick={() => handleStepClick(index)}
-            />
-          ))}
-        </Stepper>
-      </div>
+        <div className="mb-12">
+          <Stepper currentStep={currentStepIndex} variant="destructive" className="w-full">
+            {steps.map((step, index) => (
+              <StepperItem
+                key={step.id}
+                step={index}
+                title={step.label}
+                className={cn(
+                  "flex-1 cursor-pointer transition-opacity",
+                  selectedStepIndex === index && "opacity-100",
+                  selectedStepIndex !== null && selectedStepIndex !== index && "opacity-50"
+                )}
+                onClick={() => handleStepClick(index)}
+              />
+            ))}
+          </Stepper>
+        </div>
 
-      <div className="mt-8 ">
-        {renderStepContent()}
-      </div>
+        <div className="mt-8 ">
+          {renderStepContent()}
+        </div>
     </div>
   );
 };
