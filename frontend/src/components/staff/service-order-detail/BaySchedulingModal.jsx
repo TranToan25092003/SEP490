@@ -62,7 +62,7 @@ const baySchedulingSchema = z.object({
 });
 
 const calculateDuration = (task) => {
-  if (task.expectedStartTime && task.expectedEndTime) {
+  if (task?.expectedStartTime && task?.expectedEndTime) {
     const start = new Date(task.expectedStartTime);
     const end = new Date(task.expectedEndTime);
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 60;
@@ -98,7 +98,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
   } = useForm({
     resolver: zodResolver(baySchedulingSchema),
     defaultValues: {
-      bayId: task.assignedBayId ?? "",
+      bayId: task?.assignedBayId ?? "",
       duration: calculateDuration(task),
       slot: null,
     },
