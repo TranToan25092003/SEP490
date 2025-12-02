@@ -139,9 +139,8 @@ const ServiceItemRow = ({
       <Input
         id={`services.${index}.name`}
         placeholder="Nhập tên dịch vụ"
-        {...register(`services.${index}.name`)}
+        {...register(`services.${index}.name`, { disabled: disabled })}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
-        disabled={disabled}
       />
       {errors?.services?.[index]?.name && (
         <p className="text-sm text-red-500 mt-1">
@@ -199,9 +198,8 @@ const ServiceItemRow = ({
         id={`services.${index}.quantity`}
         placeholder="Số lượng"
         type="number"
-        {...register(`services.${index}.quantity`)}
+        {...register(`services.${index}.quantity`, { disabled: disabled })}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
-        disabled={disabled}
         min={1}
       />
       {errors?.services?.[index]?.quantity && (

@@ -33,13 +33,13 @@ const basePartShema = z.object({
 
 const partItemSchema = basePartShema.extend({
   type: z.literal("part"),
-  partId: z.string().min(1, "Không được để trống"),
+  partId: z.string().trim().min(1, "Không được để trống").max(512, "Quá dài"),
 });
 
 const serviceItemSchema = basePartShema.extend({
   type: z.literal("service"),
-  serviceId: z.string().optional(),
-  name: z.string().min(1, "Không được để trống"),
+  serviceId: z.string().trim().optional(),
+  name: z.string().trim().min(1, "Không được để trống").max(512, "Quá dài"),
 });
 
 const formSchema = z.object({
