@@ -47,9 +47,20 @@ const serviceOrderListColumnDefinitions = [
     id: "status",
     header: "Trạng thái",
     cell: (info) => {
-      const status = info.row.original.status;
-      const statusLabel = translateServiceOrderStatus(status);
-      return <StatusBadge status={statusLabel} />;
+      const row = info.row.original;
+      const statusLabel = translateServiceOrderStatus(row.status);
+      const isUpcomingSoon = row.upcomingSoon;
+
+      return (
+        <div className="flex items-center gap-2">
+          <StatusBadge status={statusLabel} />
+          {isUpcomingSoon && (
+            <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-0.5 text-[11px] font-medium text-orange-700 border border-orange-200 whitespace-nowrap">
+              Sắp tới giờ sửa
+            </span>
+          )}
+        </div>
+      );
     },
   },
 ];

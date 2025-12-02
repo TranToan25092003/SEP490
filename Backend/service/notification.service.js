@@ -331,7 +331,7 @@ async function notifyCustomerOnReply(complaint) {
     recipientType: "customer",
     type: "COMPLAINT_REPLIED",
     title: "Khiếu nại đã được phản hồi",
-    message: `Yêu cầu khiếu nại của quý khách đã được phản hồi. Vui lòng kiểm tra tại: /complaint?replyComplaintId=${complaint._id}`,
+    message: `Yêu cầu khiếu nại của quý khách đã được phản hồi. Vui lòng kiểm tra tại: đây`,
     linkTo: `/complaint?replyComplaintId=${complaint._id}`,
     actorClerkId: complaint.reply.staffClerkId,
   };
@@ -924,4 +924,5 @@ module.exports = {
   markAllAsRead,
   createNotification,
   isStaffUser,
+  notifyStaffGroup,
 };

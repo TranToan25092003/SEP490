@@ -13,7 +13,18 @@ import {
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { generateGoodsReceiptPDF } from "@/utils/pdfGeneratorHtml";
-import { ArrowLeft, Download, FileText } from "lucide-react";
+import { ArrowLeft, Download, FileText, XCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function GoodsReceiptDetail() {
   const { id } = useParams();
@@ -22,6 +33,7 @@ export default function GoodsReceiptDetail() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchReceiptDetail();
@@ -206,6 +218,36 @@ export default function GoodsReceiptDetail() {
     }
   };
 
+  const handleCancelReceipt = async () => {
+    if (!id) return;
+    try {
+      setCancelling(true);
+      const response = await customFetch(
+        `/manager/goods-receipt/${id}/cancel`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Không thể hủy phiếu nhập");
+      }
+
+      toast.success("Đã hủy phiếu nhập", {
+        description: "Phiếu nhập đã được chuyển sang trạng thái Đã hủy",
+      });
+      await fetchReceiptDetail();
+    } catch (error) {
+      console.error("Cancel receipt error:", error);
+      toast.error("Lỗi", {
+        description:
+          error.message || "Không thể hủy phiếu nhập. Vui lòng thử lại.",
+      });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   // Format price
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -224,6 +266,8 @@ export default function GoodsReceiptDetail() {
     switch (status) {
       case "completed":
         return "text-green-600 bg-green-100";
+      case "cancelled":
+        return "text-red-600 bg-red-100";
       case "pending":
         return "text-yellow-600 bg-yellow-100";
       case "approved":
@@ -240,6 +284,8 @@ export default function GoodsReceiptDetail() {
     switch (status) {
       case "completed":
         return "Hoàn thành";
+      case "cancelled":
+        return "Đã hủy";
       case "pending":
         return "Chờ duyệt";
       case "approved":
@@ -308,6 +354,43 @@ export default function GoodsReceiptDetail() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {receipt.status !== "cancelled" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  disabled={cancelling}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {cancelling ? "Đang hủy..." : "Hủy phiếu nhập"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Xác nhận hủy phiếu nhập?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Hành động này sẽ trừ lại số lượng phụ tùng đã nhập trong
+                    phiếu và chuyển trạng thái phiếu nhập sang{" "}
+                    <span className="font-semibold">Đã hủy</span>. Phiếu nhập và
+                    lịch sử liên quan vẫn được giữ lại để tra cứu.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Không</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={handleCancelReceipt}
+                  >
+                    Xác nhận hủy
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Button
             onClick={handleExportPDF}
             disabled={exporting}

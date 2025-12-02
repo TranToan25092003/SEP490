@@ -19,7 +19,8 @@ import {
   MessageCircle,
   FileText,
   LogOut,
-  Home
+  Home,
+  Warehouse,
 } from "lucide-react";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,12 @@ const items = [
     label: "Quản lý phụ tùng",
     icon: Wrench,
     href: "/staff/items",
+  },
+  {
+    key: "bay_status",
+    label: "Tình trạng bay",
+    icon: Warehouse,
+    href: "/staff/bay-status",
   },
   {
     key: "complaint",
