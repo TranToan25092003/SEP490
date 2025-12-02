@@ -55,9 +55,13 @@ class BayService {
   async getAvailability(query = {}) {
     const now = new Date();
     const lookaheadHours =
-      Number(query.lookaheadHours) > 0 ? Number(query.lookaheadHours) : DEFAULT_LOOKAHEAD_HOURS;
+      Number(query.lookaheadHours) > 0
+        ? Number(query.lookaheadHours)
+        : DEFAULT_LOOKAHEAD_HOURS;
     const limitUpcoming =
-      Number(query.limitUpcoming) > 0 ? Number(query.limitUpcoming) : DEFAULT_UPCOMING_LIMIT;
+      Number(query.limitUpcoming) > 0
+        ? Number(query.limitUpcoming)
+        : DEFAULT_UPCOMING_LIMIT;
 
     const from = query.from ? new Date(query.from) : now;
     const to = query.to
@@ -86,8 +90,18 @@ class BayService {
     const tasks = await ServiceOrderTask.find({
       assigned_bay_id: { $in: bayIds },
       status: { $ne: "completed" },
-      expected_end_time: { $gte: from },
-      expected_start_time: { $lte: to },
+      $or: [
+        // Các task theo lịch (scheduled) nằm trong khoảng thời gian đang xem
+        {
+          expected_end_time: { $gte: from },
+          expected_start_time: { $lte: to },
+        },
+        // Các task đang thực tế sửa (in_progress) luôn phải lấy,
+        // kể cả khi lịch dự kiến nằm ngoài khoảng from/to
+        {
+          status: "in_progress",
+        },
+      ],
     })
       .populate("service_order_id", "orderNumber status")
       .sort({ expected_start_time: 1 })
@@ -105,21 +119,30 @@ class BayService {
     const baySnapshots = bays.map((bay) => {
       const bayTasks = tasksByBay.get(bay._id.toString()) || [];
       const currentTask = bayTasks.find((task) => {
-        const startTime = new Date(task.expected_start_time);
-        const endTime = new Date(task.expected_end_time);
+        const startTime = new Date(
+          task.actual_start_time || task.expected_start_time
+        );
+        const endTime = new Date(
+          task.actual_end_time || task.expected_end_time
+        );
         return startTime <= now && endTime >= now;
       });
 
       const upcomingTasks = bayTasks
-        .filter((task) => new Date(task.expected_start_time) > now)
+        .filter((task) => {
+          const startTime = new Date(
+            task.actual_start_time || task.expected_start_time
+          );
+          return startTime > now;
+        })
         .slice(0, limitUpcoming)
         .map((task) => ({
           taskId: task._id.toString(),
           serviceOrderId: task.service_order_id?._id?.toString() || null,
           orderNumber: task.service_order_id?.orderNumber || null,
           status: task.status,
-          start: toISO(task.expected_start_time),
-          end: toISO(task.expected_end_time),
+          start: toISO(task.actual_start_time || task.expected_start_time),
+          end: toISO(task.actual_end_time || task.expected_end_time),
         }));
 
       const availabilityStatus =
@@ -139,11 +162,16 @@ class BayService {
         currentTask: currentTask
           ? {
               taskId: currentTask._id.toString(),
-              serviceOrderId: currentTask.service_order_id?._id?.toString() || null,
+              serviceOrderId:
+                currentTask.service_order_id?._id?.toString() || null,
               orderNumber: currentTask.service_order_id?.orderNumber || null,
               status: currentTask.status,
-              start: toISO(currentTask.expected_start_time),
-              end: toISO(currentTask.expected_end_time),
+              start: toISO(
+                currentTask.actual_start_time || currentTask.expected_start_time
+              ),
+              end: toISO(
+                currentTask.actual_end_time || currentTask.expected_end_time
+              ),
             }
           : null,
         upcomingTasks,
@@ -151,7 +179,9 @@ class BayService {
           availabilityStatus === "inactive"
             ? null
             : currentTask
-            ? toISO(currentTask.expected_end_time)
+            ? toISO(
+                currentTask.actual_end_time || currentTask.expected_end_time
+              )
             : toISO(now),
       };
     });
@@ -166,4 +196,3 @@ class BayService {
 }
 
 module.exports = new BayService();
-
