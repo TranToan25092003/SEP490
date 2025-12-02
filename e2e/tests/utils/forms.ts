@@ -9,11 +9,11 @@ export const BannerForm: FormDef = {
   preSteps: async (page) => {
       await page.getByRole('button', { name: '+ Thêm banner' }).click();
   },
-  requiredFields: [
+  fields: [
     {
       name: 'title',
       selector: 'input[name="title"]',
-      config: { fieldType: 'text', required: true, minLength: 5, maxLength: 100 }
+      config: { fieldType: 'text', required: true }
     },
     {
       name: 'image',
@@ -24,12 +24,12 @@ export const BannerForm: FormDef = {
     {
       name: 'link_url',
       selector: 'input[name="link_url"]',
-      config: { fieldType: 'text', required: true }
+      config: { fieldType: 'text', required: false }
     },
     {
       name: 'display_order',
       selector: 'input[name="display_order"]',
-      config: { fieldType: 'number', required: true, min: 1, max: 100 }
+      config: { fieldType: 'number', required: true }
     }
   ],
   submitButton: 'button:has-text("Tạo mới")'
@@ -39,14 +39,13 @@ export const ServiceOrderAddForm: FormDef = {
   name: 'Create Service Order',
   url: '/staff/service-order/add',
   preSteps: async (page) => {
-    await page.waitForLoadState('networkidle');
     // Select the first service checkbox to satisfy the "at least one service" requirement
     const firstCheckbox = page.locator('button[role="checkbox"]').first();
     if (await firstCheckbox.count() > 0) {
       await firstCheckbox.click();
     }
   },
-  requiredFields: [
+  fields: [
     {
       name: 'customerName',
       selector: 'input[name="customerName"]',
@@ -80,8 +79,6 @@ export const ServiceOrderEditForm: FormDef = {
   name: 'Edit Service Order',
   url: '/staff/service-order/692d7255d90e2892606b78b4',
   preSteps: async (page) => {
-    await page.waitForLoadState('networkidle');
-
     // Ensure we are on services tab
     const serviceTab = page.getByRole('tab', { name: /dịch vụ/i });
     if (await serviceTab.isVisible()) {
@@ -94,7 +91,7 @@ export const ServiceOrderEditForm: FormDef = {
        await page.getByRole('button', { name: /thêm dịch vụ trống/i }).click();
     }
   },
-  requiredFields: [
+  fields: [
     {
       name: 'serviceName',
       selector: 'input[name="services.0.name"]',

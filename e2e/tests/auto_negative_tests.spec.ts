@@ -21,7 +21,7 @@ export interface FormDef {
   name: string;
   url: string;
   preSteps?: (page: Page) => Promise<void>;
-  requiredFields: FieldDef[];
+  fields: FieldDef[];
   submitButton: string;
   requiresLogin?: boolean;
 }
@@ -64,17 +64,18 @@ for (const form of forms) {
   test.describe(`Negative Tests for ${form.name}`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto(form.url);
+      await page.waitForLoadState('networkidle');
       if (form.preSteps) {
         await form.preSteps(page);
       }
     });
 
-    for (const field of form.requiredFields) {
+    for (const field of form.fields) {
       const negativeCases = getNegativeCasesForField(field.config);
 
       for (const testCase of negativeCases) {
         test(`${field.name} - ${testCase.description}`, async ({ page }) => {
-          await fillOtherFieldsWithPositiveValues(page, form.requiredFields, field.name);
+          await fillOtherFieldsWithPositiveValues(page, form.fields, field.name);
           const input = page.locator(field.selector);
 
           if (field.config.fieldType === 'file') {

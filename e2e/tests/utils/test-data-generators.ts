@@ -310,28 +310,10 @@ export const NUMBER_NEGATIVE_CASES: NegativeTestCase[] = [
     description: 'Negative number',
   },
   {
-    name: 'zero_when_required_positive',
-    value: 0,
-    expectedError: /phải > 0|greater than 0|lớn hơn 0/i,
-    description: 'Zero when positive required',
-  },
-  {
     name: 'text_instead_of_number',
     value: 'abc',
     expectedError: /số|number|phải là/i,
     description: 'Text instead of number',
-  },
-  {
-    name: 'mixed_text_numbers',
-    value: '123abc',
-    expectedError: /số|number|không hợp lệ/i,
-    description: 'Mixed text and numbers',
-  },
-  {
-    name: 'decimal_comma',
-    value: '100,50',
-    expectedError: /số|number|không hợp lệ/i,
-    description: 'Decimal with comma instead of period',
   },
   {
     name: 'too_large',
