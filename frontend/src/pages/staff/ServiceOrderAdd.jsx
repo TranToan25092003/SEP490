@@ -36,12 +36,6 @@ async function loader() {
   return { services: normalizedServices };
 }
 
-/**
- * ServiceOrderAdd Component
- * Page for adding a new service order
- * @component
- * @returns {JSX.Element} The service order add page
- */
 const ServiceOrderAdd = () => {
   const loaderData = useLoaderData() || {};
   const services = loaderData.services || [];

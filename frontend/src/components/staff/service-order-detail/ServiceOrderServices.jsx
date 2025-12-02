@@ -139,13 +139,12 @@ const ServiceItemRow = ({
       <Input
         id={`services.${index}.name`}
         placeholder="Nhập tên dịch vụ"
-        {...register(`services.${index}.name`)}
+        {...register(`services.${index}.name`, { disabled: disabled })}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
-        disabled={disabled}
       />
-      {errors?.services?.[index]?.serviceId && (
+      {errors?.services?.[index]?.name && (
         <p className="text-sm text-red-500 mt-1">
-          {errors.services[index].serviceId.message}
+          {errors.services[index].name.message}
         </p>
       )}
     </div>
@@ -199,9 +198,8 @@ const ServiceItemRow = ({
         id={`services.${index}.quantity`}
         placeholder="Số lượng"
         type="number"
-        {...register(`services.${index}.quantity`)}
+        {...register(`services.${index}.quantity`, { disabled: disabled })}
         className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
-        disabled={disabled}
         min={1}
       />
       {errors?.services?.[index]?.quantity && (
@@ -249,7 +247,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
     try {
       const parts = await NiceModal.show(ChoosePartsModal);
       const currentParts = getValues("parts") || [];
-      
+
       for (const part of parts) {
         const existingPartIndex = currentParts.findIndex(
             (p) => p.partId === part._id
@@ -330,7 +328,13 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     register={register}
                     control={control}
                     errors={errors}
-                    onRemove={{ onClick: () => partsMethods.remove(index) }}
+                    onRemove={{
+                      onClick: () => {
+                        if (window.confirm("Bạn có chắc chắn muốn xóa phụ tùng này?")) {
+                          partsMethods.remove(index);
+                        }
+                      },
+                    }}
                   />
                 );
               })
@@ -365,7 +369,13 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     control={control}
                     register={register}
                     errors={errors}
-                    onRemove={{ onClick: () => serviceItemsMethods.remove(index) }}
+                    onRemove={{
+                      onClick: () => {
+                        if (window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
+                          serviceItemsMethods.remove(index);
+                        }
+                      },
+                    }}
                   />
                 );
               })

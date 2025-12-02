@@ -19,6 +19,7 @@ const basePartShema = z.object({
         required_error: "Không được để trống",
       })
       .min(0, "Phải >= 0")
+      .max(1000000000, "Quá lớn")
   ),
   quantity: z.preprocess(
     (value) => (value === "" ? undefined : Number(value)),
@@ -28,18 +29,19 @@ const basePartShema = z.object({
         required_error: "Không được để trống",
       })
       .min(1, "Phải >= 1")
+      .max(1000000000, "Quá lớn")
   ),
 });
 
 const partItemSchema = basePartShema.extend({
   type: z.literal("part"),
-  partId: z.string().min(1, "Không được để trống"),
+  partId: z.string().trim().min(1, "Không được để trống").max(512, "Quá dài"),
 });
 
 const serviceItemSchema = basePartShema.extend({
   type: z.literal("service"),
-  serviceId: z.string().optional(),
-  name: z.string().min(1, "Không được để trống"),
+  serviceId: z.string().trim().optional(),
+  name: z.string().trim().min(1, "Không được để trống").max(512, "Quá dài"),
 });
 
 const formSchema = z.object({

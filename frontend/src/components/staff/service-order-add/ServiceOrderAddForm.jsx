@@ -13,13 +13,21 @@ import {
   FieldSet,
 } from "@/components/ui/field";
 import { cn, formatPrice } from "@/lib/utils";
+import { z } from "zod";
+import { vehicleSchema, phoneNumberSchema } from "@/utils/schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-/**
- * ServiceOrderAddForm Component
- * Form for creating a new service order
- *
- * @param {import("./index").ServiceOrderAddFormProps} props
- */
+const formSchema = z.object({
+  customerName: z.string().trim().min(1, "Vui lòng nhập tên khách hàng").max(50, "Tên khách hàng quá dài"),
+  phone: phoneNumberSchema,
+  licensePlate: vehicleSchema.shape.license_plate,
+  address: z.string().trim().max(100, "Địa chỉ quá dài").optional(),
+  serviceIds: z
+    .array(z.string().trim())
+    .min(1, "Vui lòng chọn ít nhất một loại lệnh"),
+  note: z.string().trim().max(500, "Ghi chú quá dài").optional(),
+})
+
 const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
   const {
     register,
@@ -27,6 +35,7 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       customerName: "",
       phone: "",
@@ -39,12 +48,6 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
 
   const hasAvailableServices = Array.isArray(services) && services.length > 0;
 
-  /**
-   * Handle form submission for creating a service order
-   * @async
-   * @param {Object} data - Form data
-   * @returns {Promise<void>}
-   */
   const onFormSubmit = async (data) => {
     try {
       await onSubmit({
@@ -77,9 +80,7 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
                 id="customerName"
                 placeholder="Nguyễn Văn A"
                 aria-invalid={!!errors.customerName}
-                {...register("customerName", {
-                  required: "Vui lòng nhập tên khách hàng",
-                })}
+                {...register("customerName")}
               />
               <FieldError>{errors.customerName?.message}</FieldError>
             </FieldContent>
@@ -95,13 +96,7 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
                 type="tel"
                 placeholder="0123456789"
                 aria-invalid={!!errors.phone}
-                {...register("phone", {
-                  required: "Vui lòng nhập số điện thoại",
-                  pattern: {
-                    value: /^[0-9]{10,11}$/,
-                    message: "Số điện thoại không hợp lệ",
-                  },
-                })}
+                {...register("phone")}
               />
               <FieldError>{errors.phone?.message}</FieldError>
             </FieldContent>
@@ -115,11 +110,9 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
           <FieldContent>
             <Input
               id="licensePlate"
-              placeholder="0G123 45"
+              placeholder="29-G1-12345"
               aria-invalid={!!errors.licensePlate}
-              {...register("licensePlate", {
-                required: "Vui lòng nhập biển số xe",
-              })}
+              {...register("licensePlate")}
             />
             <FieldError>{errors.licensePlate?.message}</FieldError>
           </FieldContent>
@@ -128,7 +121,8 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         <Field>
           <FieldLabel htmlFor="address">Địa chỉ</FieldLabel>
           <FieldContent>
-            <Input id="address" placeholder="" {...register("address")} />
+            <Input id="address" placeholder="Địa chỉ" {...register("address")} />
+            <FieldError>{errors.address?.message}</FieldError>
           </FieldContent>
         </Field>
 
@@ -146,15 +140,6 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
                     <Controller
                       name="serviceIds"
                       control={control}
-                      rules={{
-                        validate: (value) => {
-                          if (!hasAvailableServices) return true;
-                          return (
-                            value.length > 0 ||
-                            "Vui lòng chọn ít nhất một loại lệnh"
-                          );
-                        },
-                      }}
                       render={({ field }) => (
                         <Checkbox
                           id={`service-${normalizedId}`}
@@ -201,10 +186,11 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
           <FieldContent>
             <Textarea
               id="note"
-              placeholder=""
+              placeholder="Ghi chú"
               className="min-h-24"
               {...register("note")}
             />
+            <FieldError>{errors.note?.message}</FieldError>
           </FieldContent>
         </Field>
 
