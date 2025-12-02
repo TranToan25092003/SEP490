@@ -19,6 +19,7 @@ const basePartShema = z.object({
         required_error: "Không được để trống",
       })
       .min(0, "Phải >= 0")
+      .max(1000000000, "Quá lớn")
   ),
   quantity: z.preprocess(
     (value) => (value === "" ? undefined : Number(value)),
@@ -28,6 +29,7 @@ const basePartShema = z.object({
         required_error: "Không được để trống",
       })
       .min(1, "Phải >= 1")
+      .max(1000000000, "Quá lớn")
   ),
 });
 
