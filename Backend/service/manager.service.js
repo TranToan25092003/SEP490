@@ -121,6 +121,8 @@ class ManagerService {
             ? "Đang xử lý"
             : receipt.status === "rejected"
             ? "Từ chối"
+            : receipt.status === "cancelled"
+            ? "Đã hủy"
             : receipt.status,
         amount: receipt.totalAmount || 0,
       })),
@@ -129,4 +131,3 @@ class ManagerService {
 }
 
 module.exports = new ManagerService();
-
