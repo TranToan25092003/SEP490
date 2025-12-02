@@ -13,7 +13,12 @@
     "lint": "pnpm run --recursive lint",
     "test:unit": "pnpm run --recursive test:unit",
     "test:only": "pnpm --filter backend test:only",
-    "test:download": "pnpm --filter backend test:download"
+    "test:download": "pnpm --filter backend test:download",
+    "test:e2e": "pnpm --filter e2e test",
+    "test:e2e:ui": "pnpm --filter e2e test:ui",
+    "test:e2e:headed": "pnpm --filter e2e test:headed",
+    "e2e:codegen": "pnpm --filter e2e codegen",
+    "e2e:report": "pnpm --filter e2e report"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.0",
