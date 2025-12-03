@@ -103,6 +103,8 @@ const LayoutProfile = () => {
   const [models, setModels] = useState([]);
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [checkingLicensePlate, setCheckingLicensePlate] = useState(false);
+  const [licensePlateError, setLicensePlateError] = useState("");
 
   // State cho logic update profile
   const [isEditing, setIsEditing] = useState(false);
@@ -260,6 +262,55 @@ const LayoutProfile = () => {
     control,
   } = vehicleForm;
 
+  // Debounce function để check biển số (phải đặt sau khi có setValue)
+  const checkLicensePlateDebounced = React.useMemo(() => {
+    let timeoutId;
+    return (licensePlate) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        if (!licensePlate || licensePlate.trim().length === 0) {
+          setLicensePlateError("");
+          setCheckingLicensePlate(false);
+          return;
+        }
+
+        // Validate format trước
+        const licensePlateRegex =
+          /^[0-9]{2}-[A-Z]{1}[0-9A-Z]{1}[- ]([0-9]{3,4}|[0-9]{5}|[0-9]{3}\.[0-9]{2})$/;
+        if (!licensePlateRegex.test(licensePlate.trim())) {
+          setLicensePlateError("");
+          setCheckingLicensePlate(false);
+          return; // Chờ format đúng mới check
+        }
+
+        setCheckingLicensePlate(true);
+        setLicensePlateError("");
+
+        try {
+          const response = await customFetch(
+            `/profile/vehicles/check-license-plate?license_plate=${encodeURIComponent(
+              licensePlate.trim()
+            )}`
+          );
+          if (!response.data.success || !response.data.available) {
+            setLicensePlateError("Biển số xe đã tồn tại trong hệ thống");
+            setValue("license_plate", licensePlate, { shouldValidate: false });
+          } else {
+            setLicensePlateError("");
+          }
+        } catch (error) {
+          console.error("Failed to check license plate:", error);
+          // Không hiển thị lỗi nếu là lỗi network, chỉ hiển thị khi chắc chắn trùng
+          if (error.response?.status === 400) {
+            setLicensePlateError("Biển số xe đã tồn tại trong hệ thống");
+          }
+        } finally {
+          setCheckingLicensePlate(false);
+        }
+      }, 500); // Debounce 500ms
+    };
+  }, [setValue]);
+
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -281,6 +332,12 @@ const LayoutProfile = () => {
   };
 
   const onSubmitVehicle = async (data) => {
+    // Kiểm tra lại biển số trước khi submit
+    if (licensePlateError) {
+      toast.error("Vui lòng kiểm tra lại biển số xe");
+      return;
+    }
+
     try {
       await customFetch.post("/profile/models/create", {
         ...data,
@@ -302,9 +359,17 @@ const LayoutProfile = () => {
       reset();
       setImagePreview(null);
       setImageFile(null);
+      setLicensePlateError("");
+      setCheckingLicensePlate(false);
       setOpen(false);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Không thể thêm xe");
+      const errorMessage = error.response?.data?.message || "Không thể thêm xe";
+      toast.error(errorMessage);
+
+      // Nếu lỗi là do trùng biển số, set error state
+      if (errorMessage.includes("Biển số xe đã tồn tại")) {
+        setLicensePlateError("Biển số xe đã tồn tại trong hệ thống");
+      }
     }
   };
 
@@ -439,6 +504,8 @@ const LayoutProfile = () => {
                       reset();
                       setImagePreview(null);
                       setImageFile(null);
+                      setLicensePlateError("");
+                      setCheckingLicensePlate(false);
                     }
                     // Lazy load brand chỉ khi mở dialog thêm xe
                     if (isOpen && brand.length === 0 && !isLoadingBrand) {
@@ -569,13 +636,31 @@ const LayoutProfile = () => {
                       {/* license plate */}
                       <div>
                         <Label htmlFor="license_plate">Biển số xe *</Label>
-                        <Input
-                          id="license_plate"
-                          {...register("license_plate")}
-                          placeholder="29-G1-12345"
-                          className="mt-1"
-                        />
-                        {errors.license_plate && (
+                        <div className="relative">
+                          <Input
+                            id="license_plate"
+                            {...register("license_plate", {
+                              onChange: (e) => {
+                                const value = e.target.value;
+                                checkLicensePlateDebounced(value);
+                              },
+                            })}
+                            placeholder="29-G1-12345"
+                            className="mt-1"
+                          />
+                          {checkingLicensePlate && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        {licensePlateError && (
+                          <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />{" "}
+                            {licensePlateError}
+                          </p>
+                        )}
+                        {errors.license_plate && !licensePlateError && (
                           <p className="text-sm text-destructive mt-1 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />{" "}
                             {errors.license_plate.message}

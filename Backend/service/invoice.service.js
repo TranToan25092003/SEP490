@@ -248,11 +248,18 @@ class InvoiceService {
 
     const data = invoices.map((invoice) => {
       const serviceOrder = invoice.service_order_id;
-      return this._mapInvoiceSummary(
-        invoice,
-        serviceOrder,
-        customerMap[serviceOrder?.booking_id?.customer_clerk_id] || null
-      );
+      // Xử lý customer name: walk-in customers hoặc registered customers
+      let customerName = null;
+      if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+        // Walk-in customer: lấy tên từ walk_in_customer
+        customerName = serviceOrder.walk_in_customer.name;
+      } else if (serviceOrder?.booking_id?.customer_clerk_id) {
+        // Registered customer: lấy tên từ customerMap
+        customerName =
+          customerMap[serviceOrder.booking_id.customer_clerk_id] || null;
+      }
+
+      return this._mapInvoiceSummary(invoice, serviceOrder, customerName);
     });
 
     const totalPages = Math.ceil(totalItems / limit);
@@ -303,17 +310,23 @@ class InvoiceService {
       confirmedByName = userMap[invoice.confirmed_by] || null;
     }
 
-    const userIds = [];
-    if (customerClerkId) userIds.push(customerClerkId);
-
-    const userMap =
-      userIds.length > 0 ? await UsersService.getFullNamesByIds(userIds) : {};
+    // Xử lý customer name: walk-in customers hoặc registered customers
+    let customerName = null;
+    if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+      // Walk-in customer: lấy tên từ walk_in_customer
+      customerName = serviceOrder.walk_in_customer.name;
+    } else if (customerClerkId) {
+      // Registered customer: lấy tên từ Clerk
+      const userIds = [customerClerkId];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      customerName = userMap[customerClerkId] || null;
+    }
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      userMap[customerClerkId] || null,
+      customerName,
       confirmedByName
     );
   }
@@ -407,17 +420,23 @@ class InvoiceService {
       confirmedByName = userMap[invoice.confirmed_by] || null;
     }
 
-    const userIds = [];
-    if (customerClerkId) userIds.push(customerClerkId);
-
-    const userMap =
-      userIds.length > 0 ? await UsersService.getFullNamesByIds(userIds) : {};
+    // Xử lý customer name: walk-in customers hoặc registered customers
+    let customerName = null;
+    if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+      // Walk-in customer: lấy tên từ walk_in_customer
+      customerName = serviceOrder.walk_in_customer.name;
+    } else if (customerClerkId) {
+      // Registered customer: lấy tên từ Clerk
+      const userIds = [customerClerkId];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      customerName = userMap[customerClerkId] || null;
+    }
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      userMap[customerClerkId] || null,
+      customerName,
       confirmedByName
     );
   }
@@ -479,6 +498,16 @@ class InvoiceService {
       serviceOrder?.walk_in_vehicle?.license_plate ||
       null;
 
+    // Xử lý customer name nếu chưa có: walk-in customers hoặc registered customers
+    let finalCustomerName = customerName;
+    if (!finalCustomerName) {
+      if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+        finalCustomerName = serviceOrder.walk_in_customer.name;
+      } else if (booking?.customer_clerk_id) {
+        // Đã có customerName từ parameter, không cần làm gì thêm
+      }
+    }
+
     const items = (serviceOrder?.items || []).map((item) => ({
       type: item.item_type,
       name:
@@ -508,7 +537,7 @@ class InvoiceService {
       confirmedAt: invoice.confirmed_at || null,
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
-      customerName,
+      customerName: finalCustomerName,
       customerClerkId: booking?.customer_clerk_id || null,
       licensePlate,
       vehicleId: vehicle?._id?.toString() || null,
