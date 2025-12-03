@@ -1,5 +1,5 @@
 const Warranty = require("../model/warranty.model");
-const { Booking, ServiceOrder } = require("../model");
+const { Booking, ServiceOrder, Invoice } = require("../model");
 const { Service } = require("../model");
 const bookingsService = require("./bookings.service");
 const DomainError = require("../errors/domainError");
@@ -70,6 +70,25 @@ class WarrantyService {
       return {
         eligible: false,
         reason: "Chỉ có thể bảo hành cho đơn sửa chữa đã hoàn thành",
+      };
+    }
+
+    // Kiểm tra hóa đơn đã thanh toán chưa
+    const invoice = await Invoice.findOne({
+      service_order_id: serviceOrderId,
+    }).exec();
+
+    if (!invoice) {
+      return {
+        eligible: false,
+        reason: "Không tìm thấy hóa đơn cho đơn sửa chữa này",
+      };
+    }
+
+    if (invoice.status !== "paid") {
+      return {
+        eligible: false,
+        reason: "Chỉ có thể bảo hành cho các hóa đơn đã thanh toán",
       };
     }
 

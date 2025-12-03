@@ -6,6 +6,7 @@ import {
   useNavigate,
   useLoaderData,
   useSearchParams,
+  useRevalidator,
   Link,
 } from "react-router-dom";
 import { Controller, useForm } from "react-hook-form";
@@ -16,7 +17,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { vehicleSchema } from "@/utils/schema";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
@@ -66,16 +66,13 @@ import { translateBookingStatus } from "@/utils/enumsTranslator";
 
 export const layoutProfileLoader = async () => {
   try {
-    const data = (await customFetch("/profile/models/get")).data;
-    console.log(data);
-    const { brand } = data.data;
-
+    // Tối ưu: Chỉ load vehicles, brand sẽ được load lazy khi cần (khi mở dialog thêm xe)
     const res = await customFetch("/profile/vehicles/get");
     const vehicles = res.data.data || [];
-    console.log(brand);
-    return { brand, vehicles };
+    return { vehicles };
   } catch (error) {
     console.log(error);
+    return { vehicles: [] };
   }
 };
 
@@ -90,14 +87,22 @@ const LayoutProfile = () => {
   const { user, isLoaded: authLoaded } = useUser();
   const { isSignedIn, isLoaded: userLoaded } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
+  const revalidator = useRevalidator();
   const [activeTab, setActiveTab] = useState(
     () => searchParams.get("tab") || "personal"
   );
   const [open, setOpen] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  const [_imageFile, setImageFile] = useState(null); // Used for file reference, prefixed to avoid lint warning
   const [isUploading, setIsUploading] = useState(false);
-  const { brand, vehicles } = useLoaderData();
+  const loaderData = useLoaderData();
+  const { vehicles } = loaderData || { vehicles: [] };
+  const [localVehicles, setLocalVehicles] = useState(vehicles);
+  const [brand, setBrand] = useState([]);
+  const [isLoadingBrand, setIsLoadingBrand] = useState(false);
+  const [models, setModels] = useState([]);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [selectedBrand, setSelectedBrand] = useState("");
 
   // State cho logic update profile
   const [isEditing, setIsEditing] = useState(false);
@@ -123,8 +128,23 @@ const LayoutProfile = () => {
 
   // Tối ưu: Sử dụng useMemo để cache kết quả filter và pagination
   const { filteredBookings, currentBookings, totalPages } = useMemo(() => {
+    // Sắp xếp lại: đang thực hiện lên đầu (đảm bảo backend đã sắp xếp nhưng frontend cũng sắp xếp lại để chắc chắn)
+    const activeStatuses = ["in_progress", "checked_in"];
+    const sortedBookings = [...bookings].sort((a, b) => {
+      const aIsActive = activeStatuses.includes(a.status);
+      const bIsActive = activeStatuses.includes(b.status);
+
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+
+      // Cùng trạng thái, sắp xếp theo thời gian giảm dần
+      const timeA = a.slotStartTime ? new Date(a.slotStartTime).getTime() : 0;
+      const timeB = b.slotStartTime ? new Date(b.slotStartTime).getTime() : 0;
+      return timeB - timeA;
+    });
+
     // Áp dụng filter
-    let filtered = bookings.filter((booking) => {
+    let filtered = sortedBookings.filter((booking) => {
       // Filter theo tìm kiếm
       if (searchText) {
         const searchLower = searchText.toLowerCase();
@@ -171,6 +191,13 @@ const LayoutProfile = () => {
     currentPage,
     itemsPerPage,
   ]);
+
+  // Sync localVehicles với vehicles từ loader khi loader data thay đổi
+  useEffect(() => {
+    if (vehicles && vehicles.length >= 0) {
+      setLocalVehicles(vehicles);
+    }
+  }, [vehicles]);
 
   // Tải dữ liệu người dùng vào state của form
   useEffect(() => {
@@ -254,20 +281,30 @@ const LayoutProfile = () => {
   };
 
   const onSubmitVehicle = async (data) => {
-    // ... (logic onSubmit của vehicle giữ nguyên, đổi tên)
     try {
-      const res = await customFetch.post("/profile/models/create", {
+      await customFetch.post("/profile/models/create", {
         ...data,
         image: imagePreview,
       });
-      toast.success("Thành công");
+
+      // Tối ưu: Chỉ fetch lại vehicles thay vì reload toàn bộ trang
+      try {
+        const vehiclesRes = await customFetch("/profile/vehicles/get");
+        const newVehicles = vehiclesRes.data.data || [];
+        setLocalVehicles(newVehicles);
+      } catch (fetchError) {
+        console.error("Failed to refresh vehicles:", fetchError);
+        // Fallback: reload toàn bộ nếu fetch thất bại
+        revalidator.revalidate();
+      }
+
+      toast.success("Thêm xe thành công!");
       reset();
       setImagePreview(null);
       setImageFile(null);
       setOpen(false);
-      navigate("/profile");
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Không thể thêm xe");
     }
   };
 
@@ -391,7 +428,36 @@ const LayoutProfile = () => {
               )}
 
               {activeTab === "vehicle" && (
-                <Dialog open={open} onOpenChange={setOpen}>
+                <Dialog
+                  open={open}
+                  onOpenChange={(isOpen) => {
+                    setOpen(isOpen);
+                    // Reset form và state khi đóng dialog
+                    if (!isOpen) {
+                      setSelectedBrand("");
+                      setModels([]);
+                      reset();
+                      setImagePreview(null);
+                      setImageFile(null);
+                    }
+                    // Lazy load brand chỉ khi mở dialog thêm xe
+                    if (isOpen && brand.length === 0 && !isLoadingBrand) {
+                      setIsLoadingBrand(true);
+                      customFetch("/profile/models/get")
+                        .then((response) => {
+                          const { brand: brandData } = response.data.data;
+                          setBrand(brandData || []);
+                        })
+                        .catch((error) => {
+                          console.error("Failed to load brands:", error);
+                          toast.error("Không thể tải danh sách hãng xe");
+                        })
+                        .finally(() => {
+                          setIsLoadingBrand(false);
+                        });
+                    }
+                  }}
+                >
                   <DialogTrigger asChild>
                     <Button className="bg-[#DF1D01] hover:bg-red-800">
                       Thêm xe
@@ -408,33 +474,52 @@ const LayoutProfile = () => {
                       className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4"
                       onSubmit={handleSubmit(onSubmitVehicle)}
                     >
-                      {/* name */}
-                      <div>
-                        <Label htmlFor="name">Tên xe *</Label>
-                        <Input
-                          id="name"
-                          {...register("name")}
-                          placeholder="Ví dụ: Air Blade"
-                          className="mt-1"
-                        />
-                        {errors.name && (
-                          <p className="text-sm text-destructive mt-1 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />{" "}
-                            {errors.name.message}
-                          </p>
-                        )}
-                      </div>
                       {/* brand */}
                       <div>
                         <Label htmlFor="brand">Hãng xe *</Label>
                         <select
                           id="brand"
-                          {...register("brand")}
+                          {...register("brand", {
+                            onChange: async (e) => {
+                              const selectedBrandValue = e.target.value;
+                              setSelectedBrand(selectedBrandValue);
+                              setValue("name", ""); // Reset model khi đổi brand
+
+                              if (selectedBrandValue) {
+                                setIsLoadingModels(true);
+                                try {
+                                  const response = await customFetch(
+                                    `/profile/models/get?brand=${encodeURIComponent(
+                                      selectedBrandValue
+                                    )}`
+                                  );
+                                  const modelsData =
+                                    response.data.data?.models || [];
+                                  setModels(modelsData);
+                                } catch (error) {
+                                  console.error(
+                                    "Failed to load models:",
+                                    error
+                                  );
+                                  toast.error(
+                                    "Không thể tải danh sách loại xe"
+                                  );
+                                  setModels([]);
+                                } finally {
+                                  setIsLoadingModels(false);
+                                }
+                              } else {
+                                setModels([]);
+                              }
+                            },
+                          })}
                           defaultValue=""
                           className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <option value="" disabled>
-                            -- Chọn brand --
+                            {isLoadingBrand
+                              ? "Đang tải..."
+                              : "-- Chọn hãng xe --"}
                           </option>
                           {brand.map((brandName) => (
                             <option key={brandName} value={brandName}>
@@ -446,6 +531,38 @@ const LayoutProfile = () => {
                           <p className="text-sm text-destructive mt-1 flex items-center gap-1">
                             <AlertCircle className="h-3 w-3" />{" "}
                             {errors.brand.message}
+                          </p>
+                        )}
+                      </div>
+                      {/* name - Loại xe */}
+                      <div>
+                        <Label htmlFor="name">Loại xe *</Label>
+                        <select
+                          id="name"
+                          {...register("name")}
+                          defaultValue=""
+                          disabled={!selectedBrand || isLoadingModels}
+                          className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <option value="" disabled>
+                            {isLoadingModels
+                              ? "Đang tải..."
+                              : !selectedBrand
+                              ? "Vui lòng chọn hãng xe trước"
+                              : models.length === 0
+                              ? "Không có loại xe nào"
+                              : "-- Chọn loại xe --"}
+                          </option>
+                          {models.map((modelName) => (
+                            <option key={modelName} value={modelName}>
+                              {modelName}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.name && (
+                          <p className="text-sm text-destructive mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />{" "}
+                            {errors.name.message}
                           </p>
                         )}
                       </div>
@@ -642,7 +759,7 @@ const LayoutProfile = () => {
               </TabsContent>
 
               <TabsContent value="vehicle">
-                <VehicleProfile vehicles={vehicles} />
+                <VehicleProfile vehicles={localVehicles} />
               </TabsContent>
 
               <TabsContent value="history">
@@ -705,7 +822,7 @@ const LayoutProfile = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="all">Tất cả xe</SelectItem>
-                                {vehicles.map((vehicle) => (
+                                {localVehicles.map((vehicle) => (
                                   <SelectItem
                                     key={vehicle._id}
                                     value={vehicle._id}
@@ -818,7 +935,21 @@ const LayoutProfile = () => {
                                         {booking.vehicle?.licensePlate || "N/A"}
                                       </p>
                                     </div>
-                                    <Badge variant="outline">
+                                    <Badge
+                                      variant="outline"
+                                      className={
+                                        booking.status === "completed"
+                                          ? "bg-green-100 text-green-700 border-green-300"
+                                          : booking.status === "in_progress" ||
+                                            booking.status === "checked_in"
+                                          ? "bg-blue-100 text-blue-700 border-blue-300"
+                                          : booking.status === "cancelled"
+                                          ? "bg-red-100 text-red-700 border-red-300"
+                                          : booking.status === "booked"
+                                          ? "bg-yellow-100 text-yellow-700 border-yellow-300"
+                                          : ""
+                                      }
+                                    >
                                       {translateBookingStatus(booking.status)}
                                     </Badge>
                                   </CardHeader>

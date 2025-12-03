@@ -181,9 +181,11 @@ class BookingsService {
     };
   }
 
-  async getUserBookings(customerClerkId) {
+  async getUserBookings(customerClerkId, options = {}) {
+    const { limit = null, skip = 0 } = options;
+    
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
-    const bookings = await Booking.find({ customer_clerk_id: customerClerkId })
+    let query = Booking.find({ customer_clerk_id: customerClerkId })
       .select(
         "_id slot_start_time slot_end_time status service_order_id service_ids vehicle_id"
       )
@@ -199,11 +201,17 @@ class BookingsService {
           select: "_id name brand", // Chỉ lấy các field cần thiết của model
         },
       })
-      .sort({ slot_start_time: -1 })
       .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
-      .exec();
+      .skip(skip);
+    
+    if (limit) {
+      query = query.limit(limit);
+    }
+    
+    const bookings = await query.exec();
 
-    return bookings.map((booking) => ({
+    // Map và sắp xếp: đang thực hiện lên đầu, sau đó sắp xếp theo thời gian giảm dần
+    const mappedBookings = bookings.map((booking) => ({
       id: booking._id,
       vehicle: mapToVehicleDTO(booking.vehicle_id),
       services: booking.service_ids
@@ -214,6 +222,23 @@ class BookingsService {
       status: booking.status,
       serviceOrderId: booking.service_order_id,
     }));
+
+    // Sắp xếp: đang thực hiện (in_progress, checked_in) lên đầu, sau đó theo thời gian giảm dần
+    const activeStatuses = ["in_progress", "checked_in"];
+    mappedBookings.sort((a, b) => {
+      const aIsActive = activeStatuses.includes(a.status);
+      const bIsActive = activeStatuses.includes(b.status);
+      
+      if (aIsActive && !bIsActive) return -1;
+      if (!aIsActive && bIsActive) return 1;
+      
+      // Cùng trạng thái, sắp xếp theo thời gian giảm dần
+      const timeA = a.slotStartTime ? new Date(a.slotStartTime).getTime() : 0;
+      const timeB = b.slotStartTime ? new Date(b.slotStartTime).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    return mappedBookings;
   }
 
   async getAllBookingsSortedDescending({

@@ -29,12 +29,30 @@ module.exports.createVehicle = async (req, res) => {
 
   const OwnerClerkId = req.userId;
 
-  let model = await ModelVehicle.findOne({ name, brand });
+  // Normalize: trim whitespace
+  const normalizedName = name?.trim();
+  const normalizedBrand = brand?.trim();
+
+  if (!normalizedName || !normalizedBrand) {
+    return res.status(400).json({ 
+      message: "Tên xe và hãng xe là bắt buộc" 
+    });
+  }
+
+  // Escape special regex characters để tránh lỗi
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  
+  // Tìm model với case-insensitive (sử dụng regex an toàn)
+  let model = await ModelVehicle.findOne({
+    name: { $regex: new RegExp(`^${escapeRegex(normalizedName)}$`, "i") },
+    brand: { $regex: new RegExp(`^${escapeRegex(normalizedBrand)}$`, "i") },
+  });
 
   if (!model) {
+    // Tạo mới model với dữ liệu đã normalize
     model = await ModelVehicle.create({
-      name,
-      brand,
+      name: normalizedName,
+      brand: normalizedBrand,
       year,
       engine_type,
       description,
@@ -78,16 +96,32 @@ module.exports.createVehicle = async (req, res) => {
 };
 
 module.exports.getModels = async (req, res) => {
-  const name = await ModelVehicle.find({}).select("name");
-
-  const brand = await ModelVehicle.distinct("brand");
-  res.status(200).json({
-    message: "hello",
-    data: {
-      name,
-      brand,
-    },
-  });
+  const brand = req.query.brand;
+  
+  if (brand) {
+    // Lấy danh sách models (name) theo brand
+    const models = await ModelVehicle.find({ 
+      brand: { $regex: new RegExp(`^${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i") }
+    })
+      .distinct("name")
+      .lean();
+    
+    res.status(200).json({
+      message: "hello",
+      data: {
+        models: models || [],
+      },
+    });
+  } else {
+    // Lấy danh sách brands
+    const brands = await ModelVehicle.distinct("brand");
+    res.status(200).json({
+      message: "hello",
+      data: {
+        brand: brands,
+      },
+    });
+  }
 };
 
 module.exports.getVehicles = async (req, res) => {
@@ -100,7 +134,8 @@ module.exports.getVehicles = async (req, res) => {
         model: "ModelVehicle",
         select: "brand engine_type description year name",
       })
-      .select("_id license_plate model_id images license_plate year");
+      .select("_id license_plate model_id images license_plate year")
+      .lean(); // Tối ưu: sử dụng lean() để tăng performance
 
     if (!vehicles.length) {
       return res.status(200).json({
