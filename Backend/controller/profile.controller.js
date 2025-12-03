@@ -118,14 +118,14 @@ module.exports.getVehicles = async (req, res) => {
     // Format lại dữ liệu gọn gàng và lọc những xe đã bị ẩn
     const formatted = vehicles
       .map((v) => ({
-        _id: v._id,
-        name: v?.model_id?.name,
-        brand: v.model_id?.brand || "Không rõ",
-        engine_type: v.model_id?.engine_type || "Không rõ",
-        description: v.model_id?.description || "",
-        images: v?.images || null,
-        license_plate: v.license_plate,
-        year: v.year,
+      _id: v._id,
+      name: v?.model_id?.name,
+      brand: v.model_id?.brand || "Không rõ",
+      engine_type: v.model_id?.engine_type || "Không rõ",
+      description: v.model_id?.description || "",
+      images: v?.images || null,
+      license_plate: v.license_plate,
+      year: v.year,
       }))
       .filter((v) => !hiddenVehicleIds.includes(v._id.toString()));
 

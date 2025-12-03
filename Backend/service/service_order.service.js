@@ -158,21 +158,21 @@ class ServiceOrderService {
           });
 
         return {
-          id: so._id.toString(),
-          bookingId: so.booking?._id?.toString() || null,
-          orderNumber: so.orderNumber || null,
-          isWalkIn: !!so.is_walk_in,
-          licensePlate: so.is_walk_in
-            ? so.walk_in_vehicle?.license_plate || "—"
-            : so.vehicle?.license_plate || "—",
-          customerName: so.is_walk_in
-            ? so.walk_in_customer?.name || "Khách vãng lai"
-            : userMap[so.booking?.customer_clerk_id?.toString()] ||
-              "Không xác định",
-          status: so.status,
-          createdAt: so.createdAt,
-          completedAt: so.completed_at,
-          estimatedCompletedAt: so.expected_completion_time,
+        id: so._id.toString(),
+        bookingId: so.booking?._id?.toString() || null,
+        orderNumber: so.orderNumber || null,
+        isWalkIn: !!so.is_walk_in,
+        licensePlate: so.is_walk_in
+          ? so.walk_in_vehicle?.license_plate || "—"
+          : so.vehicle?.license_plate || "—",
+        customerName: so.is_walk_in
+          ? so.walk_in_customer?.name || "Khách vãng lai"
+          : userMap[so.booking?.customer_clerk_id?.toString()] ||
+            "Không xác định",
+        status: so.status,
+        createdAt: so.createdAt,
+        completedAt: so.completed_at,
+        estimatedCompletedAt: so.expected_completion_time,
           upcomingSoon: hasUpcomingTask,
         };
       }),

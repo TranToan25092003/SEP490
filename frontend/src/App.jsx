@@ -1,4 +1,10 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  createBrowserRouter,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import { ClerkProvider, GoogleOneTap, SignedIn } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
@@ -97,7 +103,7 @@ import {
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-const router = createBrowserRouter([
+const appRoutes = [
   {
     path: "/",
     element: <HomeLayout />,
@@ -373,7 +379,31 @@ const router = createBrowserRouter([
       },
     ],
   },
+];
+
+const router = createBrowserRouter([
+  {
+    element: <AppRouteLayout />,
+    children: appRoutes,
+  },
 ]);
+
+function AppRouteLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const root = document.getElementById("root") || document.scrollingElement;
+    if (root && typeof root.scrollTo === "function") {
+      root.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    } else if (root) {
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
+  return <Outlet />;
+}
 
 function App() {
   if (!PUBLISHABLE_KEY) {
