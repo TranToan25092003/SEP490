@@ -1,4 +1,4 @@
-const { Test, ServiceOrder, Booking } = require("../model");
+const { Test, ServiceOrder, Booking, ServiceOrderTask } = require("../model");
 const notificationService = require("../service/notification.service");
 const { UsersService } = require("../service/users.service");
 const serviceOrderService = require("../service/service_order.service");
@@ -84,7 +84,9 @@ async function autoCancelUnapprovedServiceOrders() {
       .populate("booking_id")
       .exec();
 
-    console.log(`[Auto Cancel] Found ${unapprovedOrders.length} unapproved service orders to cancel`);
+    console.log(
+      `[Auto Cancel] Found ${unapprovedOrders.length} unapproved service orders to cancel`
+    );
 
     await Promise.all(
       unapprovedOrders.map(async (order) => {
@@ -97,12 +99,18 @@ async function autoCancelUnapprovedServiceOrders() {
           );
           console.log(`[Auto Cancel] Cancelled service order ${order._id}`);
         } catch (error) {
-          console.error(`[Auto Cancel] Error cancelling service order ${order._id}:`, error.message);
+          console.error(
+            `[Auto Cancel] Error cancelling service order ${order._id}:`,
+            error.message
+          );
         }
       })
     );
   } catch (error) {
-    console.error("[Auto Cancel] Error in autoCancelUnapprovedServiceOrders:", error);
+    console.error(
+      "[Auto Cancel] Error in autoCancelUnapprovedServiceOrders:",
+      error
+    );
   }
 }
 
@@ -120,7 +128,9 @@ async function autoCancelUncheckedInBookings() {
       slot_start_time: { $lte: thirtyMinutesAgo }, // Đã quá giờ đặt 30 phút
     }).exec();
 
-    console.log(`[Auto Cancel] Found ${uncheckedBookings.length} unchecked bookings to cancel`);
+    console.log(
+      `[Auto Cancel] Found ${uncheckedBookings.length} unchecked bookings to cancel`
+    );
 
     await Promise.all(
       uncheckedBookings.map(async (booking) => {
@@ -133,12 +143,75 @@ async function autoCancelUncheckedInBookings() {
           );
           console.log(`[Auto Cancel] Cancelled booking ${booking._id}`);
         } catch (error) {
-          console.error(`[Auto Cancel] Error cancelling booking ${booking._id}:`, error.message);
+          console.error(
+            `[Auto Cancel] Error cancelling booking ${booking._id}:`,
+            error.message
+          );
         }
       })
     );
   } catch (error) {
-    console.error("[Auto Cancel] Error in autoCancelUncheckedInBookings:", error);
+    console.error(
+      "[Auto Cancel] Error in autoCancelUncheckedInBookings:",
+      error
+    );
+  }
+}
+
+/**
+ * Gửi thông báo cho toàn bộ staff khi sắp đến giờ sửa (trước 10 phút)
+ */
+async function notifyUpcomingServiceTasks() {
+  try {
+    const now = new Date();
+    const tenMinutesLater = new Date(now.getTime() + 10 * 60 * 1000);
+
+    // Chỉ lấy các task đã được xếp lịch, chưa bắt đầu
+    const upcomingTasks = await ServiceOrderTask.find({
+      status: "scheduled",
+      expected_start_time: {
+        $gt: now,
+        $lte: tenMinutesLater,
+      },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!upcomingTasks.length) {
+      return;
+    }
+
+    console.log(
+      `[Cron] Found ${upcomingTasks.length} upcoming service tasks within 10 minutes`
+    );
+
+    await Promise.all(
+      upcomingTasks.map(async (task) => {
+        const serviceOrder = task.service_order_id;
+        if (!serviceOrder) return;
+
+        const booking = serviceOrder.booking_id;
+        const plate = booking?.vehicle_id?.license_plate || "không xác định";
+        const orderNumber =
+          serviceOrder.orderNumber || serviceOrder._id.toString();
+
+        await notificationService.notifyStaffGroup({
+          type: "UPCOMING_SERVICE_TASK",
+          title: "Sắp đến giờ sửa xe",
+          message: `Lệnh ${orderNumber} cho xe ${plate} sẽ bắt đầu trong vòng 10 phút. Vui lòng chuẩn bị bay và nhân sự.`,
+          linkTo: `/staff/service-order/${serviceOrder._id}`,
+          actorClerkId: serviceOrder.staff_clerk_id || null,
+        });
+      })
+    );
+  } catch (error) {
+    console.error("[Cron] Error in notifyUpcomingServiceTasks:", error);
   }
 }
 
@@ -149,6 +222,7 @@ const runCronTasks = async () => {
       sendMaintenanceReminders(),
       autoCancelUnapprovedServiceOrders(),
       autoCancelUncheckedInBookings(),
+      notifyUpcomingServiceTasks(),
     ]);
   } catch (error) {
     console.error("Error in cron tasks:", error);

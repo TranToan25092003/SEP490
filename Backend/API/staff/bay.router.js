@@ -6,6 +6,9 @@ const router = new express.Router();
 // List bays with basic pagination and search
 router.get("/", bayController.listBays);
 
+// Real-time availability snapshot
+router.get("/availability/snapshot", bayController.availability);
+
 // Create bay
 router.post("/", bayController.createBay);
 

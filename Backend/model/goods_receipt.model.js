@@ -42,7 +42,7 @@ const GoodsReceiptSchema = new Schema(
 
     status: {
       type: String,
-      enum: ["pending", "approved", "rejected", "completed"],
+    enum: ["pending", "approved", "rejected", "completed", "cancelled"],
       default: "pending",
     }, // Trạng thái phiếu nhập
 

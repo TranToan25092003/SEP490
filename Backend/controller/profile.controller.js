@@ -109,18 +109,27 @@ module.exports.getVehicles = async (req, res) => {
       });
     }
 
-    // Format lại dữ liệu gọn gàng
-    const formatted = vehicles.map((v) => ({
-      _id: v._id,
-      name: v?.model_id?.name,
-      brand: v.model_id?.brand || "Không rõ",
-      engine_type: v.model_id?.engine_type || "Không rõ",
-      description: v.model_id?.description || "",
-      images: v?.images || null,
-      license_plate: v.license_plate,
-      year: v.year,
-    }));
-    console.log(formatted)
+    const hiddenVehicleIdsRaw =
+      req.user?.publicMetadata?.hiddenVehicleIds || [];
+    const hiddenVehicleIds = Array.isArray(hiddenVehicleIdsRaw)
+      ? hiddenVehicleIdsRaw.map((id) => id.toString())
+      : [];
+
+    // Format lại dữ liệu gọn gàng và lọc những xe đã bị ẩn
+    const formatted = vehicles
+      .map((v) => ({
+        _id: v._id,
+        name: v?.model_id?.name,
+        brand: v.model_id?.brand || "Không rõ",
+        engine_type: v.model_id?.engine_type || "Không rõ",
+        description: v.model_id?.description || "",
+        images: v?.images || null,
+        license_plate: v.license_plate,
+        year: v.year,
+      }))
+      .filter((v) => !hiddenVehicleIds.includes(v._id.toString()));
+
+    console.log(formatted);
 
     res.status(200).json({ success: true, data: formatted });
   } catch (error) {
@@ -128,6 +137,64 @@ module.exports.getVehicles = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Lỗi khi lấy danh sách xe" });
+  }
+};
+
+module.exports.hideVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.body || {};
+
+    if (!vehicleId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu vehicleId" });
+    }
+
+    const vehicle = await Vehicle.findById(vehicleId)
+      .select("_id OwnerClerkId")
+      .lean();
+
+    if (!vehicle) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy xe" });
+    }
+
+    if (vehicle.OwnerClerkId !== req.userId) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không có quyền với xe này" });
+    }
+
+    const existingMeta = req.user?.publicMetadata || {};
+    const existingHiddenRaw = existingMeta.hiddenVehicleIds || [];
+    const existingHidden = Array.isArray(existingHiddenRaw)
+      ? existingHiddenRaw.map((id) => id.toString())
+      : [];
+
+    if (!existingHidden.includes(vehicleId.toString())) {
+      existingHidden.push(vehicleId.toString());
+    }
+
+    const updated = await clerkClient.users.updateUser(req.userId, {
+      publicMetadata: {
+        ...existingMeta,
+        hiddenVehicleIds: existingHidden,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã ẩn xe khỏi hồ sơ khách hàng",
+      data: {
+        hiddenVehicleIds: updated.publicMetadata?.hiddenVehicleIds || [],
+      },
+    });
+  } catch (error) {
+    console.error("Failed to hide vehicle:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi ẩn xe khỏi hồ sơ" });
   }
 };
 

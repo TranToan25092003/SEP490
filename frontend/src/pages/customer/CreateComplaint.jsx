@@ -604,7 +604,7 @@ function CreateComplaintPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="md:flex-shrink-0">
+              {/* <div className="md:flex-shrink-0">
                 <label className="text-base font-medium text-stone-700">
                   Đánh giá (Tùy chọn)
                 </label>
@@ -628,7 +628,7 @@ function CreateComplaintPage() {
                     );
                   })}
                 </div>
-              </div>
+              </div> */}
             </div>
 
             {/* Main content area */}

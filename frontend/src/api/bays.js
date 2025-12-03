@@ -48,3 +48,12 @@ export const getBaySlots = async (bayId, n, durationInMinutes, from, ignoredTask
 
   return response.data.data;
 };
+
+export const getBayAvailabilitySnapshot = async (params = {}) => {
+  const response = await customFetch("/staff/bays/availability/snapshot", {
+    method: "GET",
+    params,
+  });
+
+  return response.data;
+};

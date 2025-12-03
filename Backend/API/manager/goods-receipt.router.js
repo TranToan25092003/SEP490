@@ -197,7 +197,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update goods receipt
+// Update goods receipt (currently only supports updating PDF URL)
 router.patch("/:id", async (req, res) => {
   try {
     const { pdfUrl } = req.body;
@@ -230,7 +230,69 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-// Delete goods receipt
+// Cancel goods receipt (soft cancel: giữ phiếu, đảo tồn kho, đổi trạng thái)
+router.patch("/:id/cancel", async (req, res) => {
+  try {
+    const receipt = await GoodsReceipt.findById(req.params.id);
+
+    if (!receipt) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy phiếu nhập kho",
+      });
+    }
+
+    if (receipt.status === "cancelled") {
+      return res.status(400).json({
+        success: false,
+        message: "Phiếu nhập đã ở trạng thái đã hủy",
+      });
+    }
+
+    // Chỉ cho phép hủy những phiếu đã hoàn thành (đã cộng tồn kho)
+    if (receipt.status !== "completed" && receipt.status !== "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Chỉ có thể hủy phiếu ở trạng thái đã duyệt/hoàn thành",
+      });
+    }
+
+    // Lấy tất cả dòng hàng trong phiếu
+    const items = await GoodsReceiptItem.find({
+      goodsReceiptId: receipt._id,
+    });
+
+    // Đảo ngược tồn kho: trừ đi số lượng đã nhập
+    for (const item of items) {
+      await Part.findByIdAndUpdate(
+        item.partId,
+        {
+          $inc: { quantity: -item.quantityActuallyReceived },
+        },
+        { new: true }
+      );
+    }
+
+    // Cập nhật trạng thái phiếu
+    receipt.status = "cancelled";
+    await receipt.save();
+
+    return res.json({
+      success: true,
+      message: "Phiếu nhập đã được hủy và cập nhật tồn kho",
+      receipt,
+    });
+  } catch (error) {
+    console.error("Error cancelling goods receipt:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server khi hủy phiếu nhập kho",
+      error: error.message,
+    });
+  }
+});
+
+// Delete goods receipt (hard delete, đã có logic đảo tồn kho)
 router.delete("/:id", async (req, res) => {
   try {
     const receipt = await GoodsReceipt.findById(req.params.id);

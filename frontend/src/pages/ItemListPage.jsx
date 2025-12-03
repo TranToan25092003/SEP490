@@ -1,18 +1,25 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useLoaderData, useNavigate, useSearchParams } from 'react-router-dom';
-import { Search, Package, Users, BarChart, ShieldCheck, FilterX } from 'lucide-react'
-import CountUp from 'react-countup'
-import productHeroBg from '@/assets/product-hero-bg.jpg'
-import statsBg from '@/assets/stats-bg.jpg'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import React, { useState, useEffect, useMemo } from "react";
+import { useLoaderData, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  Search,
+  Package,
+  Users,
+  BarChart,
+  ShieldCheck,
+  FilterX,
+} from "lucide-react";
+import CountUp from "react-countup";
+import productHeroBg from "@/assets/product-hero-bg.jpg";
+import statsBg from "@/assets/stats-bg.jpg";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Pagination,
   PaginationContent,
@@ -20,19 +27,26 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination"
-import ItemList from '@/components/customer/ItemList'
+} from "@/components/ui/pagination";
+import ItemList from "@/components/customer/ItemList";
 
 const sortOptions = [
-  { value: 'sellingPrice,asc', label: 'Giá Tăng dần' },
-  { value: 'sellingPrice,desc', label: 'Giá Giảm dần' },
-  { value: 'name,asc', label: 'Tên A-Z' },
-  { value: 'name,desc', label: 'Tên Z-A' },
+  { value: "sellingPrice,asc", label: "Giá Tăng dần" },
+  { value: "sellingPrice,desc", label: "Giá Giảm dần" },
+  { value: "name,asc", label: "Tên A-Z" },
+  { value: "name,desc", label: "Tên Z-A" },
 ];
 
 const AnimatedCounter = ({ endValue }) => {
   return (
-    <CountUp end={endValue} duration={2.5} separator="," enableScrollSpy scrollSpyDelay={200} scrollSpyOnce={true} />
+    <CountUp
+      end={endValue}
+      duration={2.5}
+      separator=","
+      enableScrollSpy
+      scrollSpyDelay={200}
+      scrollSpyOnce={true}
+    />
   );
 };
 
@@ -48,25 +62,42 @@ function ItemListPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const [selectedBrand, setSelectedBrand] = useState(searchParams.get('brand') || '');
-  const [selectedModel, setSelectedModel] = useState(searchParams.get('vehicleModel') || '');
-  const [selectedSort, setSelectedSort] = useState(`${searchParams.get('sortBy') || 'sellingPrice'},${searchParams.get('sortOrder') || 'asc'}`);
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedBrand, setSelectedBrand] = useState(
+    searchParams.get("brand") || ""
+  );
+  const [selectedModel, setSelectedModel] = useState(
+    searchParams.get("vehicleModel") || ""
+  );
+  const [selectedSort, setSelectedSort] = useState(
+    `${searchParams.get("sortBy") || "sellingPrice"},${
+      searchParams.get("sortOrder") || "asc"
+    }`
+  );
+  const [searchQuery, setSearchQuery] = useState(
+    searchParams.get("search") || ""
+  );
 
-  const brands = useMemo(() => groupedModels.map(group => group.brand), [groupedModels]);
+  const brands = useMemo(
+    () => groupedModels.map((group) => group.brand),
+    [groupedModels]
+  );
   const models = useMemo(() => {
     if (selectedBrand) {
-      const brandData = groupedModels.find(group => group.brand === selectedBrand);
+      const brandData = groupedModels.find(
+        (group) => group.brand === selectedBrand
+      );
       return brandData ? brandData.models : [];
     }
-    return groupedModels.flatMap(group => group.models);
+    return groupedModels.flatMap((group) => group.models);
   }, [selectedBrand, groupedModels]);
 
   useEffect(() => {
-    const modelIdFromUrl = searchParams.get('vehicleModel');
+    const modelIdFromUrl = searchParams.get("vehicleModel");
     if (modelIdFromUrl && groupedModels.length > 0) {
       for (const group of groupedModels) {
-        const foundModel = group.models.find(model => model._id === modelIdFromUrl);
+        const foundModel = group.models.find(
+          (model) => model._id === modelIdFromUrl
+        );
         if (foundModel) {
           setSelectedBrand(group.brand);
           break;
@@ -85,43 +116,49 @@ function ItemListPage() {
       }
     }
     navigate(`?${params.toString()}`);
-  }
+  };
 
   const handleSearch = () => {
-    const [sortBy, sortOrder] = selectedSort.split(',');
+    const [sortBy, sortOrder] = selectedSort.split(",");
     updateUrlParams({
       search: searchQuery,
       brand: selectedBrand,
       vehicleModel: selectedModel,
       sortBy,
       sortOrder,
-      page: 1, 
+      page: 1,
     });
   };
 
   const handleClearFilters = () => {
-    setSelectedBrand('');
-    setSelectedModel('');
-    setSelectedSort('sellingPrice,asc');
-    setSearchQuery('');
-    navigate('/items');
+    setSelectedBrand("");
+    setSelectedModel("");
+    setSelectedSort("sellingPrice,asc");
+    setSearchQuery("");
+    navigate("/items");
   };
 
   const handlePageChange = (page) => {
     const params = new URLSearchParams(searchParams);
-    params.set('page', page);
+    params.set("page", page);
     navigate(`?${params.toString()}`);
-  }
+  };
 
   return (
     <main className="w-full bg-white">
-      <section className="relative w-full mb-32 md:mb-24">
+      <section className="relative w-full mb-20 md:mb-16">
         <div className="h-[500px] w-full md:h-[600px]">
-          <img src={productHeroBg} alt="Motorcycle" className="h-full w-full object-cover" />
+          <img
+            src={productHeroBg}
+            alt="Motorcycle"
+            className="h-full w-full object-cover"
+          />
           <div className="absolute inset-0 bg-black/60"></div>
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center text-white">
             <h1 className="text-5xl font-bold md:text-7xl">Phụ Tùng</h1>
-            <p className="mt-4 text-lg md:text-xl">Danh sách phụ tùng của chúng tôi</p>
+            <p className="mt-4 text-lg md:text-xl">
+              Danh sách phụ tùng của chúng tôi
+            </p>
           </div>
         </div>
 
@@ -142,25 +179,38 @@ function ItemListPage() {
             <div className="rounded-b-md bg-zinc-800 p-6 pt-2">
               <div className="flex w-full flex-col gap-4 lg:flex-row">
                 <div className="flex-1 min-w-[180px]">
-                  <Select onValueChange={(value) => { setSelectedBrand(value); setSelectedModel(''); }} value={selectedBrand}>
+                  <Select
+                    onValueChange={(value) => {
+                      setSelectedBrand(value);
+                      setSelectedModel("");
+                    }}
+                    value={selectedBrand}
+                  >
                     <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
                       <SelectValue placeholder="Hãng xe" />
                     </SelectTrigger>
                     <SelectContent>
                       {brands.map((brand) => (
-                        <SelectItem key={brand} value={brand}>{brand}</SelectItem>
+                        <SelectItem key={brand} value={brand}>
+                          {brand}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="flex-1 min-w-[180px]">
-                  <Select onValueChange={setSelectedModel} value={selectedModel}>
+                  <Select
+                    onValueChange={setSelectedModel}
+                    value={selectedModel}
+                  >
                     <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
                       <SelectValue placeholder="Dòng xe" />
                     </SelectTrigger>
                     <SelectContent>
                       {models.map((model) => (
-                        <SelectItem key={model._id} value={model._id}>{model.name}</SelectItem>
+                        <SelectItem key={model._id} value={model._id}>
+                          {model.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -172,7 +222,9 @@ function ItemListPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {sortOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -187,7 +239,8 @@ function ItemListPage() {
                   />
                   <Button
                     className="h-9 gap-2 rounded-sm bg-red-700 px-6 text-sm font-bold uppercase text-white transition-colors hover:bg-red-800"
-                    onClick={handleSearch}>
+                    onClick={handleSearch}
+                  >
                     <Search className="h-4 w-4" />
                     <span>Tìm</span>
                   </Button>
@@ -198,11 +251,11 @@ function ItemListPage() {
         </div>
       </section>
 
-      <section className="w-full px-8 pb-24 md:px-12 lg:px-16">
+      <section className="w-full px-4 pb-16 md:px-8 lg:px-12">
         <div className="mx-auto max-w-6xl">
           <ItemList products={parts} />
           {pagination && pagination.totalPages > 1 && (
-            <div className="mt-12 flex justify-center">
+            <div className="mt-8 flex justify-center">
               <Pagination>
                 <PaginationContent>
                   <PaginationItem>
@@ -218,7 +271,7 @@ function ItemListPage() {
                     />
                   </PaginationItem>
 
-                  {[...Array(pagination.totalPages).keys()].map(page => (
+                  {[...Array(pagination.totalPages).keys()].map((page) => (
                     <PaginationItem key={page + 1}>
                       <PaginationLink
                         href="#"
@@ -252,20 +305,32 @@ function ItemListPage() {
         </div>
       </section>
 
-      <section className="w-full mb-20">
+      <section className="w-full mb-12">
         <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
           <div className="relative mx-auto max-w-[1920px]">
-            <img src={statsBg} alt="Abstract background" className="absolute inset-0 h-full w-full object-cover" />
+            <img
+              src={statsBg}
+              alt="Abstract background"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
             <div className="absolute inset-0 bg-zinc-800/80"></div>
-            <div className="relative z-10 grid grid-cols-1 gap-12 px-8 py-28 text-white sm:grid-cols-2 lg:grid-cols-4">
+            <div className="relative z-10 grid grid-cols-1 gap-8 px-8 py-16 text-white sm:grid-cols-2 lg:grid-cols-4">
               {stats.map((stat, index) => (
-                <div key={index} className="flex items-center justify-center gap-4">
-                  <stat.icon className="h-14 w-14 flex-shrink-0 text-white" strokeWidth={1.5} />
+                <div
+                  key={index}
+                  className="flex items-center justify-center gap-4"
+                >
+                  <stat.icon
+                    className="h-14 w-14 flex-shrink-0 text-white"
+                    strokeWidth={1.5}
+                  />
                   <div className="flex flex-col">
                     <div className="text-5xl font-bold leading-10">
                       <AnimatedCounter endValue={stat.value} />+
                     </div>
-                    <div className="mt-2 text-sm font-normal uppercase leading-none">{stat.label}</div>
+                    <div className="mt-2 text-sm font-normal uppercase leading-none">
+                      {stat.label}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -274,7 +339,7 @@ function ItemListPage() {
         </div>
       </section>
     </main>
-  )
+  );
 }
 
-export default ItemListPage
+export default ItemListPage;

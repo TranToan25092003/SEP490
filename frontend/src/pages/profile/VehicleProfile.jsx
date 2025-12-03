@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,15 +12,49 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import placeholderVehicle from '@/assets/part-lopsau.png'; 
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { customFetch } from "@/utils/customAxios";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 
 
 // Component VehicleProfile mới
 const VehicleProfile = ({ vehicles = [] }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [localVehicles, setLocalVehicles] = useState(vehicles);
   const itemsPerPage = 2;
 
-  if (vehicles.length === 0) {
+  useEffect(() => {
+    setLocalVehicles(vehicles);
+    setCurrentPage(1);
+  }, [vehicles]);
+
+  const handleHideVehicle = async (vehicleId) => {
+    try {
+      await customFetch.patch("/profile/vehicles/hide", { vehicleId });
+      setLocalVehicles((prev) => prev.filter((v) => v._id !== vehicleId));
+      toast.success("Đã xóa xe khỏi hồ sơ của bạn");
+    } catch (error) {
+      console.error("Failed to hide vehicle:", error);
+      const message =
+        error?.response?.data?.message ||
+        "Không thể xóa xe khỏi hồ sơ, vui lòng thử lại";
+      toast.error(message);
+    }
+  };
+
+  if (localVehicles.length === 0) {
     return (
       <div className="text-center text-gray-500 py-10">
         <p>Bạn chưa có xe nào.</p>
@@ -30,15 +64,51 @@ const VehicleProfile = ({ vehicles = [] }) => {
   }
 
   // Tính toán phân trang
-  const totalPages = Math.ceil(vehicles.length / itemsPerPage);
+  const totalPages = Math.ceil(localVehicles.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentVehicles = vehicles.slice(startIndex, endIndex);
+  const currentVehicles = localVehicles.slice(startIndex, endIndex);
 
   return (
     <div className="space-y-8">
       {currentVehicles.map((vehicle) => (
         <div key={vehicle._id} className="border-b pb-8 mb-8 last:border-b-0 last:pb-0 last:mb-0">
+          <div className="flex items-start justify-between mb-4">
+            <div className="text-sm font-medium text-gray-700">
+              Xe {vehicle.license_plate}
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Xóa khỏi hồ sơ
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Xóa xe khỏi hồ sơ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Xe này sẽ không còn hiển thị trong hồ sơ và bộ lọc lịch sử sửa xe của bạn,
+                    nhưng các lệnh sửa chữa và dữ liệu liên quan vẫn được giữ nguyên trong hệ thống.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => handleHideVehicle(vehicle._id)}
+                  >
+                    Xác nhận xóa
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <Label htmlFor={`licensePlate-${vehicle._id}`}>Biển Số Xe</Label>
@@ -99,8 +169,8 @@ const VehicleProfile = ({ vehicles = [] }) => {
         <div className="flex items-center justify-between pt-4 border-t">
           <div className="text-sm text-muted-foreground">
             Hiển thị {startIndex + 1} -{" "}
-            {Math.min(endIndex, vehicles.length)} trong tổng số{" "}
-            {vehicles.length} xe
+            {Math.min(endIndex, localVehicles.length)} trong tổng số{" "}
+            {localVehicles.length} xe
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -149,7 +219,7 @@ const VehicleProfile = ({ vehicles = [] }) => {
         </div>
       )}
 
-      {vehicles.length > 0 && totalPages <= 1 && (
+      {localVehicles.length > 0 && totalPages <= 1 && (
         <p className="mt-6 text-center text-sm text-gray-500">Xe được thêm hiển thị giống như trên.</p>
       )}
     </div>

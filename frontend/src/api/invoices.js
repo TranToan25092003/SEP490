@@ -46,8 +46,8 @@ export const confirmInvoicePayment = async (invoiceId, payload = {}) => {
   const response = await customFetch(
     `/staff/invoices/${invoiceId}/confirm-payment`,
     {
-      method: "PATCH",
-      data: payload,
+    method: "PATCH",
+    data: payload,
     }
   );
 

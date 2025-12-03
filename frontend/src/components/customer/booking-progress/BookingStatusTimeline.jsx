@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Clock } from "lucide-react";
@@ -330,8 +329,7 @@ const BookingStatusTimeline = ({
   };
 
   return (
-    <Card className={className} {...props}>
-      <CardContent className="pt-3">
+    <div className={className} {...props}>
         <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
 
         <div className="mb-12">
@@ -355,8 +353,7 @@ const BookingStatusTimeline = ({
         <div className="mt-8 ">
           {renderStepContent()}
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 };
 
