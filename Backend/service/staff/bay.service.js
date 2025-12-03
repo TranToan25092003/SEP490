@@ -87,27 +87,67 @@ class BayService {
 
     const bayIds = bays.map((bay) => bay._id);
 
-    const tasks = await ServiceOrderTask.find({
+    // Tách riêng: 
+    // 1. Lấy các task đang diễn ra tại thời điểm HIỆN TẠI (để xác định trạng thái bay)
+    // 2. Lấy các task trong khoảng thời gian đang xem (để hiển thị lịch sắp tới)
+    
+    // Query 1: Lấy tất cả task đang diễn ra tại thời điểm hiện tại (KHÔNG phụ thuộc vào khoảng thời gian xem)
+    const currentTasks = await ServiceOrderTask.find({
       assigned_bay_id: { $in: bayIds },
       status: { $ne: "completed" },
       $or: [
-        // Các task theo lịch (scheduled) nằm trong khoảng thời gian đang xem
-        {
-          expected_end_time: { $gte: from },
-          expected_start_time: { $lte: to },
-        },
-        // Các task đang thực tế sửa (in_progress) luôn phải lấy,
-        // kể cả khi lịch dự kiến nằm ngoài khoảng from/to
+        // Task đang in_progress
         {
           status: "in_progress",
         },
+        // Task đang diễn ra tại thời điểm hiện tại (dựa trên actual hoặc expected time)
+        {
+          $or: [
+            {
+              actual_start_time: { $exists: true, $lte: now },
+              actual_end_time: { $exists: true, $gte: now },
+            },
+            {
+              actual_start_time: { $exists: false },
+              expected_start_time: { $lte: now },
+              expected_end_time: { $gte: now },
+            },
+          ],
+        },
       ],
+    })
+      .populate("service_order_id", "orderNumber status")
+      .lean();
+
+    // Query 2: Lấy các task trong khoảng thời gian đang xem (để hiển thị lịch sắp tới)
+    const upcomingTasksQuery = await ServiceOrderTask.find({
+      assigned_bay_id: { $in: bayIds },
+      status: { $ne: "completed" },
+      expected_end_time: { $gte: from },
+      expected_start_time: { $lte: to },
     })
       .populate("service_order_id", "orderNumber status")
       .sort({ expected_start_time: 1 })
       .lean();
 
-    const tasksByBay = tasks.reduce((acc, task) => {
+    // Gộp lại và loại bỏ trùng lặp (ưu tiên currentTasks)
+    const currentTaskIds = new Set(currentTasks.map(t => t._id.toString()));
+    const allTasks = [
+      ...currentTasks,
+      ...upcomingTasksQuery.filter(t => !currentTaskIds.has(t._id.toString()))
+    ];
+
+    const tasksByBay = allTasks.reduce((acc, task) => {
+      const key = task.assigned_bay_id.toString();
+      if (!acc.has(key)) {
+        acc.set(key, []);
+      }
+      acc.get(key).push(task);
+      return acc;
+    }, new Map());
+
+    // Tạo map các task đang diễn ra tại thời điểm hiện tại theo bay
+    const currentTasksByBay = currentTasks.reduce((acc, task) => {
       const key = task.assigned_bay_id.toString();
       if (!acc.has(key)) {
         acc.set(key, []);
@@ -118,7 +158,17 @@ class BayService {
 
     const baySnapshots = bays.map((bay) => {
       const bayTasks = tasksByBay.get(bay._id.toString()) || [];
-      const currentTask = bayTasks.find((task) => {
+      // Chỉ xem xét các task đang diễn ra tại thời điểm hiện tại để xác định trạng thái bay
+      const currentBayTasks = currentTasksByBay.get(bay._id.toString()) || [];
+      
+      // Tìm task đang diễn ra tại thời điểm hiện tại
+      // Ưu tiên task có status "in_progress"
+      const currentTask = currentBayTasks.find((task) => {
+        // Nếu task đang in_progress, luôn coi là đang diễn ra
+        if (task.status === "in_progress") {
+          return true;
+        }
+        // Kiểm tra dựa trên thời gian thực tế hoặc dự kiến
         const startTime = new Date(
           task.actual_start_time || task.expected_start_time
         );

@@ -59,6 +59,7 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
+  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -72,9 +73,7 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import StaffDashboardPage, {
-  staffDashboardLoader,
-} from "./pages/staff/StaffDashboardPage";
+import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
