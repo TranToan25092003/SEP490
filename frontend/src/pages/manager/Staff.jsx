@@ -9,12 +9,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2, Edit2, Save, X } from "lucide-react";
 import { getAttendanceByDate, getAttendanceHistory } from "@/api/attendance";
+import { customFetch } from "@/utils/customAxios";
+import { toast } from "sonner";
 
 const ROLE_LABELS = {
-  technician: "thợ",
-  staff: "nhân viên",
+  technician: "Thợ",
+  staff: "Nhân Viên",
 };
 
 const ATTENDANCE_STATUS_LABELS = {
@@ -109,10 +120,26 @@ const StaffPage = () => {
   const [historyError, setHistoryError] = useState("");
   const [historyWindowLabel, setHistoryWindowLabel] = useState("");
   const [historyCache, setHistoryCache] = useState({});
+  const [isEditingStaff, setIsEditingStaff] = useState(false);
+  const [staffForm, setStaffForm] = useState({
+    fullName: "",
+    phone: "",
+    address: "",
+    gender: "",
+  });
+  const [isSavingStaff, setIsSavingStaff] = useState(false);
 
   const handleDetailOpen = (member) => {
     setSelectedStaff(member);
     setIsDetailOpen(true);
+    // Khởi tạo form với dữ liệu hiện tại
+    setStaffForm({
+      fullName: member.fullName || "",
+      phone: member.phone || "",
+      address: member.address || "",
+      gender: member.gender || "",
+    });
+    setIsEditingStaff(false);
   };
 
   const handleDialogOpenChange = (open) => {
@@ -122,6 +149,110 @@ const StaffPage = () => {
       setHistoryError("");
       setHistoryRecords([]);
       setHistoryLoading(false);
+      setIsEditingStaff(false);
+      setStaffForm({
+        fullName: "",
+        phone: "",
+        address: "",
+        gender: "",
+      });
+    }
+  };
+
+  const handleStaffFormChange = (field, value) => {
+    setStaffForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSaveStaffInfo = async () => {
+    if (!selectedStaff?.clerkUserId) {
+      toast.error("Không tìm thấy thông tin nhân viên");
+      return;
+    }
+
+    setIsSavingStaff(true);
+    try {
+      const publicMetadataPayload = {
+        fullName: staffForm.fullName || undefined,
+        phone: staffForm.phone || undefined,
+        address: staffForm.address || undefined,
+        gender: staffForm.gender || undefined,
+      };
+
+      await customFetch.patch(
+        `/manager/staff/${selectedStaff.clerkUserId}/public-metadata`,
+        {
+          publicMetadata: publicMetadataPayload,
+        }
+      );
+
+      toast.success("Cập nhật thông tin nhân viên thành công");
+      setIsEditingStaff(false);
+
+      // Cập nhật trực tiếp state với dữ liệu đã lưu (không cần đợi reload)
+      // Sử dụng dữ liệu từ form (đã được submit) hoặc giữ nguyên giá trị cũ nếu form trống
+      const updatedFullName =
+        staffForm.fullName?.trim() || selectedStaff.fullName;
+      const updatedPhone = staffForm.phone?.trim() || selectedStaff.phone || "";
+      const updatedAddress =
+        staffForm.address?.trim() || selectedStaff.address || "";
+      const updatedGender = staffForm.gender || selectedStaff.gender || "";
+
+      // Cập nhật memberships trước để trigger lại rows calculation
+      setMemberships((prevMemberships) =>
+        prevMemberships.map((membership) => {
+          if (membership.publicUserData?.userId === selectedStaff.clerkUserId) {
+            // Tạo membership mới với publicMetadata đã cập nhật
+            const updatedMembership = {
+              ...membership,
+              publicMetadata: {
+                ...(membership.publicMetadata || {}),
+                ...(updatedFullName ? { fullName: updatedFullName } : {}),
+                ...(updatedPhone ? { phone: updatedPhone } : {}),
+                ...(updatedAddress ? { address: updatedAddress } : {}),
+                ...(updatedGender ? { gender: updatedGender } : {}),
+              },
+            };
+            return updatedMembership;
+          }
+          return membership;
+        })
+      );
+
+      // Cập nhật selectedStaff với dữ liệu mới (sẽ được tính lại từ rows khi memberships thay đổi)
+      // Nhưng cũng cập nhật trực tiếp để UI phản hồi ngay
+      setSelectedStaff((prev) => ({
+        ...prev,
+        fullName: updatedFullName,
+        phone: updatedPhone || "Chưa cập nhật",
+        address: updatedAddress || "Chưa có",
+        gender: updatedGender || "—",
+      }));
+
+      // Cập nhật lại form với dữ liệu mới
+      setStaffForm({
+        fullName: updatedFullName,
+        phone: updatedPhone,
+        address: updatedAddress,
+        gender: updatedGender,
+      });
+
+      // Reload organization ở background để đồng bộ với Clerk (không chặn UI)
+      if (organization) {
+        organization.reload().catch((err) => {
+          console.error("Failed to reload organization:", err);
+        });
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin nhân viên:", error);
+      toast.error(
+        error.response?.data?.message ||
+          "❌ Cập nhật thất bại, vui lòng thử lại!"
+      );
+    } finally {
+      setIsSavingStaff(false);
     }
   };
 
@@ -277,10 +408,20 @@ const StaffPage = () => {
           ...(membership.publicMetadata ?? {}),
         };
 
-        const fullName = [publicUserData.firstName, publicUserData.lastName]
+        // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
+        const fullNameFromMetadata = memberMetadata.fullName;
+        const fullNameFromGoogle = [
+          publicUserData.firstName,
+          publicUserData.lastName,
+        ]
           .filter(Boolean)
           .join(" ")
           .trim();
+        const fullName =
+          fullNameFromMetadata ||
+          fullNameFromGoogle ||
+          publicUserData.identifier ||
+          "Không rõ";
 
         const jobType = membership.roleName ?? "staff";
         const clerkUserId = publicUserData.userId;
@@ -298,7 +439,7 @@ const StaffPage = () => {
           employeeCode:
             memberMetadata.employeeCode ?? publicUserData.userId ?? "—",
           role: membership.roleName ?? membership.roleName ?? "staff",
-          fullName: fullName || publicUserData.identifier || "Không rõ",
+          fullName,
           avatar: publicUserData.imageUrl,
           gender: memberMetadata.gender ?? "—",
           phone:
@@ -560,15 +701,30 @@ const StaffPage = () => {
                     </span>
                   )}
                   <div>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {selectedStaff.fullName}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {selectedStaff.email}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {selectedStaff.phone}
-                    </p>
+                    {isEditingStaff ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={staffForm.fullName}
+                          onChange={(e) =>
+                            handleStaffFormChange("fullName", e.target.value)
+                          }
+                          placeholder="Họ và tên"
+                          className="w-full"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {selectedStaff.fullName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {selectedStaff.email}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {selectedStaff.phone}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </div>
 
@@ -581,23 +737,118 @@ const StaffPage = () => {
                   >
                     {selectedStaff.statusLabel}
                   </span>
+                  {!isEditingStaff && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsEditingStaff(true)}
+                    >
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Chỉnh sửa
+                    </Button>
+                  )}
                 </div>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg border p-4">
-                  <p className="text-xs text-gray-500">Mã số nhân viên</p>
-                  <p className="mt-1 text-sm font-medium truncate">
-                    {selectedStaff.employeeCode || "Chưa có"}
-                  </p>
+              {isEditingStaff ? (
+                <div className="space-y-4 rounded-lg border p-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div>
+                      <Label htmlFor="staff-phone">Số điện thoại</Label>
+                      <Input
+                        id="staff-phone"
+                        value={staffForm.phone}
+                        onChange={(e) =>
+                          handleStaffFormChange("phone", e.target.value)
+                        }
+                        placeholder="Số điện thoại"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="staff-gender">Giới tính</Label>
+                      <Select
+                        value={staffForm.gender}
+                        onValueChange={(value) =>
+                          handleStaffFormChange("gender", value)
+                        }
+                      >
+                        <SelectTrigger className="mt-1">
+                          <SelectValue placeholder="Chọn giới tính" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Nam</SelectItem>
+                          <SelectItem value="female">Nữ</SelectItem>
+                          <SelectItem value="other">Khác</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Label htmlFor="staff-address">Địa chỉ</Label>
+                      <Input
+                        id="staff-address"
+                        value={staffForm.address}
+                        onChange={(e) =>
+                          handleStaffFormChange("address", e.target.value)
+                        }
+                        placeholder="Địa chỉ"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSaveStaffInfo}
+                      disabled={isSavingStaff}
+                      className="bg-[#DF1D01] hover:bg-red-800"
+                    >
+                      {isSavingStaff ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Đang lưu...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Lưu thay đổi
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsEditingStaff(false);
+                        // Reset form về giá trị ban đầu
+                        setStaffForm({
+                          fullName: selectedStaff.fullName || "",
+                          phone: selectedStaff.phone || "",
+                          address: selectedStaff.address || "",
+                          gender: selectedStaff.gender || "",
+                        });
+                      }}
+                      disabled={isSavingStaff}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Hủy
+                    </Button>
+                  </div>
                 </div>
-                <div className="rounded-lg border p-4">
-                  <p className="text-xs text-gray-500">Địa chỉ</p>
-                  <p className="mt-1 text-sm font-medium">
-                    {selectedStaff.address || "Chưa có"}
-                  </p>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs text-gray-500">Mã số nhân viên</p>
+                    <p className="mt-1 text-sm font-medium truncate">
+                      {selectedStaff.employeeCode || "Chưa có"}
+                    </p>
+                  </div>
+                  <div className="rounded-lg border p-4">
+                    <p className="text-xs text-gray-500">Địa chỉ</p>
+                    <p className="mt-1 text-sm font-medium">
+                      {selectedStaff.address || "Chưa có"}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="rounded-xl border p-4">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">

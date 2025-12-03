@@ -440,7 +440,9 @@ const LayoutProfile = () => {
   }
 
   const profileImage = user?.imageUrl || avatarImg;
-  const fullName = user?.fullName || "Not available";
+  // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
+  const fullName =
+    user?.publicMetadata?.fullName || user?.fullName || "Chưa cập nhật";
   const email = user?.emailAddresses?.[0]?.emailAddress;
 
   return (

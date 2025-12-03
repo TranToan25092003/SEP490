@@ -79,7 +79,8 @@ const FloatingChatButton = () => {
     let name = "";
     if (isSignedIn && user?.id) {
       id = user.id;
-      name = user.firstName || user.username || "Khách hàng";
+      // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
+      name = user.publicMetadata?.fullName || user.fullName || user.firstName || user.username || "Khách hàng";
     } else {
       try {
         id = localStorage.getItem("guest_id");
@@ -182,7 +183,7 @@ const FloatingChatButton = () => {
     const message = {
       id: Date.now().toString(),
       senderId: "customer",
-      senderName: customerName || user?.firstName || "Khách hàng",
+      senderName: customerName || user?.publicMetadata?.fullName || user?.fullName || user?.firstName || "Khách hàng",
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
