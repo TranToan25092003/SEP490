@@ -87,6 +87,7 @@ const ServiceOrderSchema = new Schema(
         "waiting_customer_approval",
         "approved",
         "scheduled",
+        "rescheduled",
         "servicing",
         "completed",
         "cancelled",

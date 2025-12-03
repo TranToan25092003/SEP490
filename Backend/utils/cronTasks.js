@@ -215,6 +215,65 @@ async function notifyUpcomingServiceTasks() {
   }
 }
 
+async function notifyServiceTasksAlmostCompleted() {
+  try {
+    const now = new Date();
+
+    // Cửa sổ 15 phút: 14-16 phút trước khi kết thúc
+    const fifteenMinLower = new Date(now.getTime() + 14 * 60 * 1000);
+    const fifteenMinUpper = new Date(now.getTime() + 16 * 60 * 1000);
+
+    // Cửa sổ 5 phút: 4-6 phút trước khi kết thúc
+    const fiveMinLower = new Date(now.getTime() + 4 * 60 * 1000);
+    const fiveMinUpper = new Date(now.getTime() + 6 * 60 * 1000);
+
+    // Lấy các task đang sửa chữa
+    const inProgressTasks = await ServiceOrderTask.find({
+      status: "in_progress",
+      expected_end_time: { $ne: null },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!inProgressTasks.length) return;
+
+    await Promise.all(
+      inProgressTasks.map(async (task) => {
+        const serviceOrder = task.service_order_id;
+        if (!serviceOrder || !task.expected_end_time) return;
+
+        const endTime = new Date(task.expected_end_time);
+
+        // ~15 phút trước khi kết thúc
+        if (endTime > fifteenMinLower && endTime <= fifteenMinUpper) {
+          await notificationService.notifyServiceOrderAlmostCompleted({
+            serviceOrder,
+            minutesLeft: 15,
+            variant: "15min",
+          });
+        }
+
+        // ~5 phút trước khi kết thúc
+        if (endTime > fiveMinLower && endTime <= fiveMinUpper) {
+          await notificationService.notifyServiceOrderAlmostCompleted({
+            serviceOrder,
+            minutesLeft: 5,
+            variant: "5min",
+          });
+        }
+      })
+    );
+  } catch (error) {
+    console.error("[Cron] Error in notifyServiceTasksAlmostCompleted:", error);
+  }
+}
+
 const runCronTasks = async () => {
   try {
     await Promise.all([
@@ -223,6 +282,7 @@ const runCronTasks = async () => {
       autoCancelUnapprovedServiceOrders(),
       autoCancelUncheckedInBookings(),
       notifyUpcomingServiceTasks(),
+      notifyServiceTasksAlmostCompleted(),
     ]);
   } catch (error) {
     console.error("Error in cron tasks:", error);

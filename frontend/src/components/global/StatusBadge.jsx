@@ -32,6 +32,14 @@ const stringToHue = (value) => {
  * // Returns: { background: "hsl(120, 80%, 92%)", foreground: "hsl(120, 45%, 32%)" }
  */
 const getStatusColors = (status) => {
+  // Màu đặc biệt cho trạng thái dời lịch (rescheduled)
+  if (status === "rescheduled") {
+    return {
+      background: "hsl(280, 90%, 95%)", // tím nhạt, chưa dùng
+      foreground: "hsl(280, 60%, 35%)",
+    };
+  }
+
   const hue = stringToHue(status || "");
   return {
     background: `hsl(${hue}, 80%, 92%)`,

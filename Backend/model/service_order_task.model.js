@@ -39,7 +39,7 @@ const serviceOrderTaskSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["scheduled", "in_progress", "completed"],
+    enum: ["scheduled", "rescheduled", "in_progress", "completed"],
     default: "scheduled",
   },
   assigned_technicians: [assignedTechnicianSchema],

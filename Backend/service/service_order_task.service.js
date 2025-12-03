@@ -94,9 +94,9 @@ class ServiceOrderTaskService {
   }
 
   async beginTask(task, techniciansInfoArray) {
-    if (task.status !== "scheduled") {
+    if (!["scheduled", "rescheduled"].includes(task.status)) {
       throw new DomainError(
-        "Tác vụ không ở trạng thái 'scheduled'",
+        "Tác vụ không ở trạng thái 'scheduled' hoặc 'rescheduled'",
         ERROR_CODES.SERVICE_TASK_INVALID_STATE,
         409
       );

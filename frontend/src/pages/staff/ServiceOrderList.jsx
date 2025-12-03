@@ -53,7 +53,10 @@ const serviceOrderListColumnDefinitions = [
 
       return (
         <div className="flex items-center gap-2">
-          <StatusBadge status={statusLabel} />
+          <StatusBadge
+            status={statusLabel}
+            colorKey={row.status === "rescheduled" ? "rescheduled" : undefined}
+          />
           {isUpcomingSoon && (
             <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-0.5 text-[11px] font-medium text-orange-700 border border-orange-200 whitespace-nowrap">
               Sắp tới giờ sửa

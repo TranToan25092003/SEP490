@@ -256,15 +256,39 @@ const BookingStatusTimeline = ({
             </h4>
           </div>
 
-          {servicingTask.expectedEndTime && (
-            <div className="bg-red-50 border red-blue-200 rounded-lg p-4">
-              <p className="text-sm text-red-800">
-                <span className="font-semibold">
-                  Thời gian dự kiến hoàn thành:{" "}
-                </span>
-                {formatDateTime(servicingTask.expectedEndTime)}
+          {servicingTask.status === "rescheduled" ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-900">
+                <span className="font-semibold">Tạm dừng sửa chữa</span>
+                {servicingTask.expectedStartTime && (
+                  <>
+                    {" "}
+                    - <span className="font-semibold">
+                      Dự kiến tiếp tục:
+                    </span>{" "}
+                    {formatDateTime(servicingTask.expectedStartTime)}
+                  </>
+                )}
+                {servicingTask.expectedEndTime && (
+                  <>
+                    {" "}
+                    - <span className="font-semibold">
+                      Dự kiến hoàn thành:
+                    </span>{" "}
+                    {formatDateTime(servicingTask.expectedEndTime)}
+                  </>
+                )}
               </p>
             </div>
+          ) : (
+            servicingTask.expectedEndTime && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">
+                  <span className="font-semibold">Dự kiến hoàn thành: </span>
+                  {formatDateTime(servicingTask.expectedEndTime)}
+                </p>
+              </div>
+            )
           )}
 
           {servicingTask.timeline && servicingTask.timeline.length > 0 ? (

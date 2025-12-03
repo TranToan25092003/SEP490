@@ -14,7 +14,9 @@ const ERROR_CODES = {
 
 class BaySchedulingService {
   async rescheduleTask(taskId, bayId, newStart, newEnd) {
-    const task = await ServiceOrderTask.findById(taskId).exec();
+    const task = await ServiceOrderTask.findById(taskId)
+      .populate("service_order_id")
+      .exec();
     if (!task) {
       throw new DomainError("Task not found", ERROR_CODES.TASK_NOT_FOUND);
     }
@@ -46,6 +48,28 @@ class BaySchedulingService {
     task.expected_start_time = newStart;
     task.expected_end_time = newEnd;
     task.assigned_bay_id = bayId;
+    // Đặt lại trạng thái thành 'rescheduled' để thể hiện đang chờ tới lịch mới
+    task.status = "rescheduled";
+
+    // Nếu là tác vụ sửa chữa, ghi nhận thêm một mốc trong timeline để khách/staff
+    // nhìn thấy rõ việc dời lịch ngay trong tiến độ
+    if (task.__t === "servicing") {
+      const startText = newStart.toLocaleString("vi-VN");
+      const endText = newEnd.toLocaleString("vi-VN");
+
+      task.timeline.push({
+        title: "Dời lịch sửa chữa",
+        comment: `Dời lịch sửa chữa sang khung giờ ${startText} - ${endText}`,
+        timestamp: new Date(),
+        media: [],
+      });
+
+      // Nếu có service_order_id thì cập nhật luôn trạng thái lệnh sang 'rescheduled'
+      if (task.service_order_id) {
+        task.service_order_id.status = "rescheduled";
+        await task.service_order_id.save();
+      }
+    }
 
     await task.save();
 
