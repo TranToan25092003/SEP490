@@ -28,6 +28,7 @@ import {
   cancelServiceOrder,
 } from "@/api/serviceOrders";
 import { createQuote, getQuotesForServiceOrder } from "@/api/quotes";
+import { getAllTasksForServiceOrder } from "@/api/serviceTasks";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -51,13 +52,28 @@ async function loader({ params }) {
     return null;
   });
 
+  // Load tasks để kiểm tra trạng thái hủy lệnh
+  const tasksPromise = serviceOrderPromise.then(async (serviceOrder) => {
+    if (serviceOrder?.id) {
+      try {
+        const tasksData = await getAllTasksForServiceOrder(serviceOrder.id);
+        return tasksData;
+      } catch (error) {
+        console.error("Error loading tasks:", error);
+        return [];
+      }
+    }
+    return [];
+  });
+
   return {
     serviceOrder: serviceOrderPromise,
     quotes: quotesPromise,
+    tasks: tasksPromise,
   };
 }
 
-const ServiceOrderDetailContent = ({ serviceOrder, quotes, revalidator }) => {
+const ServiceOrderDetailContent = ({ serviceOrder, quotes, tasks, revalidator }) => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
@@ -158,6 +174,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, quotes, revalidator }) => {
 
       <ServiceOrderEditForm
         serviceOrder={serviceOrder}
+        tasks={tasks || []}
         getTotalPrice={async (items) => {
           //TODO: replace this with calls to the server
           const sum = items.reduce((acc, x) => acc + x.price * x.quantity, 0);
@@ -229,7 +246,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, quotes, revalidator }) => {
 };
 
 const ServiceOrderDetail = () => {
-  const { serviceOrder: serviceOrderPromise, quotes: quotesPromise } = useLoaderData();
+  const { serviceOrder: serviceOrderPromise, quotes: quotesPromise, tasks: tasksPromise } = useLoaderData();
   const revalidator = useRevalidator();
   const { id } = useParams();
 
@@ -266,17 +283,18 @@ const ServiceOrderDetail = () => {
         }
       >
         <Await
-          resolve={Promise.all([serviceOrderPromise, quotesPromise])}
+          resolve={Promise.all([serviceOrderPromise, quotesPromise, tasksPromise])}
           errorElement={
             <div className="text-center py-8 text-destructive">
               Không thể tải thông tin lệnh sửa chữa
             </div>
           }
         >
-          {([serviceOrder, quotes]) => (
+          {([serviceOrder, quotes, tasks]) => (
             <ServiceOrderDetailContent
               serviceOrder={serviceOrder}
               quotes={quotes}
+              tasks={tasks}
               revalidator={revalidator}
             />
           )}

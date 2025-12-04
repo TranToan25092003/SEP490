@@ -28,7 +28,7 @@ const BookingStatusHeader = ({
   const revalidator = useRevalidator();
 
   // Kiểm tra xem có thể hủy đơn không
-  // Chỉ cho phép hủy ở: tiếp nhận (booked, checked_in) hoặc chờ duyệt báo giá
+  // Chỉ cho phép hủy ở: tiếp nhận (booked, checked_in), chờ duyệt báo giá, hoặc kiểm tra xong (inspection_completed)
   const canCancel = () => {
     // Đã hủy hoặc đã hoàn thành thì không cho hủy
     if (status === "cancelled" || status === "completed") {
@@ -45,16 +45,26 @@ const BookingStatusHeader = ({
       return true;
     }
 
-    // Kiểm tra nếu đã bắt đầu kiểm tra (inspection task đã bắt đầu)
+    // Cho phép hủy khi kiểm tra xong (inspection_completed) - trước khi bắt đầu sửa chữa
+    if (serviceOrderStatus === "inspection_completed") {
+      // Kiểm tra xem đã bắt đầu sửa chữa chưa
+      const servicingTask = tasks.find((t) => t.type === "servicing");
+      if (servicingTask && servicingTask.status !== "scheduled" && servicingTask.status !== "rescheduled") {
+        return false; // Đã bắt đầu sửa chữa, không cho hủy
+      }
+      return true; // Kiểm tra xong và chưa bắt đầu sửa chữa, cho phép hủy
+    }
+
+    // Kiểm tra nếu đang kiểm tra (inspection task đang in_progress)
     const inspectionTask = tasks.find((t) => t.type === "inspection");
-    if (inspectionTask && inspectionTask.status !== "scheduled" && inspectionTask.status !== "rescheduled") {
-      return false; // Đã bắt đầu kiểm tra, không cho hủy
+    if (inspectionTask && inspectionTask.status === "in_progress") {
+      return false; // Đang kiểm tra, không cho hủy
     }
 
     // Kiểm tra nếu đã bắt đầu sửa chữa (servicing task đã bắt đầu)
     const servicingTask = tasks.find((t) => t.type === "servicing");
-    if (servicingTask && servicingTask.status !== "scheduled" && servicingTask.status !== "rescheduled") {
-      return false; // Đã bắt đầu sửa chữa, không cho hủy
+    if (servicingTask && servicingTask.status === "in_progress") {
+      return false; // Đang sửa chữa, không cho hủy
     }
 
     // Các trường hợp khác không cho hủy

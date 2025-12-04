@@ -429,7 +429,7 @@ async function notifyCustomerBookingCancelled(booking) {
   let title, message;
   if (cancelledBy === "staff") {
     title = "Đơn đặt lịch đã bị hủy";
-    message = `Đơn đặt lịch của quý khách ${customerName} đã bị nhân viên hủy.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+    message = `Đơn đặt lịch của quý khách ${customerName} đã được hủy thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
   } else {
     title = "Hủy đặt lịch thành công";
     message = `Quý khách ${customerName} đã hủy đặt lịch thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
@@ -463,7 +463,7 @@ async function notifyStaffOfBookingCancelled(booking) {
 
   let message;
   if (cancelledBy === "staff") {
-    message = `Nhân viên đã hủy đặt lịch sửa xe cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
+    message = `Hủy đặt lịch sửa xe thành công cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
   } else {
     message = `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.${cancelReason}`;
   }
