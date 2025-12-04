@@ -244,7 +244,7 @@ class ServiceOrderService {
 
     let customerName = serviceOrder.walk_in_customer?.name || "Khách vãng lai";
     let customerClerkId = null;
-    const customerPhone = serviceOrder.walk_in_customer?.phone || null;
+    let customerPhone = serviceOrder.walk_in_customer?.phone || null;
     let licensePlateInfo = serviceOrder.walk_in_vehicle?.license_plate || "—";
     let vehicleId = null;
 
@@ -257,6 +257,22 @@ class ServiceOrderService {
         customerMap[serviceOrder.booking_id.customer_clerk_id] ||
         customerName ||
         "Không xác định";
+      
+      // Lấy số điện thoại từ Clerk user nếu không có từ walk_in
+      if (!customerPhone && customerClerkId) {
+        const { clerkClient } = require("../config/clerk");
+        try {
+          const user = await clerkClient.users.getUser(customerClerkId);
+          const primaryPhone = user.phoneNumbers?.find(
+            (p) => p.id === user.primaryPhoneNumberId
+          ) || user.phoneNumbers?.[0];
+          customerPhone = primaryPhone?.phoneNumber || null;
+        } catch (error) {
+          console.error("Failed to fetch customer phone from Clerk:", error);
+          // Giữ nguyên customerPhone = null
+        }
+      }
+      
       licensePlateInfo =
         serviceOrder.booking_id.vehicle_id?.license_plate || licensePlateInfo;
       vehicleId =

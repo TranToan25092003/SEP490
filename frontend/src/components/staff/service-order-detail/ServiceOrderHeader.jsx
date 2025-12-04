@@ -38,10 +38,17 @@ const ServiceOrderHeader = ({
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="space-y-2">
           <Label>Tên khách hàng</Label>
           <div className="font-semibold">{serviceOrder.customerName}</div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Số điện thoại</Label>
+          <div className="font-semibold">
+            {serviceOrder.customerPhone || "Chưa cập nhật"}
+          </div>
         </div>
 
         <div className="space-y-2">
