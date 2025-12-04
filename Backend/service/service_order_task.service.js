@@ -202,7 +202,9 @@ class ServiceOrderTaskService {
 
     const serviceOrder = await ServiceOrder.findById(
       inspectionTask.service_order_id
-    ).exec();
+    )
+      .populate("booking_id")
+      .exec();
 
     if (!serviceOrder) {
       throw new DomainError(
@@ -218,6 +220,19 @@ class ServiceOrderTaskService {
     if (booking) {
       booking.status = "in_progress";
       await booking.save();
+    }
+
+    // Gửi notification cho customer khi bắt đầu kiểm tra
+    if (serviceOrder.booking_id?.customer_clerk_id) {
+      const plate = serviceOrder.booking_id?.vehicle_id?.license_plate || "xe của bạn";
+      await notificationService.createNotification({
+        recipientClerkId: serviceOrder.booking_id.customer_clerk_id,
+        recipientType: "customer",
+        type: "INSPECTION_STARTED",
+        title: "Đã bắt đầu kiểm tra xe",
+        message: `Xe ${plate} của quý khách đã bắt đầu được kiểm tra. Bấm vào đây để theo dõi tiến độ.`,
+        linkTo: `/booking/${serviceOrder.booking_id._id}`,
+      });
     }
 
     return mapInspectionTask(inspectionTask);
@@ -458,8 +473,41 @@ class ServiceOrderTaskService {
     );
 
     task = await ServiceOrderTask.findById(taskId)
-      .populate("service_order_id")
+      .populate({
+        path: "service_order_id",
+        populate: { path: "booking_id", populate: { path: "vehicle_id" } },
+      })
       .exec();
+
+    // Gửi notification cho customer khi dời lịch
+    if (task?.service_order_id?.booking_id?.customer_clerk_id) {
+      const booking = task.service_order_id.booking_id;
+      const plate = booking.vehicle_id?.license_plate || "xe của bạn";
+      const taskType = task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
+      const formattedStart = new Date(start).toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+      const formattedEnd = new Date(end).toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+
+      await notificationService.createNotification({
+        recipientClerkId: booking.customer_clerk_id,
+        recipientType: "customer",
+        type: "TASK_RESCHEDULED",
+        title: `Lịch ${taskType} đã được dời`,
+        message: `Lịch ${taskType} cho xe ${plate} đã được dời lại. Thời gian mới: ${formattedStart} - ${formattedEnd}. Bấm vào đây để xem chi tiết.`,
+        linkTo: `/booking/${booking._id}`,
+      });
+    }
 
     if (task.__t === "inspection") {
       return mapInspectionTask(task);

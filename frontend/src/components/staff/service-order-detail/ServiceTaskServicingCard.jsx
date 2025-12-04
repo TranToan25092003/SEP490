@@ -22,6 +22,7 @@ import ChooseStaffModal from "./ChooseStaffModal";
 import { Clock, Image } from "lucide-react";
 import EmptyState from "@/components/global/EmptyState";
 import BaySchedulingModal from "./BaySchedulingModal";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 const ServiceTaskServicingCard = ({ task }) => {
   const [loading, setLoading] = useState(false);
@@ -211,12 +212,19 @@ const ServiceTaskServicingCard = ({ task }) => {
         {getButton()}
       </CardHeader>
       <CardContent className="px-2">
-        <div className="mb-2 text-sm text-muted-foreground">
-          Trạng thái:{" "}
+        <div className="mb-2 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+          <span>Trạng thái:</span>
           <StatusBadge
             status={translateTaskStatus(task.status)}
             colorKey={task.status === "rescheduled" ? "rescheduled" : undefined}
           />
+          {task.status === "in_progress" && task.expectedEndTime && (
+            <CountdownTimer
+              targetTime={task.expectedEndTime}
+              label="Còn lại"
+              compact
+            />
+          )}
         </div>
         <div className="mb-4 space-y-2 text-sm text-muted-foreground">
           {task.expectedStartTime && (
@@ -231,6 +239,7 @@ const ServiceTaskServicingCard = ({ task }) => {
               <span>{formatDateTime(task.expectedEndTime)}</span>
             </div>
           )}
+
           {task.actualStartTime && (
             <div className="flex items-center gap-2">
               <span className="font-medium">Thời gian bắt đầu thực tế:</span>

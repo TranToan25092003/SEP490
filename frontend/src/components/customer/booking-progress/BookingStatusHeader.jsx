@@ -19,13 +19,34 @@ const BookingStatusHeader = ({
   status,
   licensePlate,
   creationDate,
+  serviceOrderStatus,
   className,
   ...props
 }) => {
   const [loading, setLoading] = useState(false);
   const revalidator = useRevalidator();
 
+  // Không cho phép hủy sau khi đã duyệt báo giá và chuyển sang bước sửa chữa
+  const nonCancellableStatuses = [
+    "approved",
+    "scheduled",
+    "servicing",
+    "completed",
+  ];
+  const canCancel =
+    status !== "cancelled" &&
+    status !== "completed" &&
+    (!serviceOrderStatus ||
+      !nonCancellableStatuses.includes(serviceOrderStatus));
+
   const handleCancel = async () => {
+    if (!canCancel) {
+      toast.error(
+        "Không thể hủy đơn sau khi đã duyệt báo giá và chuyển sang bước sửa chữa"
+      );
+      return;
+    }
+
     try {
       setLoading(true);
 
@@ -54,7 +75,7 @@ const BookingStatusHeader = ({
         <Button
           variant="destructive"
           onClick={handleCancel}
-          disabled={loading || status === "cancelled" || status === "completed"}
+          disabled={loading || !canCancel}
         >
           Hủy đơn
         </Button>

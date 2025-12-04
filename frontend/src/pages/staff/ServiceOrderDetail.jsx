@@ -31,6 +31,7 @@ import { createQuote } from "@/api/quotes";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 function loader({ params }) {
   return {
@@ -110,8 +111,21 @@ const ServiceOrderDetailContent = ({ serviceOrder, revalidator }) => {
     }
   };
 
+  // giả sử backend trả về serviceOrder.estimatedCompletionTime (ISO) cho thời gian kết thúc dự kiến
+  const hasEstimatedTime = !!serviceOrder?.estimatedCompletionTime;
+
   return (
     <>
+      {hasEstimatedTime && (
+        <div className="mb-4 flex justify-end">
+          <CountdownTimer
+            targetTime={serviceOrder.estimatedCompletionTime}
+            label="Thời gian còn lại để hoàn thành lệnh"
+            compact
+          />
+        </div>
+      )}
+
       <ServiceOrderEditForm
         serviceOrder={serviceOrder}
         getTotalPrice={async (items) => {

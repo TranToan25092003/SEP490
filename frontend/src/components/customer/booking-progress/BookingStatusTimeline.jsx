@@ -8,6 +8,7 @@ import { MousePointer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { XCircle } from "lucide-react";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 /**
  * BookingStatusTimeline component to display progress timeline
@@ -143,11 +144,20 @@ const BookingStatusTimeline = ({
 
       if (inspectionTask.status === "in_progress") {
         return (
-          <EmptyState
-            icon={Clock}
-            title="Đang kiểm tra"
-            subtitle="Xe đang được kiểm tra. Vui lòng chờ kết quả."
-          />
+          <div className="space-y-4 flex flex-col items-center">
+            <EmptyState
+              icon={Clock}
+              title="Đang kiểm tra"
+              subtitle="Thời gian còn lại cho kiểm tra:"
+            />
+            {inspectionTask.expectedEndTime && (
+              <CountdownTimer
+                targetTime={inspectionTask.expectedEndTime}
+                label=""
+                compact
+              />
+            )}
+          </div>
         );
       }
 
@@ -204,13 +214,22 @@ const BookingStatusTimeline = ({
     if (selectedStep.id === "waiting_approval") {
       if (booking.serviceOrderStatus === "waiting_customer_approval") {
         return (
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center space-y-4">
             <EmptyState
               icon={Clock}
               title="Chờ phê duyệt báo giá"
               subtitle="Vui lòng xem chi tiết báo giá và phê duyệt để tiếp tục quá trình sửa chữa."
             />
-
+            {/* Nếu có thời gian hết hạn phê duyệt thì backend có thể trả về, tạm dùng 30 phút từ createdAt */}
+            {booking.createdAt && (
+              <CountdownTimer
+                targetTime={
+                  new Date(booking.createdAt).getTime() + 30 * 60 * 1000
+                }
+                label="Thời gian còn lại phê duyệt"
+                compact
+              />
+            )}
             <Link to={`/booking/${booking.id}/quotes`}>
               <Button>Chi tiết báo giá</Button>
             </Link>
@@ -240,11 +259,20 @@ const BookingStatusTimeline = ({
 
       if (servicingTask.status === "scheduled") {
         return (
-          <EmptyState
-            icon={Clock}
-            title="Đã lên lịch sửa chữa"
-            subtitle="Xe đã được lên lịch sửa chữa. Thông tin sẽ được cập nhật sau."
-          />
+          <div className="space-y-4 flex flex-col items-center">
+            <EmptyState
+              icon={Clock}
+              title="Đã lên lịch sửa chữa"
+              subtitle="Xe đã được lên lịch sửa chữa. Thông tin sẽ được cập nhật sau."
+            />
+            {servicingTask.expectedEndTime && (
+              <CountdownTimer
+                targetTime={servicingTask.expectedEndTime}
+                label="Thời gian còn lại đến khi sửa xong"
+                compact
+              />
+            )}
+          </div>
         );
       }
 
@@ -255,6 +283,28 @@ const BookingStatusTimeline = ({
               Tiến độ sửa chữa
             </h4>
           </div>
+
+          {/* Countdown timer - Always show when in_progress */}
+          {servicingTask.status === "in_progress" &&
+            servicingTask.expectedEndTime && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-sm text-red-800">
+                    Dự kiến hoàn thành:
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm text-red-800">
+                    {formatDateTime(servicingTask.expectedEndTime)}
+                  </span>
+                  <CountdownTimer
+                    targetTime={servicingTask.expectedEndTime}
+                    label="Còn lại"
+                    compact
+                  />
+                </div>
+              </div>
+            )}
 
           {servicingTask.status === "rescheduled" ? (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
@@ -280,16 +330,7 @@ const BookingStatusTimeline = ({
                 )}
               </p>
             </div>
-          ) : (
-            servicingTask.expectedEndTime && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p className="text-sm text-red-800">
-                  <span className="font-semibold">Dự kiến hoàn thành: </span>
-                  {formatDateTime(servicingTask.expectedEndTime)}
-                </p>
-              </div>
-            )
-          )}
+          ) : null}
 
           {servicingTask.timeline && servicingTask.timeline.length > 0 ? (
             <div className="relative">
@@ -331,11 +372,20 @@ const BookingStatusTimeline = ({
             </div>
           ) : (
             servicingTask.status === "in_progress" && (
-              <EmptyState
-                icon={Clock}
-                title="Đang sửa chữa"
-                subtitle="Xe đang được sửa chữa. Tiến độ sẽ được cập nhật sớm."
-              />
+              <div className="space-y-4 flex flex-col items-center">
+                <EmptyState
+                  icon={Clock}
+                  title="Đang sửa chữa"
+                  subtitle="Xe đang được sửa chữa. Tiến độ sẽ được cập nhật sớm."
+                />
+                {servicingTask.expectedEndTime && (
+                  <CountdownTimer
+                    targetTime={servicingTask.expectedEndTime}
+                    label="Thời gian còn lại cho sửa chữa"
+                    compact
+                  />
+                )}
+              </div>
             )
           )}
         </div>

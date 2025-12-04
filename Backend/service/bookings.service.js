@@ -183,7 +183,7 @@ class BookingsService {
 
   async getUserBookings(customerClerkId, options = {}) {
     const { limit = null, skip = 0 } = options;
-    
+
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     let query = Booking.find({ customer_clerk_id: customerClerkId })
       .select(
@@ -203,11 +203,11 @@ class BookingsService {
       })
       .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
       .skip(skip);
-    
+
     if (limit) {
       query = query.limit(limit);
     }
-    
+
     const bookings = await query.exec();
 
     // Map và sắp xếp: đang thực hiện lên đầu, sau đó sắp xếp theo thời gian giảm dần
@@ -228,10 +228,10 @@ class BookingsService {
     mappedBookings.sort((a, b) => {
       const aIsActive = activeStatuses.includes(a.status);
       const bIsActive = activeStatuses.includes(b.status);
-      
+
       if (aIsActive && !bIsActive) return -1;
       if (!aIsActive && bIsActive) return 1;
-      
+
       // Cùng trạng thái, sắp xếp theo thời gian giảm dần
       const timeA = a.slotStartTime ? new Date(a.slotStartTime).getTime() : 0;
       const timeB = b.slotStartTime ? new Date(b.slotStartTime).getTime() : 0;
@@ -394,7 +394,9 @@ class BookingsService {
   }
 
   async cancelBooking(bookingId, userId, cancelReason = null) {
-    const booking = await Booking.findById(bookingId).exec();
+    const booking = await Booking.findById(bookingId)
+      .populate("service_order_id")
+      .exec();
     if (!booking) {
       throw new DomainError(
         "Booking không tồn tại",
@@ -422,6 +424,26 @@ class BookingsService {
     // Determine if user is staff or customer
     const isStaff = await notificationService.isStaffUser(userId);
     const cancelledBy = isStaff ? "staff" : "customer";
+
+    // Nếu là customer, chỉ cho phép hủy ở các bước: tiếp nhận, kiểm tra, chờ duyệt báo giá
+    // Không cho phép hủy sau khi đã duyệt báo giá (approved, scheduled, servicing)
+    if (cancelledBy === "customer" && booking.service_order_id) {
+      const serviceOrderStatus = booking.service_order_id.status;
+      const nonCancellableStatuses = [
+        "approved",
+        "scheduled",
+        "servicing",
+        "completed",
+      ];
+
+      if (nonCancellableStatuses.includes(serviceOrderStatus)) {
+        throw new DomainError(
+          "Không thể hủy đơn sau khi đã duyệt báo giá và chuyển sang bước sửa chữa",
+          ERROR_CODES.BOOKINGS_STATE_INVALID,
+          400
+        );
+      }
+    }
 
     booking.status = "cancelled";
     booking.cancelled_by = cancelledBy;

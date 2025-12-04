@@ -128,143 +128,18 @@ const StaffPage = () => {
     gender: "",
   });
   const [isSavingStaff, setIsSavingStaff] = useState(false);
-  const [isLoadingStaffMeta, setIsLoadingStaffMeta] = useState(false);
-
-  const hydrateStaff = (member, metadata = {}, publicUserData = {}) => {
-    const fallbackFullName = [
-      publicUserData.firstName,
-      publicUserData.lastName,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
-
-    return {
-      ...member,
-      fullName: metadata.fullName || member.fullName || fallbackFullName,
-      phone:
-        metadata.phone ||
-        publicUserData.phoneNumber ||
-        member.phone ||
-        "",
-      address: metadata.address || member.address || "",
-      gender: metadata.gender || member.gender || "",
-      publicMetadata: metadata,
-      publicUserData,
-    };
-  };
-
-  const fetchMembershipsWithPublicMetadata = async (members = []) => {
-    return Promise.all(
-      members.map(async (member) => {
-        const clerkUserId = member.publicUserData?.userId;
-        if (!clerkUserId) return member;
-        try {
-          const { data } = await customFetch.get(
-            `/manager/staff/${clerkUserId}/public-metadata`
-          );
-          return {
-            ...member,
-            publicMetadata: {
-              ...(member.publicMetadata ?? {}),
-              ...(data?.publicMetadata ?? {}),
-            },
-            publicUserData: {
-              ...(member.publicUserData ?? {}),
-              ...(data?.publicUserData ?? {}),
-            },
-          };
-        } catch (err) {
-          console.error(
-            "Failed to fetch public metadata for member:",
-            clerkUserId,
-            err
-          );
-          return member;
-        }
-      })
-    );
-  };
-
-  const resolveMemberMetadata = (member) => {
-    if (!member?.clerkUserId) {
-      return { metadata: {}, publicUserData: {} };
-    }
-
-    const basePublicUserData = member.publicUserData ?? {};
-    const baseMetadata = {
-      ...(basePublicUserData.publicMetadata ?? {}),
-      ...(member.publicMetadata ?? {}),
-    };
-
-    if (Object.keys(baseMetadata).length) {
-      return { metadata: baseMetadata, publicUserData: basePublicUserData };
-    }
-
-    const membership = memberships.find(
-      (m) => m.publicUserData?.userId === member.clerkUserId
-    );
-
-    if (!membership) {
-      return { metadata: baseMetadata, publicUserData: basePublicUserData };
-    }
-
-    const publicUserData = membership.publicUserData ?? {};
-    const metadata = {
-      ...(publicUserData.publicMetadata ?? {}),
-      ...(membership.publicMetadata ?? {}),
-    };
-
-    return { metadata, publicUserData };
-  };
 
   const handleDetailOpen = (member) => {
-    const { metadata, publicUserData } = resolveMemberMetadata(member);
-    const hydratedStaff = hydrateStaff(member, metadata, publicUserData);
-
-    setSelectedStaff(hydratedStaff);
+    setSelectedStaff(member);
     setIsDetailOpen(true);
+    // Khởi tạo form với dữ liệu hiện tại
     setStaffForm({
-      fullName: hydratedStaff.fullName || "",
-      phone: hydratedStaff.phone || "",
-      address: hydratedStaff.address || "",
-      gender: hydratedStaff.gender || "",
+      fullName: member.fullName || "",
+      phone: member.phone || "",
+      address: member.address || "",
+      gender: member.gender || "",
     });
     setIsEditingStaff(false);
-
-    if (!member?.clerkUserId) {
-      toast.error("Không tìm thấy mã người dùng của Clerk.");
-      return;
-    }
-
-    setIsLoadingStaffMeta(true);
-    customFetch
-      .get(`/manager/staff/${member.clerkUserId}/public-metadata`)
-      .then(({ data }) => {
-        const fetchedMetadata = data?.publicMetadata ?? {};
-        const fetchedPublicUserData = data?.publicUserData ?? {};
-        const refreshedStaff = hydrateStaff(
-          hydratedStaff,
-          fetchedMetadata,
-          fetchedPublicUserData
-        );
-
-        setSelectedStaff(refreshedStaff);
-        setStaffForm({
-          fullName: refreshedStaff.fullName || "",
-          phone:
-            fetchedMetadata.phone ||
-            fetchedPublicUserData.phoneNumber ||
-            "",
-          address: fetchedMetadata.address || "",
-          gender: fetchedMetadata.gender || "",
-        });
-      })
-      .catch((error) => {
-        console.error("Không thể tải public metadata:", error);
-        toast.error("Không tải được public metadata của nhân viên.");
-      })
-      .finally(() => setIsLoadingStaffMeta(false));
   };
 
   const handleDialogOpenChange = (open) => {
@@ -406,11 +281,7 @@ const StaffPage = () => {
 
         console.log(staffOnly);
 
-        const staffWithMetadata = await fetchMembershipsWithPublicMetadata(
-          staffOnly
-        );
-        if (cancelled) return;
-        setMemberships(staffWithMetadata);
+        setMemberships(staffOnly);
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -584,8 +455,6 @@ const StaffPage = () => {
           statusLabel: attendanceStatus.text,
           statusClasses: attendanceStatus.classes,
           clerkUserId,
-          publicUserData,
-          publicMetadata: memberMetadata,
         };
       }),
     [memberships, attendanceMap]
@@ -697,6 +566,8 @@ const StaffPage = () => {
           </div>
         </div>
       </div>
+
+      {/* 🟢 Nút bật/tắt trang quản lý tổ chức */}
 
       {showOrgManager && organization && (
         <div className="rounded-xl border bg-white p-4 shadow-sm space-y-3 w-full">
@@ -812,12 +683,6 @@ const StaffPage = () => {
             <DialogDescription>
               Xem thông tin liên hệ và lịch sử điểm danh trong 30 ngày gần nhất.
             </DialogDescription>
-            {isLoadingStaffMeta && (
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
-                <Loader2 className="size-4 animate-spin text-gray-400" />
-                Đang tải public metadata mới nhất...
-              </div>
-            )}
           </DialogHeader>
 
           {selectedStaff ? (

@@ -30,6 +30,7 @@ import {
   rejectQuote,
 } from "@/api/quotes";
 import { toast } from "sonner";
+import CountdownTimer from "@/components/global/CountdownTimer";
 import background from "@/assets/cool-motorcycle-indoors.png";
 import { ArrowLeft } from "lucide-react";
 
@@ -52,6 +53,8 @@ function loader({ params, request }) {
     }),
   };
 }
+
+const QUOTE_PENDING_MINUTES = 30;
 
 const quotesTableDefinition = [
   {
@@ -81,6 +84,28 @@ const quotesTableDefinition = [
         {translateQuoteStatus(row.original.status)}
       </Badge>
     ),
+  },
+  {
+    header: "Đếm ngược",
+    accessorKey: "pendingCountdown",
+    cell: ({ row }) => {
+      const quote = row.original;
+      if (quote.status !== "pending") return null;
+
+      // giả sử backend trả về createdAt, ta đếm ngược 30 phút từ thời điểm tạo
+      const createdAt = quote.createdAt;
+      if (!createdAt) return null;
+
+      const targetTime = new Date(createdAt).getTime() + QUOTE_PENDING_MINUTES * 60 * 1000;
+
+      return (
+        <CountdownTimer
+          targetTime={targetTime}
+          label="Còn lại"
+          compact
+        />
+      );
+    },
   },
   {
     header: "Ngày tạo",
