@@ -130,6 +130,7 @@ const StaffPage = () => {
   const [isSavingStaff, setIsSavingStaff] = useState(false);
 
   const handleDetailOpen = (member) => {
+    console.log(member);
     setSelectedStaff(member);
     setIsDetailOpen(true);
     // Khởi tạo form với dữ liệu hiện tại
@@ -566,8 +567,6 @@ const StaffPage = () => {
           </div>
         </div>
       </div>
-
-      {/* 🟢 Nút bật/tắt trang quản lý tổ chức */}
 
       {showOrgManager && organization && (
         <div className="rounded-xl border bg-white p-4 shadow-sm space-y-3 w-full">
