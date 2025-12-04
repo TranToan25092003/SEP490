@@ -29,19 +29,55 @@ module.exports.createVehicle = async (req, res) => {
 
   const OwnerClerkId = req.userId;
 
-  let model = await ModelVehicle.findOne({ name, brand });
+  // Normalize: trim whitespace
+  const normalizedName = name?.trim();
+  const normalizedBrand = brand?.trim();
+
+  if (!normalizedName || !normalizedBrand) {
+    return res.status(400).json({
+      message: "Tên xe và hãng xe là bắt buộc",
+    });
+  }
+
+  // Escape special regex characters để tránh lỗi
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Tìm model với case-insensitive (sử dụng regex an toàn)
+  let model = await ModelVehicle.findOne({
+    name: { $regex: new RegExp(`^${escapeRegex(normalizedName)}$`, "i") },
+    brand: { $regex: new RegExp(`^${escapeRegex(normalizedBrand)}$`, "i") },
+  });
 
   if (!model) {
+    // Tạo mới model với dữ liệu đã normalize
     model = await ModelVehicle.create({
-      name,
-      brand,
+      name: normalizedName,
+      brand: normalizedBrand,
       year,
       engine_type,
       description,
     });
   }
 
-  const existingVehicle = await Vehicle.findOne({ license_plate });
+  // Normalize biển số: trim và uppercase để check case-insensitive
+  const normalizedLicensePlate = license_plate?.trim().toUpperCase();
+
+  if (!normalizedLicensePlate) {
+    return res.status(400).json({
+      message: "Biển số xe là bắt buộc",
+    });
+  }
+
+  // Check trùng biển số (case-insensitive)
+  const existingVehicle = await Vehicle.findOne({
+    license_plate: {
+      $regex: new RegExp(
+        `^${normalizedLicensePlate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        "i"
+      ),
+    },
+  });
+
   if (existingVehicle) {
     return res
       .status(400)
@@ -51,7 +87,7 @@ module.exports.createVehicle = async (req, res) => {
   const vehicle = await Vehicle.create({
     OwnerClerkId,
     model_id: model._id,
-    license_plate,
+    license_plate: normalizedLicensePlate, // Lưu biển số đã normalize
     year,
     odo_reading,
     images: image ? [image] : [],
@@ -78,16 +114,37 @@ module.exports.createVehicle = async (req, res) => {
 };
 
 module.exports.getModels = async (req, res) => {
-  const name = await ModelVehicle.find({}).select("name");
+  const brand = req.query.brand;
 
-  const brand = await ModelVehicle.distinct("brand");
-  res.status(200).json({
-    message: "hello",
-    data: {
-      name,
-      brand,
-    },
-  });
+  if (brand) {
+    // Lấy danh sách models (name) theo brand
+    const models = await ModelVehicle.find({
+      brand: {
+        $regex: new RegExp(
+          `^${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i"
+        ),
+      },
+    })
+      .distinct("name")
+      .lean();
+
+    res.status(200).json({
+      message: "hello",
+      data: {
+        models: models || [],
+      },
+    });
+  } else {
+    // Lấy danh sách brands
+    const brands = await ModelVehicle.distinct("brand");
+    res.status(200).json({
+      message: "hello",
+      data: {
+        brand: brands,
+      },
+    });
+  }
 };
 
 module.exports.getVehicles = async (req, res) => {
@@ -100,7 +157,8 @@ module.exports.getVehicles = async (req, res) => {
         model: "ModelVehicle",
         select: "brand engine_type description year name",
       })
-      .select("_id license_plate model_id images license_plate year");
+      .select("_id license_plate model_id images license_plate year")
+      .lean(); // Tối ưu: sử dụng lean() để tăng performance
 
     if (!vehicles.length) {
       return res.status(200).json({
@@ -109,17 +167,27 @@ module.exports.getVehicles = async (req, res) => {
       });
     }
 
-    // Format lại dữ liệu gọn gàng
-    const formatted = vehicles.map((v) => ({
-      _id: v._id,
-      name: v?.model_id?.name,
-      brand: v.model_id?.brand || "Không rõ",
-      engine_type: v.model_id?.engine_type || "Không rõ",
-      description: v.model_id?.description || "",
-      image: v?.images?.[0] || null,
-      license_plate: v.license_plate,
-      year: v.year,
-    }));
+    const hiddenVehicleIdsRaw =
+      req.user?.publicMetadata?.hiddenVehicleIds || [];
+    const hiddenVehicleIds = Array.isArray(hiddenVehicleIdsRaw)
+      ? hiddenVehicleIdsRaw.map((id) => id.toString())
+      : [];
+
+    // Format lại dữ liệu gọn gàng và lọc những xe đã bị ẩn
+    const formatted = vehicles
+      .map((v) => ({
+        _id: v._id,
+        name: v?.model_id?.name,
+        brand: v.model_id?.brand || "Không rõ",
+        engine_type: v.model_id?.engine_type || "Không rõ",
+        description: v.model_id?.description || "",
+        images: v?.images || null,
+        license_plate: v.license_plate,
+        year: v.year,
+      }))
+      .filter((v) => !hiddenVehicleIds.includes(v._id.toString()));
+
+    console.log(formatted);
 
     res.status(200).json({ success: true, data: formatted });
   } catch (error) {
@@ -127,6 +195,104 @@ module.exports.getVehicles = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Lỗi khi lấy danh sách xe" });
+  }
+};
+
+module.exports.hideVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.body || {};
+
+    if (!vehicleId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Thiếu vehicleId" });
+    }
+
+    const vehicle = await Vehicle.findById(vehicleId)
+      .select("_id OwnerClerkId")
+      .lean();
+
+    if (!vehicle) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy xe" });
+    }
+
+    if (vehicle.OwnerClerkId !== req.userId) {
+      return res
+        .status(403)
+        .json({ success: false, message: "Bạn không có quyền với xe này" });
+    }
+
+    const existingMeta = req.user?.publicMetadata || {};
+    const existingHiddenRaw = existingMeta.hiddenVehicleIds || [];
+    const existingHidden = Array.isArray(existingHiddenRaw)
+      ? existingHiddenRaw.map((id) => id.toString())
+      : [];
+
+    if (!existingHidden.includes(vehicleId.toString())) {
+      existingHidden.push(vehicleId.toString());
+    }
+
+    const updated = await clerkClient.users.updateUser(req.userId, {
+      publicMetadata: {
+        ...existingMeta,
+        hiddenVehicleIds: existingHidden,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Đã ẩn xe khỏi hồ sơ khách hàng",
+      data: {
+        hiddenVehicleIds: updated.publicMetadata?.hiddenVehicleIds || [],
+      },
+    });
+  } catch (error) {
+    console.error("Failed to hide vehicle:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Lỗi khi ẩn xe khỏi hồ sơ" });
+  }
+};
+
+module.exports.checkLicensePlate = async (req, res) => {
+  try {
+    const { license_plate } = req.query;
+
+    if (!license_plate) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu biển số xe",
+      });
+    }
+
+    // Normalize biển số: trim và uppercase
+    const normalizedLicensePlate = license_plate.trim().toUpperCase();
+
+    // Check trùng biển số (case-insensitive)
+    const existingVehicle = await Vehicle.findOne({
+      license_plate: {
+        $regex: new RegExp(
+          `^${normalizedLicensePlate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i"
+        ),
+      },
+    }).lean();
+
+    return res.status(200).json({
+      success: true,
+      available: !existingVehicle,
+      message: existingVehicle
+        ? "Biển số xe đã tồn tại trong hệ thống"
+        : "Biển số xe có thể sử dụng",
+    });
+  } catch (error) {
+    console.error("Error checking license plate:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra biển số xe",
+    });
   }
 };
 

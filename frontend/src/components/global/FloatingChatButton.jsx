@@ -10,6 +10,7 @@ import { useUser, useAuth } from "@clerk/clerk-react";
 import { initializeSocket } from "@/utils/socket";
 import MentionInput from "@/components/chat/MentionInput";
 import { renderMessageWithMentions } from "@/utils/mentionParser";
+import cskhImage from "@/assets/cskh.png";
 
 // Chat icon SVG component
 const ChatIcon = ({ className = "w-6 h-6" }) => (
@@ -33,7 +34,7 @@ const ChatIcon = ({ className = "w-6 h-6" }) => (
 const mockStaff = {
   id: "staff_001",
   name: "Nhân viên hỗ trợ",
-  avatar: "/api/placeholder/40/40",
+  avatar: cskhImage,
   status: "online",
   department: "Hỗ trợ khách hàng",
 };
@@ -78,7 +79,8 @@ const FloatingChatButton = () => {
     let name = "";
     if (isSignedIn && user?.id) {
       id = user.id;
-      name = user.firstName || user.username || "Khách hàng";
+      // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
+      name = user.publicMetadata?.fullName || user.fullName || user.firstName || user.username || "Khách hàng";
     } else {
       try {
         id = localStorage.getItem("guest_id");
@@ -181,7 +183,7 @@ const FloatingChatButton = () => {
     const message = {
       id: Date.now().toString(),
       senderId: "customer",
-      senderName: customerName || user?.firstName || "Khách hàng",
+      senderName: customerName || user?.publicMetadata?.fullName || user?.fullName || user?.firstName || "Khách hàng",
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -335,14 +337,6 @@ const FloatingChatButton = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={minimizeChat}
-                    className="h-8 w-8 text-primary-foreground hover:bg-primary-foreground/20 rounded-full"
-                  >
-                    <Minimize2 className="h-4 w-4" />
-                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

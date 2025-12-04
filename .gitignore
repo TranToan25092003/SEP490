@@ -5,6 +5,9 @@ node_modules/
 # Build outputs
 dist/
 build/
+examples/
+template/
+repomix-output.xml
 
 # Environment variables
 .env
@@ -37,3 +40,5 @@ coverage/
 Thumbs.db
 .vercel
 .mdc
+example/
+

@@ -1,5 +1,5 @@
-import React from "react";
-import { useLoaderData } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLoaderData, Link } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -11,9 +11,6 @@ import hero1 from "@/assets/header-img.jpg";
 import g1 from "@/assets/gallery-1.jpg";
 import g2 from "@/assets/gallery-2.jpg";
 import g3 from "@/assets/gallery-3.jpg";
-import part1 from "@/assets/part-lopsau.png";
-import part2 from "@/assets/part-bugi.png";
-import part3 from "@/assets/part-maphanh.png";
 import bgParts from "@/assets/bg-parts.png";
 import worldMap from "@/assets/world-map.png";
 import service1 from "@/assets/service-suaxe.png";
@@ -25,43 +22,27 @@ import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
 import ItemList from "@/components/customer/ItemList";
 import { useUser } from "@clerk/clerk-react";
 
+const fallbackSlides = [
+  { _id: 'f1', title: 'Banner 1', image_url: hero1, link_url: '/booking' },
+  { _id: 'f2', title: 'Banner 2', image_url: g1, link_url: '/booking' },
+  { _id: 'f3', title: 'Banner 3', image_url: g2, link_url: '/booking' },
+  { _id: 'f4', title: 'Banner 4', image_url: g3, link_url: '/booking' },
+];
+
+const services = [
+  { id: 1, name: "SỬA XE", tag: "New | Used", image: service1 },
+  { id: 2, name: "THAY NHỚT", tag: "New | Used", image: service2 },
+  { id: 3, name: "ATVS", tag: "New | Used", image: service3 },
+  { id: 4, name: "RỬA XE", tag: "New | Used", image: service4 },
+];
+
 function Home() {
-  const { parts } = useLoaderData();
-  const slides = [hero1, g1, g2, g3];
+  const { parts, banners } = useLoaderData();
+  const slides = (banners && banners.length > 0) ? banners : fallbackSlides;
   const [api, setApi] = React.useState(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [slideCount, setSlideCount] = React.useState(slides.length);
-
-  const featuredParts = [
-    {
-      id: 1,
-      name: "Lốp sau MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "340.000 VND",
-      image: part1,
-    },
-    {
-      id: 2,
-      name: "Bugi + IC MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "50.000 VND",
-      image: part2,
-    },
-    {
-      id: 3,
-      name: "Bố Má Phanh MotorMate",
-      category: "Phụ Tùng và Phụ Kiện",
-      price: "110.000 VND",
-      image: part3,
-    },
-  ];
-
-  const services = [
-    { id: 1, name: "SỬA XE", tag: "New | Used", image: service1 },
-    { id: 2, name: "THAY NHỚT", tag: "New | Used", image: service2 },
-    { id: 3, name: "ATVS", tag: "New | Used", image: service3 },
-    { id: 4, name: "RỬA XE", tag: "New | Used", image: service4 },
-  ];
+  const [isLoaded, setIsLoaded] = useState(false);
 
   React.useEffect(() => {
     if (!api) return;
@@ -76,21 +57,26 @@ function Home() {
     };
   }, [api]);
 
+  useEffect(() => {
+    // Trigger animation after component mounts
+    setIsLoaded(true);
+  }, []);
+
   return (
     <main className="w-full">
       {/* Hero Carousel - full-bleed */}
-      <section className="bg-black">
+      <section className={`bg-black transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
         <div className="mx-auto max-w-[1920px]">
           <Carousel className="w-full" setApi={setApi}>
             <CarouselContent className="">
-              {slides.map((src, idx) => (
-                <CarouselItem key={src}>
+              {slides.map((slide, idx) => (
+                <CarouselItem key={slide._id || idx}>
                   <div className="w-full">
                     <div className="relative aspect-[16/7] w-full max-h-[800px]">
                       {/* 1. Image (bottom layer) */}
                       <img
-                        src={src}
-                        alt={`slide-${idx + 1}`}
+                        src={slide.image_url}
+                        alt={slide.title || `Slide ${idx + 1}`}
                         className="absolute inset-0 h-full w-full object-cover"
                       />
 
@@ -107,17 +93,13 @@ function Home() {
                             Phụ tùng tốt nhất cho{" "}
                             <br className="hidden md:block" /> mọi nhà
                           </div>
-                          <button
-                            className="mx-auto inline-flex w-40 items-center justify-center gap-2.5 rounded-lg bg-red-600 p-2.5
-                                        text-lg font-bold text-white
-                                       transition-all duration-150 ease-in-out
-                                       hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg
-                                       active:scale-95
-                                       cursor-pointer"
+                          <Link
+                            to={slide.link_url || "/items"}
+                            className="mx-auto inline-flex w-40 items-center justify-center gap-2.5 rounded-lg bg-red-600 p-2.5 text-lg font-bold text-white transition-all duration-150 ease-in-out hover:brightness-110 hover:-translate-y-0.5 hover:shadow-lg active:scale-95 cursor-pointer"
                           >
                             <MotorcycleIcon />
                             Tìm hiểu
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
@@ -135,9 +117,8 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
-                      selectedIndex === i ? "bg-white" : "bg-white/50"
-                    }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
+                      }`}
                   />
                 ))}
               </div>
@@ -147,7 +128,7 @@ function Home() {
       </section>
 
       {/* Phụ Tùng Nổi Bật */}
-      <section>
+      <section className={`transition-all duration-1000 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="relative w-full overflow-hidden bg-black">
           {/* Background Image and Overlay */}
           <div className="absolute inset-0">
@@ -160,7 +141,7 @@ function Home() {
 
           {/* Content */}
           <div className="relative z-10 px-8 py-16 md:px-12 md:py-24 lg:px-16">
-            <div className="mb-12 text-center">
+            <div className={`mb-12 text-center transition-all duration-700 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
               <h2 className="text-4xl font-bold text-white md:text-5xl">
                 Phụ Tùng Nổi Bật
               </h2>
@@ -172,9 +153,9 @@ function Home() {
             <ItemList products={parts} size={3} />
 
             {/* --- NEW MOTORMATE QUOTE SECTION --- */}
-            <div className="mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2">
+            <div className={`mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2 transition-all duration-700 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
               {/* Left side: Text content */}
-              <div className="text-center md:text-left">
+              <div className={`text-center md:text-left transition-all duration-700 delay-600 ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
                 <h3 className=" text-lg font-bold uppercase tracking-[0.2em] text-red-600">
                   MotorMate
                 </h3>
@@ -185,7 +166,7 @@ function Home() {
                 </p>
               </div>
               {/* Right side: World Map Image */}
-              <div className="flex justify-center md:justify-end">
+              <div className={`flex justify-center md:justify-end transition-all duration-700 delay-700 ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
                 <img
                   src={worldMap}
                   alt="World Map"
@@ -198,10 +179,10 @@ function Home() {
       </section>
 
       {/* SECTION: Services --- */}
-      <section className="bg-white py-16 md:py-24">
+      <section className={`bg-white py-16 md:py-24 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="mx-auto max-w-[1920px] px-8 md:px-12 lg:px-16">
           {/* Section Header */}
-          <div className="mb-12 text-center">
+          <div className={`mb-12 text-center transition-all duration-700 delay-400 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <h2 className="text-4xl font-bold text-red-600 md:text-5xl">
               Dịch Vụ của MotorMate
             </h2>
@@ -209,10 +190,15 @@ function Home() {
 
           {/* Services Grid */}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            {services.map((service) => (
+            {services.map((service, index) => (
               <div
                 key={service.id}
-                className="group relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-lg"
+                className={`group relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-700 ${
+                  isLoaded 
+                    ? 'opacity-100 translate-y-0' 
+                    : 'opacity-0 translate-y-8'
+                }`}
+                style={{ transitionDelay: `${500 + index * 100}ms` }}
               >
                 {/* Background Image */}
                 <img
@@ -239,7 +225,7 @@ function Home() {
       </section>
 
       {/* --- NEW CTA SECTION --- */}
-      <section>
+      <section className={`transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         <div className="relative mx-auto max-w-[1920px]">
           <img
             src={ctaBg}
@@ -247,7 +233,7 @@ function Home() {
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
-            <div className="w-11/12 max-w-xl border-4 border-white  p-8 text-white md:mr-16 lg:mr-24">
+            <div className={`w-11/12 max-w-xl border-4 border-white p-8 text-white md:mr-16 lg:mr-24 transition-all duration-700 delay-700 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
               <h2 className="text-3xl font-bold uppercase tracking-wider md:text-4xl">
                 Chào mừng bạn đến với{" "}
                 <span className="text-red-500">MotorMate</span>

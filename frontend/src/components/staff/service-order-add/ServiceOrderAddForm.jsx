@@ -12,7 +12,7 @@ import {
   FieldLegend,
   FieldSet,
 } from "@/components/ui/field";
-import { cn } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 
 /**
  * ServiceOrderAddForm Component
@@ -26,22 +26,18 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
     control,
     handleSubmit,
     formState: { errors, isSubmitting },
-    watch,
   } = useForm({
     defaultValues: {
       customerName: "",
       phone: "",
       licensePlate: "",
-      answer2: "",
       address: "",
-      input3: "",
-      input4: "",
       serviceIds: [],
       note: "",
     },
   });
 
-  const serviceIds = watch("serviceIds");
+  const hasAvailableServices = Array.isArray(services) && services.length > 0;
 
   /**
    * Handle form submission for creating a service order
@@ -57,6 +53,7 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         licensePlate: data.licensePlate,
         serviceIds: data.serviceIds,
         note: data.note,
+        address: data.address,
       });
     } catch (error) {
       console.error("Submit error:", error);
@@ -64,7 +61,11 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit(onFormSubmit)} className={cn(className)} {...props}>
+    <form
+      onSubmit={handleSubmit(onFormSubmit)}
+      className={cn(className)}
+      {...props}
+    >
       <FieldSet>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Field>
@@ -121,51 +122,69 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         <Field>
           <FieldLabel htmlFor="address">Địa chỉ</FieldLabel>
           <FieldContent>
-            <Input
-              id="address"
-              placeholder=""
-              {...register("address")}
-            />
+            <Input id="address" placeholder="" {...register("address")} />
           </FieldContent>
         </Field>
 
         <FieldGroup className="gap-2">
           <FieldLegend>Loại lệnh</FieldLegend>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {services?.map((service) => (
-              <Field key={service.sid} orientation="horizontal">
-                <Controller
-                  name="serviceIds"
-                  control={control}
-                  rules={{
-                    validate: (value) =>
-                      value.length > 0 || "Vui lòng chọn ít nhất một loại lệnh",
-                  }}
-                  render={({ field }) => (
-                    <Checkbox
-                      id={`service-${service.sid}`}
-                      checked={field.value.includes(service.sid)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          field.onChange([...field.value, service.sid]);
-                        } else {
-                          field.onChange(
-                            field.value.filter((id) => id !== service.sid)
+          {services?.length ? (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {services.map((service) => {
+                const normalizedId =
+                  service?.id != null ? String(service.id) : "";
+                return (
+                  <Field key={normalizedId} orientation="horizontal">
+                    <Controller
+                      name="serviceIds"
+                      control={control}
+                      rules={{
+                        validate: (value) => {
+                          if (!hasAvailableServices) return true;
+                          return (
+                            value.length > 0 ||
+                            "Vui lòng chọn ít nhất một loại lệnh"
                           );
-                        }
+                        },
                       }}
+                      render={({ field }) => (
+                        <Checkbox
+                          id={`service-${normalizedId}`}
+                          checked={field.value.includes(normalizedId)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              if (!field.value.includes(normalizedId)) {
+                                field.onChange([...field.value, normalizedId]);
+                              }
+                            } else {
+                              field.onChange(
+                                field.value.filter((id) => id !== normalizedId)
+                              );
+                            }
+                          }}
+                        />
+                      )}
                     />
-                  )}
-                />
-                <FieldLabel
-                  htmlFor={`service-${service.sid}`}
-                  className="cursor-pointer font-normal"
-                >
-                  {service.name}
-                </FieldLabel>
-              </Field>
-            ))}
-          </div>
+                    <FieldLabel
+                      htmlFor={`service-${normalizedId}`}
+                      className="cursor-pointer font-normal"
+                    >
+                      <span>{service.name}</span>
+                      {service.basePrice !== undefined && (
+                        <span className="block text-xs text-muted-foreground">
+                          {formatPrice(service.basePrice)}
+                        </span>
+                      )}
+                    </FieldLabel>
+                  </Field>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Không có dịch vụ khả dụng. Vui lòng kiểm tra lại kho dịch vụ.
+            </div>
+          )}
           <FieldError>{errors.serviceIds?.message}</FieldError>
         </FieldGroup>
 
@@ -184,10 +203,14 @@ const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {
         <div className="flex justify-end pt-4">
           <Button
             type="submit"
-            disabled={isSubmitting}
-            className="bg-red-600 hover:bg-red-700 text-white px-8"
+            disabled={isSubmitting || !hasAvailableServices}
+            className="bg-red-600 hover:bg-red-700 text-white px-8 disabled:opacity-60"
           >
-            {isSubmitting ? "Đang tạo..." : "Tạo Lệnh"}
+            {!hasAvailableServices
+              ? "Chưa có dịch vụ khả dụng"
+              : isSubmitting
+              ? "Đang tạo..."
+              : "Tạo Lệnh"}
           </Button>
         </div>
       </FieldSet>

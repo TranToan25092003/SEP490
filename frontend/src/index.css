@@ -13,6 +13,44 @@
   --font-inter: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+html,
+body {
+  /* Không cho trang gốc scroll, tránh thay đổi chiều rộng viewport */
+  @apply overflow-hidden;
+}
+
+#root {
+  /* Toàn bộ app scroll trong root, tránh layout bị thò thụt khi thanh scroll xuất hiện */
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling - nhạt, tông đỏ */
+/* Chrome, Edge, Safari */
+#root::-webkit-scrollbar {
+  width: 8px;
+}
+
+#root::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#root::-webkit-scrollbar-thumb {
+  background-color: rgba(239, 68, 68, 0.25); /* đỏ nhạt */
+  border-radius: 9999px;
+}
+
+#root::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(239, 68, 68, 0.4);
+}
+
+/* Firefox */
+#root {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(239, 68, 68, 0.35) transparent;
+}
+
 body {
   @apply bg-background font-inter;
 }

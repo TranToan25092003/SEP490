@@ -5,41 +5,13 @@ import { StatusBadge } from "@/components/global/StatusBadge";
 import { cn } from "@/lib/utils";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
-import { useFormContext } from "react-hook-form";
 import { Link } from "react-router-dom";
 
-const ServiceOrderHeader = ({ className, ...props }) => {
-  const {
-    serviceOrder,
-    disabled,
-    handleCancelServiceOrder,
-    handleStartServiceOrder,
-  } = useServiceOrder();
-  const { watch } = useFormContext();
-  const items = watch();
-  const hasServices = items.services.length + items.parts.length > 0;
-
-  function getButton() {
-    const status = serviceOrder.status;
-    if (status === "created") {
-      return (
-        <Button
-          type="submit"
-          onClick={() => handleStartServiceOrder(serviceOrder)}
-          disabled={disabled || !hasServices}
-          aria-busy={disabled || !hasServices}
-        >
-          Bắt đầu
-        </Button>
-      );
-    } else {
-      return (
-        <Link to={`/staff/service-order/${serviceOrder.id}/progress`}>
-          <Button>Xem tiến độ</Button>
-        </Link>
-      );
-    }
-  }
+const ServiceOrderHeader = ({
+  className,
+  ...props
+}) => {
+  const { serviceOrder, disabled, handleCancelServiceOrder } = useServiceOrder();
 
   return (
     <Card className={cn(className)} {...props}>
@@ -48,20 +20,22 @@ const ServiceOrderHeader = ({ className, ...props }) => {
           <CardTitle>Thông tin chung</CardTitle>
         </div>
         <div className="space-x-2">
-          {serviceOrder.status !== "cancelled" &&
-            serviceOrder.status !== "completed" && (
-              <Button
-                type="button"
-                className="text-destructive"
-                variant="outline"
-                onClick={() => handleCancelServiceOrder(serviceOrder)}
-                disabled={disabled}
-                aria-busy={disabled}
-              >
-                Hủy lệnh
-              </Button>
-            )}
-          {getButton(serviceOrder)}
+          {serviceOrder.status !== "cancelled" && serviceOrder.status !== "completed" && (
+          <Button
+            type="button"
+            className="text-destructive"
+            variant="outline"
+            onClick={() => handleCancelServiceOrder(serviceOrder)}
+            disabled={disabled}
+            aria-busy={disabled}
+          >
+            Hủy lệnh
+          </Button>)}
+          <Link to={`/staff/service-order/${serviceOrder.id}/progress`}>
+            <Button>
+              Xem tiến độ
+            </Button>
+          </Link>
         </div>
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -82,6 +56,30 @@ const ServiceOrderHeader = ({ className, ...props }) => {
           />
         </div>
       </CardContent>
+      {serviceOrder.status === "cancelled" && (
+        <CardContent className="border-t pt-4">
+          <div className="space-y-2">
+            <Label className="text-destructive">Thông tin hủy lệnh</Label>
+            <div className="space-y-1">
+              <div className="text-sm">
+                <span className="font-semibold">Người hủy: </span>
+                <span>{serviceOrder.cancelledBy === "staff" ? "Nhân viên" : serviceOrder.cancelledBy === "customer" ? "Khách hàng" : "Không xác định"}</span>
+              </div>
+              {serviceOrder.cancelReason && (
+                <div className="text-sm">
+                  <span className="font-semibold">Lý do: </span>
+                  <span>{serviceOrder.cancelReason}</span>
+                </div>
+              )}
+              {serviceOrder.cancelledAt && (
+                <div className="text-sm text-muted-foreground">
+                  Thời gian: {new Date(serviceOrder.cancelledAt).toLocaleString("vi-VN")}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      )}
     </Card>
   );
 };

@@ -47,9 +47,23 @@ const serviceOrderListColumnDefinitions = [
     id: "status",
     header: "Trạng thái",
     cell: (info) => {
-      const status = info.row.original.status;
-      const statusLabel = translateServiceOrderStatus(status);
-      return <StatusBadge status={statusLabel} />;
+      const row = info.row.original;
+      const statusLabel = translateServiceOrderStatus(row.status);
+      const isUpcomingSoon = row.upcomingSoon;
+
+      return (
+        <div className="flex items-center gap-2">
+          <StatusBadge
+            status={statusLabel}
+            colorKey={row.status === "rescheduled" ? "rescheduled" : undefined}
+          />
+          {isUpcomingSoon && (
+            <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-0.5 text-[11px] font-medium text-orange-700 border border-orange-200 whitespace-nowrap">
+              Sắp tới giờ sửa
+            </span>
+          )}
+        </div>
+      );
     },
   },
 ];
@@ -168,7 +182,22 @@ const ServiceOrderList = () => {
           }
           resolve={serviceOrders}
         >
-          {(data) => (
+          {(data) => {
+            // Sort: completed xuống dưới, các trạng thái khác lên trên
+            const sortedServiceOrders = [...(data.serviceOrders || [])].sort((a, b) => {
+              const aIsCompleted = a.status === "completed";
+              const bIsCompleted = b.status === "completed";
+              
+              if (aIsCompleted && !bIsCompleted) return 1; // a xuống dưới
+              if (!aIsCompleted && bIsCompleted) return -1; // b xuống dưới
+              
+              // Nếu cùng trạng thái, sort theo createdAt (mới nhất lên trên)
+              const aDate = new Date(a.createdAt || 0);
+              const bDate = new Date(b.createdAt || 0);
+              return bDate - aDate;
+            });
+
+            return (
             <>
               <Filters filters={filters} onFiltersChange={setFilters}>
                 <Filters.StringFilter
@@ -189,7 +218,7 @@ const ServiceOrderList = () => {
               </Filters>
 
               <CRUDTable
-                data={data.serviceOrders}
+                  data={sortedServiceOrders}
                 columns={serviceOrderListColumnDefinitions}
                 getRowId={(row) => row.id}
               >
@@ -211,7 +240,8 @@ const ServiceOrderList = () => {
                 <AdminPagination pagination={data.pagination} />
               )}
             </>
-          )}
+            );
+          }}
         </Await>
       </Suspense>
     </Container>

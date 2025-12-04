@@ -1,4 +1,10 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  createBrowserRouter,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import { ClerkProvider, GoogleOneTap, SignedIn } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
@@ -6,11 +12,17 @@ import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
 import { Toaster } from "sonner";
 // import { Button } from "antd";
 import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import RoleRedirect from "./pages/auth/RoleRedirect";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import Home from "./pages/Home";
 import { ThemeProvider } from "./components/global/ThemeProvider";
 import Booking from "./pages/customer/Booking";
 import BookingProgress from "./pages/customer/BookingProgress";
 import BookingQuotes from "./pages/customer/BookingQuotes";
+import BookingHistoryDetail from "./pages/customer/BookingHistoryDetail";
+import BookingTracking from "./pages/customer/BookingTracking";
+import WarrantyBooking from "./pages/customer/WarrantyBooking";
 import ServiceOrderDetail from "./pages/staff/ServiceOrderDetail";
 import ServiceOrderDetailQuotes from "./pages/staff/ServiceOrderDetailQuotes";
 import ServiceOrderDetailProgress from "./pages/staff/ServiceOrderDetailProgress";
@@ -35,6 +47,7 @@ import NotFoundPage from "./pages/404";
 import {
   partsPageLoader,
   partFormLoader,
+  homeLoader,
   partsClientLoader,
   partLoaderByClient,
   goodsReceiptListLoader,
@@ -46,6 +59,7 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
+  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -57,15 +71,15 @@ import StaffItemsPage from "./pages/staff/StaffItemsPage";
 import StaffItemDetail from "./pages/staff/StaffItemDetail";
 import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
+import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
 import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
-import { authenTicationForStaffLoader, authenTicationLoader } from "./utils/authentication.loader";
 import StaffPage from "./pages/manager/Staff";
-import ActivityLogs from "./pages/manager/ActivityLogs";
-import { activityLogsLoader } from "./utils/loaders";
+import AdminActivityLogs from "./pages/admin/ActivityLogs";
+import { adminActivityLogsLoader } from "./utils/loaders";
 import GlobalLoginLogger from "./components/global/GlobalLoginLogger";
 import NotificationListPage from "./pages/NotificationListPage";
 import AttendanceTracking from "./pages/manager/AttendanceTracking";
@@ -74,10 +88,21 @@ import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
 import AdminServicesPage from "./pages/admin/AdminServicesPage";
 import AdminModelsPage from "./pages/admin/AdminModelsPage";
 import AdminBannersPage from "./pages/admin/AdminBannersPage";
+import CustomerInvoices from "./pages/customer/CustomerInvoices";
+import CustomerInvoiceDetail from "./pages/customer/CustomerInvoiceDetail";
+import LoyaltyWallet from "./pages/customer/LoyaltyWallet";
+import LoyaltyProgram from "./pages/manager/LoyaltyProgram";
+import StaffBayStatusPage from "./pages/staff/BayStatus";
+import {
+  authenTicationLoader,
+  authenTicationForStaffLoader,
+  authenTicationForAdminLoader,
+  authenTicationForManagerLoader,
+} from "./utils/authentication.loader";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-const router = createBrowserRouter([
+const appRoutes = [
   {
     path: "/",
     element: <HomeLayout />,
@@ -86,12 +111,17 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <Home />,
-        loader: partsClientLoader,
+        loader: homeLoader,
       },
       {
         path: "/booking",
         loader: Booking.loader,
         element: <Booking />,
+      },
+      {
+        path: "/booking-tracking",
+        element: <BookingTracking />,
+        loader: BookingTracking.loader,
       },
       {
         path: "/booking/:id",
@@ -104,8 +134,21 @@ const router = createBrowserRouter([
         loader: BookingQuotes.loader,
       },
       {
+        path: "/booking/:id/history",
+        element: <BookingHistoryDetail />,
+        loader: BookingHistoryDetail.loader,
+      },
+      {
+        path: "/warranty-booking",
+        element: <WarrantyBooking />,
+      },
+      {
         path: "/about",
         element: <About />,
+      },
+      {
+        path: "/loyalty",
+        element: <LoyaltyWallet />,
       },
       {
         path: "/items",
@@ -120,6 +163,16 @@ const router = createBrowserRouter([
       {
         path: "/complaint",
         element: <CreateComplaint />,
+      },
+      {
+        path: "/invoices",
+        element: <CustomerInvoices />,
+        loader: CustomerInvoices.loader,
+      },
+      {
+        path: "/invoices/:id",
+        element: <CustomerInvoiceDetail />,
+        loader: CustomerInvoiceDetail.loader,
       },
 
       // 404 within HomeLayout
@@ -145,17 +198,29 @@ const router = createBrowserRouter([
     element: <Login></Login>,
   },
   {
+    path: "/forgot-password",
+    element: <ForgotPassword />,
+  },
+  {
+    path: "/register",
+    element: <Register />,
+  },
+  {
     path: "/sso-callback",
     element: (
       <AuthenticateWithRedirectCallback></AuthenticateWithRedirectCallback>
     ),
   },
   {
+    path: "/auth/role-redirect",
+    element: <RoleRedirect />,
+  },
+  {
     path: "/manager",
     element: <ManagerLayout />,
-    loader: authenTicationLoader,
+    loader: authenTicationForManagerLoader,
     children: [
-      { index: true, element: <Manager /> },
+      { index: true, element: <Manager />, loader: Manager.loader },
       { path: "staff", element: <StaffPage /> },
       {
         path: "items",
@@ -185,13 +250,12 @@ const router = createBrowserRouter([
         element: <ManagerBays />,
       },
       {
-        path: "activity-logs",
-        element: <ActivityLogs />,
-        loader: activityLogsLoader,
-      },
-      {
         path: "attendance-tracking",
         element: <AttendanceTracking />,
+      },
+      {
+        path: "loyalty",
+        element: <LoyaltyProgram />,
       },
     ],
   },
@@ -201,7 +265,11 @@ const router = createBrowserRouter([
     element: <StaffLayout />,
     loader: authenTicationForStaffLoader,
     children: [
-      { index: true, element: <StaffDashboardPage /> },
+      {
+        index: true,
+        element: <StaffDashboardPage />,
+        loader: staffDashboardLoader,
+      },
       {
         path: "service-order/:id",
         element: <ServiceOrderDetail />,
@@ -222,7 +290,11 @@ const router = createBrowserRouter([
         element: <ServiceOrderList />,
         loader: ServiceOrderList.loader,
       },
-      { path: "service-order/add", element: <ServiceOrderAdd /> },
+      {
+        path: "service-order/add",
+        element: <ServiceOrderAdd />,
+        loader: ServiceOrderAdd.loader,
+      },
       {
         path: "booking/:id",
         element: <BookingDetail />,
@@ -239,6 +311,10 @@ const router = createBrowserRouter([
         loader: partsStaffLoader,
       },
       {
+        path: "bay-status",
+        element: <StaffBayStatusPage />,
+      },
+      {
         path: "items/:id",
         element: <StaffItemDetail />,
         loader: partDetailStaffLoader,
@@ -252,6 +328,10 @@ const router = createBrowserRouter([
         path: "complaints/:id",
         element: <StaffComplaintDetail />,
         loader: complaintDetailStaffLoader,
+      },
+      {
+        path: "complaints/categories",
+        element: <ComplaintCategoryManager />,
       },
       {
         path: "invoices",
@@ -270,11 +350,11 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: <AdminLayout />,
-    // loader: authenTicationForAdminLoader,   //Add later 
+    loader: authenTicationForAdminLoader,
     children: [
       {
         index: true,
-        element: <AdminDashboardPage />
+        element: <AdminDashboardPage />,
       },
       {
         path: "services",
@@ -284,17 +364,45 @@ const router = createBrowserRouter([
       {
         path: "models",
         element: <AdminModelsPage />,
-        loader: adminModelsLoader
+        loader: adminModelsLoader,
       },
       {
         path: "banners",
         element: <AdminBannersPage />,
-        loader: adminBannersLoader
-      }
-
+        loader: adminBannersLoader,
+      },
+      {
+        path: "activity-logs",
+        element: <AdminActivityLogs />,
+        loader: adminActivityLogsLoader,
+      },
     ],
   },
+];
+
+const router = createBrowserRouter([
+  {
+    element: <AppRouteLayout />,
+    children: appRoutes,
+  },
 ]);
+
+function AppRouteLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const root = document.getElementById("root") || document.scrollingElement;
+    if (root && typeof root.scrollTo === "function") {
+      root.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    } else if (root) {
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
+  return <Outlet />;
+}
 
 function App() {
   if (!PUBLISHABLE_KEY) {

@@ -1,8 +1,8 @@
 import React from "react";
 import {
-  sidebarLogo as imgLogo,
   sidebarDividerLine as imgLine,
 } from "@/assets/admin/sidebar_new";
+import imgLogo from "@/assets/logo-with-brand.png";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -13,12 +13,13 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
-  LayoutDashboard,
+  Home,
   Wrench,
   ClipboardList,
   Building2,
   Users,
-  CalendarCheck, 
+  CalendarCheck,
+  Gift,
   ScrollText,
   LogOut,
   ChevronRight,
@@ -28,17 +29,17 @@ import { useClerk } from "@clerk/clerk-react";
 import { toast } from "sonner";
 
 const items = [
-  { key: "home", label: "Dashboard", icon: LayoutDashboard, href: "/manager" },
+  { key: "home", label: "Dashboard", icon: Home, href: "/manager" },
   {
     key: "parts",
     label: "Quản lý phụ tùng",
-    icon: Wrench, 
+    icon: Wrench,
     href: "/manager/items",
   },
   {
     key: "goodReceipts",
     label: "Quản lý phiếu nhập ",
-    icon: ClipboardList, 
+    icon: ClipboardList,
     href: "/manager/goods-receipt-list",
   },
   {
@@ -51,14 +52,14 @@ const items = [
   {
     key: "attendance",
     label: "Điểm danh",
-    icon: CalendarCheck, 
+    icon: CalendarCheck,
     href: "/manager/attendance-tracking",
   },
   {
-    key: "log",
-    label: "Log",
-    icon: ScrollText, 
-    href: "/manager/activity-logs",
+    key: "loyalty",
+    label: "Điểm thưởng",
+    icon: Gift,
+    href: "/manager/loyalty",
   },
 ];
 
@@ -89,11 +90,20 @@ export default function ManagerSidebar({
       style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
+        <img alt="imgLine" src={imgLine} className="w-px h-full" />
       </div>
       <div className="flex flex-col h-full item-start pl-7">
-        <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4" />
-        <TooltipProvider>
+        <div className="flex flex-col items-center pr-7">
+          <Link to={"/manager"}>
+            <img
+              alt="imgLogo"
+              src={imgLogo}
+              className="w-24 h-24 mt-4"
+            />
+
+          </Link>
+        </div>
+        <TooltipProvider delayDuration={expanded ? 999999 : 700} disableHoverableContent>
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
@@ -107,12 +117,12 @@ export default function ManagerSidebar({
                     : location.pathname.startsWith(it.href);
 
                 return (
-                  <Tooltip key={it.key}>
-                    <TooltipTrigger asChild>
-                      <div className="relative">
+                  <Tooltip key={it.key} open={expanded ? false : undefined}>
+                    <TooltipTrigger asChild disabled={expanded}>
+                      <div className="relative group">
                         <span
                           className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
@@ -127,8 +137,8 @@ export default function ManagerSidebar({
                           variant="ghost"
                           size="icon"
                           className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100" // Style nút khi active
-                              : "text-gray-500 hover:bg-gray-100" // Style nút khi không active
+                            ? "bg-red-50 text-red-600 hover:text-red-600 hover:bg-red-50 active:bg-red-50 focus:bg-red-50 focus-visible:bg-red-50" // Style nút khi active - giữ background và màu đỏ
+                            : "text-gray-500 hover:text-red-600 hover:bg-transparent active:bg-transparent focus:bg-transparent focus-visible:bg-transparent" // Style nút khi không active - không có background, chỉ đổi màu chữ
                             }`}
                           asChild={Boolean(it.href)}
                         >
@@ -145,14 +155,14 @@ export default function ManagerSidebar({
                         </Button>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="right">{it.label}</TooltipContent>
+                    {!expanded && <TooltipContent side="right">{it.label}</TooltipContent>}
                   </Tooltip>
                 );
               })}
             </div>
             <div className="flex flex-col gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <Tooltip open={expanded ? false : undefined}>
+                <TooltipTrigger asChild disabled={expanded}>
                   <div className="relative">
                     <span
                       className={cn(
@@ -175,7 +185,7 @@ export default function ManagerSidebar({
                     </Button>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">Đăng xuất</TooltipContent>
+                {!expanded && <TooltipContent side="right">Đăng xuất</TooltipContent>}
               </Tooltip>
               <Button variant="ghost" onClick={onExpandToggle}>
                 <ChevronRight
@@ -189,6 +199,6 @@ export default function ManagerSidebar({
           </nav>
         </TooltipProvider>
       </div>
-    </aside>
+    </aside >
   );
 }

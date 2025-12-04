@@ -58,6 +58,44 @@ export const partsLoader = async ({ request }) => {
   }
 };
 
+// Loader for Home page - gets featured parts (newest parts, limit 3)
+export const homeLoader = async () => {
+  try {
+    const [partsResponse, bannersResponse] = await Promise.all([
+      customFetch("/parts?limit=3&sortBy=createdAt&sortOrder=desc"),
+      customFetch("/banners/active"),
+    ]);
+
+    const partsApiResponse = partsResponse.data;
+    if (!partsApiResponse.success) {
+      throw new Error(partsApiResponse.message || "Failed to load parts");
+    }
+
+    const bannersApiResponse = bannersResponse.data;
+    if (!bannersApiResponse.success) {
+      throw new Error(
+        bannersApiResponse.message || "Failed to load active banners"
+      );
+    }
+
+    return {
+      parts: partsApiResponse.data || [],
+      pagination: partsApiResponse.pagination,
+      banners: bannersApiResponse.data || [],
+    };
+  } catch (error) {
+    console.error("Home loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải dữ liệu trang chủ",
+    });
+    return {
+      parts: [],
+      pagination: {},
+      banners: [],
+    };
+  }
+};
+
 export const partsClientLoader = async ({ request }) => {
   try {
     const url = new URL(request.url);
@@ -75,9 +113,7 @@ export const partsClientLoader = async ({ request }) => {
 
     const groupedModelsApiResponse = groupedModelsResponse.data;
     if (!groupedModelsApiResponse.success) {
-      throw new Error(
-        groupedModelsApiResponse.message || "Failed to load filter data"
-      );
+      throw new Error(groupedModelsApiResponse.message || "Failed to load grouped models");
     }
 
     return {
@@ -210,17 +246,18 @@ export const partLoaderByClient = async ({ params }) => {
     }
     const product = mainProductApiResponse.data;
 
-    // Fetch related products based on the brand
+    // Fetch related products based on the brand (limit to 3)
     let relatedProducts = [];
     if (product && product.brand) {
       const relatedResponse = await customFetch(
-        `/parts?brand=${product.brand}`
+        `/parts?brand=${product.brand}&limit=4`
       );
       const relatedApiResponse = relatedResponse.data;
       if (relatedApiResponse.success) {
-        relatedProducts = relatedApiResponse.data.filter(
-          (p) => p._id !== product._id
-        );
+        // Filter out the current product and limit to 3
+        relatedProducts = relatedApiResponse.data
+          .filter((p) => p._id !== product._id)
+          .slice(0, 3);
       }
     }
     return { product, relatedProducts };
@@ -373,10 +410,29 @@ export const partsPageLoader = async ({ request }) => {
   }
 };
 
-// Combined loader for add/edit part page (vehicle models + optional part data)
+export const groupedModelsLoader = async () => {
+  try {
+    const response = await customFetch("/models/grouped-by-brand");
+
+    const apiResponse = response.data;
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load vehicle models");
+    }
+
+    return apiResponse.data; 
+  } catch (error) {
+    console.error("Grouped models loader error:", error);
+    toast.error("Lỗi tải dữ liệu", {
+      description: error.message || "Không thể tải danh sách xe",
+    });
+
+    return [];
+  }
+};
+
 export const partFormLoader = async ({ params }) => {
   try {
-    const promises = [vehicleModelsLoader()];
+    const promises = [groupedModelsLoader()];
 
     // If editing, also load the part data
     if (params.id && params.id !== "add") {
@@ -386,13 +442,13 @@ export const partFormLoader = async ({ params }) => {
     const results = await Promise.all(promises);
 
     return {
-      vehicleModels: results[0] || [],
-      part: results[1] || null, // null for new part, part data for edit
+       groupedModels: results[0] || [],
+      part: results[1] || null, 
     };
   } catch (error) {
     console.error("Part form loader error:", error);
     return {
-      vehicleModels: [],
+       groupedModels: [],
       part: null,
     };
   }
@@ -605,6 +661,47 @@ export const activityLogsLoader = async ({ request }) => {
   }
 };
 
+export const adminActivityLogsLoader = async ({ request }) => {
+  try {
+    const url = new URL(request.url);
+    const query = url.searchParams.toString();
+    // Try admin endpoint first, fallback to manager endpoint if needed
+    try {
+      const { data } = await customFetch(`/admin/activity-logs?${query}`);
+      if (!data.success) {
+        throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+      }
+      return {
+        logs: data.items,
+        pagination: data.pagination,
+      };
+    } catch (adminError) {
+      // Fallback to manager endpoint if admin endpoint doesn't exist
+      const { data } = await customFetch(`/manager/activity-logs?${query}`);
+      if (!data.success) {
+        throw new Error(data.message || "Không thể tải nhật ký hoạt động");
+      }
+      return {
+        logs: data.items,
+        pagination: data.pagination,
+      };
+    }
+  } catch (error) {
+    toast.error("Lỗi tải nhật ký", {
+      description: error.message,
+    });
+    return {
+      logs: [],
+      pagination: {
+        currentPage: 1,
+        totalPages: 1,
+        itemsPerPage: 20,
+        totalItems: 0,
+      },
+    };
+  }
+};
+
 export const adminServicesLoader = async ({ request }) => {
   try {
     const url = new URL(request.url);
@@ -684,7 +781,7 @@ export const adminModelsLoader = async ({ request }) => {
     }
 
     return {
-      models: apiResponse.data, 
+      models: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {
@@ -734,7 +831,7 @@ export const adminBannersLoader = async ({ request }) => {
     }
 
     return {
-      banners: apiResponse.data, 
+      banners: apiResponse.data,
       pagination: apiResponse.pagination,
     };
   } catch (error) {
@@ -751,6 +848,32 @@ export const adminBannersLoader = async ({ request }) => {
         totalItems: 0,
         itemsPerPage: 10,
       },
+    };
+  }
+};
+
+export const staffDashboardLoader = async () => {
+  try {
+    const response = await customFetch("/staff/dashboard");
+    const apiResponse = response.data;
+
+    if (!apiResponse.success) {
+      throw new Error(apiResponse.message || "Failed to load dashboard data");
+    }
+
+    return apiResponse.data; 
+  } catch (error) {
+    console.error("Dashboard loader error:", error);
+    toast.error("Lỗi tải dữ liệu dashboard", {
+      description: error.message || "Không thể tải dữ liệu thống kê",
+    });
+    
+    return {
+        stats: { orders: 0, requests: 0, revenue: 0, customers: 0 },
+        lineChartData: [],
+        barChartData: [],
+        pieChartData: [],
+        pendingOrders: []
     };
   }
 };

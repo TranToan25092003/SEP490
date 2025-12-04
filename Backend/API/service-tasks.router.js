@@ -589,4 +589,79 @@ router.get(
   serviceOrderTaskController.getTaskDetails
 );
 
+/**
+ * @swagger
+ * /service-tasks/{taskId}/reschedule:
+ *   post:
+ *     summary: Reschedule a task
+ *     tags:
+ *       - Service Tasks
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: taskId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the task
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bayId
+ *               - start
+ *               - end
+ *             properties:
+ *               bayId:
+ *                 type: string
+ *                 description: The ID of the bay to reschedule the task in
+ *               start:
+ *                 type: string
+ *                 format: date-time
+ *                 description: New start time of the task
+ *               end:
+ *                 type: string
+ *                 format: date-time
+ *                 description: New end time of the task
+ *     responses:
+ *       200:
+ *         description: Task rescheduled successfully
+ *       404:
+ *         description: Task not found
+ *       409:
+ *         description: Bay not available or time slot invalid
+ */
+router.post(
+  "/:taskId/reschedule",
+  [
+    param("taskId")
+      .notEmpty()
+      .withMessage("Task ID is required")
+      .isMongoId()
+      .withMessage("Task ID must be a valid MongoDB ObjectId"),
+    body("bayId")
+      .notEmpty()
+      .withMessage("Bay ID is required")
+      .isMongoId()
+      .withMessage("Bay ID must be a valid MongoDB ObjectId"),
+    body("start")
+      .notEmpty()
+      .withMessage("Start time is required")
+      .isISO8601()
+      .withMessage("Start time must be a valid ISO 8601 date-time"),
+    body("end")
+      .notEmpty()
+      .withMessage("End time is required")
+      .isISO8601()
+      .withMessage("End time must be a valid ISO 8601 date-time"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderTaskController.rescheduleTask
+);
+
 module.exports = router;

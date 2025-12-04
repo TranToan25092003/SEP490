@@ -27,6 +27,138 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const ModelCompatibilityTree = ({
+  groupedModels,
+  selectedIds,
+  onSelectionChange,
+}) => {
+  const [filter, setFilter] = useState("");
+
+  const handleModelSelect = (modelId, isSelected) => {
+    const newIds = new Set(selectedIds);
+    if (isSelected) {
+      newIds.delete(modelId);
+    } else {
+      newIds.add(modelId);
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const handleBrandSelectAll = (brandModels, isAllSelected) => {
+    const modelIdsInBrand = brandModels.map((m) => m._id);
+    const newIds = new Set(selectedIds);
+
+    if (isAllSelected) {
+      modelIdsInBrand.forEach((id) => newIds.delete(id));
+    } else {
+      modelIdsInBrand.forEach((id) => newIds.add(id));
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const filteredGroups = groupedModels
+    .map((group) => ({
+      ...group,
+      models: group.models.filter((model) =>
+        model.name.toLowerCase().includes(filter.toLowerCase())
+      ),
+    }))
+    .filter(
+      (group) =>
+        group.brand.toLowerCase().includes(filter.toLowerCase()) ||
+        group.models.length > 0
+    );
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Tìm kiếm hãng hoặc dòng xe..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="h-9"
+      />
+      <div className="max-h-200 overflow-y-auto space-y-2 rounded-md border p-2">
+        {filteredGroups.length === 0 && (
+          <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>
+        )}
+
+        {filteredGroups.map((group) => {
+          const modelsInBrandIds = group.models.map((m) => m._id);
+          const selectedInBrandCount = modelsInBrandIds.filter((id) =>
+            selectedIds.includes(id)
+          ).length;
+          const isAllSelected =
+            selectedInBrandCount === modelsInBrandIds.length &&
+            modelsInBrandIds.length > 0;
+          const isIndeterminate =
+            selectedInBrandCount > 0 &&
+            selectedInBrandCount < modelsInBrandIds.length;
+
+          return (
+            // Sử dụng thẻ <details> của HTML
+            <details key={group.brand} open>
+              {/* <summary> là phần đầu có thể click để thu gọn */}
+              <summary className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`brand-${group.brand}`}
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    // Ngăn sự kiện click của checkbox làm thu gọn <details>
+                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() =>
+                      handleBrandSelectAll(group.models, isAllSelected)
+                    }
+                  />
+                  <label
+                    htmlFor={`brand-${group.brand}`}
+                    className="flex-1 cursor-pointer text-sm font-semibold"
+                    // Ngăn sự kiện click của label làm thu gọn <details>
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {group.brand} ({selectedInBrandCount}/
+                    {modelsInBrandIds.length})
+                  </label>
+                </div>
+                <div className="w-9 p-0">
+                  <ChevronsUpDown className="h-4 w-4" />
+                </div>
+              </summary>
+              {/* Nội dung được thu gọn */}
+              <div className="py-2 pl-6">
+                {group.models.map((model) => {
+                  const isSelected = selectedIds.includes(model._id);
+                  return (
+                    <div
+                      key={model._id}
+                      className="flex items-center gap-2 py-1"
+                    >
+                      <Checkbox
+                        id={model._id}
+                        checked={isSelected}
+                        onCheckedChange={() =>
+                          handleModelSelect(model._id, isSelected)
+                        }
+                      />
+                      <label
+                        htmlFor={model._id}
+                        className="text-sm cursor-pointer"
+                      >
+                        {model.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function AddItem() {
   const navigate = useNavigate();
@@ -41,7 +173,6 @@ export default function AddItem() {
     costPrice: "",
     description: "",
     brand: "",
-    quantity: "",
     compatible_model_ids: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,9 +294,6 @@ export default function AddItem() {
       if (!formData.costPrice || formData.costPrice <= 0) {
         newErrors.costPrice = "Giá nhập phải lớn hơn 0";
       }
-      if (!formData.quantity || formData.quantity < 0) {
-        newErrors.quantity = "Số lượng phải lớn hơn hoặc bằng 0";
-      }
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -200,7 +328,7 @@ export default function AddItem() {
         ...formData,
         sellingPrice: parseFloat(formData.sellingPrice) || 0,
         costPrice: parseFloat(formData.costPrice) || 0,
-        quantity: parseInt(formData.quantity) || 0,
+        quantity: 0, // Set default quantity to 0, will be updated via goods receipt
         media: uploadedMedia,
       };
 
@@ -232,6 +360,14 @@ export default function AddItem() {
       setIsSubmitting(false);
     }
   };
+
+  const handleModelSelectionChange = (newIds) => {
+    setFormData((prev) => ({
+      ...prev,
+      compatible_model_ids: newIds,
+    }));
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between">
@@ -282,34 +418,15 @@ export default function AddItem() {
                 </label>
                 <Input placeholder="VD: SP0001 (tự động tạo)" disabled />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label className="text-[14px] text-[#2e2e3a]">
-                    Thương hiệu
-                  </label>
-                  <Input
-                    placeholder="VD: Honda, Yamaha, Suzuki"
-                    value={formData.brand}
-                    onChange={(e) => handleInputChange("brand", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-[14px] text-[#2e2e3a]">
-                    Số lượng tồn kho *
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="VD: 100"
-                    value={formData.quantity}
-                    onChange={(e) =>
-                      handleInputChange("quantity", e.target.value)
-                    }
-                    className={errors.quantity ? "border-red-500" : ""}
-                  />
-                  {errors.quantity && (
-                    <p className="text-red-500 text-sm">{errors.quantity}</p>
-                  )}
-                </div>
+              <div className="grid gap-2">
+                <label className="text-[14px] text-[#2e2e3a]">
+                  Thương hiệu
+                </label>
+                <Input
+                  placeholder="VD: Honda, Yamaha, Suzuki"
+                  value={formData.brand}
+                  onChange={(e) => handleInputChange("brand", e.target.value)}
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -360,94 +477,18 @@ export default function AddItem() {
                   }
                 />
               </div>
+
               <div className="grid gap-2">
                 <label className="text-[14px] text-[#2e2e3a]">
                   Dòng xe tương thích
                 </label>
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={open}
-                      className="w-full justify-between"
-                    >
-                      Chọn dòng xe tương thích
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Tìm kiếm dòng xe..." />
-                      <CommandList>
-                        <CommandEmpty>Không tìm thấy dòng xe.</CommandEmpty>
-                        <CommandGroup>
-                          {loaderData?.vehicleModels?.map((model) => (
-                            <CommandItem
-                              key={model._id}
-                              value={`${model.brand} ${model.name}`}
-                              onSelect={() => {
-                                if (
-                                  !formData.compatible_model_ids.includes(
-                                    model._id
-                                  )
-                                ) {
-                                  handleInputChange("compatible_model_ids", [
-                                    ...formData.compatible_model_ids,
-                                    model._id,
-                                  ]);
-                                }
-                                setOpen(false);
-                              }}
-                            >
-                              <Check
-                                className={`mr-2 h-4 w-4 ${
-                                  formData.compatible_model_ids.includes(
-                                    model._id
-                                  )
-                                    ? "opacity-100"
-                                    : "opacity-0"
-                                }`}
-                              />
-                              {model.brand} {model.name}
-                            </CommandItem>
-                          ))}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-                {formData.compatible_model_ids.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {formData.compatible_model_ids.map((modelId) => {
-                      const model = loaderData?.vehicleModels?.find(
-                        (m) => m._id === modelId
-                      );
-                      return (
-                        <div
-                          key={modelId}
-                          className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm flex items-center gap-1"
-                        >
-                          {model?.brand} {model?.name}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              handleInputChange(
-                                "compatible_model_ids",
-                                formData.compatible_model_ids.filter(
-                                  (id) => id !== modelId
-                                )
-                              );
-                            }}
-                            className="text-blue-600 hover:text-blue-800"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                <ModelCompatibilityTree
+                  groupedModels={loaderData?.groupedModels || []}
+                  selectedIds={formData.compatible_model_ids}
+                  onSelectionChange={(newIds) =>
+                    handleInputChange("compatible_model_ids", newIds)
+                  }
+                />
               </div>
             </div>
           </div>

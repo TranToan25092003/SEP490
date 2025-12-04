@@ -62,7 +62,7 @@ async function fetchStaffUserIds() {
   return { staffIds, staffRolesById };
 }
 
-async function fetchTechniciansFromClerk() {
+async function fetchAllStaffFromClerk() {
   const { staffIds, staffRolesById } = await fetchStaffUserIds();
 
   if (!staffIds.size) {
@@ -84,10 +84,12 @@ async function fetchTechniciansFromClerk() {
 
     chunkUsers.forEach((user) => {
       const orgRole = staffRolesById.get(user.id);
+      const position = resolvePosition(user, orgRole);
+
       technicians.push({
         technicianClerkId: user.id,
         technicianName: resolveFullName(user),
-        position: resolvePosition(user, orgRole),
+        position,
         email: user.emailAddresses?.[0]?.emailAddress || null,
         avatar: user.profileImageUrl || null,
       });
@@ -95,6 +97,13 @@ async function fetchTechniciansFromClerk() {
   }
 
   return technicians;
+}
+
+async function fetchTechniciansFromClerk() {
+  const allStaff = await fetchAllStaffFromClerk();
+  return allStaff.filter(
+    (staff) => staff.position === "technician"
+  );
 }
 
 class StaffService {
@@ -105,11 +114,13 @@ class StaffService {
     return fetchTechniciansFromClerk();
   }
 
+  async getAllStaffIncludingTechnicians() {
+    return fetchAllStaffFromClerk();
+  }
+
   /**
    * List all technicians in the system along with their status
    * whether they are currently assigned to any tasks.
-   *
-   * @return {import("./types").TechnicianInfoWithAvailabilityDTO[]}
    */
   async getTechniciansWithStatusAtThisMoment() {
     const technicians = await this.getAllTechnicians();
@@ -132,11 +143,23 @@ class StaffService {
       }
     }
 
+    // circular dependency fix: import inside the method
+    const { AttendanceService } = require("./attendance.service");
+    const staffIdsPresent = await AttendanceService.getPresentStaffIdsNow(
+      technicians
+    );
+
     return technicians.map((technician) => {
       const info = map[technician.technicianClerkId] || {
         isBusy: false,
         assignedTaskId: null,
       };
+
+      if (staffIdsPresent.includes(technician.technicianClerkId)) {
+        info.isPresent = true;
+      } else {
+        info.isPresent = false;
+      }
 
       return {
         ...technician,

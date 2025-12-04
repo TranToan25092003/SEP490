@@ -1,17 +1,58 @@
-import { Link } from "react-router-dom";
+import { Link, useLoaderData } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { fetchManagerDashboard } from "@/api/manager";
 
-export default function Manager() {
-  // Demo numbers – có thể thay bằng dữ liệu thật từ API khi cần
-  const stats = {
-    totalParts: 245,
-    lowStockParts: 12,
-    goodsReceiptsToday: 3,
-    goodsReceiptsPending: 2,
-    totalValue: 125000000,
-    monthlyRevenue: 45000000,
+export async function loader() {
+  try {
+    const response = await fetchManagerDashboard();
+    return response.data || {
+      stats: {
+        totalParts: 0,
+        lowStockParts: 0,
+        goodsReceiptsToday: 0,
+        goodsReceiptsPending: 0,
+        totalValue: 0,
+        monthlyRevenue: 0,
+      },
+      barChartData: [],
+      lowStockItems: [],
+      recentGoodsReceipts: [],
+    };
+  } catch (error) {
+    console.error("Error loading manager dashboard:", error);
+    return {
+      stats: {
+        totalParts: 0,
+        lowStockParts: 0,
+        goodsReceiptsToday: 0,
+        goodsReceiptsPending: 0,
+        totalValue: 0,
+        monthlyRevenue: 0,
+      },
+      barChartData: [],
+      lowStockItems: [],
+      recentGoodsReceipts: [],
+    };
+  }
+}
+
+function Manager() {
+  const dashboardData = useLoaderData() || {
+    stats: {
+      totalParts: 0,
+      lowStockParts: 0,
+      goodsReceiptsToday: 0,
+      goodsReceiptsPending: 0,
+      totalValue: 0,
+      monthlyRevenue: 0,
+    },
+    barChartData: [],
+    lowStockItems: [],
+    recentGoodsReceipts: [],
   };
+  const { stats, barChartData, lowStockItems, recentGoodsReceipts } = dashboardData;
 
   const quickLinks = [
     { label: "Quản lý phụ tùng", to: "/manager/items" },
@@ -24,20 +65,6 @@ export default function Manager() {
     { label: "Tỷ lệ tồn kho", value: 68, color: "bg-blue-500" },
     { label: "Đúng hạn nhập", value: 92, color: "bg-green-500" },
     { label: "Hiệu quả chi phí", value: 85, color: "bg-purple-500" },
-  ];
-
-  const recentGoodsReceipts = [
-    { id: "GR-001", date: "2024-01-15", supplier: "Nhà cung cấp A", status: "Hoàn thành", amount: 5000000 },
-    { id: "GR-002", date: "2024-01-14", supplier: "Nhà cung cấp B", status: "Đang xử lý", amount: 3200000 },
-    { id: "GR-003", date: "2024-01-13", supplier: "Nhà cung cấp C", status: "Hoàn thành", amount: 7800000 },
-  ];
-
-  const lowStockItems = [
-    { name: "Lốp xe 110/70-17", stock: 5, minStock: 20 },
-    { name: "Dầu nhớt 10W-40", stock: 8, minStock: 30 },
-    { name: "Phanh đĩa trước", stock: 3, minStock: 15 },
-    { name: "Bugi NGK", stock: 12, minStock: 25 },
-    { name: "Lọc gió", stock: 7, minStock: 20 },
   ];
 
   const formatCurrency = (amount) => {
@@ -100,7 +127,7 @@ export default function Manager() {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold">{stats.goodsReceiptsToday}</p>
-            <p className="text-xs text-green-600 mt-1">2 phiếu đang chờ</p>
+            <p className="text-xs text-green-600 mt-1">{stats.goodsReceiptsPending} phiếu đang chờ</p>
           </CardContent>
         </Card>
 
@@ -127,9 +154,12 @@ export default function Manager() {
           </CardHeader>
           <CardContent>
             {/* Mini bar chart */}
+            {barChartData && barChartData.length > 0 ? (
+              <>
             <div className="flex items-end gap-2 h-40">
-              {Array.from({ length: 6 }).map((_, i) => {
-                const h = [40, 55, 70, 85, 75, 90][i];
+                  {barChartData.map((item, i) => {
+                    const maxValue = Math.max(...barChartData.map(d => d.DoanhThu), 1);
+                    const h = maxValue > 0 ? (item.DoanhThu / maxValue) * 100 : 0;
                 return (
                   <div key={i} className="flex-1 bg-gray-100 rounded">
                     <div
@@ -141,13 +171,16 @@ export default function Manager() {
               })}
             </div>
             <div className="flex justify-between text-xs text-muted-foreground mt-2">
-              <span>T1</span>
-              <span>T2</span>
-              <span>T3</span>
-              <span>T4</span>
-              <span>T5</span>
-              <span>T6</span>
+                  {barChartData.map((item, i) => (
+                    <span key={i}>{item.month}</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-40 text-muted-foreground">
+                Chưa có dữ liệu
             </div>
+            )}
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Doanh thu tháng này</span>
@@ -280,3 +313,7 @@ export default function Manager() {
     </div>
   );
 }
+
+Manager.loader = loader;
+
+export default Manager;

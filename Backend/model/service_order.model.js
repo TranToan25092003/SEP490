@@ -36,13 +36,48 @@ const PartItemSchema = new Schema(
   { _id: false }
 );
 
+const WalkInCustomerSchema = new Schema(
+  {
+    name: { type: String, required: false },
+    phone: { type: String, required: false },
+    address: { type: String, required: false },
+  },
+  { _id: false }
+);
+
+const WalkInVehicleSchema = new Schema(
+  {
+    license_plate: { type: String, required: false },
+    model: { type: String, required: false },
+    color: { type: String, required: false },
+  },
+  { _id: false }
+);
+
 // Service_Orders Schema
 // The main data model
 const ServiceOrderSchema = new Schema(
   {
+    orderNumber: {
+      type: String,
+      required: false,
+      unique: true,
+      sparse: true, // Allow multiple null values, only enforce uniqueness for non-null values
+    }, // Số lệnh sửa chữa (VD: SC000001)
     staff_clerk_id: { type: String, required: true }, // Staff who created the order
-    booking_id: { type: Schema.Types.ObjectId, ref: "Booking", required: true }, // Associated booking ID
+    booking_id: {
+      type: Schema.Types.ObjectId,
+      ref: "Booking",
+      required: false,
+    }, // Associated booking ID
     items: [ItemsSchema], // Array of order items (services, parts, custom)
+    is_walk_in: {
+      type: Boolean,
+      default: false,
+    },
+    walk_in_customer: WalkInCustomerSchema,
+    walk_in_vehicle: WalkInVehicleSchema,
+    walk_in_note: { type: String, required: false },
     status: {
       type: String,
       enum: [
@@ -52,6 +87,7 @@ const ServiceOrderSchema = new Schema(
         "waiting_customer_approval",
         "approved",
         "scheduled",
+        "rescheduled",
         "servicing",
         "completed",
         "cancelled",
@@ -62,6 +98,14 @@ const ServiceOrderSchema = new Schema(
     expected_completion_time: { type: Date, required: false },
     completed_at: { type: Date, required: false },
     cancelled_at: { type: Date, required: false },
+    cancelled_by: {
+      type: String,
+      enum: ["customer", "staff"],
+      required: false,
+    },
+    cancel_reason: { type: String, required: false },
+    maintenance_reminder_sent_at: { type: Date, required: false },
+    waiting_approval_at: { type: Date, required: false }, // Thời gian chuyển sang waiting_customer_approval
   },
   { timestamps: true }
 );
@@ -83,6 +127,27 @@ ServiceOrderSchema.methods.getTaxAmount = function () {
 ServiceOrderSchema.methods.getAmountAfterTax = function () {
   return this.getTotalCostBeforeTax() + this.getTaxAmount();
 };
+
+// Pre-save middleware để tự động tạo orderNumber
+ServiceOrderSchema.pre("save", async function (next) {
+  if (!this.orderNumber) {
+    // Tìm lệnh sửa chữa cuối cùng
+    const lastOrder = await this.constructor
+      .findOne({
+        orderNumber: new RegExp("^SC"),
+      })
+      .sort({ orderNumber: -1 });
+
+    let nextNumber = 1;
+    if (lastOrder && lastOrder.orderNumber) {
+      const lastNumber = parseInt(lastOrder.orderNumber.slice(2));
+      nextNumber = lastNumber + 1;
+    }
+
+    this.orderNumber = `SC${String(nextNumber).padStart(6, "0")}`;
+  }
+  next();
+});
 
 const ServiceOrder = mongoose.model("ServiceOrder", ServiceOrderSchema);
 

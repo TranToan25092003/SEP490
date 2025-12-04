@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Stepper, StepperItem } from "@/components/ui/stepper";
 import { cn, formatDateTime } from "@/lib/utils";
 import { Clock } from "lucide-react";
@@ -24,8 +23,8 @@ const BookingStatusTimeline = ({
   className,
   ...props
 }) => {
-  const inspectionTask = tasks.find(t => t.type === "inspection");
-  const servicingTask = tasks.find(t => t.type === "servicing");
+  const inspectionTask = tasks.find((t) => t.type === "inspection");
+  const servicingTask = tasks.find((t) => t.type === "servicing");
 
   const steps = [
     {
@@ -39,7 +38,7 @@ const BookingStatusTimeline = ({
     },
     {
       id: "waiting_approval",
-      label: "Chờ duyệt báo giá"
+      label: "Chờ duyệt báo giá",
     },
     {
       id: "servicing",
@@ -48,13 +47,17 @@ const BookingStatusTimeline = ({
     },
     {
       id: "completed",
-      label: "Hoàn thành"
+      label: "Hoàn thành",
     },
   ];
 
   const getCurrentStepIndex = () => {
     if (booking.status === "completed") return 5;
-    else if (booking.serviceOrderStatus === "waiting_customer_approval" || booking.serviceOrderStatus === "approved") return 2;
+    else if (
+      booking.serviceOrderStatus === "waiting_customer_approval" ||
+      booking.serviceOrderStatus === "approved"
+    )
+      return 2;
     else if (servicingTask) return 3;
     else if (inspectionTask) return 1;
 
@@ -72,7 +75,8 @@ const BookingStatusTimeline = ({
     setSelectedStepIndex(index === selectedStepIndex ? null : index);
   };
 
-  const selectedStep = selectedStepIndex !== null ? steps[selectedStepIndex] : null;
+  const selectedStep =
+    selectedStepIndex !== null ? steps[selectedStepIndex] : null;
 
   const renderStepContent = () => {
     if (!selectedStep) {
@@ -105,7 +109,7 @@ const BookingStatusTimeline = ({
               subtitle="Xe đã được tiếp nhận"
             />
           )}
-          {booking.status === "cancelled" && (
+          {booking.status === "cancelled" && !inspectionTask && (
             <EmptyState
               icon={XCircle}
               title="Đã hủy"
@@ -157,7 +161,9 @@ const BookingStatusTimeline = ({
 
           {inspectionTask.comment && (
             <div className="bg-muted/50 rounded-lg p-4">
-              <h5 className="text-sm font-semibold mb-2">Nhận xét của kỹ thuật viên</h5>
+              <h5 className="text-sm font-semibold mb-2">
+                Nhận xét của kỹ thuật viên
+              </h5>
               <p className="text-sm">{inspectionTask.comment}</p>
             </div>
           )}
@@ -250,6 +256,41 @@ const BookingStatusTimeline = ({
             </h4>
           </div>
 
+          {servicingTask.status === "rescheduled" ? (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <p className="text-sm text-amber-900">
+                <span className="font-semibold">Tạm dừng sửa chữa</span>
+                {servicingTask.expectedStartTime && (
+                  <>
+                    {" "}
+                    - <span className="font-semibold">
+                      Dự kiến tiếp tục:
+                    </span>{" "}
+                    {formatDateTime(servicingTask.expectedStartTime)}
+                  </>
+                )}
+                {servicingTask.expectedEndTime && (
+                  <>
+                    {" "}
+                    - <span className="font-semibold">
+                      Dự kiến hoàn thành:
+                    </span>{" "}
+                    {formatDateTime(servicingTask.expectedEndTime)}
+                  </>
+                )}
+              </p>
+            </div>
+          ) : (
+            servicingTask.expectedEndTime && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-800">
+                  <span className="font-semibold">Dự kiến hoàn thành: </span>
+                  {formatDateTime(servicingTask.expectedEndTime)}
+                </p>
+              </div>
+            )
+          )}
+
           {servicingTask.timeline && servicingTask.timeline.length > 0 ? (
             <div className="relative">
               <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
@@ -330,33 +371,35 @@ const BookingStatusTimeline = ({
   };
 
   return (
-    <Card className={className} {...props}>
-      <CardContent className="pt-3">
-        <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
+    <div className={className} {...props}>
+      <h3 className="text-xl font-bold text-foreground mb-6">Tiến độ</h3>
 
-        <div className="mb-12">
-          <Stepper currentStep={currentStepIndex} variant="destructive" className="w-full">
-            {steps.map((step, index) => (
-              <StepperItem
-                key={step.id}
-                step={index}
-                title={step.label}
-                className={cn(
-                  "flex-1 cursor-pointer transition-opacity",
-                  selectedStepIndex === index && "opacity-100",
-                  selectedStepIndex !== null && selectedStepIndex !== index && "opacity-50"
-                )}
-                onClick={() => handleStepClick(index)}
-              />
-            ))}
-          </Stepper>
-        </div>
+      <div className="mb-12">
+        <Stepper
+          currentStep={currentStepIndex}
+          variant="destructive"
+          className="w-full"
+        >
+          {steps.map((step, index) => (
+            <StepperItem
+              key={step.id}
+              step={index}
+              title={step.label}
+              className={cn(
+                "flex-1 cursor-pointer transition-opacity",
+                selectedStepIndex === index && "opacity-100",
+                selectedStepIndex !== null &&
+                  selectedStepIndex !== index &&
+                  "opacity-50"
+              )}
+              onClick={() => handleStepClick(index)}
+            />
+          ))}
+        </Stepper>
+      </div>
 
-        <div className="mt-8 ">
-          {renderStepContent()}
-        </div>
-      </CardContent>
-    </Card>
+      <div className="mt-8 ">{renderStepContent()}</div>
+    </div>
   );
 };
 

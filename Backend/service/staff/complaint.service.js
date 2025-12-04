@@ -67,11 +67,16 @@ class ComplaintService {
 
                 const clerkInfo = clerkUserMap[complaint.clerkId] || { fullName: "Không rõ", phoneNumbers: [] };
                 const primaryPhoneNumber = clerkInfo.phoneNumbers.length > 0 ? clerkInfo.phoneNumbers[0] : "N/A";
+                const categoryId = complaint.category?.toString?.() || null;
+                const categoryName = complaint.categoryName || complaint.category || "N/A";
 
                 return {
                     ...complaint,
                     customerName: clerkInfo.fullName,
                     customerPhone: primaryPhoneNumber,
+                    categoryId,
+                    category: categoryName,
+                    categoryName,
                 };
             });
 
@@ -172,6 +177,9 @@ class ComplaintService {
 
             const primaryPhoneNumber = customerInfo.phoneNumbers.length > 0 ? customerInfo.phoneNumbers[0] : "N/A";
 
+            const categoryId = complaint.category?.toString?.() || null;
+            const categoryName = complaint.categoryName || complaint.category || "N/A";
+
             const detailedComplaint = {
                 _id: complaint._id,
                 title: complaint.title,
@@ -179,7 +187,9 @@ class ComplaintService {
                 photos: complaint.photos,
                 rating: complaint.rating,
                 status: complaint.status,
-                category: complaint.category,
+                category: categoryName,
+                categoryName,
+                categoryId,
                 reply: populatedReply,
                 createdAt: complaint.createdAt,
                 so_id: complaint.so_id?._id || null,

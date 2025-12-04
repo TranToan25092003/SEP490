@@ -1,6 +1,7 @@
 const { Invoice, ServiceOrder } = require("../model");
 const DomainError = require("../errors/domainError");
 const { UsersService } = require("./users.service");
+const notificationService = require("./notification.service");
 
 const ERROR_CODES = {
   INVOICE_NOT_FOUND: "INVOICE_NOT_FOUND",
@@ -9,6 +10,46 @@ const ERROR_CODES = {
 };
 
 class InvoiceService {
+  async _ensureInvoiceNumber(invoice) {
+    if (!invoice.invoiceNumber) {
+      const lastInvoice = await Invoice.findOne({
+        invoiceNumber: new RegExp("^HD"),
+      })
+        .sort({ invoiceNumber: -1 })
+        .exec();
+
+      let nextNumber = 1;
+      if (lastInvoice && lastInvoice.invoiceNumber) {
+        const lastNumber = parseInt(lastInvoice.invoiceNumber.slice(2));
+        nextNumber = lastNumber + 1;
+      }
+
+      invoice.invoiceNumber = `HD${String(nextNumber).padStart(6, "0")}`;
+      await invoice.save();
+    }
+    return invoice.invoiceNumber;
+  }
+
+  async _ensureOrderNumber(serviceOrder) {
+    if (serviceOrder && !serviceOrder.orderNumber) {
+      const lastOrder = await ServiceOrder.findOne({
+        orderNumber: new RegExp("^SC"),
+      })
+        .sort({ orderNumber: -1 })
+        .exec();
+
+      let nextNumber = 1;
+      if (lastOrder && lastOrder.orderNumber) {
+        const lastNumber = parseInt(lastOrder.orderNumber.slice(2));
+        nextNumber = lastNumber + 1;
+      }
+
+      serviceOrder.orderNumber = `SC${String(nextNumber).padStart(6, "0")}`;
+      await serviceOrder.save();
+    }
+    return serviceOrder?.orderNumber;
+  }
+
   async ensureInvoiceForServiceOrder(serviceOrderId) {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)
       .populate({
@@ -73,6 +114,94 @@ class InvoiceService {
     return this._mapInvoiceSummary(invoice, serviceOrder);
   }
 
+  async listInvoicesForCustomer(customerClerkId) {
+    const invoices = await Invoice.find({})
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "service_order_id",
+        populate: [
+          { path: "booking_id", populate: { path: "vehicle_id" } },
+          { path: "items.part_id" },
+        ],
+      })
+      .exec();
+
+    const customerInvoices = invoices.filter((invoice) => {
+      const booking = invoice.service_order_id?.booking_id;
+      return booking?.customer_clerk_id === customerClerkId;
+    });
+
+    if (customerInvoices.length === 0) {
+      return [];
+    }
+
+    const customerMap = await UsersService.getFullNamesByIds([customerClerkId]);
+
+    // Đảm bảo tất cả invoice và serviceOrder đều có số format
+    for (const invoice of customerInvoices) {
+      await this._ensureInvoiceNumber(invoice);
+      if (invoice.service_order_id) {
+        await this._ensureOrderNumber(invoice.service_order_id);
+      }
+    }
+
+    return customerInvoices.map((invoice) =>
+      this._mapInvoiceSummary(
+        invoice,
+        invoice.service_order_id,
+        customerMap[customerClerkId] || null
+      )
+    );
+  }
+
+  async getInvoiceByIdForCustomer(invoiceId, customerClerkId) {
+    const invoice = await Invoice.findById(invoiceId)
+      .populate({
+        path: "service_order_id",
+        populate: [
+          { path: "booking_id", populate: { path: "vehicle_id" } },
+          { path: "items.part_id" },
+        ],
+      })
+      .exec();
+
+    if (!invoice) {
+      return null;
+    }
+
+    const booking = invoice.service_order_id?.booking_id;
+    if (booking?.customer_clerk_id !== customerClerkId) {
+      return null;
+    }
+
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    const userIds = [customerClerkId];
+    const userMap = await UsersService.getFullNamesByIds(userIds);
+
+    return this._mapInvoiceDetail(
+      invoice,
+      invoice.service_order_id,
+      booking,
+      userMap[customerClerkId] || null,
+      confirmedByName
+    );
+  }
+
   async listInvoices({ page = 1, limit = 10, status = null } = {}) {
     const filters = {};
     if (status) {
@@ -107,13 +236,30 @@ class InvoiceService {
 
     const customerMap = await UsersService.getFullNamesByIds(customerClerkIds);
 
+    // Đảm bảo tất cả invoice và serviceOrder đều có số format
+    await Promise.all(
+      invoices.map(async (invoice) => {
+        await this._ensureInvoiceNumber(invoice);
+        if (invoice.service_order_id) {
+          await this._ensureOrderNumber(invoice.service_order_id);
+        }
+      })
+    );
+
     const data = invoices.map((invoice) => {
       const serviceOrder = invoice.service_order_id;
-      return this._mapInvoiceSummary(
-        invoice,
-        serviceOrder,
-        customerMap[serviceOrder?.booking_id?.customer_clerk_id] || null
-      );
+      // Xử lý customer name: walk-in customers hoặc registered customers
+      let customerName = null;
+      if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+        // Walk-in customer: lấy tên từ walk_in_customer
+        customerName = serviceOrder.walk_in_customer.name;
+      } else if (serviceOrder?.booking_id?.customer_clerk_id) {
+        // Registered customer: lấy tên từ customerMap
+        customerName =
+          customerMap[serviceOrder.booking_id.customer_clerk_id] || null;
+      }
+
+      return this._mapInvoiceSummary(invoice, serviceOrder, customerName);
     });
 
     const totalPages = Math.ceil(totalItems / limit);
@@ -144,22 +290,53 @@ class InvoiceService {
       return null;
     }
 
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
     const serviceOrder = invoice.service_order_id;
     const booking = serviceOrder?.booking_id;
     const customerClerkId = booking?.customer_clerk_id;
-    const customerMap = customerClerkId
-      ? await UsersService.getFullNamesByIds([customerClerkId])
-      : {};
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    // Xử lý customer name: walk-in customers hoặc registered customers
+    let customerName = null;
+    if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+      // Walk-in customer: lấy tên từ walk_in_customer
+      customerName = serviceOrder.walk_in_customer.name;
+    } else if (customerClerkId) {
+      // Registered customer: lấy tên từ Clerk
+      const userIds = [customerClerkId];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      customerName = userMap[customerClerkId] || null;
+    }
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      customerMap[customerClerkId] || null
+      customerName,
+      confirmedByName
     );
   }
 
-  async confirmInvoicePayment(invoiceId, paymentMethod, confirmedBy) {
+  async confirmInvoicePayment(
+    invoiceId,
+    paymentMethod,
+    confirmedBy,
+    { voucherCode, paidAmount } = {}
+  ) {
     const invoice = await Invoice.findById(invoiceId)
       .populate({
         path: "service_order_id",
@@ -190,46 +367,146 @@ class InvoiceService {
       invoice.payment_method = paymentMethod;
     }
 
+    if (voucherCode) {
+      invoice.discount_code = voucherCode;
+    }
+
+    if (paidAmount !== undefined && paidAmount !== null) {
+      const numericPaid = Number(paidAmount);
+      if (!Number.isNaN(numericPaid) && numericPaid >= 0) {
+        const originalAmount = Number(invoice.amount) || 0;
+        const effectivePaid = Math.min(numericPaid, originalAmount);
+        invoice.paid_amount = effectivePaid;
+        invoice.discount_amount = Math.max(originalAmount - effectivePaid, 0);
+      }
+    }
+
     invoice.status = "paid";
     invoice.confirmed_by = confirmedBy || null;
     invoice.confirmed_at = new Date();
 
     await invoice.save();
 
+    // Populate lại invoice sau khi save để đảm bảo có đầy đủ thông tin
+    await invoice.populate({
+      path: "service_order_id",
+      populate: {
+        path: "booking_id",
+        populate: { path: "vehicle_id" },
+      },
+    });
+
+    await notificationService.notifyPaymentSuccess(invoice, {
+      actorClerkId: confirmedBy,
+    });
+
+    // Đảm bảo invoice và serviceOrder đều có số format
+    await this._ensureInvoiceNumber(invoice);
+    if (invoice.service_order_id) {
+      await this._ensureOrderNumber(invoice.service_order_id);
+    }
+
     const serviceOrder = invoice.service_order_id;
     const booking = serviceOrder?.booking_id;
     const customerClerkId = booking?.customer_clerk_id;
-    const customerMap = customerClerkId
-      ? await UsersService.getFullNamesByIds([customerClerkId])
-      : {};
+
+    // Xử lý confirmed_by: nếu là "SYSTEM" thì trả về "Hệ thống"
+    let confirmedByName = null;
+    if (invoice.confirmed_by === "SYSTEM") {
+      confirmedByName = "Hệ thống";
+    } else if (invoice.confirmed_by) {
+      const userIds = [invoice.confirmed_by];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      confirmedByName = userMap[invoice.confirmed_by] || null;
+    }
+
+    // Xử lý customer name: walk-in customers hoặc registered customers
+    let customerName = null;
+    if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+      // Walk-in customer: lấy tên từ walk_in_customer
+      customerName = serviceOrder.walk_in_customer.name;
+    } else if (customerClerkId) {
+      // Registered customer: lấy tên từ Clerk
+      const userIds = [customerClerkId];
+      const userMap = await UsersService.getFullNamesByIds(userIds);
+      customerName = userMap[customerClerkId] || null;
+    }
 
     return this._mapInvoiceDetail(
       invoice,
       serviceOrder,
       booking,
-      customerMap[customerClerkId] || null
+      customerName,
+      confirmedByName
     );
+  }
+
+  async updateLoyaltyPoints(invoiceId, pointsEarned) {
+    if (!invoiceId) return null;
+    const normalizedPoints = Math.max(Number(pointsEarned) || 0, 0);
+    const invoice = await Invoice.findById(invoiceId);
+    if (!invoice) {
+      return null;
+    }
+
+    invoice.loyalty_points_earned = normalizedPoints;
+    await invoice.save();
+    return invoice;
   }
 
   _mapInvoiceSummary(invoice, serviceOrder, customerName = null) {
     const booking = serviceOrder?.booking_id;
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
 
     return {
       id: invoice._id.toString(),
+      invoiceNumber: invoice.invoiceNumber || invoice._id.toString(),
       serviceOrderId: serviceOrder?._id?.toString() || null,
+      serviceOrderNumber:
+        serviceOrder?.orderNumber || serviceOrder?._id?.toString() || null,
       status: invoice.status,
-      totalAmount: invoice.amount,
+      totalAmount: invoice.paid_amount ?? invoice.amount,
+      originalAmount: invoice.amount,
+      discountCode: invoice.discount_code || null,
+      discountAmount: invoice.discount_amount || 0,
+      loyaltyPointsEarned: invoice.loyalty_points_earned || 0,
+      clerkId: invoice.clerkId || null,
       subtotal: invoice.subtotal,
       tax: invoice.tax,
       createdAt: invoice.createdAt,
       customerName,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
     };
   }
 
-  _mapInvoiceDetail(invoice, serviceOrder, booking, customerName = null) {
+  _mapInvoiceDetail(
+    invoice,
+    serviceOrder,
+    booking,
+    customerName = null,
+    confirmedByName = null
+  ) {
     const vehicle = booking?.vehicle_id;
+    // For walk-in orders, get license plate from walk_in_vehicle
+    const licensePlate =
+      vehicle?.license_plate ||
+      serviceOrder?.walk_in_vehicle?.license_plate ||
+      null;
+
+    // Xử lý customer name nếu chưa có: walk-in customers hoặc registered customers
+    let finalCustomerName = customerName;
+    if (!finalCustomerName) {
+      if (serviceOrder?.is_walk_in && serviceOrder?.walk_in_customer?.name) {
+        finalCustomerName = serviceOrder.walk_in_customer.name;
+      } else if (booking?.customer_clerk_id) {
+        // Đã có customerName từ parameter, không cần làm gì thêm
+      }
+    }
 
     const items = (serviceOrder?.items || []).map((item) => ({
       type: item.item_type,
@@ -242,19 +519,27 @@ class InvoiceService {
 
     return {
       id: invoice._id.toString(),
+      invoiceNumber: invoice.invoiceNumber || invoice._id.toString(),
       serviceOrderId: serviceOrder?._id?.toString() || null,
+      serviceOrderNumber:
+        serviceOrder?.orderNumber || serviceOrder?._id?.toString() || null,
       status: invoice.status,
       subtotal: invoice.subtotal,
       tax: invoice.tax,
-      totalAmount: invoice.amount,
+      totalAmount: invoice.paid_amount ?? invoice.amount,
+      originalAmount: invoice.amount,
+      discountCode: invoice.discount_code || null,
+      discountAmount: invoice.discount_amount || 0,
+      loyaltyPointsEarned: invoice.loyalty_points_earned || 0,
+      clerkId: invoice.clerkId || null,
       paymentMethod: invoice.payment_method || null,
-      confirmedBy: invoice.confirmed_by || null,
+      confirmedBy: confirmedByName || invoice.confirmed_by || null,
       confirmedAt: invoice.confirmed_at || null,
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
-      customerName,
+      customerName: finalCustomerName,
       customerClerkId: booking?.customer_clerk_id || null,
-      licensePlate: vehicle?.license_plate || null,
+      licensePlate,
       vehicleId: vehicle?._id?.toString() || null,
       items,
     };

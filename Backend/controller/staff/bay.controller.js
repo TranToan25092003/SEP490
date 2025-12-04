@@ -52,6 +52,21 @@ class BayController {
       });
     }
   }
+
+  async availability(req, res) {
+    try {
+      const data = await bayService.getAvailability(req.query);
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        message: error.message || "Failed to fetch bay availability",
+      });
+    }
+  }
 }
 
 module.exports = new BayController();

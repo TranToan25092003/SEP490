@@ -99,6 +99,11 @@ router.get("/models/get", controller.getModels);
  */
 router.get("/vehicles/get", controller.getVehicles);
 
+// Ẩn một xe khỏi hồ sơ khách hàng (soft-delete phía UI)
+router.patch("/vehicles/hide", controller.hideVehicle);
+
+router.get("/vehicles/check-license-plate", controller.checkLicensePlate);
+
 router.patch("/public-metadata", controller.updatePublicMetadata);
 
 module.exports = router;

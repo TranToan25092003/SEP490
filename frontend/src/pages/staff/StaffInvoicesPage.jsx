@@ -159,10 +159,12 @@ export default function StaffInvoicesPage() {
                   <TableBody>
                     {invoices.map((invoice) => (
                       <TableRow key={invoice.id}>
-                        <TableCell className="font-medium">
-                          {invoice.id}
+                        <TableCell className="font-medium font-mono">
+                          {invoice.invoiceNumber || invoice.id}
                         </TableCell>
-                        <TableCell>{invoice.serviceOrderId}</TableCell>
+                        <TableCell className="font-mono">
+                          {invoice.serviceOrderNumber || invoice.serviceOrderId}
+                        </TableCell>
                         <TableCell>{invoice.customerName || "-"}</TableCell>
                         <TableCell>{invoice.licensePlate || "-"}</TableCell>
                         <TableCell>

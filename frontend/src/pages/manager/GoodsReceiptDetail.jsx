@@ -13,7 +13,18 @@ import {
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { generateGoodsReceiptPDF } from "@/utils/pdfGeneratorHtml";
-import { ArrowLeft, Download, FileText } from "lucide-react";
+import { ArrowLeft, Download, FileText, XCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function GoodsReceiptDetail() {
   const { id } = useParams();
@@ -22,6 +33,7 @@ export default function GoodsReceiptDetail() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchReceiptDetail();
@@ -50,6 +62,8 @@ export default function GoodsReceiptDetail() {
 
   // Convert number to Vietnamese words
   const numberToVietnameseWords = (num) => {
+    if (num === 0) return "không";
+
     const ones = [
       "",
       "một",
@@ -62,63 +76,110 @@ export default function GoodsReceiptDetail() {
       "tám",
       "chín",
     ];
-    const tens = [
-      "",
-      "",
-      "hai mươi",
-      "ba mươi",
-      "bốn mươi",
-      "năm mươi",
-      "sáu mươi",
-      "bảy mươi",
-      "tám mươi",
-      "chín mươi",
-    ];
-    const hundreds = [
-      "",
-      "một trăm",
-      "hai trăm",
-      "ba trăm",
-      "bốn trăm",
-      "năm trăm",
-      "sáu trăm",
-      "bảy trăm",
-      "tám trăm",
-      "chín trăm",
-    ];
 
-    if (num === 0) return "không";
-    if (num < 10) return ones[num];
-    if (num < 100) {
-      const ten = Math.floor(num / 10);
-      const one = num % 10;
-      if (one === 0) return tens[ten];
-      if (ten === 1) return `mười ${ones[one]}`;
-      return `${tens[ten]} ${ones[one]}`;
+    const readGroup = (n) => {
+      if (n === 0) return "";
+      let result = "";
+
+      const hundred = Math.floor(n / 100);
+      const remainder = n % 100;
+      const ten = Math.floor(remainder / 10);
+      const one = remainder % 10;
+
+      // Handle hundreds
+      if (hundred > 0) {
+        result += ones[hundred] + " trăm ";
+      }
+
+      // Handle tens and ones
+      if (ten > 0) {
+        if (ten === 1) {
+          if (one === 0) {
+            result += "mười";
+          } else if (one === 5) {
+            result += "mười lăm";
+          } else {
+            result += "mười " + ones[one];
+          }
+        } else {
+          result += ones[ten] + " mươi ";
+          if (one === 1) {
+            result += "mốt";
+          } else if (one === 5) {
+            result += "lăm";
+          } else if (one > 0) {
+            result += ones[one];
+          }
+        }
+      } else if (one > 0) {
+        result += ones[one];
+      }
+
+      return result.trim();
+    };
+
+    // Handle billions (tỷ)
+    if (num >= 1000000000) {
+      const billion = Math.floor(num / 1000000000);
+      const remainder = num % 1000000000;
+      let result = readGroup(billion) + " tỷ";
+      if (remainder > 0) {
+        result += " " + numberToVietnameseWords(remainder);
+      }
+      return result;
     }
-    if (num < 1000) {
-      const hundred = Math.floor(num / 100);
-      const remainder = num % 100;
-      if (remainder === 0) return hundreds[hundred];
-      return `${hundreds[hundred]} ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000) {
-      const thousand = Math.floor(num / 1000);
-      const remainder = num % 1000;
-      if (remainder === 0) return `${numberToVietnameseWords(thousand)} nghìn`;
-      return `${numberToVietnameseWords(
-        thousand
-      )} nghìn ${numberToVietnameseWords(remainder)}`;
-    }
-    if (num < 1000000000) {
+
+    // Handle millions (triệu)
+    if (num >= 1000000) {
       const million = Math.floor(num / 1000000);
       const remainder = num % 1000000;
-      if (remainder === 0) return `${numberToVietnameseWords(million)} triệu`;
-      return `${numberToVietnameseWords(
-        million
-      )} triệu ${numberToVietnameseWords(remainder)}`;
+      let result = readGroup(million) + " triệu";
+      if (remainder > 0) {
+        result += " " + numberToVietnameseWords(remainder);
+      }
+      return result;
     }
-    return "số quá lớn";
+
+    // Handle thousands (nghìn)
+    if (num >= 1000) {
+      const thousand = Math.floor(num / 1000);
+      const remainder = num % 1000;
+      let result = readGroup(thousand) + " nghìn";
+      if (remainder > 0) {
+        result += " " + readGroup(remainder);
+      }
+      return result;
+    }
+
+    // Handle numbers less than 1000
+    return readGroup(num);
+  };
+
+  // Convert amount to Vietnamese words with đồng
+  const amountToVietnameseWords = (amount) => {
+    if (!amount || amount === 0) return "không đồng";
+
+    const amountInThousands = Math.floor(amount / 1000);
+    const remainder = amount % 1000;
+
+    let result = numberToVietnameseWords(amountInThousands);
+    
+    if (amountInThousands > 0) {
+      result += " nghìn";
+    }
+
+    if (remainder > 0) {
+      result += " " + numberToVietnameseWords(remainder);
+    }
+
+    result += " đồng";
+
+    // Add "chẵn" if there's no remainder (exact amount)
+    if (remainder === 0 && amountInThousands > 0) {
+      result += " chẵn";
+    }
+
+    return result;
   };
 
   const handleExportPDF = async () => {
@@ -131,9 +192,7 @@ export default function GoodsReceiptDetail() {
       const pdfBlob = await generateGoodsReceiptPDF({
         ...receipt,
         items: items,
-        totalAmountInWords: `${numberToVietnameseWords(
-          Math.floor(totalAmount / 1000)
-        )} nghìn đồng chẵn`,
+        totalAmountInWords: amountToVietnameseWords(totalAmount),
       });
 
       // Create download link
@@ -159,6 +218,36 @@ export default function GoodsReceiptDetail() {
     }
   };
 
+  const handleCancelReceipt = async () => {
+    if (!id) return;
+    try {
+      setCancelling(true);
+      const response = await customFetch(
+        `/manager/goods-receipt/${id}/cancel`,
+        {
+          method: "PATCH",
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Không thể hủy phiếu nhập");
+      }
+
+      toast.success("Đã hủy phiếu nhập", {
+        description: "Phiếu nhập đã được chuyển sang trạng thái Đã hủy",
+      });
+      await fetchReceiptDetail();
+    } catch (error) {
+      console.error("Cancel receipt error:", error);
+      toast.error("Lỗi", {
+        description:
+          error.message || "Không thể hủy phiếu nhập. Vui lòng thử lại.",
+      });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   // Format price
   const formatPrice = (price) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -177,6 +266,8 @@ export default function GoodsReceiptDetail() {
     switch (status) {
       case "completed":
         return "text-green-600 bg-green-100";
+      case "cancelled":
+        return "text-red-600 bg-red-100";
       case "pending":
         return "text-yellow-600 bg-yellow-100";
       case "approved":
@@ -193,6 +284,8 @@ export default function GoodsReceiptDetail() {
     switch (status) {
       case "completed":
         return "Hoàn thành";
+      case "cancelled":
+        return "Đã hủy";
       case "pending":
         return "Chờ duyệt";
       case "approved":
@@ -261,6 +354,43 @@ export default function GoodsReceiptDetail() {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {receipt.status !== "cancelled" && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                  disabled={cancelling}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  {cancelling ? "Đang hủy..." : "Hủy phiếu nhập"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    Xác nhận hủy phiếu nhập?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Hành động này sẽ trừ lại số lượng phụ tùng đã nhập trong
+                    phiếu và chuyển trạng thái phiếu nhập sang{" "}
+                    <span className="font-semibold">Đã hủy</span>. Phiếu nhập và
+                    lịch sử liên quan vẫn được giữ lại để tra cứu.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Không</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={handleCancelReceipt}
+                  >
+                    Xác nhận hủy
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           <Button
             onClick={handleExportPDF}
             disabled={exporting}
@@ -416,9 +546,8 @@ export default function GoodsReceiptDetail() {
       {receipt.totalAmount && (
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-semibold mb-2">Tổng số tiền (Viết bằng chữ):</h3>
-          <p className="text-lg">
-            {numberToVietnameseWords(Math.floor(receipt.totalAmount / 1000))}{" "}
-            nghìn đồng chẵn
+          <p className="text-lg capitalize">
+            {amountToVietnameseWords(receipt.totalAmount)}
           </p>
         </div>
       )}

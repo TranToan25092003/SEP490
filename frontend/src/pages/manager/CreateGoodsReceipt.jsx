@@ -24,6 +24,14 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -33,9 +41,138 @@ import {
   TableFooter,
 } from "@/components/ui/table";
 import { Check, ChevronsUpDown, Plus, Search, Trash2 } from "lucide-react";
+import { useCallback, useEffect } from "react";
 import { customFetch } from "@/utils/customAxios";
+import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
 import { toast } from "sonner";
 import DatePicker from "@/components/ui/date-picker";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const ModelCompatibilityTree = ({
+  groupedModels,
+  selectedIds,
+  onSelectionChange,
+}) => {
+  const [filter, setFilter] = useState("");
+
+  const handleModelSelect = (modelId, isSelected) => {
+    const newIds = new Set(selectedIds);
+    if (isSelected) {
+      newIds.delete(modelId);
+    } else {
+      newIds.add(modelId);
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const handleBrandSelectAll = (brandModels, isAllSelected) => {
+    const modelIdsInBrand = brandModels.map((m) => m._id);
+    const newIds = new Set(selectedIds);
+
+    if (isAllSelected) {
+      modelIdsInBrand.forEach((id) => newIds.delete(id));
+    } else {
+      modelIdsInBrand.forEach((id) => newIds.add(id));
+    }
+    onSelectionChange(Array.from(newIds));
+  };
+
+  const filteredGroups = groupedModels
+    .map((group) => ({
+      ...group,
+      models: group.models.filter((model) =>
+        model.name.toLowerCase().includes(filter.toLowerCase())
+      ),
+    }))
+    .filter(
+      (group) =>
+        group.brand.toLowerCase().includes(filter.toLowerCase()) ||
+        group.models.length > 0
+    );
+
+  return (
+    <div className="space-y-4">
+      <Input
+        placeholder="Tìm kiếm hãng hoặc dòng xe..."
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+        className="h-9"
+      />
+      <div className="max-h-200 overflow-y-auto space-y-2 rounded-md border p-2">
+        {filteredGroups.length === 0 && (
+          <p className="text-center text-sm text-gray-500">Không tìm thấy.</p>
+        )}
+
+        {filteredGroups.map((group) => {
+          const modelsInBrandIds = group.models.map((m) => m._id);
+          const selectedInBrandCount = modelsInBrandIds.filter((id) =>
+            selectedIds.includes(id)
+          ).length;
+          const isAllSelected =
+            selectedInBrandCount === modelsInBrandIds.length &&
+            modelsInBrandIds.length > 0;
+          const isIndeterminate =
+            selectedInBrandCount > 0 &&
+            selectedInBrandCount < modelsInBrandIds.length;
+
+          return (
+            <details key={group.brand} open>
+              <summary className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`brand-${group.brand}`}
+                    checked={isAllSelected}
+                    indeterminate={isIndeterminate}
+                    onClick={(e) => e.stopPropagation()}
+                    onCheckedChange={() =>
+                      handleBrandSelectAll(group.models, isAllSelected)
+                    }
+                  />
+                  <label
+                    htmlFor={`brand-${group.brand}`}
+                    className="flex-1 cursor-pointer text-sm font-semibold"
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    {group.brand} ({selectedInBrandCount}/
+                    {modelsInBrandIds.length})
+                  </label>
+                </div>
+                <div className="w-9 p-0">
+                  <ChevronsUpDown className="h-4 w-4" />
+                </div>
+              </summary>
+              <div className="py-2 pl-6">
+                {group.models.map((model) => {
+                  const isSelected = selectedIds.includes(model._id);
+                  return (
+                    <div
+                      key={model._id}
+                      className="flex items-center gap-2 py-1"
+                    >
+                      <Checkbox
+                        id={model._id}
+                        checked={isSelected}
+                        onCheckedChange={() =>
+                          handleModelSelect(model._id, isSelected)
+                        }
+                      />
+                      <label
+                        htmlFor={model._id}
+                        className="text-sm cursor-pointer"
+                      >
+                        {model.name}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+            </details>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 export default function CreateGoodsReceipt() {
   const navigate = useNavigate();
@@ -63,6 +200,35 @@ export default function CreateGoodsReceipt() {
   const [searchValue, setSearchValue] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Add new product modal
+  const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [newProductData, setNewProductData] = useState({
+    name: "",
+    brand: "",
+    sellingPrice: "",
+    costPrice: "",
+    description: "",
+    compatible_model_ids: [],
+  });
+  const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [previews, setPreviews] = useState([]); // { file, url, uploaded }
+  const [groupedModels, setGroupedModels] = useState([]);
+
+  // Load grouped models on mount
+  useEffect(() => {
+    const loadGroupedModels = async () => {
+      try {
+        const response = await customFetch("/models/grouped-by-brand");
+        if (response.data.success) {
+          setGroupedModels(response.data.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to load grouped models:", error);
+      }
+    };
+    loadGroupedModels();
+  }, []);
 
   // Debounced search function
   let timeoutId;
@@ -117,6 +283,158 @@ export default function CreateGoodsReceipt() {
     setSearchOpen(false);
     setSearchValue("");
     setSearchResults([]);
+  };
+
+  // Handle image upload
+  const onFiles = useCallback((files) => {
+    const validFiles = [];
+    const newErrors = [];
+
+    Array.from(files).forEach((file) => {
+      const validation = validateFile(file, {
+        maxSize: 5 * 1024 * 1024, // 5MB
+        allowedTypes: ["image/jpeg", "image/png", "image/gif", "image/webp"],
+      });
+
+      if (validation.isValid) {
+        validFiles.push({
+          file,
+          url: URL.createObjectURL(file),
+          uploaded: false,
+        });
+      } else {
+        newErrors.push(`File ${file.name}: ${validation.errors.join(", ")}`);
+      }
+    });
+
+    if (newErrors.length > 0) {
+      toast.error("Lỗi file", {
+        description: newErrors.join("; "),
+      });
+    }
+
+    if (validFiles.length > 0) {
+      setPreviews((prev) => [...prev, ...validFiles]);
+    }
+  }, []);
+
+  const onDrop = useCallback(
+    (e) => {
+      e.preventDefault();
+      if (e.dataTransfer?.files?.length) onFiles(e.dataTransfer.files);
+    },
+    [onFiles]
+  );
+
+  const onPick = useCallback(
+    (e) => {
+      if (e.target?.files?.length) onFiles(e.target.files);
+    },
+    [onFiles]
+  );
+
+  const removePreview = useCallback((idx) => {
+    setPreviews((prev) => {
+      const next = [...prev];
+      const [removed] = next.splice(idx, 1);
+      try {
+        if (removed?.url) URL.revokeObjectURL(removed.url);
+      } catch (error) {
+        console.warn("Failed to revoke object URL:", error);
+      }
+      return next;
+    });
+  }, []);
+
+  // Handle create new product
+  const handleCreateProduct = async () => {
+    if (!newProductData.name.trim()) {
+      toast.error("Vui lòng nhập tên sản phẩm");
+      return;
+    }
+    if (!newProductData.sellingPrice || newProductData.sellingPrice <= 0) {
+      toast.error("Vui lòng nhập giá bán hợp lệ");
+      return;
+    }
+    if (!newProductData.costPrice || newProductData.costPrice <= 0) {
+      toast.error("Vui lòng nhập giá nhập hợp lệ");
+      return;
+    }
+
+    setIsCreatingProduct(true);
+    try {
+      // Upload images first
+      const uploadedMedia = [];
+      for (const preview of previews) {
+        if (!preview.uploaded && preview.file) {
+          try {
+            const uploadResult = await uploadPartImage(preview.file);
+            uploadedMedia.push({
+              publicId: uploadResult.publicId,
+              url: uploadResult.url,
+              kind: uploadResult.kind,
+            });
+          } catch (error) {
+            console.error("Upload error:", error);
+            toast.error("Lỗi upload ảnh", {
+              description: `Không thể upload ${preview.file.name}`,
+            });
+            setIsCreatingProduct(false);
+            return;
+          }
+        }
+      }
+
+      const submitData = {
+        name: newProductData.name,
+        brand: newProductData.brand || "",
+        sellingPrice: parseFloat(newProductData.sellingPrice) || 0,
+        costPrice: parseFloat(newProductData.costPrice) || 0,
+        quantity: 0, // Set default quantity to 0, will be updated via goods receipt
+        description: newProductData.description || "",
+        status: "active",
+        compatible_model_ids: newProductData.compatible_model_ids || [],
+        media: uploadedMedia,
+      };
+
+      const response = await customFetch("/manager/parts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        data: submitData,
+      });
+
+      if (response.data.success) {
+        const newPart = response.data.data;
+        toast.success("Thành công", {
+          description: "Sản phẩm đã được tạo thành công",
+        });
+
+        // Add the new product to the items table
+        addItem(newPart);
+
+        // Reset form and close modal
+        setNewProductData({
+          name: "",
+          brand: "",
+          sellingPrice: "",
+          costPrice: "",
+          description: "",
+          compatible_model_ids: [],
+        });
+        setPreviews([]);
+        setIsAddProductModalOpen(false);
+      } else {
+        throw new Error(response.data.message || "Không thể tạo sản phẩm");
+      }
+    } catch (error) {
+      toast.error("Lỗi", {
+        description: error.message || "Không thể tạo sản phẩm",
+      });
+    } finally {
+      setIsCreatingProduct(false);
+    }
   };
 
   // Update item in table
@@ -424,61 +742,13 @@ export default function CreateGoodsReceipt() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Danh sách sản phẩm</h2>
-          <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[200px] justify-between">
-                <Search className="h-4 w-4" />
-                Tìm sản phẩm...
-                <ChevronsUpDown className="h-4 w-4 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[400px] p-0">
-              <Command>
-                <CommandInput
-                  placeholder="Tìm kiếm sản phẩm..."
-                  value={searchValue}
-                  onValueChange={(value) => {
-                    setSearchValue(value);
-                    debouncedSearch(value);
-                  }}
-                />
-                <CommandList>
-                  {isSearching ? (
-                    <CommandEmpty>Đang tìm kiếm...</CommandEmpty>
-                  ) : searchResults.length === 0 && searchValue.trim() ? (
-                    <CommandEmpty>
-                      Không tìm thấy sản phẩm nào với từ khóa "{searchValue}"
-                    </CommandEmpty>
-                  ) : searchResults.length === 0 ? (
-                    <CommandEmpty>
-                      Nhập từ khóa để tìm kiếm sản phẩm
-                    </CommandEmpty>
-                  ) : (
-                    <CommandGroup>
-                      {searchResults.map((part) => (
-                        <CommandItem
-                          key={part._id}
-                          value={part.name}
-                          onSelect={() => addItem(part)}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <div>
-                              <div className="font-medium">{part.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                Mã: {part.code} | Tồn: {part.quantity} | Giá:{" "}
-                                {formatPrice(part.sellingPrice)}
-                              </div>
-                            </div>
-                            <Plus className="h-4 w-4" />
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  )}
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
+          <Button
+            onClick={() => setIsAddProductModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Thêm sản phẩm mới
+          </Button>
         </div>
 
         <Table>
@@ -496,42 +766,98 @@ export default function CreateGoodsReceipt() {
             </TableRow>
           </TableHeader>
           <TableBody>
+            {/* Add Product Row */}
+            <TableRow className="bg-gray-50/50 hover:bg-gray-50">
+              <TableCell colSpan={9} className="p-2">
+                <Popover open={searchOpen} onOpenChange={setSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-center gap-2 h-10 text-muted-foreground hover:text-foreground"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Thêm sản phẩm vào phiếu nhập
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[500px] p-0" align="start">
+                    <Command>
+                      <CommandInput
+                        placeholder="Tìm kiếm sản phẩm..."
+                        value={searchValue}
+                        onValueChange={(value) => {
+                          setSearchValue(value);
+                          debouncedSearch(value);
+                        }}
+                      />
+                      <CommandList>
+                        {isSearching ? (
+                          <CommandEmpty>Đang tìm kiếm...</CommandEmpty>
+                        ) : searchResults.length === 0 && searchValue.trim() ? (
+                          <CommandEmpty>
+                            Không tìm thấy sản phẩm nào với từ khóa "
+                            {searchValue}"
+                          </CommandEmpty>
+                        ) : searchResults.length === 0 ? (
+                          <CommandEmpty>
+                            Nhập từ khóa để tìm kiếm sản phẩm
+                          </CommandEmpty>
+                        ) : (
+                          <CommandGroup>
+                            {searchResults.map((part) => (
+                              <CommandItem
+                                key={part._id}
+                                value={part.name}
+                                onSelect={() => {
+                                  addItem(part);
+                                  setSearchOpen(false);
+                                  setSearchValue("");
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <div className="flex-1">
+                                    <div className="font-medium">
+                                      {part.name}
+                                    </div>
+                                    <div className="text-sm text-muted-foreground">
+                                      Mã: {part.code} | Tồn: {part.quantity} |
+                                      Giá: {formatPrice(part.sellingPrice)}
+                                    </div>
+                                  </div>
+                                  <Plus className="h-4 w-4 ml-2 text-primary" />
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </TableCell>
+            </TableRow>
+
+            {/* Product Items */}
             {items.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={9}
                   className="text-center py-8 text-muted-foreground"
                 >
-                  Chưa có sản phẩm nào. Hãy tìm kiếm và thêm sản phẩm.
+                  Chưa có sản phẩm nào. Nhấn vào nút "Thêm sản phẩm vào phiếu
+                  nhập" ở trên để thêm sản phẩm.
                 </TableCell>
               </TableRow>
             ) : (
               items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.sequenceNumber}</TableCell>
-                  <TableCell>{item.partName}</TableCell>
-                  <TableCell>{item.partCode}</TableCell>
+                  <TableCell className="font-medium">{item.partName}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {item.partCode}
+                  </TableCell>
                   <TableCell>
-                    <Select
-                      value={item.unit}
-                      onValueChange={(value) =>
-                        updateItem(item.id, "unit", value)
-                      }
-                    >
-                      <SelectTrigger className="w-[100px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="cái">Cái</SelectItem>
-                        <SelectItem value="bộ">Bộ</SelectItem>
-                        <SelectItem value="kg">Kg</SelectItem>
-                        <SelectItem value="lít">Lít</SelectItem>
-                        <SelectItem value="mét">Mét</SelectItem>
-                        <SelectItem value="cuộn">Cuộn</SelectItem>
-                        <SelectItem value="hộp">Hộp</SelectItem>
-                        <SelectItem value="thùng">Thùng</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div className="w-[100px] px-3 py-2 text-sm">Cái</div>
                   </TableCell>
                   <TableCell>
                     <Input
@@ -582,6 +908,7 @@ export default function CreateGoodsReceipt() {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeItem(item.id)}
+                      className="text-destructive hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -618,6 +945,172 @@ export default function CreateGoodsReceipt() {
           {isSubmitting ? "Đang xử lý..." : "Hoàn thành"}
         </Button>
       </div>
+
+      {/* Add New Product Modal */}
+      <Dialog
+        open={isAddProductModalOpen}
+        onOpenChange={setIsAddProductModalOpen}
+      >
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Thêm sản phẩm mới</DialogTitle>
+            <DialogDescription>
+              Tạo sản phẩm mới và tự động thêm vào phiếu nhập kho.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Tên sản phẩm *</label>
+              <Input
+                placeholder="Nhập tên sản phẩm"
+                value={newProductData.name}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    name: e.target.value,
+                  })
+                }
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Thương hiệu</label>
+              <Input
+                placeholder="VD: Honda, Yamaha"
+                value={newProductData.brand}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    brand: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Dòng xe tương thích</label>
+              <ModelCompatibilityTree
+                groupedModels={groupedModels}
+                selectedIds={newProductData.compatible_model_ids}
+                onSelectionChange={(newIds) =>
+                  setNewProductData({
+                    ...newProductData,
+                    compatible_model_ids: newIds,
+                  })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Giá bán *</label>
+                <Input
+                  type="number"
+                  placeholder="VD: 120000"
+                  value={newProductData.sellingPrice}
+                  onChange={(e) =>
+                    setNewProductData({
+                      ...newProductData,
+                      sellingPrice: e.target.value,
+                    })
+                  }
+                  required
+                  min="0"
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Giá nhập *</label>
+                <Input
+                  type="number"
+                  placeholder="VD: 100000"
+                  value={newProductData.costPrice}
+                  onChange={(e) =>
+                    setNewProductData({
+                      ...newProductData,
+                      costPrice: e.target.value,
+                    })
+                  }
+                  required
+                  min="0"
+                />
+              </div>
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Mô tả</label>
+              <Textarea
+                placeholder="Mô tả sản phẩm"
+                rows={4}
+                value={newProductData.description}
+                onChange={(e) =>
+                  setNewProductData({
+                    ...newProductData,
+                    description: e.target.value,
+                  })
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">Hình ảnh</label>
+              <div
+                className="h-[150px] rounded-[8px] border border-dashed grid place-items-center text-[#656575] cursor-pointer hover:bg-gray-50 transition-colors"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={onDrop}
+              >
+                <div className="text-center">
+                  Kéo & thả ảnh vào đây hoặc
+                  <label className="ml-1 underline cursor-pointer">
+                    chọn file
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={onPick}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {previews.length > 0 && (
+                <div className="mt-4 grid grid-cols-3 gap-3">
+                  {previews.map((p, idx) => (
+                    <div key={idx} className="relative group">
+                      <img
+                        src={p.url}
+                        alt="preview"
+                        className="w-full h-28 object-cover rounded-md border"
+                      />
+                      <button
+                        type="button"
+                        aria-label="Remove image"
+                        onClick={() => removePreview(idx)}
+                        className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition rounded-full bg-red-600 text-white w-6 h-6 grid place-items-center shadow"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddProductModalOpen(false)}
+              disabled={isCreatingProduct}
+            >
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={handleCreateProduct}
+              disabled={isCreatingProduct}
+            >
+              {isCreatingProduct ? "Đang tạo..." : "Tạo và thêm vào phiếu"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

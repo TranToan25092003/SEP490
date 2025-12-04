@@ -1,9 +1,6 @@
-
 import React from "react";
-import {
-  sidebarLogo as imgLogo,
-  sidebarDividerLine as imgLine,
-} from "@/assets/admin/sidebar_new";
+import { sidebarDividerLine as imgLine } from "@/assets/admin/sidebar_new";
+import imgLogo from "@/assets/logo-with-brand.png";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -13,13 +10,14 @@ import {
 } from "@/components/ui/tooltip";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard,
+  Home,
   Wrench,
   ClipboardList,
   Cog,
   Car,
   Image,
   Users,
+  ScrollText,
   LogOut,
   ChevronRight,
 } from "lucide-react";
@@ -31,32 +29,38 @@ const items = [
   {
     key: "dashboard",
     label: "Tổng quát",
-    icon: LayoutDashboard,
-    href: "/admin", 
+    icon: Home,
+    href: "/admin",
   },
   {
     key: "services",
     label: "Quản lý service",
     icon: Cog,
-    href: "/admin/services", 
+    href: "/admin/services",
   },
   {
     key: "models",
     label: "Quản lý model",
     icon: Car,
-    href: "/admin/models", 
+    href: "/admin/models",
   },
   {
     key: "banners",
     label: "Quản lý banner",
     icon: Image,
-    href: "/admin/banners", 
+    href: "/admin/banners",
   },
+  // {
+  //   key: "staff",
+  //   label: "Quản lý staff",
+  //   icon: Users,
+  //   href: "/admin/staff",
+  // },
   {
-    key: "staff",
-    label: "Quản lý staff",
-    icon: Users,
-    href: "/admin/staff", 
+    key: "log",
+    label: "Log",
+    icon: ScrollText,
+    href: "/admin/activity-logs",
   },
 ];
 
@@ -65,7 +69,7 @@ export default function AdminSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => { },
+  onExpandToggle = () => {},
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -86,11 +90,18 @@ export default function AdminSidebar({
       style={{ top: 0, width: expanded ? expandedWidth : width, bottom: 0 }}
     >
       <div className="absolute inset-y-0 right-0 w-px">
-        <img alt="" src={imgLine} className="w-px h-full" />
+        <img alt="imgLine" src={imgLine} className="w-px h-full" />
       </div>
       <div className="flex flex-col h-full item-start pl-7">
-        <img alt="" src={imgLogo} className="w-[43px] h-[43px] mt-4" />
-        <TooltipProvider>
+        <div className="flex flex-col items-center pr-7">
+          <Link to={"/admin"}>
+            <img alt="imgLogo" src={imgLogo} className="w-24 h-24 mt-4" />
+          </Link>
+        </div>
+        <TooltipProvider
+          delayDuration={expanded ? 999999 : 700}
+          disableHoverableContent
+        >
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
@@ -99,21 +110,22 @@ export default function AdminSidebar({
               {items.map((it) => {
                 const Icon = it.icon;
                 // Cập nhật logic kiểm tra active
-                const isActive = (it.href === "/admin") 
-                  ? location.pathname === it.href
-                  : location.pathname.startsWith(it.href);
+                const isActive =
+                  it.href === "/admin"
+                    ? location.pathname === it.href
+                    : location.pathname.startsWith(it.href);
 
                 return (
-                  <Tooltip key={it.key}>
-                    <TooltipTrigger asChild>
-                      <div className="relative">
+                  <Tooltip key={it.key} open={expanded ? false : undefined}>
+                    <TooltipTrigger asChild disabled={expanded}>
+                      <div className="relative group">
                         <span
                           className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
                             {
                               "opacity-0": !expanded,
                               "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive, 
+                              "font-semibold text-red-600": isActive,
                               "text-gray-700": !isActive,
                             }
                           )}
@@ -123,10 +135,11 @@ export default function AdminSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
-                              ? "bg-red-50 text-red-600 hover:bg-red-100"
-                              : "text-gray-500 hover:bg-gray-100"
-                            }`}
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${
+                            isActive
+                              ? "bg-red-50 text-red-600 hover:text-red-600 hover:bg-red-50 active:bg-red-50 focus:bg-red-50 focus-visible:bg-red-50" // Style khi active - giữ background và màu đỏ
+                              : "text-gray-500 hover:text-red-600 hover:bg-transparent active:bg-transparent focus:bg-transparent focus-visible:bg-transparent" // Style khi không active - không có background, chỉ đổi màu chữ
+                          }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (
@@ -142,14 +155,16 @@ export default function AdminSidebar({
                         </Button>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent side="right">{it.label}</TooltipContent>
+                    {!expanded && (
+                      <TooltipContent side="right">{it.label}</TooltipContent>
+                    )}
                   </Tooltip>
                 );
               })}
             </div>
             <div className="flex flex-col gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
+              <Tooltip open={expanded ? false : undefined}>
+                <TooltipTrigger asChild disabled={expanded}>
                   <div className="relative">
                     <span
                       className={cn(
@@ -172,7 +187,9 @@ export default function AdminSidebar({
                     </Button>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent side="right">Đăng xuất</TooltipContent>
+                {!expanded && (
+                  <TooltipContent side="right">Đăng xuất</TooltipContent>
+                )}
               </Tooltip>
               <Button variant="ghost" onClick={onExpandToggle}>
                 <ChevronRight

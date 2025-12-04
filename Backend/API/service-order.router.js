@@ -1,9 +1,35 @@
 const express = require("express");
-const { param, query } = require("express-validator");
+const { param, query, body } = require("express-validator");
 const serviceOrderController = require("../controller/service-order.controller");
 const { throwErrors } = require("../middleware/validate-data/throwErrors.middleware");
 const { authenticate } = require("../middleware/guards/authen.middleware");
 const router = express.Router();
+
+router.post(
+  "/walk-in",
+  authenticate,
+  [
+    body("customerName")
+      .notEmpty()
+      .withMessage("Tên khách hàng là bắt buộc"),
+    body("customerPhone")
+      .notEmpty()
+      .withMessage("Số điện thoại là bắt buộc")
+      .matches(/^[0-9]{9,11}$/)
+      .withMessage("Số điện thoại không hợp lệ"),
+    body("licensePlate")
+      .notEmpty()
+      .withMessage("Biển số xe là bắt buộc"),
+    body("serviceIds")
+      .isArray({ min: 1 })
+      .withMessage("Vui lòng chọn ít nhất một dịch vụ"),
+    body("serviceIds.*")
+      .isMongoId()
+      .withMessage("Dịch vụ không hợp lệ"),
+  ],
+  throwErrors,
+  serviceOrderController.createWalkInServiceOrder
+);
 
 /**
  * @swagger
@@ -168,6 +194,56 @@ router.put(
   throwErrors,
   authenticate,
   serviceOrderController.updateServiceOrderItems
+);
+
+/**
+ * @swagger
+ * /service-orders/{id}/cancel:
+ *   post:
+ *     summary: Cancel a service order (staff only)
+ *     tags:
+ *       - Service Orders
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the service order
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cancelReason:
+ *                 type: string
+ *                 description: Reason for cancellation
+ *     responses:
+ *       200:
+ *         description: Service order cancelled successfully
+ *       404:
+ *         description: Service order not found
+ */
+router.post(
+  "/:id/cancel",
+  [
+    param("id")
+      .notEmpty()
+      .withMessage("Service order ID is required")
+      .isMongoId()
+      .withMessage("Service order ID must be a valid MongoDB ObjectId"),
+    body("cancelReason")
+      .optional()
+      .isString()
+      .withMessage("Cancel reason must be a string"),
+  ],
+  throwErrors,
+  authenticate,
+  serviceOrderController.cancelServiceOrder
 );
 
 module.exports = router;

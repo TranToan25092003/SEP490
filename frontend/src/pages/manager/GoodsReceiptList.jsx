@@ -62,6 +62,8 @@ export default function GoodsReceiptList() {
     switch (status) {
       case "completed":
         return "text-green-600 bg-green-100";
+      case "cancelled":
+        return "text-red-600 bg-red-100";
       case "pending":
         return "text-yellow-600 bg-yellow-100";
       case "approved":
@@ -78,6 +80,8 @@ export default function GoodsReceiptList() {
     switch (status) {
       case "completed":
         return "Hoàn thành";
+      case "cancelled":
+        return "Đã hủy";
       case "pending":
         return "Chờ duyệt";
       case "approved":

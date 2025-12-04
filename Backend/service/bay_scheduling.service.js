@@ -9,17 +9,73 @@ const serviceConfig = require("./config");
 
 const ERROR_CODES = {
   BAYS_UNAVAILABLE: "BAYS_UNAVAILABLE",
+  TASK_NOT_FOUND: "TASK_NOT_FOUND",
 };
 
 class BaySchedulingService {
-  /**
-   * Schedule an inspection task as soon as possible, assigning a bay and timeslot.
-   * @param {string} serviceOrderId
-   * @param {Date} start
-   * @param {Date} end
-   * @param {string} bayId
-   * @returns {Promise<InspectionTask>}
-   */
+  async rescheduleTask(taskId, bayId, newStart, newEnd) {
+    const task = await ServiceOrderTask.findById(taskId)
+      .populate("service_order_id")
+      .exec();
+    if (!task) {
+      throw new DomainError("Task not found", ERROR_CODES.TASK_NOT_FOUND);
+    }
+
+    const overlappingTasks = await this.findOverlappingTasksForBayId(
+      bayId,
+      newStart,
+      newEnd,
+      [taskId]
+    );
+
+    if (overlappingTasks.length > 0) {
+      throw new DomainError(
+        "The selected bay is not available for the requested time slot.",
+        ERROR_CODES.BAYS_UNAVAILABLE
+      );
+    }
+
+    if (
+      newEnd.getHours() > serviceConfig.BUSINESS_END_HOUR ||
+      newStart.getHours() < serviceConfig.BUSINESS_START_HOUR
+    ) {
+      throw new DomainError(
+        "The requested time slot is outside business hours.",
+        ERROR_CODES.BAYS_UNAVAILABLE
+      );
+    }
+
+    task.expected_start_time = newStart;
+    task.expected_end_time = newEnd;
+    task.assigned_bay_id = bayId;
+    // Đặt lại trạng thái thành 'rescheduled' để thể hiện đang chờ tới lịch mới
+    task.status = "rescheduled";
+
+    // Nếu là tác vụ sửa chữa, ghi nhận thêm một mốc trong timeline để khách/staff
+    // nhìn thấy rõ việc dời lịch ngay trong tiến độ
+    if (task.__t === "servicing") {
+      const startText = newStart.toLocaleString("vi-VN");
+      const endText = newEnd.toLocaleString("vi-VN");
+
+      task.timeline.push({
+        title: "Dời lịch sửa chữa",
+        comment: `Dời lịch sửa chữa sang khung giờ ${startText} - ${endText}`,
+        timestamp: new Date(),
+        media: [],
+      });
+
+      // Nếu có service_order_id thì cập nhật luôn trạng thái lệnh sang 'rescheduled'
+      if (task.service_order_id) {
+        task.service_order_id.status = "rescheduled";
+        await task.service_order_id.save();
+      }
+    }
+
+    await task.save();
+
+    return task;
+  }
+
   async scheduleInspectionTask(serviceOrderId, start, end, bayId) {
     const overlappingTasks = await this.findOverlappingTasksForBayId(
       bayId,
@@ -58,14 +114,6 @@ class BaySchedulingService {
     return inspectionTask;
   }
 
-  /**
-   * Schedule a servicing task as soon as possible, assigning a bay and timeslot.
-   * @param {string} serviceOrderId
-   * @param {Date} start
-   * @param {Date} end
-   * @param {string} bayId
-   * @returns {Promise<ServicingTask>}
-   */
   async scheduleServicingTask(serviceOrderId, start, end, bayId) {
     const overlappingTasks = await this.findOverlappingTasksForBayId(
       bayId,
@@ -104,12 +152,13 @@ class BaySchedulingService {
     return servicingTask;
   }
 
-  async findOverlappingTasksForBayId(bayId, start, end) {
+  async findOverlappingTasksForBayId(bayId, start, end, ignoredTaskIds = []) {
     const conflictingTasks = await ServiceOrderTask.find({
       assigned_bay_id: bayId,
       status: { $ne: "completed" },
       expected_start_time: { $lt: end },
       expected_end_time: { $gt: start },
+      _id: { $nin: ignoredTaskIds },
     }).exec();
 
     return conflictingTasks;
@@ -119,15 +168,20 @@ class BaySchedulingService {
     bayId,
     n,
     durationInMinutes,
+    starting = new Date(),
+    ignoredTaskIds = [],
     startOfDayHours = serviceConfig.BUSINESS_START_HOUR,
     endOfDayHours = serviceConfig.BUSINESS_END_HOUR,
-    starting = new Date(),
     maxCutOffDate = new Date(
       Date.now() +
         (serviceConfig?.DEFAULT_MAX_LOOKAHEAD_MILLISECONDS || 10 * 3_600_000)
     )
   ) {
     const slots = [];
+
+    if (starting < new Date()) {
+      starting = new Date();
+    }
 
     let startTime = new Date(starting);
 
@@ -159,7 +213,8 @@ class BaySchedulingService {
       const overlappingTasks = await this.findOverlappingTasksForBayId(
         bayId,
         startTime,
-        endTime
+        endTime,
+        ignoredTaskIds
       );
       if (overlappingTasks.length === 0) {
         slots.push({ start: startTime, end: endTime });
@@ -232,12 +287,6 @@ class BaySchedulingService {
     return null;
   }
 
-  /**
-   * Find available bays for the given time slot.
-   * @param {Date} expectedStartTime
-   * @param {Date} expectedEndTime
-   * @returns {Promise<[Bay[], { [bayId: string]: ServiceOrderTask[] }]>} List of available bays and map of conflicting tasks.
-   */
   async findAvailableBayGlobally(expectedStartTime, expectedEndTime) {
     const bays = await Bay.find({});
     const availableBays = [];

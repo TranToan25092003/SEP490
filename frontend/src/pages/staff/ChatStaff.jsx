@@ -43,19 +43,51 @@ export default function ChatStaff() {
     navigate(`/items/${productId}`);
   };
 
+  // Initialize socket connection - only run once on mount
   useEffect(() => {
     // Initialize socket connection
     const socketInstance = initializeSocket();
     setSocket(socketInstance);
 
-    // Join staff room immediately if already connected
-    if (socketInstance.connected) {
+    // Function to check and update connection status
+    const checkConnection = () => {
+      const connected = socketInstance.connected;
+      setIsConnected(connected);
+      if (connected) {
+        // Join staff room if connected
       socketInstance.emit("joinRoom", {
         room: "staff_room",
         userId: "staff_user",
         userType: "staff",
       });
-    }
+    } else {
+      // If not connected, try to connect
+        socketInstance.connect();
+      }
+    };
+
+    // Check connection status immediately
+    checkConnection();
+
+    // Check connection when tab becomes visible again
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Tab is now visible, check connection
+        setTimeout(() => {
+          checkConnection();
+        }, 100);
+      }
+    };
+
+    // Check connection when window gets focus
+    const handleFocus = () => {
+      setTimeout(() => {
+        checkConnection();
+      }, 100);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
 
     // Socket event listeners
     socketInstance.on("connect", () => {
@@ -72,6 +104,17 @@ export default function ChatStaff() {
     socketInstance.on("disconnect", () => {
       setIsConnected(false);
       console.log("Disconnected from chat server");
+    });
+
+    socketInstance.on("reconnect", () => {
+      setIsConnected(true);
+      console.log("Reconnected to chat server");
+      // Rejoin staff room after reconnection
+      socketInstance.emit("joinRoom", {
+        room: "staff_room",
+        userId: "staff_user",
+        userType: "staff",
+      });
     });
 
     // Receive active customers list when staff connects
@@ -142,7 +185,10 @@ export default function ChatStaff() {
             localStoreKey(customerId),
             JSON.stringify(next[customerId])
           );
-        } catch {}
+        } catch (error) {
+          // Ignore localStorage errors
+          console.warn("Failed to save message to localStorage:", error);
+        }
         return next;
       });
 
@@ -189,7 +235,10 @@ export default function ChatStaff() {
         const next = { ...prev, [cid]: list };
         try {
           localStorage.setItem(localStoreKey(cid), JSON.stringify(list));
-        } catch {}
+        } catch (error) {
+          // Ignore localStorage errors
+          console.warn("Failed to save chat history to localStorage:", error);
+        }
         return next;
       });
       if (selectedCustomer?.id === cid) {
@@ -198,8 +247,11 @@ export default function ChatStaff() {
     });
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
       socketInstance.off("connect");
       socketInstance.off("disconnect");
+      socketInstance.off("reconnect");
       socketInstance.off("newMessage");
       socketInstance.off("activeCustomers");
       socketInstance.off("newCustomer");
@@ -234,7 +286,10 @@ export default function ChatStaff() {
         if (Array.isArray(cached) && cached.length > 0) {
           setMessages((prev) => ({ ...prev, [selectedCustomer.id]: cached }));
         }
-      } catch {}
+      } catch (error) {
+        // Ignore localStorage errors
+        console.warn("Failed to load messages from localStorage:", error);
+      }
 
       setTimeout(() => scrollToBottom(), 100);
     }
@@ -500,7 +555,7 @@ export default function ChatStaff() {
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
                     message.senderId === "staff"
-                      ? "bg-blue-500 text-white"
+                      ? "bg-red-500 text-white"
                       : "bg-gray-200 text-gray-900"
                   }`}
                 >
@@ -547,7 +602,7 @@ export default function ChatStaff() {
                   <p
                     className={`text-xs mt-1 ${
                       message.senderId === "staff"
-                        ? "text-blue-100"
+                        ? "text-red-100"
                         : "text-gray-500"
                     }`}
                   >

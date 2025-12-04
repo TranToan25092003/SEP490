@@ -16,13 +16,16 @@ const ERROR_CODES = {
 
 class ServicesService {
   async getAllServices() {
-    const services = await Service.find({}).exec();
+    // Lọc bỏ dịch vụ bảo hành khỏi danh sách dịch vụ thông thường
+    const services = await Service.find({
+      name: { $not: { $regex: /bảo hành/i } }
+    }).exec();
     return services.map(mapServiceToDTO);
   }
 
   async getValidServiceIds(serviceIds) {
     const services = await Service.find({ _id: { $in: serviceIds } }).exec();
-    return services.filter(s => serviceIds.includes(s._id.toString())).map(s => s._id.toString());
+    return services.map((s) => s._id.toString());
   }
 }
 
