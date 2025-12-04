@@ -906,7 +906,7 @@ const StaffPage = () => {
                       </div>
                     </div>
 
-                    <div className="max-h-64 overflow-y-auto rounded-lg border">
+                    <div className="rounded-lg border overflow-visible max-h-none sm:max-h-64 sm:overflow-y-auto">
                       {historyRecords.length > 0 ? (
                         <table className="min-w-full divide-y divide-gray-200 text-sm">
                           <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">

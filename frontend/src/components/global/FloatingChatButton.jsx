@@ -351,7 +351,7 @@ const FloatingChatButton = () => {
 
             {/* Messages Area */}
             <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 p-4 space-y-4 sm:overflow-y-auto">
                 {messages.map((message) => (
                   <div
                     key={message.id}
