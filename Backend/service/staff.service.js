@@ -8,6 +8,8 @@ const ORG_MEMBERSHIP_PAGE_SIZE =
 const CLERK_ORGANIZATION_ID = "org_32tzUd7dUcFW7Te5gxEO4VcgkX1";
 
 function resolveFullName(user) {
+  // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
+  if (user.publicMetadata?.fullName) return user.publicMetadata.fullName;
   if (user.fullName) return user.fullName;
   const composed = [user.firstName, user.lastName].filter(Boolean).join(" ");
   if (composed) return composed;

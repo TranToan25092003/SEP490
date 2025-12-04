@@ -166,6 +166,59 @@ const StaffPage = () => {
     }));
   };
 
+  const fetchMembershipsWithPublicMetadata = async (members = []) => {
+    return Promise.all(
+      members.map(async (member) => {
+        const clerkUserId = member.publicUserData?.userId;
+
+        if (!clerkUserId) return member;
+
+        try {
+          const { data } = await customFetch.get(
+            `/manager/staff/${clerkUserId}/public-metadata`
+          );
+
+          return {
+            ...member,
+            publicMetadata: {
+              ...(member.publicMetadata ?? {}),
+              ...(data?.publicMetadata ?? {}),
+            },
+            publicUserData: {
+              ...(member.publicUserData ?? {}),
+              ...(data?.publicUserData ?? {}),
+            },
+          };
+        } catch (err) {
+          console.error(
+            "Failed to fetch public metadata for member:",
+            clerkUserId,
+            err
+          );
+          return member;
+        }
+      })
+    );
+  };
+
+  // Helper function để resolve metadata từ member (có thể dùng sau)
+  // eslint-disable-next-line no-unused-vars
+  const _resolveMemberMetadata = (member) => {
+    if (!member?.clerkUserId) {
+      return { metadata: {}, publicUserData: {} };
+    }
+
+    const publicUserData = member.publicUserData ?? {};
+    const memberMetadata = {
+      ...(member.publicMetadata ?? {}),
+    };
+
+    return {
+      metadata: memberMetadata,
+      publicUserData,
+    };
+  };
+
   const handleSaveStaffInfo = async () => {
     if (!selectedStaff?.clerkUserId) {
       toast.error("Không tìm thấy thông tin nhân viên");
@@ -281,7 +334,13 @@ const StaffPage = () => {
 
         console.log(staffOnly);
 
-        setMemberships(staffOnly);
+        const staffWithMetadata = await fetchMembershipsWithPublicMetadata(
+          staffOnly
+        );
+
+        if (cancelled) return;
+
+        setMemberships(staffWithMetadata);
       } catch (err) {
         if (!cancelled) {
           setError(

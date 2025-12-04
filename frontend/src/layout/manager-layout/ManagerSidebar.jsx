@@ -1,7 +1,5 @@
 import React from "react";
-import {
-  sidebarDividerLine as imgLine,
-} from "@/assets/admin/sidebar_new";
+import { sidebarDividerLine as imgLine } from "@/assets/admin/sidebar_new";
 import imgLogo from "@/assets/logo-with-brand.png";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,7 +46,12 @@ const items = [
     icon: Building2,
     href: "/manager/bays",
   },
-  { key: "staff", label: "Staff", icon: Users, href: "/manager/staff" },
+  {
+    key: "staff",
+    label: "Quản lý Nhân Sự",
+    icon: Users,
+    href: "/manager/staff",
+  },
   {
     key: "attendance",
     label: "Điểm danh",
@@ -68,7 +71,7 @@ export default function ManagerSidebar({
   offsetTop = 100,
   expanded = true,
   expandedWidth = 200,
-  onExpandToggle = () => { },
+  onExpandToggle = () => {},
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
@@ -95,15 +98,13 @@ export default function ManagerSidebar({
       <div className="flex flex-col h-full item-start pl-7">
         <div className="flex flex-col items-center pr-7">
           <Link to={"/manager"}>
-            <img
-              alt="imgLogo"
-              src={imgLogo}
-              className="w-24 h-24 mt-4"
-            />
-
+            <img alt="imgLogo" src={imgLogo} className="w-24 h-24 mt-4" />
           </Link>
         </div>
-        <TooltipProvider delayDuration={expanded ? 999999 : 700} disableHoverableContent>
+        <TooltipProvider
+          delayDuration={expanded ? 999999 : 700}
+          disableHoverableContent
+        >
           <nav
             className="flex flex-col justify-between flex-1 items-start pb-5"
             style={{ marginTop: Math.max(0, offsetTop - 54) }}
@@ -136,10 +137,11 @@ export default function ManagerSidebar({
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={`rounded-xl size-11 shadow-sm transition-colors ${isActive
-                            ? "bg-red-50 text-red-600 hover:text-red-600 hover:bg-red-50 active:bg-red-50 focus:bg-red-50 focus-visible:bg-red-50" // Style nút khi active - giữ background và màu đỏ
-                            : "text-gray-500 hover:text-red-600 hover:bg-transparent active:bg-transparent focus:bg-transparent focus-visible:bg-transparent" // Style nút khi không active - không có background, chỉ đổi màu chữ
-                            }`}
+                          className={`rounded-xl size-11 shadow-sm transition-colors ${
+                            isActive
+                              ? "bg-red-50 text-red-600 hover:text-red-600 hover:bg-red-50 active:bg-red-50 focus:bg-red-50 focus-visible:bg-red-50" // Style nút khi active - giữ background và màu đỏ
+                              : "text-gray-500 hover:text-red-600 hover:bg-transparent active:bg-transparent focus:bg-transparent focus-visible:bg-transparent" // Style nút khi không active - không có background, chỉ đổi màu chữ
+                          }`}
                           asChild={Boolean(it.href)}
                         >
                           {it.href ? (
@@ -155,7 +157,9 @@ export default function ManagerSidebar({
                         </Button>
                       </div>
                     </TooltipTrigger>
-                    {!expanded && <TooltipContent side="right">{it.label}</TooltipContent>}
+                    {!expanded && (
+                      <TooltipContent side="right">{it.label}</TooltipContent>
+                    )}
                   </Tooltip>
                 );
               })}
@@ -185,7 +189,9 @@ export default function ManagerSidebar({
                     </Button>
                   </div>
                 </TooltipTrigger>
-                {!expanded && <TooltipContent side="right">Đăng xuất</TooltipContent>}
+                {!expanded && (
+                  <TooltipContent side="right">Đăng xuất</TooltipContent>
+                )}
               </Tooltip>
               <Button variant="ghost" onClick={onExpandToggle}>
                 <ChevronRight
@@ -199,6 +205,6 @@ export default function ManagerSidebar({
           </nav>
         </TooltipProvider>
       </div>
-    </aside >
+    </aside>
   );
 }

@@ -45,21 +45,21 @@ function mapToQuoteSummaryDTO(quote) {
 class QuotesService {
   async createQuote(serviceOrderId) {
     try {
-      const serviceOrder = await ServiceOrder.findById(serviceOrderId)
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId)
         .populate({
           path: "items.part_id",
           model: "Part",
         })
-        .populate("booking_id")
-        .exec();
+      .populate("booking_id")
+      .exec();
       
-      if (!serviceOrder) {
-        throw new DomainError(
-          "Lệnh sửa chữa không tồn tại",
-          ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
-          404
-        );
-      }
+    if (!serviceOrder) {
+      throw new DomainError(
+        "Lệnh sửa chữa không tồn tại",
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+        404
+      );
+    }
 
     if (!serviceOrder.items || serviceOrder.items.length === 0) {
       throw new DomainError(
@@ -113,7 +113,7 @@ class QuotesService {
         }
 
         items.push({
-          type: item.item_type,
+      type: item.item_type,
           name: itemName,
           quantity: itemQuantity,
           price: itemPrice,
@@ -366,7 +366,7 @@ class QuotesService {
     });
 
     try {
-      await quote.save();
+    await quote.save();
     } catch (saveError) {
       // Xử lý lỗi duplicate key (E11000) - có thể do unique index trên so_id
       if (saveError.code === 11000 || saveError.name === "MongoServerError") {
@@ -410,7 +410,7 @@ class QuotesService {
     // Cập nhật service order status - chỉ cập nhật nếu chưa ở trạng thái waiting_customer_approval
     // (cho phép tạo quote mới sau khi quote cũ bị rejected)
     if (serviceOrder.status !== "waiting_customer_approval") {
-      serviceOrder.status = "waiting_customer_approval";
+    serviceOrder.status = "waiting_customer_approval";
     }
     serviceOrder.waiting_approval_at = new Date(); // Cập nhật thời gian chờ phê duyệt
     await serviceOrder.save();
