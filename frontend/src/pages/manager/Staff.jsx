@@ -154,6 +154,38 @@ const StaffPage = () => {
     };
   };
 
+  const fetchMembershipsWithPublicMetadata = async (members = []) => {
+    return Promise.all(
+      members.map(async (member) => {
+        const clerkUserId = member.publicUserData?.userId;
+        if (!clerkUserId) return member;
+        try {
+          const { data } = await customFetch.get(
+            `/manager/staff/${clerkUserId}/public-metadata`
+          );
+          return {
+            ...member,
+            publicMetadata: {
+              ...(member.publicMetadata ?? {}),
+              ...(data?.publicMetadata ?? {}),
+            },
+            publicUserData: {
+              ...(member.publicUserData ?? {}),
+              ...(data?.publicUserData ?? {}),
+            },
+          };
+        } catch (err) {
+          console.error(
+            "Failed to fetch public metadata for member:",
+            clerkUserId,
+            err
+          );
+          return member;
+        }
+      })
+    );
+  };
+
   const resolveMemberMetadata = (member) => {
     if (!member?.clerkUserId) {
       return { metadata: {}, publicUserData: {} };
@@ -374,7 +406,11 @@ const StaffPage = () => {
 
         console.log(staffOnly);
 
-        setMemberships(staffOnly);
+        const staffWithMetadata = await fetchMembershipsWithPublicMetadata(
+          staffOnly
+        );
+        if (cancelled) return;
+        setMemberships(staffWithMetadata);
       } catch (err) {
         if (!cancelled) {
           setError(
