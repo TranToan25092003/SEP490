@@ -128,19 +128,111 @@ const StaffPage = () => {
     gender: "",
   });
   const [isSavingStaff, setIsSavingStaff] = useState(false);
+  const [isLoadingStaffMeta, setIsLoadingStaffMeta] = useState(false);
+
+  const hydrateStaff = (member, metadata = {}, publicUserData = {}) => {
+    const fallbackFullName = [
+      publicUserData.firstName,
+      publicUserData.lastName,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    return {
+      ...member,
+      fullName: metadata.fullName || member.fullName || fallbackFullName,
+      phone:
+        metadata.phone ||
+        publicUserData.phoneNumber ||
+        member.phone ||
+        "",
+      address: metadata.address || member.address || "",
+      gender: metadata.gender || member.gender || "",
+      publicMetadata: metadata,
+      publicUserData,
+    };
+  };
+
+  const resolveMemberMetadata = (member) => {
+    if (!member?.clerkUserId) {
+      return { metadata: {}, publicUserData: {} };
+    }
+
+    const basePublicUserData = member.publicUserData ?? {};
+    const baseMetadata = {
+      ...(basePublicUserData.publicMetadata ?? {}),
+      ...(member.publicMetadata ?? {}),
+    };
+
+    if (Object.keys(baseMetadata).length) {
+      return { metadata: baseMetadata, publicUserData: basePublicUserData };
+    }
+
+    const membership = memberships.find(
+      (m) => m.publicUserData?.userId === member.clerkUserId
+    );
+
+    if (!membership) {
+      return { metadata: baseMetadata, publicUserData: basePublicUserData };
+    }
+
+    const publicUserData = membership.publicUserData ?? {};
+    const metadata = {
+      ...(publicUserData.publicMetadata ?? {}),
+      ...(membership.publicMetadata ?? {}),
+    };
+
+    return { metadata, publicUserData };
+  };
 
   const handleDetailOpen = (member) => {
-    console.log(member);
-    setSelectedStaff(member);
+    const { metadata, publicUserData } = resolveMemberMetadata(member);
+    const hydratedStaff = hydrateStaff(member, metadata, publicUserData);
+
+    setSelectedStaff(hydratedStaff);
     setIsDetailOpen(true);
-    // Khởi tạo form với dữ liệu hiện tại
     setStaffForm({
-      fullName: member.fullName || "",
-      phone: member.phone || "",
-      address: member.address || "",
-      gender: member.gender || "",
+      fullName: hydratedStaff.fullName || "",
+      phone: hydratedStaff.phone || "",
+      address: hydratedStaff.address || "",
+      gender: hydratedStaff.gender || "",
     });
     setIsEditingStaff(false);
+
+    if (!member?.clerkUserId) {
+      toast.error("Không tìm thấy mã người dùng của Clerk.");
+      return;
+    }
+
+    setIsLoadingStaffMeta(true);
+    customFetch
+      .get(`/manager/staff/${member.clerkUserId}/public-metadata`)
+      .then(({ data }) => {
+        const fetchedMetadata = data?.publicMetadata ?? {};
+        const fetchedPublicUserData = data?.publicUserData ?? {};
+        const refreshedStaff = hydrateStaff(
+          hydratedStaff,
+          fetchedMetadata,
+          fetchedPublicUserData
+        );
+
+        setSelectedStaff(refreshedStaff);
+        setStaffForm({
+          fullName: refreshedStaff.fullName || "",
+          phone:
+            fetchedMetadata.phone ||
+            fetchedPublicUserData.phoneNumber ||
+            "",
+          address: fetchedMetadata.address || "",
+          gender: fetchedMetadata.gender || "",
+        });
+      })
+      .catch((error) => {
+        console.error("Không thể tải public metadata:", error);
+        toast.error("Không tải được public metadata của nhân viên.");
+      })
+      .finally(() => setIsLoadingStaffMeta(false));
   };
 
   const handleDialogOpenChange = (open) => {
@@ -456,6 +548,8 @@ const StaffPage = () => {
           statusLabel: attendanceStatus.text,
           statusClasses: attendanceStatus.classes,
           clerkUserId,
+          publicUserData,
+          publicMetadata: memberMetadata,
         };
       }),
     [memberships, attendanceMap]
@@ -682,6 +776,12 @@ const StaffPage = () => {
             <DialogDescription>
               Xem thông tin liên hệ và lịch sử điểm danh trong 30 ngày gần nhất.
             </DialogDescription>
+            {isLoadingStaffMeta && (
+              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                <Loader2 className="size-4 animate-spin text-gray-400" />
+                Đang tải public metadata mới nhất...
+              </div>
+            )}
           </DialogHeader>
 
           {selectedStaff ? (
