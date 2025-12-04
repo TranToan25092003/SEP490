@@ -183,7 +183,7 @@ class BookingsService {
 
   async getUserBookings(customerClerkId, options = {}) {
     const { limit = null, skip = 0 } = options;
-
+    
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     let query = Booking.find({ customer_clerk_id: customerClerkId })
       .select(
@@ -203,11 +203,11 @@ class BookingsService {
       })
       .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
       .skip(skip);
-
+    
     if (limit) {
       query = query.limit(limit);
     }
-
+    
     const bookings = await query.exec();
 
     // Map và sắp xếp: đang thực hiện lên đầu, sau đó sắp xếp theo thời gian giảm dần
@@ -228,10 +228,10 @@ class BookingsService {
     mappedBookings.sort((a, b) => {
       const aIsActive = activeStatuses.includes(a.status);
       const bIsActive = activeStatuses.includes(b.status);
-
+      
       if (aIsActive && !bIsActive) return -1;
       if (!aIsActive && bIsActive) return 1;
-
+      
       // Cùng trạng thái, sắp xếp theo thời gian giảm dần
       const timeA = a.slotStartTime ? new Date(a.slotStartTime).getTime() : 0;
       const timeB = b.slotStartTime ? new Date(b.slotStartTime).getTime() : 0;
@@ -425,26 +425,27 @@ class BookingsService {
     const isStaff = await notificationService.isStaffUser(userId);
     const cancelledBy = isStaff ? "staff" : "customer";
 
-    // Nếu là customer, chỉ cho phép hủy ở các bước: tiếp nhận, kiểm tra, chờ duyệt báo giá
-    // Không cho phép hủy sau khi đã duyệt báo giá (approved, scheduled, servicing)
-    if (cancelledBy === "customer" && booking.service_order_id) {
-      const serviceOrderStatus = booking.service_order_id.status;
-      const nonCancellableStatuses = [
-        "approved",
-        "scheduled",
-        "servicing",
-        "completed",
-      ];
-
-      if (nonCancellableStatuses.includes(serviceOrderStatus)) {
-        throw new DomainError(
-          "Không thể hủy đơn sau khi đã duyệt báo giá và chuyển sang bước sửa chữa",
-          ERROR_CODES.BOOKINGS_STATE_INVALID,
-          400
-        );
+    // Nếu đã check-in (đã tạo service order), hủy service order trước
+    if (booking.service_order_id) {
+      const serviceOrder = booking.service_order_id;
+      // Chỉ hủy service order nếu chưa hoàn thành và chưa bị hủy
+      if (
+        serviceOrder.status !== "completed" &&
+        serviceOrder.status !== "cancelled"
+      ) {
+        serviceOrder.status = "cancelled";
+        serviceOrder.cancelled_by = cancelledBy;
+        serviceOrder.cancel_reason =
+          cancelReason ||
+          (cancelledBy === "customer"
+            ? "Khách hàng hủy đơn sau khi đã check-in"
+            : "Nhân viên hủy đơn sau khi đã check-in");
+        serviceOrder.cancelled_at = new Date();
+        await serviceOrder.save();
       }
     }
 
+    // Cập nhật trạng thái booking thành cancelled
     booking.status = "cancelled";
     booking.cancelled_by = cancelledBy;
     booking.cancel_reason = cancelReason || null;

@@ -20,30 +20,50 @@ const BookingStatusHeader = ({
   licensePlate,
   creationDate,
   serviceOrderStatus,
+  tasks = [],
   className,
   ...props
 }) => {
   const [loading, setLoading] = useState(false);
   const revalidator = useRevalidator();
 
-  // Không cho phép hủy sau khi đã duyệt báo giá và chuyển sang bước sửa chữa
-  const nonCancellableStatuses = [
-    "approved",
-    "scheduled",
-    "servicing",
-    "completed",
-  ];
-  const canCancel =
-    status !== "cancelled" &&
-    status !== "completed" &&
-    (!serviceOrderStatus ||
-      !nonCancellableStatuses.includes(serviceOrderStatus));
+  // Kiểm tra xem có thể hủy đơn không
+  // Chỉ cho phép hủy ở: tiếp nhận (booked, checked_in) hoặc chờ duyệt báo giá
+  const canCancel = () => {
+    // Đã hủy hoặc đã hoàn thành thì không cho hủy
+    if (status === "cancelled" || status === "completed") {
+      return false;
+    }
+
+    // Cho phép hủy khi đang ở bước tiếp nhận
+    if (status === "booked" || status === "checked_in") {
+      return true;
+    }
+
+    // Cho phép hủy khi đang chờ duyệt báo giá
+    if (serviceOrderStatus === "waiting_customer_approval") {
+      return true;
+    }
+
+    // Kiểm tra nếu đã bắt đầu kiểm tra (inspection task đã bắt đầu)
+    const inspectionTask = tasks.find((t) => t.type === "inspection");
+    if (inspectionTask && inspectionTask.status !== "scheduled" && inspectionTask.status !== "rescheduled") {
+      return false; // Đã bắt đầu kiểm tra, không cho hủy
+    }
+
+    // Kiểm tra nếu đã bắt đầu sửa chữa (servicing task đã bắt đầu)
+    const servicingTask = tasks.find((t) => t.type === "servicing");
+    if (servicingTask && servicingTask.status !== "scheduled" && servicingTask.status !== "rescheduled") {
+      return false; // Đã bắt đầu sửa chữa, không cho hủy
+    }
+
+    // Các trường hợp khác không cho hủy
+    return false;
+  };
 
   const handleCancel = async () => {
-    if (!canCancel) {
-      toast.error(
-        "Không thể hủy đơn sau khi đã duyệt báo giá và chuyển sang bước sửa chữa"
-      );
+    if (!canCancel()) {
+      toast.error("Không thể hủy đơn ở giai đoạn này");
       return;
     }
 
@@ -75,7 +95,12 @@ const BookingStatusHeader = ({
         <Button
           variant="destructive"
           onClick={handleCancel}
-          disabled={loading || !canCancel}
+          disabled={loading || !canCancel()}
+          title={
+            !canCancel()
+              ? "Không thể hủy đơn ở giai đoạn này. Chỉ có thể hủy đơn khi đang tiếp nhận hoặc chờ duyệt báo giá."
+              : "Hủy đơn đặt lịch"
+          }
         >
           Hủy đơn
         </Button>

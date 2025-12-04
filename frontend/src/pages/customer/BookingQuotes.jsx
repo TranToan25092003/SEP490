@@ -114,6 +114,21 @@ const quotesTableDefinition = [
       return formatDateTime(row.original.createdAt);
     },
   },
+  {
+    header: "Lý do từ chối",
+    accessorKey: "rejectedReason",
+    cell: ({ row }) => {
+      const quote = row.original;
+      if (quote.status === "rejected" && quote.rejectedReason) {
+        return (
+          <span className="text-sm text-muted-foreground italic">
+            {quote.rejectedReason}
+          </span>
+        );
+      }
+      return <span className="text-muted-foreground">-</span>;
+    },
+  },
 ];
 
 const BookingQuotesContent = ({ data }) => {

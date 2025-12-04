@@ -37,25 +37,26 @@ const BookingProgressContent = ({ data }) => {
     <>
       <hr className="border-t border-gray-200 my-0" />
       <div className="px-4 md:px-6 py-4 md:py-6">
-        <BookingStatusHeader
-          bookingId={booking.id || "N/A"}
-          customerName={booking.customer.customerName || "N/A"}
-          licensePlate={booking.vehicle.licensePlate || "N/A"}
-          status={booking.status || "N/A"}
-          serviceOrderStatus={booking.serviceOrderStatus || null}
+      <BookingStatusHeader
+        bookingId={booking.id || "N/A"}
+        customerName={booking.customer.customerName || "N/A"}
+        licensePlate={booking.vehicle.licensePlate || "N/A"}
+        status={booking.status || "N/A"}
+        serviceOrderStatus={booking.serviceOrderStatus}
+        tasks={tasks || []}
           creationDate={
             booking.createdAt ? new Date(booking.createdAt) : new Date()
           }
-        />
+      />
       </div>
 
       <hr className="border-t border-gray-200 my-0" />
       <div className="px-4 md:px-6 py-4 md:py-6">
-        <BookingStatusTimeline
-          booking={booking}
-          tasks={tasks || []}
-          className="min-h-[600px]"
-        />
+      <BookingStatusTimeline
+        booking={booking}
+        tasks={tasks || []}
+        className="min-h-[600px]"
+      />
       </div>
     </>
   );
@@ -89,37 +90,37 @@ const BookingProgress = () => {
             </button>
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <H3 className="text-gray-900 m-0">CHI TIẾT ĐƠN</H3>
-              <Tabs value="progress">
-                <TabsList>
-                  <TabsTrigger value="progress">
-                    <Link to={`/booking/${id}`}>Tiến độ</Link>
-                  </TabsTrigger>
-                  <TabsTrigger value="quotes">
-                    <Link to={`/booking/${id}/quotes`}>Báo giá</Link>
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
+          <Tabs value="progress">
+            <TabsList>
+              <TabsTrigger value="progress">
+                <Link to={`/booking/${id}`}>Tiến độ</Link>
+              </TabsTrigger>
+              <TabsTrigger value="quotes">
+                <Link to={`/booking/${id}/quotes`}>Báo giá</Link>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
             </div>
-          </div>
+        </div>
 
-          <Suspense
-            fallback={
-              <div className="flex bg-white justify-center items-center py-8">
-                <Spinner className="h-8 w-8" />
+        <Suspense
+          fallback={
+            <div className="flex bg-white justify-center items-center py-8">
+              <Spinner className="h-8 w-8" />
+            </div>
+          }
+        >
+          <Await
+            resolve={bookingPromise}
+            errorElement={
+              <div className="text-center py-8 text-destructive">
+                Không thể tải thông tin đặt lịch
               </div>
             }
           >
-            <Await
-              resolve={bookingPromise}
-              errorElement={
-                <div className="text-center py-8 text-destructive">
-                  Không thể tải thông tin đặt lịch
-                </div>
-              }
-            >
-              {(data) => <BookingProgressContent data={data} />}
-            </Await>
-          </Suspense>
+            {(data) => <BookingProgressContent data={data} />}
+          </Await>
+        </Suspense>
         </Card>
       </Container>
     </div>

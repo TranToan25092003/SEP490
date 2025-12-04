@@ -145,9 +145,9 @@ const BookingStatusTimeline = ({
       if (inspectionTask.status === "in_progress") {
         return (
           <div className="space-y-4 flex flex-col items-center">
-            <EmptyState
-              icon={Clock}
-              title="Đang kiểm tra"
+          <EmptyState
+            icon={Clock}
+            title="Đang kiểm tra"
               subtitle="Thời gian còn lại cho kiểm tra:"
             />
             {inspectionTask.expectedEndTime && (
@@ -260,11 +260,11 @@ const BookingStatusTimeline = ({
       if (servicingTask.status === "scheduled") {
         return (
           <div className="space-y-4 flex flex-col items-center">
-            <EmptyState
-              icon={Clock}
-              title="Đã lên lịch sửa chữa"
-              subtitle="Xe đã được lên lịch sửa chữa. Thông tin sẽ được cập nhật sau."
-            />
+          <EmptyState
+            icon={Clock}
+            title="Đã lên lịch sửa chữa"
+            subtitle="Xe đã được lên lịch sửa chữa. Thông tin sẽ được cập nhật sau."
+          />
             {servicingTask.expectedEndTime && (
               <CountdownTimer
                 targetTime={servicingTask.expectedEndTime}
@@ -373,11 +373,11 @@ const BookingStatusTimeline = ({
           ) : (
             servicingTask.status === "in_progress" && (
               <div className="space-y-4 flex flex-col items-center">
-                <EmptyState
-                  icon={Clock}
-                  title="Đang sửa chữa"
-                  subtitle="Xe đang được sửa chữa. Tiến độ sẽ được cập nhật sớm."
-                />
+              <EmptyState
+                icon={Clock}
+                title="Đang sửa chữa"
+                subtitle="Xe đang được sửa chữa. Tiến độ sẽ được cập nhật sớm."
+              />
                 {servicingTask.expectedEndTime && (
                   <CountdownTimer
                     targetTime={servicingTask.expectedEndTime}

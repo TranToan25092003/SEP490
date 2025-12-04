@@ -6,8 +6,9 @@
  *   licensePlate: string;
  *   technicianName: string;
  *   creationDate: Date;
- *   serviceOrderStatus?: string | null;
  *   estimatedTime?: Date;
+ *   serviceOrderStatus?: string;
+ *   tasks?: Array<{ type: string; status: string }>;
  * }} BookingStatusHeaderProps
  */
 
