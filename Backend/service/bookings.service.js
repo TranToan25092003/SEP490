@@ -385,8 +385,12 @@ class BookingsService {
       );
     }
 
-    await ServiceOrderService.createServiceOrderFromBooking(staffId, bookingId);
+    const serviceOrder = await ServiceOrderService.createServiceOrderFromBooking(
+      staffId,
+      bookingId
+    );
 
+    booking.service_order_id = serviceOrder._id;
     booking.status = "checked_in";
     await booking.save();
 

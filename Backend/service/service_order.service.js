@@ -379,9 +379,7 @@ class ServiceOrderService {
 
     await serviceOrder.save();
 
-    booking.status = "in_progress";
-    booking.service_order_id = serviceOrder._id;
-    await booking.save();
+    return serviceOrder;
   }
 
   async createWalkInServiceOrder({

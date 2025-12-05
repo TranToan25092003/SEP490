@@ -248,7 +248,7 @@ describe("BookingsService", () => {
       const ServiceOrderService = require("../../service/service_order.service");
       ServiceOrderService.createServiceOrderFromBooking = jest
         .fn()
-        .mockResolvedValue(undefined);
+        .mockResolvedValue({ _id: new mongoose.Types.ObjectId() });
 
       const booking = await BookingsService.checkInBooking(
         STAFF_ID,

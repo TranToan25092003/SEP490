@@ -49,7 +49,11 @@ const BookingStatusHeader = ({
     if (serviceOrderStatus === "inspection_completed") {
       // Kiểm tra xem đã bắt đầu sửa chữa chưa
       const servicingTask = tasks.find((t) => t.type === "servicing");
-      if (servicingTask && servicingTask.status !== "scheduled" && servicingTask.status !== "rescheduled") {
+      if (
+        servicingTask &&
+        servicingTask.status !== "scheduled" &&
+        servicingTask.status !== "rescheduled"
+      ) {
         return false; // Đã bắt đầu sửa chữa, không cho hủy
       }
       return true; // Kiểm tra xong và chưa bắt đầu sửa chữa, cho phép hủy

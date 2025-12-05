@@ -21,6 +21,11 @@ class BaySchedulingService {
       throw new DomainError("Task not found", ERROR_CODES.TASK_NOT_FOUND);
     }
 
+    const bayInfo = await Bay.findById(bayId).exec();
+    if (!bayInfo || bayInfo.status !== "available") {
+      throw new DomainError("Bay not found", ERROR_CODES.BAYS_UNAVAILABLE);
+    }
+
     const overlappingTasks = await this.findOverlappingTasksForBayId(
       bayId,
       newStart,
@@ -77,6 +82,11 @@ class BaySchedulingService {
   }
 
   async scheduleInspectionTask(serviceOrderId, start, end, bayId) {
+    const bayInfo = await Bay.findById(bayId).exec();
+    if (!bayInfo || bayInfo.status !== "available") {
+      throw new DomainError("Bay not found", ERROR_CODES.BAYS_UNAVAILABLE);
+    }
+
     const overlappingTasks = await this.findOverlappingTasksForBayId(
       bayId,
       start,
@@ -115,6 +125,11 @@ class BaySchedulingService {
   }
 
   async scheduleServicingTask(serviceOrderId, start, end, bayId) {
+    const bayInfo = await Bay.findById(bayId).exec();
+    if (!bayInfo || bayInfo.status !== "available") {
+      throw new DomainError("Bay not found", ERROR_CODES.BAYS_UNAVAILABLE);
+    }
+
     const overlappingTasks = await this.findOverlappingTasksForBayId(
       bayId,
       start,

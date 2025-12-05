@@ -61,6 +61,19 @@ const baySchedulingSchema = z.object({
     .nullable(),
 });
 
+const calculateDuration = (task) => {
+  if (task?.expectedStartTime && task?.expectedEndTime) {
+    const start = new Date(task.expectedStartTime);
+    const end = new Date(task.expectedEndTime);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 60;
+    const diffInMs = end - start;
+    if (diffInMs <= 0) return 60; //invalid time
+    const diffInMinutes = Math.ceil(diffInMs / (1000 * 60));
+    return diffInMinutes;
+  }
+  return 60; // default duration
+};
+
 const BaySchedulingModal = NiceModal.create(({ task }) => {
   const modal = useModal();
 
@@ -73,6 +86,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
   const [searchTime, setSearchTime] = useState(format(new Date(), "HH:mm"));
   const [searchFrom, setSearchFrom] = useState(new Date().toISOString());
 
+
   const {
     control,
     handleSubmit,
@@ -84,8 +98,8 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
   } = useForm({
     resolver: zodResolver(baySchedulingSchema),
     defaultValues: {
-      bayId: "",
-      duration: 60,
+      bayId: task?.assignedBayId ?? "",
+      duration: calculateDuration(task),
       slot: null,
     },
   });
@@ -109,7 +123,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
     try {
       setIsLoadingBays(true);
       const baysData = await getAllBays();
-      setBays(baysData);
+      setBays(baysData.filter(bay => bay.status === "available"));
     } catch (error) {
       console.error("Error fetching bays:", error);
     } finally {
@@ -207,7 +221,9 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
           <div className="space-y-4">
             <FieldGroup>
               <Field>
-                <FieldLabel>Chọn bay</FieldLabel>
+                <FieldLabel className="required-asterisk">
+                  Chọn bay
+                </FieldLabel>
                 {isLoadingBays ? (
                   <div className="flex flex-col items-center justify-center py-8 space-y-2">
                     <Spinner className="h-6 w-6" />
@@ -273,7 +289,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="duration">
+                <FieldLabel htmlFor="duration" className="required-asterisk">
                   Thời gian dự kiến (phút)
                 </FieldLabel>
                 <div className="flex items-center gap-2">
