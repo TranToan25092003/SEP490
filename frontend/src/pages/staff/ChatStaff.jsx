@@ -6,6 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { initializeSocket } from "@/utils/socket";
 import MentionInput from "@/components/chat/MentionInput";
 import { renderMessageWithMentions } from "@/utils/mentionParser";
@@ -33,6 +40,7 @@ export default function ChatStaff() {
   const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [viewingImage, setViewingImage] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const seenMessageIdsRef = useRef(new Map());
@@ -55,13 +63,13 @@ export default function ChatStaff() {
       setIsConnected(connected);
       if (connected) {
         // Join staff room if connected
-      socketInstance.emit("joinRoom", {
-        room: "staff_room",
-        userId: "staff_user",
-        userType: "staff",
-      });
-    } else {
-      // If not connected, try to connect
+        socketInstance.emit("joinRoom", {
+          room: "staff_room",
+          userId: "staff_user",
+          userType: "staff",
+        });
+      } else {
+        // If not connected, try to connect
         socketInstance.connect();
       }
     };
@@ -564,8 +572,13 @@ export default function ChatStaff() {
                       <img
                         src={message.image.preview || message.image}
                         alt={message.image.name || "Image"}
-                        className="max-w-full h-auto rounded-lg"
+                        className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                         style={{ maxHeight: "200px" }}
+                        onClick={() =>
+                          setViewingImage(
+                            message.image.preview || message.image
+                          )
+                        }
                       />
                     </div>
                   )}
@@ -723,6 +736,28 @@ export default function ChatStaff() {
           )}
         </div>
       </div>
+
+      {/* Image View Dialog */}
+      <Dialog
+        open={!!viewingImage}
+        onOpenChange={(open) => !open && setViewingImage(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Xem ảnh</DialogTitle>
+            <DialogDescription>Ảnh từ tin nhắn</DialogDescription>
+          </DialogHeader>
+          {viewingImage && (
+            <div className="flex items-center justify-center p-4">
+              <img
+                src={viewingImage}
+                alt="Xem ảnh"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

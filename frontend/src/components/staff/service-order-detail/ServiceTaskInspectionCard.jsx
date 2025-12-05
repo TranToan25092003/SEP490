@@ -42,7 +42,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
               ? "Bắt đầu kiểm tra"
               : "Tiếp tục kiểm tra"}
           </Button>
-        </div>
+      </div>
       );
     } else if (task.status === "in_progress") {
       return (

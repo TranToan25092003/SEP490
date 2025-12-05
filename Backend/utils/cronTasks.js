@@ -1,4 +1,11 @@
-const { Test, ServiceOrder, Booking, ServiceOrderTask, InspectionTask, ServicingTask } = require("../model");
+const {
+  Test,
+  ServiceOrder,
+  Booking,
+  ServiceOrderTask,
+  InspectionTask,
+  ServicingTask,
+} = require("../model");
 const notificationService = require("../service/notification.service");
 const { UsersService } = require("../service/users.service");
 const serviceOrderService = require("../service/service_order.service");
@@ -276,6 +283,108 @@ async function notifyServiceTasksAlmostCompleted() {
 }
 
 /**
+ * Tự động dời lịch các task đã trễ giờ bắt đầu > 30 phút nhưng chưa bắt đầu (scheduled/rescheduled)
+ */
+async function autoRescheduleMissedScheduledTasks() {
+  try {
+    const now = new Date();
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+    // Các task đã xếp lịch (chưa bắt đầu), trễ giờ bắt đầu > 30 phút
+    const missedTasks = await ServiceOrderTask.find({
+      status: { $in: ["scheduled", "rescheduled"] },
+      actual_start_time: { $exists: false },
+      expected_start_time: { $lt: thirtyMinutesAgo },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!missedTasks.length) {
+      return;
+    }
+
+    console.log(
+      `[AutoReschedule] Found ${missedTasks.length} missed scheduled tasks (>30m late to start)`
+    );
+
+    await Promise.all(
+      missedTasks.map(async (task) => {
+        try {
+          const newSlot = await BaySchedulingService.autoRescheduleMissedTask(
+            task
+          );
+
+          if (!newSlot) {
+            console.warn(
+              `[AutoReschedule] No slot found (missed) for task ${task._id}`
+            );
+            return;
+          }
+
+          await BaySchedulingService.rescheduleTask(
+            task._id.toString(),
+            newSlot.bayId.toString(),
+            newSlot.start,
+            newSlot.end
+          );
+
+          // Gửi notification cho customer
+          const serviceOrder = task.service_order_id;
+          if (serviceOrder?.booking_id?.customer_clerk_id) {
+            const booking = serviceOrder.booking_id;
+            const plate = booking.vehicle_id?.license_plate || "xe của bạn";
+            const taskType =
+              task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
+            const formattedStart = new Date(newSlot.start).toLocaleString(
+              "vi-VN",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              }
+            );
+            const formattedEnd = new Date(newSlot.end).toLocaleString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+
+            await notificationService.createNotification({
+              recipientClerkId: booking.customer_clerk_id,
+              recipientType: "customer",
+              type: "TASK_AUTO_RESCHEDULED",
+              title: `Lịch ${taskType} đã được tự động dời`,
+              message: `Lịch ${taskType} cho xe ${plate} đã quá giờ bắt đầu hơn 30 phút và được tự động dời lại. Thời gian mới: ${formattedStart} - ${formattedEnd}. Bấm vào đây để xem chi tiết.`,
+              linkTo: `/booking/${booking._id}`,
+            });
+          }
+        } catch (error) {
+          console.error(
+            `[AutoReschedule] Error rescheduling missed task ${task._id}:`,
+            error.message
+          );
+        }
+      })
+    );
+  } catch (error) {
+    console.error(
+      "[AutoReschedule] Error in autoRescheduleMissedScheduledTasks:",
+      error
+    );
+  }
+}
+
+/**
  * Tự động dời lịch các task quá hạn (in_progress nhưng đã quá expected_end_time)
  */
 async function autoRescheduleOverdueTasks() {
@@ -308,7 +417,9 @@ async function autoRescheduleOverdueTasks() {
       overdueTasks.map(async (task) => {
         try {
           // Tìm slot mới theo thứ tự ưu tiên
-          const newSlot = await BaySchedulingService.autoRescheduleOverdueTask(task);
+          const newSlot = await BaySchedulingService.autoRescheduleOverdueTask(
+            task
+          );
 
           if (!newSlot) {
             console.warn(
@@ -334,14 +445,18 @@ async function autoRescheduleOverdueTasks() {
           if (serviceOrder?.booking_id?.customer_clerk_id) {
             const booking = serviceOrder.booking_id;
             const plate = booking.vehicle_id?.license_plate || "xe của bạn";
-            const taskType = task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
-            const formattedStart = new Date(newSlot.start).toLocaleString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-              day: "2-digit",
-              month: "2-digit",
-              year: "numeric",
-            });
+            const taskType =
+              task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
+            const formattedStart = new Date(newSlot.start).toLocaleString(
+              "vi-VN",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              }
+            );
             const formattedEnd = new Date(newSlot.end).toLocaleString("vi-VN", {
               hour: "2-digit",
               minute: "2-digit",
@@ -368,7 +483,10 @@ async function autoRescheduleOverdueTasks() {
       })
     );
   } catch (error) {
-    console.error("[AutoReschedule] Error in autoRescheduleOverdueTasks:", error);
+    console.error(
+      "[AutoReschedule] Error in autoRescheduleOverdueTasks:",
+      error
+    );
   }
 }
 
@@ -381,6 +499,7 @@ const runCronTasks = async () => {
       autoCancelUncheckedInBookings(),
       notifyUpcomingServiceTasks(),
       notifyServiceTasksAlmostCompleted(),
+      autoRescheduleMissedScheduledTasks(),
       autoRescheduleOverdueTasks(),
     ]);
   } catch (error) {

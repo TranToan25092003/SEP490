@@ -5,6 +5,13 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Send, X, Minimize2, MessageCircle, Image } from "lucide-react";
 import { useUser, useAuth } from "@clerk/clerk-react";
 import { initializeSocket } from "@/utils/socket";
@@ -63,6 +70,7 @@ const FloatingChatButton = () => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [viewingImage, setViewingImage] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const [customerId, setCustomerId] = useState(null);
@@ -80,7 +88,12 @@ const FloatingChatButton = () => {
     if (isSignedIn && user?.id) {
       id = user.id;
       // Ưu tiên hiển thị thông tin cá nhân (publicMetadata) thay vì thông tin từ Google/Facebook
-      name = user.publicMetadata?.fullName || user.fullName || user.firstName || user.username || "Khách hàng";
+      name =
+        user.publicMetadata?.fullName ||
+        user.fullName ||
+        user.firstName ||
+        user.username ||
+        "Khách hàng";
     } else {
       try {
         id = localStorage.getItem("guest_id");
@@ -183,7 +196,12 @@ const FloatingChatButton = () => {
     const message = {
       id: Date.now().toString(),
       senderId: "customer",
-      senderName: customerName || user?.publicMetadata?.fullName || user?.fullName || user?.firstName || "Khách hàng",
+      senderName:
+        customerName ||
+        user?.publicMetadata?.fullName ||
+        user?.fullName ||
+        user?.firstName ||
+        "Khách hàng",
       content: newMessage.trim(),
       timestamp: new Date().toLocaleTimeString("vi-VN", {
         hour: "2-digit",
@@ -371,10 +389,15 @@ const FloatingChatButton = () => {
                       {message.type === "image" && message.image && (
                         <div className="mb-2">
                           <img
-                            src={message.image.preview}
-                            alt={message.image.name}
-                            className="max-w-full h-auto rounded-lg"
+                            src={message.image.preview || message.image}
+                            alt={message.image.name || "Image"}
+                            className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                             style={{ maxHeight: "200px" }}
+                            onClick={() =>
+                              setViewingImage(
+                                message.image.preview || message.image
+                              )
+                            }
                           />
                         </div>
                       )}
@@ -528,6 +551,28 @@ const FloatingChatButton = () => {
           </div>
         </div>
       )}
+
+      {/* Image View Dialog */}
+      <Dialog
+        open={!!viewingImage}
+        onOpenChange={(open) => !open && setViewingImage(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Xem ảnh</DialogTitle>
+            <DialogDescription>Ảnh từ tin nhắn</DialogDescription>
+          </DialogHeader>
+          {viewingImage && (
+            <div className="flex items-center justify-center p-4">
+              <img
+                src={viewingImage}
+                alt="Xem ảnh"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
