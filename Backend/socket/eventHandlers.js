@@ -1,18 +1,33 @@
 // Store active customers and their info
-const activeCustomers = new Map(); // customerId -> { socketId, name, userType, lastSeen, room }
+const activeCustomers = new Map(); // customerId -> { socketId, name, userType, lastSeen, room, imageUrl }
 // In-memory chat history per customer
 const chatHistoryByCustomer = new Map();
 const MAX_MESSAGES_PER_CHAT = 100;
 let guestCounter = 0; // server-scoped incremental counter for Guest naming
 let ioInstance = null; // Store io instance for broadcasting
 const notificationService = require("../service/notification.service");
+const { clerkClient } = require("../config/clerk");
+
+// Helper function to fetch user imageUrl from Clerk
+async function getUserImageUrl(userId) {
+  if (!userId || userId.startsWith("guest_")) {
+    return null;
+  }
+  try {
+    const user = await clerkClient.users.getUser(userId);
+    return user.imageUrl || null;
+  } catch (error) {
+    console.warn(`Failed to fetch imageUrl for user ${userId}:`, error.message);
+    return null;
+  }
+}
 
 // Socket.IO event handlers
 const handleConnection = (socket) => {
   console.log("User connected:", socket.id);
 
   // Handle joining a room (customer or staff)
-  socket.on("joinRoom", (data) => {
+  socket.on("joinRoom", async (data) => {
     const { room, userId, userType, customerName } = data;
     socket.join(room);
     socket.userId = userId;
@@ -36,12 +51,19 @@ const handleConnection = (socket) => {
         assignedName = userId; // fallback to userId when not guest and no name provided
       }
 
+      // Fetch imageUrl from Clerk for non-guest customers
+      let imageUrl = null;
+      if (!isGuest) {
+        imageUrl = await getUserImageUrl(userId);
+      }
+
       activeCustomers.set(userId, {
         socketId: socket.id,
         name: assignedName,
         userType: isGuest ? "guest" : "customer",
         lastSeen: new Date(),
         room: room,
+        imageUrl: imageUrl,
       });
 
       // Notify staff for non-guest customers immediately; guests will be notified on first message
@@ -50,6 +72,7 @@ const handleConnection = (socket) => {
           customerId: userId,
           name: assignedName,
           userType: "customer",
+          imageUrl: imageUrl,
         });
       }
     }
@@ -72,6 +95,7 @@ const handleConnection = (socket) => {
           name: info.name,
           userType: info.userType,
           lastSeen: info.lastSeen,
+          imageUrl: info.imageUrl || null,
         }));
       socket.emit("activeCustomers", customers);
       console.log(`Sent ${customers.length} active customers to staff`);
@@ -156,7 +180,12 @@ const handleConnection = (socket) => {
       // If first message from a guest, now announce to staff list
       const info = activeCustomers.get(customerId);
       if (wasEmpty && info && info.userType === "guest") {
-        const payload = { customerId, name: info.name, userType: "guest" };
+        const payload = {
+          customerId,
+          name: info.name,
+          userType: "guest",
+          imageUrl: info.imageUrl || null,
+        };
         if (ioInstance)
           ioInstance.to("staff_room").emit("newCustomer", payload);
         else socket.to("staff_room").emit("newCustomer", payload);
