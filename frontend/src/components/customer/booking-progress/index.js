@@ -7,6 +7,8 @@
  *   technicianName: string;
  *   creationDate: Date;
  *   estimatedTime?: Date;
+ *   serviceOrderStatus?: string;
+ *   tasks?: Array<{ type: string; status: string }>;
  * }} BookingStatusHeaderProps
  */
 

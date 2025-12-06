@@ -14,7 +14,7 @@ import {
   startService,
   updateServiceTaskTimeline,
   updateServiceTaskTimelineEntry,
-  rescheduleTask
+  rescheduleTask,
 } from "@/api/serviceTasks";
 import ServiceTaskAddModal from "./ServiceTaskAddModal";
 import ServiceTaskTimeline from "./ServiceTaskTimeline";
@@ -22,26 +22,40 @@ import ChooseStaffModal from "./ChooseStaffModal";
 import { Clock, Image } from "lucide-react";
 import EmptyState from "@/components/global/EmptyState";
 import BaySchedulingModal from "./BaySchedulingModal";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 const ServiceTaskServicingCard = ({ task }) => {
   const [loading, setLoading] = useState(false);
   const revalidator = useRevalidator();
 
   function getButton() {
-    if (task.status === "scheduled") {
+    if (task.status === "scheduled" || task.status === "rescheduled") {
       return (
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleChangeSchedule} disabled={loading}>
-            Thay đổi lịch
+          <Button
+            variant="outline"
+            onClick={handleChangeSchedule}
+            disabled={loading}
+          >
+            {task.status === "scheduled" ? "Thay đổi lịch" : "Dời lại lần nữa"}
           </Button>
           <Button disabled={loading} onClick={handleStartService}>
-            Bắt đầu sửa chữa
+            {task.status === "scheduled"
+              ? "Bắt đầu sửa chữa"
+              : "Tiếp tục sửa chữa"}
           </Button>
         </div>
       );
     } else if (task.status === "in_progress") {
       return (
-        <div className="space-x-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={handleChangeSchedule}
+            disabled={loading}
+          >
+            Dời lịch sửa
+          </Button>
           <Button
             disabled={loading}
             onClick={handleUpdateTimeline}
@@ -198,8 +212,19 @@ const ServiceTaskServicingCard = ({ task }) => {
         {getButton()}
       </CardHeader>
       <CardContent className="px-2">
-        <div className="mb-2 text-sm text-muted-foreground">
-          Trạng thái: <StatusBadge status={translateTaskStatus(task.status)} />
+        <div className="mb-2 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+          <span>Trạng thái:</span>
+          <StatusBadge
+            status={translateTaskStatus(task.status)}
+            colorKey={task.status === "rescheduled" ? "rescheduled" : undefined}
+          />
+          {task.status === "in_progress" && task.expectedEndTime && (
+            <CountdownTimer
+              targetTime={task.expectedEndTime}
+              label="Còn lại"
+              compact
+            />
+          )}
         </div>
         <div className="mb-4 space-y-2 text-sm text-muted-foreground">
           {task.expectedStartTime && (
@@ -214,6 +239,7 @@ const ServiceTaskServicingCard = ({ task }) => {
               <span>{formatDateTime(task.expectedEndTime)}</span>
             </div>
           )}
+
           {task.actualStartTime && (
             <div className="flex items-center gap-2">
               <span className="font-medium">Thời gian bắt đầu thực tế:</span>

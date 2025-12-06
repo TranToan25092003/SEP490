@@ -22,8 +22,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useClerk } from "@clerk/clerk-react";
+import { useClerk, useUser } from "@clerk/clerk-react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveStaffFullName } from "@/utils/staffNameResolver";
 
 const items = [
   {
@@ -73,6 +75,7 @@ export default function AdminSidebar({
 }) {
   const location = useLocation();
   const { signOut } = useClerk();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -163,15 +166,47 @@ export default function AdminSidebar({
               })}
             </div>
             <div className="flex flex-col gap-2">
+              {/* User Info Section */}
+              <div
+                className={cn("flex items-center gap-3 py-2 rounded-lg", {
+                  "justify-center": !expanded,
+                  "justify-start pl-0": expanded,
+                })}
+              >
+                <Avatar className="size-10">
+                  <AvatarImage
+                    src={user?.imageUrl}
+                    alt={user?.fullName || "User"}
+                  />
+                  <AvatarFallback className="bg-red-100 text-red-600">
+                    {user?.firstName?.[0] ||
+                      user?.emailAddresses?.[0]?.emailAddress?.[0] ||
+                      "U"}
+                  </AvatarFallback>
+                </Avatar>
+                {expanded && (
+                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+                    <span className="text-sm font-medium text-gray-900 truncate">
+                      {resolveStaffFullName(user, { fallback: "Người dùng" })}
+                    </span>
+                    {user?.primaryEmailAddress && (
+                      <span className="text-xs text-gray-500 truncate">
+                        {user.primaryEmailAddress.emailAddress}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
               <Tooltip open={expanded ? false : undefined}>
                 <TooltipTrigger asChild disabled={expanded}>
                   <div className="relative">
                     <span
+                      onClick={handleLogout}
                       className={cn(
-                        "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition",
+                        "absolute ml-20 top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition cursor-pointer text-gray-700 hover:text-red-600",
                         {
-                          "opacity-0": !expanded,
-                          "opacity-100": expanded,
+                          "opacity-0 pointer-events-none": !expanded,
+                          "opacity-100 pointer-events-auto": expanded,
                         }
                       )}
                     >

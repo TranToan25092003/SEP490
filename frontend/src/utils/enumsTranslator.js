@@ -13,6 +13,7 @@ const serviceOrderStatusMap = {
   waiting_customer_approval: "Chờ khách duyệt",
   approved: "Đã duyệt",
   scheduled: "Đã lên lịch",
+  rescheduled: "Dời lịch",
   servicing: "Đang sửa chữa",
   completed: "Hoàn thành",
   cancelled: "Đã hủy",
@@ -32,6 +33,7 @@ const quoteStatusText = {
 
 const taskStatusMap = {
   scheduled: "Đã lên lịch",
+  rescheduled: "Dời lịch",
   in_progress: "Đang thực hiện",
   completed: "Đã hoàn thành",
 };

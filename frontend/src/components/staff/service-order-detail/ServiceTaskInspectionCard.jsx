@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useRevalidator } from "react-router-dom";
 import { Card } from "antd";
 import { CardContent, CardHeader } from "@/components/ui/card";
@@ -12,26 +13,51 @@ import {
   beginInspectionTask,
   completeInspection,
   updateInspection,
-  rescheduleTask
+  rescheduleTask,
 } from "@/api/serviceTasks";
 import InspectionTaskModal from "./InspectionTaskModal";
 import ChooseStaffModal from "./ChooseStaffModal";
 import EmptyState from "@/components/global/EmptyState";
 import { Clock } from "lucide-react";
 import BaySchedulingModal from "./BaySchedulingModal";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 const ServiceTaskInspectionCard = ({ task }) => {
+  const [loading, setLoading] = useState(false);
   const revalidator = useRevalidator();
 
   function getButton() {
-    if (task.status === "scheduled") {
-      return <div className="flex gap-2">
-        <Button variant="outline" onClick={handleChangeSchedule}>Thay đổi lịch</Button>
-        <Button onClick={handleStartInspection}>Bắt đầu kiểm tra</Button>
+    if (task.status === "scheduled" || task.status === "rescheduled") {
+      return (
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleChangeSchedule}
+            disabled={loading}
+          >
+            {task.status === "scheduled" ? "Thay đổi lịch" : "Dời lại lần nữa"}
+          </Button>
+          <Button disabled={loading} onClick={handleStartInspection}>
+            {task.status === "scheduled"
+              ? "Bắt đầu kiểm tra"
+              : "Tiếp tục kiểm tra"}
+          </Button>
       </div>
+      );
     } else if (task.status === "in_progress") {
       return (
-        <Button onClick={handleCompleteInspection}>Hoàn thành kiểm tra</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={handleChangeSchedule}
+            disabled={loading}
+          >
+            Dời lịch kiểm tra
+          </Button>
+          <Button disabled={loading} onClick={handleCompleteInspection}>
+            Hoàn thành kiểm tra
+          </Button>
+        </div>
       );
     } else if (
       task.status === "completed" &&
@@ -43,6 +69,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
 
   async function handleChangeSchedule() {
     try {
+      setLoading(true);
       const { bay, slot } = await NiceModal.show(BaySchedulingModal, { task });
 
       const promise = rescheduleTask(task.id, bay.id, slot.start, slot.end);
@@ -58,6 +85,8 @@ const ServiceTaskInspectionCard = ({ task }) => {
       revalidator.revalidate();
     } catch (error) {
       console.log("Rescheduling failed:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -91,6 +120,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
 
   async function handleStartInspection() {
     try {
+      setLoading(true);
       const technician = await NiceModal.show(ChooseStaffModal);
 
       const startPromise = beginInspectionTask(task.id, [
@@ -111,11 +141,14 @@ const ServiceTaskInspectionCard = ({ task }) => {
       revalidator.revalidate();
     } catch (error) {
       console.log("Inspection start cancelled or failed:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
   async function handleCompleteInspection() {
     try {
+      setLoading(true);
       const result = await NiceModal.show(InspectionTaskModal);
       const completeInspectionPromise = completeInspection(task.id, {
         comment: result.comment,
@@ -137,6 +170,8 @@ const ServiceTaskInspectionCard = ({ task }) => {
       revalidator.revalidate();
     } catch (error) {
       console.log("Inspection cancelled or failed:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -147,8 +182,19 @@ const ServiceTaskInspectionCard = ({ task }) => {
         {getButton()}
       </CardHeader>
       <CardContent className="px-2">
-        <div className="mb-2 text-sm text-muted-foreground">
-          Trạng thái: <StatusBadge status={translateTaskStatus(task.status)} />
+        <div className="mb-2 text-sm text-muted-foreground flex items-center gap-2 flex-wrap">
+          <span>Trạng thái:</span>
+          <StatusBadge
+            status={translateTaskStatus(task.status)}
+            colorKey={task.status === "rescheduled" ? "rescheduled" : undefined}
+          />
+          {task.status === "in_progress" && task.expectedEndTime && (
+            <CountdownTimer
+              targetTime={task.expectedEndTime}
+              label="Còn lại"
+              compact
+            />
+          )}
         </div>
         <div className="mb-4 space-y-2 text-sm text-muted-foreground">
           {task.expectedStartTime && (
@@ -163,6 +209,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
               <span>{formatDateTime(task.expectedEndTime)}</span>
             </div>
           )}
+
           {task.actualStartTime && (
             <div className="flex items-center gap-2">
               <span className="font-medium">Thời gian bắt đầu thực tế:</span>
@@ -197,10 +244,14 @@ const ServiceTaskInspectionCard = ({ task }) => {
           />
         )}
 
-        {task.status === "scheduled" && (
+        {(task.status === "scheduled" || task.status === "rescheduled") && (
           <EmptyState
             icon={Clock}
-            title="Chưa bắt đầu kiểm tra"
+            title={
+              task.status === "rescheduled"
+                ? "Đã dời lịch kiểm tra"
+                : "Chưa bắt đầu kiểm tra"
+            }
             subtitle="Vui lòng thực hiện bằng nút bên trên"
           />
         )}

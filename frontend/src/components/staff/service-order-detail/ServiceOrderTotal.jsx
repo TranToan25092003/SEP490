@@ -7,12 +7,8 @@ import { useState } from "react";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { useFormContext } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
-const ServiceOrderTotal = ({
-  className,
-  ...props
-}) => {
+const ServiceOrderTotal = ({ className, ...props }) => {
   const {
     disabled,
     serviceOrder,
@@ -24,7 +20,7 @@ const ServiceOrderTotal = ({
   const [price, setPrice] = useState({
     price: 0,
     tax: 0,
-    total: 0
+    total: 0,
   });
 
   const { watch, subscribe } = useFormContext();
@@ -55,17 +51,14 @@ const ServiceOrderTotal = ({
     const unsub = subscribe({
       formState: {
         values: true,
-        isValid: true
+        isValid: true,
       },
       callback: ({ values, isValid }) => {
         if (isValid) {
-          debounced(() => fetchPrice([
-            ...values.services,
-            ...values.parts
-          ]));
+          debounced(() => fetchPrice([...values.services, ...values.parts]));
         }
-      }
-    })
+      },
+    });
 
     fetchPrice([...items.services, ...items.parts]);
 
@@ -97,7 +90,7 @@ const ServiceOrderTotal = ({
           </div>
         </div>
 
-        {serviceOrder.status !== "completed" && (
+        {serviceOrder.status !== "completed" &&
           serviceOrder.status !== "cancelled" && (
             <Button
               type="button"
@@ -113,43 +106,31 @@ const ServiceOrderTotal = ({
             >
               Cập nhật thông tin
             </Button>
-          ))}
+          )}
 
         {serviceOrder.status !== "completed" &&
           serviceOrder.status !== "cancelled" && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="w-full"
-                    type="button"
-                    onClick={() => {
-                      handleSendInvoice(serviceOrder, [
-                        ...items.services,
-                        ...items.parts,
-                      ]);
-                    }}
-                    disabled={
-                      !(serviceOrder.status === "inspection_completed" ||
-                      serviceOrder.status === "waiting_customer_approval") ||
-                      !hasServices ||
-                      disabled
-                    }
-                    aria-busy={disabled || !hasServices}
-                  >
-                    Gửi báo giá
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                  {serviceOrder.status !== "inspection_completed" ? (
-                    <span>
-                      Chỉ có thể gửi báo giá khi lệnh sửa chữa ở trạng thái
-                      Đã kiểm tra hoặc Chờ phê duyệt của khách hàng
-                    </span>
-                  ) : null}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button
+              className="w-full"
+              type="button"
+              onClick={() => {
+                handleSendInvoice(serviceOrder, [
+                  ...items.services,
+                  ...items.parts,
+                ]);
+              }}
+              disabled={
+                !(
+                  serviceOrder.status === "inspection_completed" ||
+                  serviceOrder.status === "waiting_customer_approval"
+                ) ||
+                !hasServices ||
+                disabled
+              }
+              aria-busy={disabled || !hasServices}
+            >
+              Gửi báo giá
+            </Button>
           )}
       </CardContent>
 

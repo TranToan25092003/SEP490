@@ -865,7 +865,7 @@ const CustomerInvoiceDetail = () => {
 
         {/* Modal thanh toán */}
         <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-lg sm:max-h-[90vh] sm:overflow-y-auto max-h-none overflow-visible">
             <DialogHeader>
               <DialogTitle className="text-xl font-semibold">
                 Thanh toán hóa đơn

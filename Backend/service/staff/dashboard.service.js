@@ -3,8 +3,8 @@ const { clerkClient } = require("../../config/clerk");
 
 const monthNames = [
     null, // Index 0 không dùng
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    "T1", "T2", "T3", "T4", "T5", "T6",
+    "T7", "T8", "T9", "T10", "T11", "T12"
 ];
 
 class DashboardService {
@@ -24,7 +24,7 @@ class DashboardService {
                 lineChartData,
                 barChartData,
                 pieChartData,
-                topCustomerData
+                pendingOrdersData
             ] = await Promise.all([
                 // Đếm tổng số ServiceOrder đã hoàn thành
                 ServiceOrder.countDocuments({ status: "completed" }),
@@ -93,70 +93,117 @@ class DashboardService {
                     { $project: { _id: 0, name: "$_id", value: 1 } }
                 ]),
 
-                // Top 5 khách hàng chi tiêu nhiều nhất
-                Invoice.aggregate([
-                    { $match: { status: 'paid' } },
-                    {
-                        $group: {
-                            _id: "$clerkId", // Group theo clerkId của khách hàng (nếu có)
-                            spent: { $sum: "$amount" }
-                        }
-                    },
-                    { $sort: { spent: -1 } },
-                    { $limit: 5 }
-                ])
+                // Lấy các lệnh đang cần xử lý (không phải completed và cancelled)
+                ServiceOrder.find({
+                    status: { $nin: ["completed", "cancelled"] }
+                })
+                .populate("booking_id", "customer_clerk_id license_plate")
+                .sort({ createdAt: -1 })
+                .limit(10)
+                .lean()
+                .exec()
             ]);
 
-            // --- Xử lý dữ liệu Khách Hàng Tiềm Năng (Gọi Clerk) ---
-            const topCustomerClerkIds = topCustomerData.map(c => c._id).filter(id => id);
-            let potentialCustomers = [];
+            // --- Xử lý dữ liệu Lệnh Đang Cần Xử Lý ---
+            let pendingOrders = [];
 
-            if (topCustomerClerkIds.length > 0) {
+            if (pendingOrdersData && pendingOrdersData.length > 0) {
                 try {
-                    const clerkUsers = await clerkClient.users.getUserList({ userId: topCustomerClerkIds });
-                    const clerkUserMap = {};
+                    // Lấy thông tin khách hàng từ Clerk
+                    const customerClerkIds = pendingOrdersData
+                        .map(order => {
+                            if (order.booking_id && order.booking_id.customer_clerk_id) {
+                                return order.booking_id.customer_clerk_id;
+                            }
+                            return null;
+                        })
+                        .filter(id => id);
 
-                    for (const user of clerkUsers.data) {
-                        clerkUserMap[user.id] = {
-                            fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
-                            phone: (user.phoneNumbers || []).length > 0 ? user.phoneNumbers[0].phoneNumber : "N/A"
-                        };
+                    const clerkUserMap = {};
+                    if (customerClerkIds.length > 0) {
+                        const clerkUsers = await clerkClient.users.getUserList({ userId: customerClerkIds });
+                        for (const user of clerkUsers.data) {
+                            clerkUserMap[user.id] = {
+                                fullName: user.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : user.username || "N/A",
+                                phone: (user.phoneNumbers || []).length > 0 ? user.phoneNumbers[0].phoneNumber : "N/A"
+                            };
+                        }
                     }
 
-                    // Map dữ liệu chi tiêu với thông tin từ Clerk
-                    potentialCustomers = topCustomerData.map(customer => ({
-                        id: `#${customer._id.slice(-6)}`,
-                        name: clerkUserMap[customer._id]?.fullName || "Không rõ",
-                        spent: customer.spent,
-                        phone: clerkUserMap[customer._id]?.phone || "N/A"
-                    }));
+                    // Map dữ liệu lệnh với thông tin từ Clerk và Booking
+                    pendingOrders = pendingOrdersData.map(order => {
+                        const customerClerkId = order.booking_id?.customer_clerk_id;
+                        const customerInfo = customerClerkId ? clerkUserMap[customerClerkId] : null;
+                        
+                        return {
+                            id: order._id.toString(),
+                            orderNumber: order.orderNumber || `#${order._id.toString().slice(-6)}`,
+                            licensePlate: order.booking_id?.license_plate || order.walk_in_vehicle?.license_plate || "N/A",
+                            customerName: customerInfo?.fullName || order.walk_in_customer?.name || "N/A",
+                            status: order.status,
+                            createdAt: order.createdAt,
+                            phone: customerInfo?.phone || order.walk_in_customer?.phone || "N/A"
+                        };
+                    });
 
                 } catch (clerkError) {
-                    console.error("Failed to fetch Clerk data for top customers:", clerkError);
+                    console.error("Failed to fetch Clerk data for pending orders:", clerkError);
                     // Trả về dữ liệu thô nếu không lấy được thông tin Clerk
-                    potentialCustomers = topCustomerData.map(customer => ({
-                        id: `#${customer._id.slice(-6)}`,
-                        name: "Không rõ",
-                        spent: customer.spent,
-                        phone: "N/A"
+                    pendingOrders = pendingOrdersData.map(order => ({
+                        id: order._id.toString(),
+                        orderNumber: order.orderNumber || `#${order._id.toString().slice(-6)}`,
+                        licensePlate: order.booking_id?.license_plate || order.walk_in_vehicle?.license_plate || "N/A",
+                        customerName: order.walk_in_customer?.name || "N/A",
+                        status: order.status,
+                        createdAt: order.createdAt,
+                        phone: order.walk_in_customer?.phone || "N/A"
                     }));
                 }
             }
 
             // --- Tổng hợp kết quả ---
             const stats = {
-                orders: orderCount,
-                requests: requestCount,
+                orders: orderCount || 0,
+                requests: requestCount || 0,
                 revenue: totalRevenueResult[0]?.totalRevenue || 0,
-                customers: customerCountResult.length,
+                customers: customerCountResult?.length || 0,
             };
+
+            // Đảm bảo lineChartData và barChartData có đủ 12 tháng gần nhất
+            const now = new Date();
+            const last12Months = [];
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const monthKey = `T${date.getMonth() + 1}`;
+                last12Months.push(monthKey);
+            }
+
+            // Fill lineChartData với đầy đủ 12 tháng
+            const lineChartMap = {};
+            lineChartData.forEach(item => {
+                lineChartMap[item.name] = item.YêuCầu;
+            });
+            const filledLineChartData = last12Months.map(month => ({
+                name: month,
+                YêuCầu: lineChartMap[month] || 0
+            }));
+
+            // Fill barChartData với đầy đủ 12 tháng
+            const barChartMap = {};
+            barChartData.forEach(item => {
+                barChartMap[item.month] = item.DoanhThu;
+            });
+            const filledBarChartData = last12Months.map(month => ({
+                month: month,
+                DoanhThu: barChartMap[month] || 0
+            }));
 
             return {
                 stats,
-                lineChartData,
-                barChartData,
-                pieChartData,
-                potentialCustomers
+                lineChartData: filledLineChartData,
+                barChartData: filledBarChartData,
+                pieChartData: pieChartData || [],
+                pendingOrders: pendingOrders || []
             };
 
         } catch (error) {

@@ -4,13 +4,14 @@ import { Check, Circle, Clock } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { translateTaskStatus } from "@/utils/enumsTranslator";
+import CountdownTimer from "@/components/global/CountdownTimer";
 
 const BookingProgressTimeline = ({ booking, tasks }) => {
   const [selectedStep, setSelectedStep] = useState(null);
 
   // Find tasks
-  const inspectionTask = tasks.find(t => t.type === "inspection");
-  const servicingTask = tasks.find(t => t.type === "servicing");
+  const inspectionTask = tasks.find((t) => t.type === "inspection");
+  const servicingTask = tasks.find((t) => t.type === "servicing");
 
   // Define the 4 fixed steps
   const steps = [
@@ -107,7 +108,10 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
                     className={cn(
                       "relative pl-12 w-full text-left transition-all",
                       selectedStep?.id === step.id && "scale-105",
-                      (step.task || step.id === "reception" || step.id === "completed") && "hover:bg-accent/50 rounded-lg p-2 -ml-2"
+                      (step.task ||
+                        step.id === "reception" ||
+                        step.id === "completed") &&
+                        "hover:bg-accent/50 rounded-lg p-2 -ml-2"
                     )}
                     onClick={() => handleStepClick(step)}
                   >
@@ -130,9 +134,27 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
                         </p>
                       )}
                       {step.status === "in_progress" && (
-                        <span className="text-xs font-medium text-blue-600">
-                          Đang thực hiện
-                        </span>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs font-medium text-blue-600">
+                            Đang thực hiện
+                          </span>
+                          {step.id === "inspection" &&
+                            inspectionTask?.expectedEndTime && (
+                              <CountdownTimer
+                                targetTime={inspectionTask.expectedEndTime}
+                                label="Còn lại"
+                                compact
+                              />
+                            )}
+                          {step.id === "servicing" &&
+                            servicingTask?.expectedEndTime && (
+                              <CountdownTimer
+                                targetTime={servicingTask.expectedEndTime}
+                                label="Còn lại"
+                                compact
+                              />
+                            )}
+                        </div>
                       )}
                       {step.status === "completed" && (
                         <span className="text-xs font-medium text-green-600">
@@ -171,19 +193,31 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
                 <div className="space-y-4">
                   <p className="text-sm">{selectedStep.description}</p>
                   <div className="bg-muted/50 rounded-lg p-4">
-                    <h4 className="font-semibold text-sm mb-2">Thông tin tiếp nhận</h4>
+                    <h4 className="font-semibold text-sm mb-2">
+                      Thông tin tiếp nhận
+                    </h4>
                     <div className="space-y-2 text-sm">
                       <div>
-                        <span className="text-muted-foreground">Mã đặt lịch: </span>
-                        <span className="font-mono">{booking?.id?.slice(-8)}</span>
+                        <span className="text-muted-foreground">
+                          Mã đặt lịch:{" "}
+                        </span>
+                        <span className="font-mono">
+                          {booking?.id?.slice(-8)}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Thời gian: </span>
+                        <span className="text-muted-foreground">
+                          Thời gian:{" "}
+                        </span>
                         <span>{formatDateTime(booking?.createdAt)}</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">Biển số xe: </span>
-                        <span className="font-semibold">{booking?.vehicle?.licensePlate}</span>
+                        <span className="text-muted-foreground">
+                          Biển số xe:{" "}
+                        </span>
+                        <span className="font-semibold">
+                          {booking?.vehicle?.licensePlate}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -196,29 +230,43 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
                   <p className="text-sm">{selectedStep.description}</p>
                   <div className="bg-muted/50 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold text-sm">Kết quả kiểm tra</h4>
+                      <h4 className="font-semibold text-sm">
+                        Kết quả kiểm tra
+                      </h4>
                       <span className="text-xs font-medium text-muted-foreground">
                         {translateTaskStatus(inspectionTask.status)}
                       </span>
                     </div>
+                    {inspectionTask.expectedEndTime && (
+                      <div className="mb-3">
+                        <CountdownTimer
+                          targetTime={inspectionTask.expectedEndTime}
+                          label="Thời gian còn lại cho bước kiểm tra"
+                          compact
+                        />
+                      </div>
+                    )}
                     {inspectionTask.comment && (
                       <p className="text-sm mb-4">{inspectionTask.comment}</p>
                     )}
-                    {inspectionTask.media && inspectionTask.media.length > 0 && (
-                      <div>
-                        <h5 className="text-sm font-medium mb-2">Hình ảnh kiểm tra</h5>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                          {inspectionTask.media.map((mediaItem) => (
-                            <img
-                              key={mediaItem.url || mediaItem.publicId}
-                              src={mediaItem.url}
-                              alt="Inspection"
-                              className="w-full h-32 object-cover rounded-md"
-                            />
-                          ))}
+                    {inspectionTask.media &&
+                      inspectionTask.media.length > 0 && (
+                        <div>
+                          <h5 className="text-sm font-medium mb-2">
+                            Hình ảnh kiểm tra
+                          </h5>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {inspectionTask.media.map((mediaItem) => (
+                              <img
+                                key={mediaItem.url || mediaItem.publicId}
+                                src={mediaItem.url}
+                                alt="Inspection"
+                                className="w-full h-32 object-cover rounded-md"
+                              />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                   </div>
                 </div>
               )}
@@ -228,69 +276,101 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
                 <div className="space-y-4">
                   <p className="text-sm">{selectedStep.description}</p>
 
+                  {/* Countdown timer - Always show when in_progress */}
+                  {servicingTask.status === "in_progress" &&
+                    servicingTask.expectedEndTime && (
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-semibold text-sm">
+                            Thời gian còn lại
+                          </h4>
+                        </div>
+                        <CountdownTimer
+                          targetTime={servicingTask.expectedEndTime}
+                          label="Thời gian còn lại cho bước sửa chữa"
+                          compact
+                        />
+                      </div>
+                    )}
+
                   {/* Initial servicing info */}
                   {servicingTask.comment && (
                     <div className="bg-muted/50 rounded-lg p-4">
-                      <h4 className="font-semibold text-sm mb-2">Thông tin sửa chữa</h4>
+                      <h4 className="font-semibold text-sm mb-2">
+                        Thông tin sửa chữa
+                      </h4>
                       <p className="text-sm">{servicingTask.comment}</p>
-                      {servicingTask.media && servicingTask.media.length > 0 && (
-                        <div className="mt-3">
-                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                            {servicingTask.media.map((mediaItem) => (
-                              <img
-                                key={mediaItem.url || mediaItem.publicId}
-                                src={mediaItem.url}
-                                alt="Servicing"
-                                className="w-full h-32 object-cover rounded-md"
-                              />
-                            ))}
+                      {servicingTask.media &&
+                        servicingTask.media.length > 0 && (
+                          <div className="mt-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {servicingTask.media.map((mediaItem) => (
+                                <img
+                                  key={mediaItem.url || mediaItem.publicId}
+                                  src={mediaItem.url}
+                                  alt="Servicing"
+                                  className="w-full h-32 object-cover rounded-md"
+                                />
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
                     </div>
                   )}
 
                   {/* Timeline entries */}
-                  {servicingTask.timeline && servicingTask.timeline.length > 0 && (
-                    <div>
-                      <h4 className="font-semibold text-sm mb-3">Tiến độ chi tiết</h4>
-                      <div className="relative">
-                        <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
-                        <div className="space-y-6">
-                          {servicingTask.timeline.map((entry, idx) => (
-                            <div key={entry.id || idx} className="relative pl-8">
-                              <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-background" />
+                  {servicingTask.timeline &&
+                    servicingTask.timeline.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-sm mb-3">
+                          Tiến độ chi tiết
+                        </h4>
+                        <div className="relative">
+                          <div className="absolute left-2 top-0 bottom-0 w-0.5 bg-border" />
+                          <div className="space-y-6">
+                            {servicingTask.timeline.map((entry, idx) => (
+                              <div
+                                key={entry.id || idx}
+                                className="relative pl-8"
+                              >
+                                <div className="absolute left-0 top-1.5 w-4 h-4 rounded-full bg-primary border-2 border-background" />
 
-                              <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                                <div className="flex items-start justify-between gap-2">
-                                  <h5 className="font-medium text-sm">{entry.title}</h5>
-                                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                                    {formatDateTime(entry.timestamp)}
-                                  </span>
-                                </div>
-                                {entry.comment && (
-                                  <p className="text-sm text-muted-foreground">{entry.comment}</p>
-                                )}
-
-                                {entry.media && entry.media.length > 0 && (
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                                    {entry.media.map((mediaItem) => (
-                                      <img
-                                        key={mediaItem.url || mediaItem.publicId}
-                                        src={mediaItem.url}
-                                        alt={mediaItem.kind}
-                                        className="w-full h-24 object-cover rounded-md"
-                                      />
-                                    ))}
+                                <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                                  <div className="flex items-start justify-between gap-2">
+                                    <h5 className="font-medium text-sm">
+                                      {entry.title}
+                                    </h5>
+                                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                                      {formatDateTime(entry.timestamp)}
+                                    </span>
                                   </div>
-                                )}
+                                  {entry.comment && (
+                                    <p className="text-sm text-muted-foreground">
+                                      {entry.comment}
+                                    </p>
+                                  )}
+
+                                  {entry.media && entry.media.length > 0 && (
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                      {entry.media.map((mediaItem) => (
+                                        <img
+                                          key={
+                                            mediaItem.url || mediaItem.publicId
+                                          }
+                                          src={mediaItem.url}
+                                          alt={mediaItem.kind}
+                                          className="w-full h-24 object-cover rounded-md"
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                 </div>
               )}
 
@@ -298,21 +378,24 @@ const BookingProgressTimeline = ({ booking, tasks }) => {
               {selectedStep.id === "completed" && (
                 <div className="space-y-4">
                   <p className="text-sm">{selectedStep.description}</p>
-                  {booking?.status === "completed" && selectedStep.timestamp && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <h4 className="font-semibold text-sm text-green-800 mb-2">
-                        Hoàn tất sửa chữa
-                      </h4>
-                      <p className="text-sm text-green-700">
-                        Xe của bạn đã được sửa chữa hoàn tất vào {formatDateTime(selectedStep.timestamp)}.
-                        Vui lòng đến nhận xe theo thời gian đã hẹn.
-                      </p>
-                    </div>
-                  )}
+                  {booking?.status === "completed" &&
+                    selectedStep.timestamp && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-sm text-green-800 mb-2">
+                          Hoàn tất sửa chữa
+                        </h4>
+                        <p className="text-sm text-green-700">
+                          Xe của bạn đã được sửa chữa hoàn tất vào{" "}
+                          {formatDateTime(selectedStep.timestamp)}. Vui lòng đến
+                          nhận xe theo thời gian đã hẹn.
+                        </p>
+                      </div>
+                    )}
                   {booking?.status !== "completed" && (
                     <div className="bg-muted/50 rounded-lg p-4">
                       <p className="text-sm text-muted-foreground">
-                        Xe đang trong quá trình sửa chữa. Chúng tôi sẽ thông báo khi hoàn tất.
+                        Xe đang trong quá trình sửa chữa. Chúng tôi sẽ thông báo
+                        khi hoàn tất.
                       </p>
                     </div>
                   )}

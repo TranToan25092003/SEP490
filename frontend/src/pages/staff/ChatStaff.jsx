@@ -1,30 +1,29 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useClerk } from "@clerk/clerk-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { initializeSocket } from "@/utils/socket";
 import MentionInput from "@/components/chat/MentionInput";
 import { renderMessageWithMentions } from "@/utils/mentionParser";
-import {
-  Send,
-  Phone,
-  Video,
-  MoreVertical,
-  Search,
-  Filter,
-  Image,
-  Package,
-  X,
-} from "lucide-react";
+import { Send, Search, Filter, Image, Package, X } from "lucide-react";
 
 // Mock data removed - using real-time socket data
 
 export default function ChatStaff() {
   const navigate = useNavigate();
+  const { user: clerkUser } = useClerk();
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState({}); // { customerId: [messages] }
   const [newMessage, setNewMessage] = useState("");
@@ -33,6 +32,7 @@ export default function ChatStaff() {
   const [isConnected, setIsConnected] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [viewingImage, setViewingImage] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const seenMessageIdsRef = useRef(new Map());
@@ -55,13 +55,13 @@ export default function ChatStaff() {
       setIsConnected(connected);
       if (connected) {
         // Join staff room if connected
-      socketInstance.emit("joinRoom", {
-        room: "staff_room",
-        userId: "staff_user",
-        userType: "staff",
-      });
-    } else {
-      // If not connected, try to connect
+        socketInstance.emit("joinRoom", {
+          room: "staff_room",
+          userId: "staff_user",
+          userType: "staff",
+        });
+      } else {
+        // If not connected, try to connect
         socketInstance.connect();
       }
     };
@@ -118,20 +118,37 @@ export default function ChatStaff() {
     });
 
     // Receive active customers list when staff connects
-    socketInstance.on("activeCustomers", (customersList) => {
-      const formattedCustomers = customersList.map((c) => ({
-        id: c.customerId,
-        name: c.name,
-        avatar: "/api/placeholder/40/40",
-        lastMessage: "",
-        lastMessageTime: new Date(c.lastSeen).toLocaleTimeString("vi-VN", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        unreadCount: 0,
-        status: "online",
-        vehicleInfo: c.userType === "guest" ? "Khách vãng lai" : "",
-      }));
+    socketInstance.on("activeCustomers", async (customersList) => {
+      const formattedCustomers = await Promise.all(
+        customersList.map(async (c) => {
+          let avatar = c.avatar || c.imageUrl || null;
+
+          // Nếu không có avatar và customerId là clerk ID, thử fetch từ Clerk
+          if (!avatar && c.customerId && c.userType !== "guest") {
+            try {
+              const { clerkClient } = await import("@clerk/clerk-react");
+              // Note: clerkClient không thể dùng trực tiếp ở frontend
+              // Cần fetch từ backend API hoặc socket phải gửi imageUrl
+            } catch (error) {
+              console.warn("Could not fetch avatar:", error);
+            }
+          }
+
+          return {
+            id: c.customerId,
+            name: c.name,
+            avatar: avatar,
+            lastMessage: "",
+            lastMessageTime: new Date(c.lastSeen).toLocaleTimeString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            unreadCount: 0,
+            status: "online",
+            vehicleInfo: c.userType === "guest" ? "Khách vãng lai" : "",
+          };
+        })
+      );
       setCustomers(formattedCustomers);
     });
 
@@ -144,7 +161,7 @@ export default function ChatStaff() {
           {
             id: customer.customerId,
             name: customer.name,
-            avatar: "/api/placeholder/40/40",
+            avatar: customer.avatar || customer.imageUrl || null,
             lastMessage: "",
             lastMessageTime: new Date().toLocaleTimeString("vi-VN", {
               hour: "2-digit",
@@ -450,15 +467,28 @@ export default function ChatStaff() {
                 <div className="relative">
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={customer.avatar} alt={customer.name} />
-                    <AvatarFallback>
-                      {customer.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
+                    {!customer.avatar && (
+                      <AvatarFallback className="bg-gray-200">
+                        <svg
+                          className="w-6 h-6 text-gray-500"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   {customer.status === "online" && (
-                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm">
+                      <div className="absolute inset-0 bg-green-500 rounded-full animate-pulse opacity-75"></div>
+                    </div>
                   )}
                 </div>
 
@@ -505,12 +535,23 @@ export default function ChatStaff() {
                     src={selectedCustomer.avatar}
                     alt={selectedCustomer.name}
                   />
-                  <AvatarFallback>
-                    {selectedCustomer.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
+                  {!selectedCustomer.avatar && (
+                    <AvatarFallback className="bg-gray-200">
+                      <svg
+                        className="w-6 h-6 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </AvatarFallback>
+                  )}
                 </Avatar>
                 <div>
                   <h3 className="font-semibold text-gray-900">
@@ -521,18 +562,6 @@ export default function ChatStaff() {
                     {selectedCustomer.bookingId}
                   </p>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <Phone className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Video className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
               </div>
             </div>
           </div>
@@ -564,8 +593,13 @@ export default function ChatStaff() {
                       <img
                         src={message.image.preview || message.image}
                         alt={message.image.name || "Image"}
-                        className="max-w-full h-auto rounded-lg"
+                        className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                         style={{ maxHeight: "200px" }}
+                        onClick={() =>
+                          setViewingImage(
+                            message.image.preview || message.image
+                          )
+                        }
                       />
                     </div>
                   )}
@@ -723,6 +757,28 @@ export default function ChatStaff() {
           )}
         </div>
       </div>
+
+      {/* Image View Dialog */}
+      <Dialog
+        open={!!viewingImage}
+        onOpenChange={(open) => !open && setViewingImage(null)}
+      >
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Xem ảnh</DialogTitle>
+            <DialogDescription>Ảnh từ tin nhắn</DialogDescription>
+          </DialogHeader>
+          {viewingImage && (
+            <div className="flex items-center justify-center p-4">
+              <img
+                src={viewingImage}
+                alt="Xem ảnh"
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

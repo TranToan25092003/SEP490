@@ -58,6 +58,7 @@ const formSchema = z.object({
  */
 const ServiceOrderEditForm = ({
   serviceOrder,
+  tasks = [],
   onUpdateServiceOrder,
   onCancelServiceOrder,
   onSendInvoice,

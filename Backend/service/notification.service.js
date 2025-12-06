@@ -429,7 +429,7 @@ async function notifyCustomerBookingCancelled(booking) {
   let title, message;
   if (cancelledBy === "staff") {
     title = "Đơn đặt lịch đã bị hủy";
-    message = `Đơn đặt lịch của quý khách ${customerName} đã bị nhân viên hủy.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
+    message = `Đơn đặt lịch của quý khách ${customerName} đã được hủy thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
   } else {
     title = "Hủy đặt lịch thành công";
     message = `Quý khách ${customerName} đã hủy đặt lịch thành công.${cancelReason} Rất mong được phục vụ quý khách trong lần sau.`;
@@ -463,7 +463,7 @@ async function notifyStaffOfBookingCancelled(booking) {
 
   let message;
   if (cancelledBy === "staff") {
-    message = `Nhân viên đã hủy đặt lịch sửa xe cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
+    message = `Hủy đặt lịch sửa xe thành công cho khách hàng ${customerName} - ${bookingCode} (xe ${plate}).${cancelReason}`;
   } else {
     message = `Khách hàng ${customerName} - ${bookingCode} đã hủy đặt lịch sửa xe cho xe ${plate}.${cancelReason}`;
   }
@@ -543,6 +543,53 @@ async function notifyServiceOrderStatusChange({
     linkTo: `/staff/service-order/${serviceOrderDoc._id}`,
     actorClerkId,
   });
+}
+
+async function notifyServiceOrderAlmostCompleted({
+  serviceOrder,
+  minutesLeft,
+  variant = "15min",
+}) {
+  const serviceOrderDoc = await ensureServiceOrderContext(serviceOrder);
+  if (!serviceOrderDoc?.booking_id) return;
+
+  const booking = serviceOrderDoc.booking_id;
+  const customerClerkId = booking.customer_clerk_id;
+  const plate = getPlate(booking);
+  const orderNumber =
+    serviceOrderDoc.orderNumber || serviceOrderDoc._id.toString();
+  const progressLink = `/booking/${booking._id}`;
+  const staffLink = getStaffServiceOrderLink(serviceOrderDoc._id);
+
+  // Customer luôn nhận thông báo ở cả 15' và 5'
+  if (customerClerkId) {
+    await createNotification({
+      recipientClerkId: customerClerkId,
+      recipientType: "customer",
+      type: "SERVICE_ORDER_ALMOST_COMPLETED",
+      title:
+        minutesLeft <= 5
+          ? "Sắp hoàn thành sửa xe (5 phút nữa)"
+          : "Sắp hoàn thành sửa xe",
+      message:
+        minutesLeft <= 5
+          ? `Xe ${plate} của quý khách dự kiến sẽ hoàn thành sửa chữa trong khoảng 5 phút nữa. Bấm vào đây để xem tiến độ chi tiết.`
+          : `Xe ${plate} của quý khách dự kiến sẽ hoàn thành sửa chữa trong khoảng ${minutesLeft} phút nữa. Bấm vào đây để xem tiến độ chi tiết.`,
+      linkTo: progressLink,
+    });
+  }
+
+  // Staff chỉ nhận ở mốc 15 phút (theo yêu cầu)
+  if (variant === "15min") {
+    const customerName = await resolveCustomerName(customerClerkId);
+    await notifyStaffGroup({
+      type: "SERVICE_ORDER_ALMOST_COMPLETED",
+      title: "Sắp hết thời gian sửa chữa",
+      message: `Lệnh ${orderNumber} cho khách hàng ${customerName} (xe ${plate}) dự kiến sẽ hoàn thành trong khoảng ${minutesLeft} phút nữa.`,
+      linkTo: staffLink,
+      actorClerkId: customerClerkId,
+    });
+  }
 }
 
 async function notifyCustomerNewQuote(

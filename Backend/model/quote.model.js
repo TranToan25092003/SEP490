@@ -6,7 +6,7 @@ const QuoteSchema = new Schema(
     so_id: {
       type: Schema.Types.ObjectId,
       ref: "ServiceOrder",
-      required: true
+      required: true,
     },
     subtotal: { type: Number, required: true },
     tax: { type: Number, required: true },
@@ -15,7 +15,7 @@ const QuoteSchema = new Schema(
         type: {
           type: String,
           enum: ["part", "service"],
-          required: true
+          required: true,
         },
         name: {
           type: String,
@@ -23,25 +23,25 @@ const QuoteSchema = new Schema(
         quantity: {
           type: Number,
           min: 1,
-          default: 1
+          default: 1,
         },
         price: {
           type: Number,
           min: 0,
-          default: 0
-        }
-      })
+          default: 0,
+        },
+      }),
     ],
     status: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       required: true,
-      default: "pending"
+      default: "pending",
     },
     rejected_reason: {
       type: String,
-      required: false
-    }
+      required: false,
+    },
   },
   { timestamps: true }
 );

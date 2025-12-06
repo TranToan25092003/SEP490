@@ -873,7 +873,7 @@ export const staffDashboardLoader = async () => {
         lineChartData: [],
         barChartData: [],
         pieChartData: [],
-        potentialCustomers: []
+        pendingOrders: []
     };
   }
 };

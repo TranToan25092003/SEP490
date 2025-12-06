@@ -1,8 +1,16 @@
-const { Test, ServiceOrder, Booking, ServiceOrderTask } = require("../model");
+const {
+  Test,
+  ServiceOrder,
+  Booking,
+  ServiceOrderTask,
+  InspectionTask,
+  ServicingTask,
+} = require("../model");
 const notificationService = require("../service/notification.service");
 const { UsersService } = require("../service/users.service");
 const serviceOrderService = require("../service/service_order.service");
 const bookingsService = require("../service/bookings.service");
+const { BaySchedulingService } = require("../service/bay_scheduling.service");
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -215,6 +223,273 @@ async function notifyUpcomingServiceTasks() {
   }
 }
 
+async function notifyServiceTasksAlmostCompleted() {
+  try {
+    const now = new Date();
+
+    // Cửa sổ 15 phút: 14-16 phút trước khi kết thúc
+    const fifteenMinLower = new Date(now.getTime() + 14 * 60 * 1000);
+    const fifteenMinUpper = new Date(now.getTime() + 16 * 60 * 1000);
+
+    // Cửa sổ 5 phút: 4-6 phút trước khi kết thúc
+    const fiveMinLower = new Date(now.getTime() + 4 * 60 * 1000);
+    const fiveMinUpper = new Date(now.getTime() + 6 * 60 * 1000);
+
+    // Lấy các task đang sửa chữa
+    const inProgressTasks = await ServiceOrderTask.find({
+      status: "in_progress",
+      expected_end_time: { $ne: null },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!inProgressTasks.length) return;
+
+    await Promise.all(
+      inProgressTasks.map(async (task) => {
+        const serviceOrder = task.service_order_id;
+        if (!serviceOrder || !task.expected_end_time) return;
+
+        const endTime = new Date(task.expected_end_time);
+
+        // ~15 phút trước khi kết thúc
+        if (endTime > fifteenMinLower && endTime <= fifteenMinUpper) {
+          await notificationService.notifyServiceOrderAlmostCompleted({
+            serviceOrder,
+            minutesLeft: 15,
+            variant: "15min",
+          });
+        }
+
+        // ~5 phút trước khi kết thúc
+        if (endTime > fiveMinLower && endTime <= fiveMinUpper) {
+          await notificationService.notifyServiceOrderAlmostCompleted({
+            serviceOrder,
+            minutesLeft: 5,
+            variant: "5min",
+          });
+        }
+      })
+    );
+  } catch (error) {
+    console.error("[Cron] Error in notifyServiceTasksAlmostCompleted:", error);
+  }
+}
+
+/**
+ * Tự động dời lịch các task đã trễ giờ bắt đầu > 30 phút nhưng chưa bắt đầu (scheduled/rescheduled)
+ */
+async function autoRescheduleMissedScheduledTasks() {
+  try {
+    const now = new Date();
+    const thirtyMinutesAgo = new Date(now.getTime() - 30 * 60 * 1000);
+
+    // Các task đã xếp lịch (chưa bắt đầu), trễ giờ bắt đầu > 30 phút
+    const missedTasks = await ServiceOrderTask.find({
+      status: { $in: ["scheduled", "rescheduled"] },
+      actual_start_time: { $exists: false },
+      expected_start_time: { $lt: thirtyMinutesAgo },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!missedTasks.length) {
+      return;
+    }
+
+    console.log(
+      `[AutoReschedule] Found ${missedTasks.length} missed scheduled tasks (>30m late to start)`
+    );
+
+    await Promise.all(
+      missedTasks.map(async (task) => {
+        try {
+          const newSlot = await BaySchedulingService.autoRescheduleMissedTask(
+            task
+          );
+
+          if (!newSlot) {
+            console.warn(
+              `[AutoReschedule] No slot found (missed) for task ${task._id}`
+            );
+            return;
+          }
+
+          await BaySchedulingService.rescheduleTask(
+            task._id.toString(),
+            newSlot.bayId.toString(),
+            newSlot.start,
+            newSlot.end
+          );
+
+          // Gửi notification cho customer
+          const serviceOrder = task.service_order_id;
+          if (serviceOrder?.booking_id?.customer_clerk_id) {
+            const booking = serviceOrder.booking_id;
+            const plate = booking.vehicle_id?.license_plate || "xe của bạn";
+            const taskType =
+              task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
+            const formattedStart = new Date(newSlot.start).toLocaleString(
+              "vi-VN",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              }
+            );
+            const formattedEnd = new Date(newSlot.end).toLocaleString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+
+            await notificationService.createNotification({
+              recipientClerkId: booking.customer_clerk_id,
+              recipientType: "customer",
+              type: "TASK_AUTO_RESCHEDULED",
+              title: `Lịch ${taskType} đã được tự động dời`,
+              message: `Lịch ${taskType} cho xe ${plate} đã quá giờ bắt đầu hơn 30 phút và được tự động dời lại. Thời gian mới: ${formattedStart} - ${formattedEnd}. Bấm vào đây để xem chi tiết.`,
+              linkTo: `/booking/${booking._id}`,
+            });
+          }
+        } catch (error) {
+          console.error(
+            `[AutoReschedule] Error rescheduling missed task ${task._id}:`,
+            error.message
+          );
+        }
+      })
+    );
+  } catch (error) {
+    console.error(
+      "[AutoReschedule] Error in autoRescheduleMissedScheduledTasks:",
+      error
+    );
+  }
+}
+
+/**
+ * Tự động dời lịch các task quá hạn (in_progress nhưng đã quá expected_end_time)
+ */
+async function autoRescheduleOverdueTasks() {
+  try {
+    const now = new Date();
+
+    // Tìm các task đang in_progress nhưng đã quá expected_end_time
+    const overdueTasks = await ServiceOrderTask.find({
+      status: "in_progress",
+      expected_end_time: { $lt: now },
+    })
+      .populate({
+        path: "service_order_id",
+        populate: {
+          path: "booking_id",
+          populate: { path: "vehicle_id" },
+        },
+      })
+      .exec();
+
+    if (!overdueTasks.length) {
+      return;
+    }
+
+    console.log(
+      `[AutoReschedule] Found ${overdueTasks.length} overdue tasks to reschedule`
+    );
+
+    await Promise.all(
+      overdueTasks.map(async (task) => {
+        try {
+          // Tìm slot mới theo thứ tự ưu tiên
+          const newSlot = await BaySchedulingService.autoRescheduleOverdueTask(
+            task
+          );
+
+          if (!newSlot) {
+            console.warn(
+              `[AutoReschedule] No available slot found for task ${task._id}`
+            );
+            return;
+          }
+
+          // Dời lịch task
+          await BaySchedulingService.rescheduleTask(
+            task._id.toString(),
+            newSlot.bayId.toString(),
+            newSlot.start,
+            newSlot.end
+          );
+
+          console.log(
+            `[AutoReschedule] Rescheduled task ${task._id} to ${newSlot.start} - ${newSlot.end} in bay ${newSlot.bayId} (priority: ${newSlot.priority})`
+          );
+
+          // Gửi notification cho customer
+          const serviceOrder = task.service_order_id;
+          if (serviceOrder?.booking_id?.customer_clerk_id) {
+            const booking = serviceOrder.booking_id;
+            const plate = booking.vehicle_id?.license_plate || "xe của bạn";
+            const taskType =
+              task.__t === "inspection" ? "kiểm tra" : "sửa chữa";
+            const formattedStart = new Date(newSlot.start).toLocaleString(
+              "vi-VN",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              }
+            );
+            const formattedEnd = new Date(newSlot.end).toLocaleString("vi-VN", {
+              hour: "2-digit",
+              minute: "2-digit",
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            });
+
+            await notificationService.createNotification({
+              recipientClerkId: booking.customer_clerk_id,
+              recipientType: "customer",
+              type: "TASK_AUTO_RESCHEDULED",
+              title: `Lịch ${taskType} đã được tự động dời`,
+              message: `Lịch ${taskType} cho xe ${plate} đã quá thời gian dự kiến và được tự động dời lại. Thời gian mới: ${formattedStart} - ${formattedEnd}. Bấm vào đây để xem chi tiết.`,
+              linkTo: `/booking/${booking._id}`,
+            });
+          }
+        } catch (error) {
+          console.error(
+            `[AutoReschedule] Error rescheduling task ${task._id}:`,
+            error.message
+          );
+        }
+      })
+    );
+  } catch (error) {
+    console.error(
+      "[AutoReschedule] Error in autoRescheduleOverdueTasks:",
+      error
+    );
+  }
+}
+
 const runCronTasks = async () => {
   try {
     await Promise.all([
@@ -223,6 +498,9 @@ const runCronTasks = async () => {
       autoCancelUnapprovedServiceOrders(),
       autoCancelUncheckedInBookings(),
       notifyUpcomingServiceTasks(),
+      notifyServiceTasksAlmostCompleted(),
+      autoRescheduleMissedScheduledTasks(),
+      autoRescheduleOverdueTasks(),
     ]);
   } catch (error) {
     console.error("Error in cron tasks:", error);

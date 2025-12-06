@@ -29,19 +29,55 @@ module.exports.createVehicle = async (req, res) => {
 
   const OwnerClerkId = req.userId;
 
-  let model = await ModelVehicle.findOne({ name, brand });
+  // Normalize: trim whitespace
+  const normalizedName = name?.trim();
+  const normalizedBrand = brand?.trim();
+
+  if (!normalizedName || !normalizedBrand) {
+    return res.status(400).json({
+      message: "Tên xe và hãng xe là bắt buộc",
+    });
+  }
+
+  // Escape special regex characters để tránh lỗi
+  const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  // Tìm model với case-insensitive (sử dụng regex an toàn)
+  let model = await ModelVehicle.findOne({
+    name: { $regex: new RegExp(`^${escapeRegex(normalizedName)}$`, "i") },
+    brand: { $regex: new RegExp(`^${escapeRegex(normalizedBrand)}$`, "i") },
+  });
 
   if (!model) {
+    // Tạo mới model với dữ liệu đã normalize
     model = await ModelVehicle.create({
-      name,
-      brand,
+      name: normalizedName,
+      brand: normalizedBrand,
       year,
       engine_type,
       description,
     });
   }
 
-  const existingVehicle = await Vehicle.findOne({ license_plate });
+  // Normalize biển số: trim và uppercase để check case-insensitive
+  const normalizedLicensePlate = license_plate?.trim().toUpperCase();
+
+  if (!normalizedLicensePlate) {
+    return res.status(400).json({
+      message: "Biển số xe là bắt buộc",
+    });
+  }
+
+  // Check trùng biển số (case-insensitive)
+  const existingVehicle = await Vehicle.findOne({
+    license_plate: {
+      $regex: new RegExp(
+        `^${normalizedLicensePlate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+        "i"
+      ),
+    },
+  });
+
   if (existingVehicle) {
     return res
       .status(400)
@@ -51,7 +87,7 @@ module.exports.createVehicle = async (req, res) => {
   const vehicle = await Vehicle.create({
     OwnerClerkId,
     model_id: model._id,
-    license_plate,
+    license_plate: normalizedLicensePlate, // Lưu biển số đã normalize
     year,
     odo_reading,
     images: image ? [image] : [],
@@ -78,16 +114,37 @@ module.exports.createVehicle = async (req, res) => {
 };
 
 module.exports.getModels = async (req, res) => {
-  const name = await ModelVehicle.find({}).select("name");
+  const brand = req.query.brand;
 
-  const brand = await ModelVehicle.distinct("brand");
-  res.status(200).json({
-    message: "hello",
-    data: {
-      name,
-      brand,
-    },
-  });
+  if (brand) {
+    // Lấy danh sách models (name) theo brand
+    const models = await ModelVehicle.find({
+      brand: {
+        $regex: new RegExp(
+          `^${brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i"
+        ),
+      },
+    })
+      .distinct("name")
+      .lean();
+
+    res.status(200).json({
+      message: "hello",
+      data: {
+        models: models || [],
+      },
+    });
+  } else {
+    // Lấy danh sách brands
+    const brands = await ModelVehicle.distinct("brand");
+    res.status(200).json({
+      message: "hello",
+      data: {
+        brand: brands,
+      },
+    });
+  }
 };
 
 module.exports.getVehicles = async (req, res) => {
@@ -100,7 +157,8 @@ module.exports.getVehicles = async (req, res) => {
         model: "ModelVehicle",
         select: "brand engine_type description year name",
       })
-      .select("_id license_plate model_id images license_plate year");
+      .select("_id license_plate model_id images license_plate year")
+      .lean(); // Tối ưu: sử dụng lean() để tăng performance
 
     if (!vehicles.length) {
       return res.status(200).json({
@@ -195,6 +253,46 @@ module.exports.hideVehicle = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Lỗi khi ẩn xe khỏi hồ sơ" });
+  }
+};
+
+module.exports.checkLicensePlate = async (req, res) => {
+  try {
+    const { license_plate } = req.query;
+
+    if (!license_plate) {
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu biển số xe",
+      });
+    }
+
+    // Normalize biển số: trim và uppercase
+    const normalizedLicensePlate = license_plate.trim().toUpperCase();
+
+    // Check trùng biển số (case-insensitive)
+    const existingVehicle = await Vehicle.findOne({
+      license_plate: {
+        $regex: new RegExp(
+          `^${normalizedLicensePlate.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+          "i"
+        ),
+      },
+    }).lean();
+
+    return res.status(200).json({
+      success: true,
+      available: !existingVehicle,
+      message: existingVehicle
+        ? "Biển số xe đã tồn tại trong hệ thống"
+        : "Biển số xe có thể sử dụng",
+    });
+  } catch (error) {
+    console.error("Error checking license plate:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi kiểm tra biển số xe",
+    });
   }
 };
 

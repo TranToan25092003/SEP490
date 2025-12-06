@@ -37,16 +37,22 @@ function mapToQuoteSummaryDTO(quote) {
     serviceOrderId: quote.so_id.toString(),
     grandTotal: quote.subtotal + quote.tax,
     status: quote.status,
+    rejectedReason: quote.rejected_reason || null,
     createdAt: quote.createdAt,
   };
 }
 
 class QuotesService {
   async createQuote(serviceOrderId) {
+    try {
     const serviceOrder = await ServiceOrder.findById(serviceOrderId)
-      .populate("items.part_id")
+        .populate({
+          path: "items.part_id",
+          model: "Part",
+        })
       .populate("booking_id")
       .exec();
+      
     if (!serviceOrder) {
       throw new DomainError(
         "Lệnh sửa chữa không tồn tại",
@@ -63,13 +69,64 @@ class QuotesService {
       );
     }
 
+    // Kiểm tra trạng thái service order - chỉ cho phép tạo quote khi ở trạng thái phù hợp
+    if (
+      serviceOrder.status !== "inspection_completed" &&
+      serviceOrder.status !== "waiting_customer_approval"
+    ) {
+      throw new DomainError(
+        `Không thể tạo báo giá khi lệnh sửa chữa ở trạng thái '${serviceOrder.status}'. Chỉ có thể tạo báo giá khi đã hoàn thành kiểm tra hoặc đang chờ phê duyệt.`,
+        ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
+        400
+      );
+    }
+
     // Tạo items từ service order
-    const items = serviceOrder.items.map((item) => ({
+    const items = [];
+    for (const item of serviceOrder.items) {
+      try {
+        let itemName = item.name || "N/A";
+        let itemPrice = item.price || 0;
+        let itemQuantity = item.quantity || 1;
+
+        if (item.item_type === "part") {
+          // Nếu part_id chưa được populate, thử populate lại
+          if (!item.part_id || typeof item.part_id === "string") {
+            const Part = require("../model/part.model");
+            const partId = item.part_id?._id || item.part_id;
+            if (partId) {
+              const part = await Part.findById(partId).exec();
+              if (part) {
+                item.part_id = part;
+                itemName = part.name;
+              } else {
+                console.warn(`Part với ID ${partId} không tồn tại`);
+                itemName = item.name || `Part ID: ${partId}`;
+              }
+            } else {
+              itemName = item.name || "N/A";
+            }
+          } else {
+            // part_id đã được populate
+            itemName = item.part_id.name || item.name || "N/A";
+          }
+        }
+
+        items.push({
       type: item.item_type,
-      name: item.item_type === "service" ? item.name : item.part_id.name,
-      quantity: item.quantity,
-      price: item.price,
-    }));
+          name: itemName,
+          quantity: itemQuantity,
+          price: itemPrice,
+        });
+      } catch (error) {
+        console.error(`Lỗi khi xử lý item:`, error);
+        throw new DomainError(
+          `Lỗi khi xử lý mục trong lệnh sửa chữa: ${error.message}`,
+          ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+          400
+        );
+      }
+    }
 
     // Tìm warranty liên quan đến booking này (nếu đây là warranty booking)
     let warranty = null;
@@ -251,9 +308,54 @@ class QuotesService {
     );
     const tax = subtotal * 0.1;
 
+    // Kiểm tra xem đã có quote pending chưa - chỉ cho phép 1 quote pending tại một thời điểm
+    const existingPendingQuote = await Quote.findOne({
+      so_id: serviceOrderId,
+      status: "pending",
+    }).exec();
+
+    if (existingPendingQuote) {
+      throw new DomainError(
+        "Đã có báo giá đang chờ phê duyệt cho lệnh sửa chữa này. Vui lòng đợi khách hàng phê duyệt hoặc từ chối báo giá hiện tại.",
+        ERROR_CODES.QUOTE_ALREADY_EXISTS,
+        409
+      );
+    }
+
+    // Kiểm tra xem có quote approved không - nếu có thì không cho tạo quote mới
+    const existingApprovedQuote = await Quote.findOne({
+      so_id: serviceOrderId,
+      status: "approved",
+    }).exec();
+
+    if (existingApprovedQuote) {
+      throw new DomainError(
+        "Không thể tạo báo giá mới khi đã có báo giá được phê duyệt. Vui lòng tạo lệnh sửa chữa mới.",
+        ERROR_CODES.QUOTE_ALREADY_EXISTS,
+        409
+      );
+    }
+
+    // Đếm số lượng quote hiện có (bao gồm cả rejected) để xác định có phải revision không
     const existingQuoteCount = await Quote.countDocuments({
       so_id: serviceOrderId,
-    });
+    }).exec();
+
+    // Nếu có unique index trên so_id, cần xóa các quote rejected cũ trước khi tạo quote mới
+    // để tránh lỗi duplicate key. Vẫn giữ lại để hiển thị trong list (nếu không có unique index)
+    // nhưng nếu có unique index thì phải xóa để tạo quote mới
+    const rejectedQuotes = await Quote.find({
+      so_id: serviceOrderId,
+      status: "rejected",
+    }).exec();
+
+    // Xóa rejected quotes cũ trước khi tạo quote mới (để tránh duplicate key error)
+    // Lưu ý: Nếu muốn giữ lại lịch sử, có thể lưu vào collection khác hoặc archive
+    if (rejectedQuotes.length > 0) {
+      await Quote.deleteMany({
+        _id: { $in: rejectedQuotes.map((q) => q._id) },
+      }).exec();
+    }
 
     const quote = new Quote({
       so_id: serviceOrderId,
@@ -263,10 +365,54 @@ class QuotesService {
       status: "pending",
     });
 
+    try {
     await quote.save();
+    } catch (saveError) {
+      // Xử lý lỗi duplicate key (E11000) - có thể do unique index trên so_id
+      if (saveError.code === 11000 || saveError.name === "MongoServerError") {
+        // Kiểm tra lại xem có quote pending không (có thể do race condition)
+        const existingPending = await Quote.findOne({
+          so_id: serviceOrderId,
+          status: "pending",
+        }).exec();
 
+        if (existingPending) {
+          throw new DomainError(
+            "Đã có báo giá đang chờ phê duyệt cho lệnh sửa chữa này. Vui lòng đợi khách hàng phê duyệt hoặc từ chối báo giá hiện tại.",
+            ERROR_CODES.QUOTE_ALREADY_EXISTS,
+            409
+          );
+        } else {
+          // Nếu vẫn bị lỗi duplicate key sau khi đã xóa rejected quotes,
+          // có thể do unique index hoặc race condition
+          // Thử xóa tất cả quotes (trừ approved) và tạo lại
+          await Quote.deleteMany({
+            so_id: serviceOrderId,
+            status: { $ne: "approved" },
+          }).exec();
+          
+          // Thử save lại
+          try {
+            await quote.save();
+          } catch (retryError) {
+            throw new DomainError(
+              `Không thể tạo báo giá do lỗi duplicate key. Vui lòng thử lại sau.`,
+              ERROR_CODES.QUOTE_ALREADY_EXISTS,
+              409
+            );
+          }
+        }
+      } else {
+        throw saveError;
+      }
+    }
+
+    // Cập nhật service order status - chỉ cập nhật nếu chưa ở trạng thái waiting_customer_approval
+    // (cho phép tạo quote mới sau khi quote cũ bị rejected)
+    if (serviceOrder.status !== "waiting_customer_approval") {
     serviceOrder.status = "waiting_customer_approval";
-    serviceOrder.waiting_approval_at = new Date(); // Lưu thời gian chuyển sang waiting_customer_approval
+    }
+    serviceOrder.waiting_approval_at = new Date(); // Cập nhật thời gian chờ phê duyệt
     await serviceOrder.save();
 
     await notificationService.notifyServiceOrderStatusChange({ serviceOrder });
@@ -275,6 +421,26 @@ class QuotesService {
     });
 
     return mapToQuoteDTO(quote);
+    } catch (error) {
+      // Log lỗi chi tiết để debug
+      console.error("[QuotesService] Error creating quote:", {
+        serviceOrderId,
+        error: error.message,
+        stack: error.stack,
+      });
+      
+      // Nếu đã là DomainError thì throw lại
+      if (error instanceof DomainError) {
+        throw error;
+      }
+      
+      // Nếu là lỗi khác, wrap thành DomainError
+      throw new DomainError(
+        `Lỗi khi tạo báo giá: ${error.message}`,
+        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+        500
+      );
+    }
   }
 
   async approveQuote(quoteId) {
@@ -489,6 +655,21 @@ class QuotesService {
 
     const serviceOrder = await ServiceOrder.findById(quote.so_id).exec();
     if (serviceOrder) {
+      // Khi quote bị rejected, chuyển service order về trạng thái inspection_completed
+      // để cho phép staff tạo quote mới
+      if (serviceOrder.status === "waiting_customer_approval") {
+        serviceOrder.status = "inspection_completed";
+        // Xóa waiting_approval_at để reset thời gian chờ phê duyệt
+        serviceOrder.waiting_approval_at = undefined;
+        await serviceOrder.save();
+        
+        // Gửi notification về việc thay đổi trạng thái
+        await notificationService.notifyServiceOrderStatusChange({ 
+          serviceOrder,
+          actorClerkId: null 
+        });
+      }
+      
       await notificationService.notifyQuoteRevisionRequested(
         serviceOrder,
         quote

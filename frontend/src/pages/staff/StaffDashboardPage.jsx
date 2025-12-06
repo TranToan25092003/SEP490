@@ -1,10 +1,13 @@
 import React from 'react';
-import { useLoaderData } from 'react-router-dom'; // Import useLoaderData
+import { useLoaderData, Link } from 'react-router-dom'; // Import useLoaderData
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Sector } from 'recharts';
 import { ShoppingCart, FileText, DollarSign, Users, TrendingUp } from 'lucide-react';
+import { StatusBadge } from "@/components/global/StatusBadge";
+import { translateServiceOrderStatus } from "@/utils/enumsTranslator";
+import { formatDateTime } from "@/lib/utils";
 
 // Function to format currency
 const formatCurrency = (value) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
@@ -79,23 +82,25 @@ const fallbackDashboardData = {
         { month: 'T3', DoanhThu: 0 },
     ],
     pieChartData: [],
-    potentialCustomers: [],
+    pendingOrders: [],
 };
-
-export async function staffDashboardLoader() {
-    return fallbackDashboardData;
-}
 
 export default function StaffDashboardPage() {
     // 1. Lấy dữ liệu thật từ loader
     const loaderData = useLoaderData() || fallbackDashboardData;
+    
+    // Debug: Log dữ liệu nhận được
+    React.useEffect(() => {
+        console.log("Dashboard data received:", loaderData);
+    }, [loaderData]);
+    
     const {
-        stats,
-        lineChartData,
-        barChartData,
-        pieChartData,
-        potentialCustomers
-    } = loaderData;
+        stats = fallbackDashboardData.stats,
+        lineChartData = fallbackDashboardData.lineChartData,
+        barChartData = fallbackDashboardData.barChartData,
+        pieChartData = fallbackDashboardData.pieChartData,
+        pendingOrders = fallbackDashboardData.pendingOrders
+    } = loaderData || {};
 
     const [activeIndex, setActiveIndex] = React.useState(0);
     const onPieEnter = (_, index) => {
@@ -114,7 +119,8 @@ export default function StaffDashboardPage() {
                         <ShoppingCart className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.orders}</div>
+                        <div className="text-2xl font-bold">{stats?.orders ?? 0}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Tổng số lệnh đã hoàn thành</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -123,7 +129,8 @@ export default function StaffDashboardPage() {
                         <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.requests}</div>
+                        <div className="text-2xl font-bold">{stats?.requests ?? 0}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Đang chờ xử lý</p>
                     </CardContent>
                 </Card>
                 <Card className="lg:col-span-1">
@@ -149,7 +156,8 @@ export default function StaffDashboardPage() {
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatCompactCurrency(stats.revenue)}</div>
+                        <div className="text-2xl font-bold">{formatCompactCurrency(stats?.revenue ?? 0)}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Từ các hóa đơn đã thanh toán</p>
                     </CardContent>
                 </Card>
                 <Card>
@@ -158,7 +166,8 @@ export default function StaffDashboardPage() {
                         <Users className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.customers}</div>
+                        <div className="text-2xl font-bold">{stats?.customers ?? 0}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Khách hàng đã sử dụng dịch vụ</p>
                     </CardContent>
                 </Card>
             </div>
@@ -236,34 +245,52 @@ export default function StaffDashboardPage() {
                     </CardContent>
                 </Card>
 
-                {/* Potential Customers Table */}
+                {/* Pending Orders Table */}
                 <Card className="lg:col-span-2">
                     <CardHeader>
-                        <CardTitle>Top 5 Khách Hàng Tiềm Năng</CardTitle>
+                        <CardTitle>Các Lệnh Đang Cần Xử Lý</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Mã KH</TableHead>
-                                    <TableHead>Họ Tên</TableHead>
-                                    <TableHead>Tổng Chi Tiêu</TableHead>
-                                    <TableHead>Số Điện Thoại</TableHead>
+                                    <TableHead>Số lệnh</TableHead>
+                                    <TableHead>Biển số xe</TableHead>
+                                    <TableHead>Khách hàng</TableHead>
+                                    <TableHead>Trạng thái</TableHead>
+                                    <TableHead>Ngày tạo</TableHead>
+                                    <TableHead>Thao tác</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {potentialCustomers.length > 0 ? (
-                                    potentialCustomers.map((customer, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{customer.id}</TableCell>
-                                            <TableCell>{customer.name}</TableCell>
-                                            <TableCell className="font-medium text-green-600">{formatCurrency(customer.spent)}</TableCell>
-                                            <TableCell>{customer.phone}</TableCell>
+                                {pendingOrders && pendingOrders.length > 0 ? (
+                                    pendingOrders.map((order) => (
+                                        <TableRow key={order.id}>
+                                            <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                                            <TableCell>{order.licensePlate}</TableCell>
+                                            <TableCell>{order.customerName}</TableCell>
+                                            <TableCell>
+                                                <StatusBadge
+                                                    status={translateServiceOrderStatus(order.status)}
+                                                    colorKey={order.status === "rescheduled" ? "rescheduled" : undefined}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{formatDateTime(order.createdAt)}</TableCell>
+                                            <TableCell>
+                                                <Link
+                                                    to={`/staff/service-order/${order.id}`}
+                                                    className="text-blue-600 hover:text-blue-800 underline text-sm"
+                                                >
+                                                    Xem chi tiết
+                                                </Link>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="text-center py-4 text-gray-500">Chưa có dữ liệu khách hàng.</TableCell>
+                                        <TableCell colSpan={6} className="text-center py-4 text-gray-500">
+                                            Không có lệnh nào đang cần xử lý.
+                                        </TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>

@@ -207,10 +207,9 @@ class ServiceOrderService {
         .exec();
     }
 
-    const warrantyPartIds =
-      warranty?.warranty_parts
-        ? warranty.warranty_parts.map((wp) => wp.part_id?._id?.toString())
-        : [];
+    const warrantyPartIds = warranty?.warranty_parts
+      ? warranty.warranty_parts.map((wp) => wp.part_id?._id?.toString())
+      : [];
 
     serviceOrder.items = items.map((item) => {
       const isWarrantyPart =
@@ -244,7 +243,7 @@ class ServiceOrderService {
 
     let customerName = serviceOrder.walk_in_customer?.name || "Khách vãng lai";
     let customerClerkId = null;
-    const customerPhone = serviceOrder.walk_in_customer?.phone || null;
+    let customerPhone = serviceOrder.walk_in_customer?.phone || null;
     let licensePlateInfo = serviceOrder.walk_in_vehicle?.license_plate || "—";
     let vehicleId = null;
 
@@ -257,6 +256,23 @@ class ServiceOrderService {
         customerMap[serviceOrder.booking_id.customer_clerk_id] ||
         customerName ||
         "Không xác định";
+
+      // Lấy số điện thoại từ Clerk user nếu không có từ walk_in
+      if (!customerPhone && customerClerkId) {
+        const { clerkClient } = require("../config/clerk");
+        try {
+          const user = await clerkClient.users.getUser(customerClerkId);
+          const primaryPhone =
+            user.phoneNumbers?.find(
+              (p) => p.id === user.primaryPhoneNumberId
+            ) || user.phoneNumbers?.[0];
+          customerPhone = primaryPhone?.phoneNumber || null;
+        } catch (error) {
+          console.error("Failed to fetch customer phone from Clerk:", error);
+          // Giữ nguyên customerPhone = null
+        }
+      }
+
       licensePlateInfo =
         serviceOrder.booking_id.vehicle_id?.license_plate || licensePlateInfo;
       vehicleId =
@@ -288,10 +304,7 @@ class ServiceOrderService {
     }));
 
     // Nếu có warranty, thêm warranty parts vào items với giá = 0
-    if (
-      warranty?.warranty_parts &&
-      warranty.warranty_parts.length > 0
-    ) {
+    if (warranty?.warranty_parts && warranty.warranty_parts.length > 0) {
       warranty.warranty_parts.forEach((wp) => {
         // Kiểm tra xem part này đã có trong items chưa
         const existingPartIndex = items.findIndex(
@@ -454,7 +467,9 @@ class ServiceOrderService {
   }
 
   async cancelServiceOrder(serviceOrderId, staffId, cancelReason) {
-    const serviceOrder = await ServiceOrder.findById(serviceOrderId).exec();
+    const serviceOrder = await ServiceOrder.findById(serviceOrderId)
+      .populate("booking_id")
+      .exec();
 
     if (!serviceOrder) {
       throw new DomainError(
@@ -476,6 +491,21 @@ class ServiceOrderService {
       throw new DomainError(
         "Không thể hủy lệnh sửa chữa đã hoàn thành",
         "SERVICE_ORDER_ALREADY_COMPLETED",
+        400
+      );
+    }
+
+    // Chỉ cho phép staff hủy ở 3 trạng thái: created, waiting_customer_approval, inspection_completed
+    const allowedStatuses = [
+      "created",
+      "waiting_customer_approval",
+      "inspection_completed",
+    ];
+
+    if (!allowedStatuses.includes(serviceOrder.status)) {
+      throw new DomainError(
+        `Không thể hủy lệnh sửa chữa ở trạng thái '${serviceOrder.status}'. Chỉ có thể hủy khi ở trạng thái: Đã tạo, Chờ khách duyệt, hoặc Đã kiểm tra.`,
+        "SERVICE_ORDER_INVALID_STATUS_FOR_CANCELLATION",
         400
       );
     }

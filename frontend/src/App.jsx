@@ -1,4 +1,10 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { useEffect } from "react";
+import {
+  createBrowserRouter,
+  Outlet,
+  RouterProvider,
+  useLocation,
+} from "react-router-dom";
 import { ClerkProvider, GoogleOneTap, SignedIn } from "@clerk/clerk-react";
 // import { testRouter } from "./routers/client/Test.router";
 import HomeLayout, { homeLayoutLoader } from "./layout/home-layout/HomeLayout";
@@ -53,6 +59,7 @@ import {
   adminServicesLoader,
   adminModelsLoader,
   adminBannersLoader,
+  staffDashboardLoader,
 } from "./utils/loaders";
 import StaffLayout from "./layout/staff-layout/StaffLayout";
 import { viVN } from "@clerk/localizations";
@@ -66,9 +73,7 @@ import StaffComplaintsPage from "./pages/staff/StaffComplaintsPage";
 import StaffComplaintDetail from "./pages/staff/StaffComplaintDetail";
 import ComplaintCategoryManager from "./pages/staff/ComplaintCategoryManager";
 import CreateComplaint from "./pages/customer/CreateComplaint";
-import StaffDashboardPage, {
-  staffDashboardLoader,
-} from "./pages/staff/StaffDashboardPage";
+import StaffDashboardPage from "./pages/staff/StaffDashboardPage";
 import ManagerBays from "./pages/manager/ManagerBays";
 import StaffInvoicesPage from "./pages/staff/StaffInvoicesPage";
 import StaffInvoiceDetail from "./pages/staff/StaffInvoiceDetail";
@@ -99,7 +104,7 @@ import { Analytics } from "@vercel/analytics/react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-const router = createBrowserRouter([
+const appRoutes = [
   {
     path: "/",
     element: <HomeLayout />,
@@ -375,7 +380,31 @@ const router = createBrowserRouter([
       },
     ],
   },
+];
+
+const router = createBrowserRouter([
+  {
+    element: <AppRouteLayout />,
+    children: appRoutes,
+  },
 ]);
+
+function AppRouteLayout() {
+  const location = useLocation();
+
+  useEffect(() => {
+    const root = document.getElementById("root") || document.scrollingElement;
+    if (root && typeof root.scrollTo === "function") {
+      root.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    } else if (root) {
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [location.pathname, location.search]);
+
+  return <Outlet />;
+}
 
 function App() {
   if (!PUBLISHABLE_KEY) {
