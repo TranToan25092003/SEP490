@@ -27,9 +27,9 @@ import { getServiceTaskTimelineEntry } from "@/api/serviceTasks";
 import { Spinner } from "@/components/ui/spinner";
 
 const timelineEntrySchema = z.object({
-  title: z.string().min(1, "Vui lòng nhập tiêu đề"),
-  comment: z.string().min(1, "Vui lòng nhập mô tả"),
-  media: z.array(z.any()).default([]),
+  title: z.string().trim().min(1, "Vui lòng nhập tiêu đề").max(100, "Tiêu đề quá dài"),
+  comment: z.string().trim().min(1, "Vui lòng nhập mô tả").max(5000, "Mô tả quá dài"),
+  media: z.array(z.any()).min(1, "Vui lòng tải lên ít nhất một hình ảnh"),
 });
 
 const MEDIA_FOLDER = "service_tasks_content";
@@ -132,7 +132,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
         </Field>
 
         <Field>
-          <FieldLabel>Hình ảnh công việc</FieldLabel>
+          <FieldLabel className="required-asterisk">Hình ảnh công việc</FieldLabel>
           <FileUpload
             acceptedMimeTypes={["image/*"]}
             maxSizePerFileKB={5120}
@@ -152,6 +152,7 @@ const ServiceTaskAddModal = NiceModal.create(({ taskId, entryId }) => {
           <FieldDescription>
             Tải lên hình ảnh minh họa quá trình thực hiện
           </FieldDescription>
+          {errors.media && <FieldError>{errors.media.message}</FieldError>}
         </Field>
 
         <div className="ml-auto flex gap-2"></div>

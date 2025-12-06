@@ -25,11 +25,10 @@ import { uploadImageToFolderWithProgress } from "@/utils/uploadCloudinary";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { getServiceTaskById } from "@/api/serviceTasks";
-import { set } from "date-fns";
 
 const inspectionFormSchema = z.object({
-  comment: z.string().min(1, "Vui lòng nhập nhận xét"),
-  media: z.array(z.any()).default([]),
+  comment: z.string().trim().min(1, "Vui lòng nhập nhận xét").max(5000, "Nhận xét quá dài"),
+  media: z.array(z.any()).min(1, "Vui lòng tải lên ít nhất một hình ảnh")
 });
 
 const MEDIA_FOLDER = "service_tasks_content";
@@ -117,7 +116,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
         </Field>
 
         <Field>
-          <FieldLabel>Hình ảnh kiểm tra</FieldLabel>
+          <FieldLabel className="required-asterisk">Hình ảnh kiểm tra</FieldLabel>
           <FileUpload
             acceptedMimeTypes={["image/*"]}
             maxSizePerFileKB={5120}
@@ -137,6 +136,7 @@ const InspectionTaskModal = NiceModal.create(({ taskId }) => {
           <FieldDescription>
             Tải lên hình ảnh minh họa tình trạng xe (tối đa 10 ảnh, mỗi ảnh 5MB)
           </FieldDescription>
+          {errors.media && <FieldError>{errors.media.message}</FieldError>}
         </Field>
       </FieldGroup>
       <DialogFooter>

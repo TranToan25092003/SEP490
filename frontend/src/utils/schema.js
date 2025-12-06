@@ -36,6 +36,6 @@ export const vehicleSchema = z.object({
 
 export const phoneNumberSchema = z
   .string({ required_error: "Vui lòng nhập số điện thoại" })
-  .min(1, "Vui lòng nhập số điện thoại")
   .trim()
+  .min(1, "Vui lòng nhập số điện thoại")
   .regex(/^[0-9]{10,11}$/, "Số điện thoại không hợp lệ");

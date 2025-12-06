@@ -1,3 +1,6 @@
+require("dotenv").config(); // .env
+require("./instrument");
+
 // create server
 const express = require("express");
 const { createServer } = require("http");
@@ -5,10 +8,8 @@ const app = express();
 const server = createServer(app);
 const DomainError = require("./errors/domainError");
 
-
 //end create server
 
-require("dotenv").config(); // .env
 // database
 const database = require("./config/database");
 const port = process.env.PORT;
@@ -65,6 +66,11 @@ adminRouter(app);
 
 const separationMakesNoSense = require("./API");
 separationMakesNoSense(app);
+
+if (process.env.NODE_ENV === "production") {
+  const Sentry = require("@sentry/node");
+  Sentry.setupExpressErrorHandler(app);
+}
 
 app.use((err, _, res, __) => {
   console.error(err);
