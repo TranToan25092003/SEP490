@@ -670,25 +670,38 @@ const CustomerInvoiceDetail = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {(invoice.items ?? []).map((item, index) => (
-                          <TableRow key={`${item.name}-${index}`}>
-                            <TableCell className="font-medium">
-                              {item.name}
-                            </TableCell>
-                            <TableCell className="capitalize">
-                              {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {item.quantity}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatPrice(item.price)}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {formatPrice(item.lineTotal)}
-                            </TableCell>
-                          </TableRow>
-                        ))}
+                        {(invoice.items ?? []).map((item, index) => {
+                          const maxLength = 30;
+                          const displayName =
+                            item.name.length > maxLength
+                              ? item.name.substring(0, maxLength) + "..."
+                              : item.name;
+
+                          return (
+                            <TableRow key={`${item.name}-${index}`}>
+                              <TableCell className="font-medium max-w-[200px]">
+                                <span
+                                  className="block truncate text-sm"
+                                  title={item.name}
+                                >
+                                  {displayName}
+                                </span>
+                              </TableCell>
+                              <TableCell className="capitalize">
+                                {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {item.quantity}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatPrice(item.price)}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {formatPrice(item.lineTotal)}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
                         {(invoice.items ?? []).length === 0 && (
                           <TableRow>
                             <TableCell
