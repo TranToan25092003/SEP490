@@ -90,11 +90,17 @@ const quotesTableDefinition = [
     accessorKey: "pendingCountdown",
     cell: ({ row }) => {
       const quote = row.original;
-      if (quote.status !== "pending") return null;
+      
+      // Chỉ hiển thị đếm ngược khi quote ở trạng thái pending
+      if (quote.status !== "pending") {
+        return <span className="text-muted-foreground">-</span>;
+      }
 
       // giả sử backend trả về createdAt, ta đếm ngược 30 phút từ thời điểm tạo
       const createdAt = quote.createdAt;
-      if (!createdAt) return null;
+      if (!createdAt) {
+        return <span className="text-muted-foreground">-</span>;
+      }
 
       const targetTime =
         new Date(createdAt).getTime() + QUOTE_PENDING_MINUTES * 60 * 1000;
@@ -115,9 +121,18 @@ const quotesTableDefinition = [
     cell: ({ row }) => {
       const quote = row.original;
       if (quote.status === "rejected" && quote.rejectedReason) {
+        const maxLength = 50; // Giới hạn hiển thị 50 ký tự
+        const reason = quote.rejectedReason;
+        const truncatedReason = reason.length > maxLength 
+          ? reason.substring(0, maxLength) + "..." 
+          : reason;
+        
         return (
-          <span className="text-sm text-muted-foreground italic">
-            {quote.rejectedReason}
+          <span 
+            className="text-sm text-muted-foreground italic block max-w-xs truncate"
+            title={reason} // Tooltip hiển thị toàn bộ lý do
+          >
+            {truncatedReason}
           </span>
         );
       }
@@ -143,14 +158,37 @@ const BookingQuotesContent = ({ data }) => {
 
   const handleViewDetail = async (quote) => {
     try {
+      // Revalidate data first to ensure we have the latest quote status
+      await revalidator.revalidate();
+      
+      // Re-fetch quotes to get latest data
+      const latestQuotesData = await getQuotesForServiceOrder(
+        bookingServiceOrderId,
+        1,
+        10
+      );
+      
+      // Find the quote in the latest data to ensure it still exists and get latest status
+      const latestQuote = latestQuotesData?.quotes?.find(q => q.id === quote.id);
+      
+      if (!latestQuote) {
+        toast.error("Báo giá không còn tồn tại. Đang tải lại danh sách...");
+        revalidator.revalidate();
+        return;
+      }
+
+      // Only allow accept/reject for pending quotes
+      const canAcceptReject = latestQuote.status === "pending";
+
+      // Use the latest quote data
       const result = await NiceModal.show(ViewQuoteDetailModal, {
-        quoteId: quote.id,
-        allowAcceptReject: true,
+        quoteId: latestQuote.id,
+        allowAcceptReject: canAcceptReject,
         serviceOrder: serviceOrderContext,
       });
 
       if (result.action === "accept") {
-        const confirmPromise = approveQuote(quote.id);
+        const confirmPromise = approveQuote(latestQuote.id);
         await toast
           .promise(confirmPromise, {
             loading: "Đang phê duyệt báo giá...",
@@ -158,8 +196,10 @@ const BookingQuotesContent = ({ data }) => {
             error: "Phê duyệt báo giá thất bại.",
           })
           .unwrap();
+        // Revalidate after approve
+        revalidator.revalidate();
       } else if (result.action === "reject") {
-        const rejectPromise = rejectQuote(quote.id, result.reason);
+        const rejectPromise = rejectQuote(latestQuote.id, result.reason);
 
         await toast
           .promise(rejectPromise, {
@@ -168,11 +208,17 @@ const BookingQuotesContent = ({ data }) => {
             error: "Từ chối báo giá thất bại.",
           })
           .unwrap();
+        // Revalidate after reject to get updated quotes list
+        revalidator.revalidate();
       }
-
-      revalidator.revalidate();
     } catch (error) {
-      console.log("Modal closed:", error);
+      // Only log if it's not a modal close error
+      if (error?.message && !error.message.includes("Modal closed") && !error.message.includes("rejected")) {
+        console.error("Error in handleViewDetail:", error);
+        toast.error("Có lỗi xảy ra. Vui lòng thử lại.");
+        // Revalidate on error to ensure data is fresh
+        revalidator.revalidate();
+      }
     }
   };
 
