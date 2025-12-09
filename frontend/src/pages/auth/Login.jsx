@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import photo from "../../assets/image.png";
 import { useSignIn, useUser } from "@clerk/clerk-react";
-import { getRoleRedirectPath } from "@/utils/roleRedirect";
+import { getRoleRedirectPath, checkIsFirstLogin } from "@/utils/roleRedirect";
 
 import { useNavigate, Route, Routes, Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -18,8 +18,21 @@ const Login = () => {
   useEffect(() => {
     if (!isUserLoaded) return;
     if (isSignedIn && user) {
-      const destination = getRoleRedirectPath(user);
-      navigate(destination, { replace: true });
+      console.log("Login: User signed in, checking first login...");
+      // Kiểm tra xem đây có phải là lần đăng nhập đầu tiên không
+      checkIsFirstLogin(user).then((isFirstLogin) => {
+        console.log("Login: First login check result:", isFirstLogin);
+        if (isFirstLogin) {
+          // Nếu là lần đầu, redirect đến profile với query param firstLogin
+          console.log("Login: Redirecting to /profile?firstLogin=true");
+          navigate("/profile?firstLogin=true", { replace: true });
+        } else {
+          // Nếu không phải lần đầu, redirect theo role
+          const destination = getRoleRedirectPath(user);
+          console.log("Login: Redirecting to:", destination);
+          navigate(destination, { replace: true });
+        }
+      });
     }
   }, [isSignedIn, user, isUserLoaded, navigate]);
 
