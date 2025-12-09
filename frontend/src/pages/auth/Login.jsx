@@ -156,8 +156,9 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="text-black mt-8 md:mt-0 w-[90%] max-w-md flex flex-col bg-white/95 rounded-2xl shadow-lg border border-gray-200 px-6 py-8 sm:px-8 sm:py-10">
-            <h1 className="uppercase text-[#D31705] text-2xl font-semibold text-center">
+          <div className="text-black mt-8 md:mt-0 w-[90%] max-w-md flex flex-col bg-white/95 rounded-2xl shadow-lg border border-gray-200 px-6 py-8 sm:px-8 sm:py-10
+                         lg:w-3/4 lg:max-w-none lg:bg-transparent lg:rounded-none lg:shadow-none lg:border-none lg:px-0 lg:py-0">
+            <h1 className="uppercase text-[#D31705] text-2xl font-semibold text-center lg:text-left">
               ĐĂNG NHẬP
             </h1>
 
@@ -288,7 +289,7 @@ const Login = () => {
 
               <div className="w-full">
                 <button
-                  className="uppercase mt-8 bg-[#DF1D01] rounded-full h-full flex items-center justify-center gap-2 px-4 py-3 text-lg cursor-pointer hover:bg-red-500 disabled:opacity-70 shadow-md"
+                  className="uppercase mt-8 bg-[#DF1D01] rounded-lg h-10 w-full flex items-center justify-center gap-2 px-6 py-2 text-base cursor-pointer hover:bg-red-500 disabled:opacity-70 shadow-md"
                   disabled={isLoading}
                   onClick={(e) => {
                     handleEmailSignin(e);
@@ -296,10 +297,10 @@ const Login = () => {
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    width="25"
-                    height="24"
+                    width="20"
+                    height="20"
                     viewBox="0 0 25 24"
-                    className="ml-5 my-1"
+                    className=""
                     fill="none"
                   >
                     <path
@@ -315,7 +316,7 @@ const Login = () => {
                       fill="white"
                     />
                   </svg>
-                  <p className="text-white text-xl font-bold mx-2 my-1 mr-5">
+                  <p className="text-white text-base font-bold">
                     Đăng Nhập
                   </p>
                 </button>
