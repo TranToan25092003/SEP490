@@ -18,14 +18,14 @@ import { vehicleSchema, phoneNumberSchema } from "@/utils/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const formSchema = z.object({
-  customerName: z.string().min(1, "Vui lòng nhập tên khách hàng").max(50, "Tên khách hàng quá dài").trim(),
+  customerName: z.string().trim().min(1, "Vui lòng nhập tên khách hàng").max(50, "Tên khách hàng quá dài"),
   phone: phoneNumberSchema,
   licensePlate: vehicleSchema.shape.license_plate,
-  address: z.string().max(100, "Địa chỉ quá dài").trim().optional(),
+  address: z.string().trim().max(100, "Địa chỉ quá dài").optional(),
   serviceIds: z
-    .array(z.string())
+    .array(z.string().trim())
     .min(1, "Vui lòng chọn ít nhất một loại lệnh"),
-  note: z.string().max(500, "Ghi chú quá dài").optional(),
+  note: z.string().trim().max(500, "Ghi chú quá dài").optional(),
 })
 
 const ServiceOrderAddForm = ({ onSubmit, services, className, ...props }) => {

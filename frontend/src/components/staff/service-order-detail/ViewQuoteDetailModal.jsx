@@ -27,9 +27,9 @@ import { toast } from "sonner";
 // Rejection Reason Schema
 const rejectionReasonSchema = z.object({
   reason: z.string()
+    .trim()
     .min(10, "Lý do từ chối phải có ít nhất 10 ký tự")
     .max(500, "Lý do từ chối không được vượt quá 500 ký tự")
-    .trim()
 });
 
 // Rejection Reason Modal Component

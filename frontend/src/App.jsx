@@ -99,6 +99,8 @@ import {
   authenTicationForAdminLoader,
   authenTicationForManagerLoader,
 } from "./utils/authentication.loader";
+import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
@@ -419,6 +421,8 @@ function App() {
         <NiceModal.Provider>
           <Toaster></Toaster>
           <GlobalLoginLogger />
+          <SpeedInsights />
+          <Analytics />
           <RouterProvider router={router} />
         </NiceModal.Provider>
       </ClerkProvider>
