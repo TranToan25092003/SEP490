@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import photo from "../../assets/image.png";
-import { useSignIn, useSignUp, useUser } from "@clerk/clerk-react";
+import { useSignIn, useUser } from "@clerk/clerk-react";
 import { getRoleRedirectPath } from "@/utils/roleRedirect";
 
 import { useNavigate, Route, Routes, Link } from "react-router-dom";
@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 const Login = () => {
   const { signIn, isLoaded: isSignInLoaded, setActive } = useSignIn();
-  const { signUp } = useSignUp();
   const { isSignedIn, isLoaded: isUserLoaded, user } = useUser();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -72,7 +71,9 @@ const Login = () => {
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/auth/role-redirect",
       });
-    } catch (error) {}
+    } catch (error) {
+      toast.error(error.message || "Không thể đăng nhập bằng Facebook.");
+    }
   };
 
   const handleGoogleSignin = async () => {
@@ -82,13 +83,25 @@ const Login = () => {
         redirectUrl: "/sso-callback",
         redirectUrlComplete: "/auth/role-redirect",
       });
-    } catch (error) {}
+    } catch (error) {
+      toast.error(error.message || "Không thể đăng nhập bằng Google.");
+    }
   };
   return (
-    <div className="flex items-center justify-center bg-black min-h-screen">
-      <div className="flex flex-col md:flex-row w-full relative">
-        {/* Cột trái (ảnh + overlay text) */}
-        <div className="relative w-full md:w-1/2 h-[300px] md:h-screen ">
+    <div
+      className="flex items-center justify-center min-h-screen bg-black"
+      style={{
+        backgroundImage: `url(${photo})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay chỉ trên mobile để chữ nổi trên ảnh nền */}
+      <div className="absolute inset-0 bg-black/60 lg:hidden" />
+
+      <div className="relative flex flex-col lg:flex-row w-full">
+        {/* Cột trái (ảnh + overlay text) - ẩn khi < 990px */}
+        <div className="relative hidden lg:block lg:w-1/2 h-screen">
           <img src={photo} className="h-full w-full object-cover" alt="" />
           <div className="absolute top-[80px] md:top-[125px] left-[30px] md:ml-[72px] w-[250px] md:w-[350px] h-auto [&_*]:text-white">
             <img
@@ -109,7 +122,7 @@ const Login = () => {
         </div>
 
         {/* Cột phải (form đăng ký / đăng nhập) */}
-        <div className="relative w-full md:w-1/2 bg-white border border-red-500 flex flex-col justify-center items-center py-8 md:py-0">
+        <div className="relative w-full lg:w-1/2 bg-white/95 lg:bg-white border border-red-500 flex flex-col justify-center items-center py-10 lg:py-0">
           <div className="absolute top-4 left-4 md:top-4 md:left-4">
             <Link
               to="/"
@@ -133,7 +146,7 @@ const Login = () => {
               </span>
             </Link>
           </div>
-          <div className="absolute top-4 right-4 md:mt-[5px] md:ml-[40px] bg-white w-auto md:w-[260px] h-auto inline-flex text-sm md:text-base">
+          <div className="absolute top-4 right-4 md:mt-[5px] md:ml-[40px] w-auto md:w-[260px] h-auto inline-flex text-sm md:text-base">
             <p className="font-normal leading-normal">Bạn chưa có tài khoản?</p>
             <button
               onClick={() => navigate("/register")}
@@ -143,20 +156,13 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="text-black mt-10 md:mt-0 w-3/4 flex flex-col ">
-            <h1 className="uppercase  text-[#D31705]  text-2xl font-semibold">
+          <div className="text-black mt-8 md:mt-0 w-[90%] max-w-md flex flex-col bg-white/95 rounded-2xl shadow-lg border border-gray-200 px-6 py-8 sm:px-8 sm:py-10">
+            <h1 className="uppercase text-[#D31705] text-2xl font-semibold text-center">
               ĐĂNG NHẬP
             </h1>
 
             <div
-              className="border border-[#333333]
-            flex
-            justify-center
-            items-center
-            mt-5
-            h-10
-            cursor-pointer hover:bg-gray-200
-            "
+              className="border border-[#333333] flex justify-center items-center mt-5 h-10 cursor-pointer hover:bg-gray-200 rounded-full"
               onClick={handleGoogleSignin}
               style={{
                 border: "1px solid #333",
@@ -192,14 +198,7 @@ const Login = () => {
             </div>
 
             <div
-              className="border border-[#333333]
-            flex
-            justify-center
-            items-center
-            mt-5
-            h-10
-            cursor-pointer hover:bg-gray-200
-            "
+              className="border border-[#333333] flex justify-center items-center mt-4 h-10 cursor-pointer hover:bg-gray-200 rounded-full"
               onClick={handleFacebookSignin}
               style={{
                 border: "1px solid #333",
@@ -229,7 +228,7 @@ const Login = () => {
             </div>
 
             <div className="flex flex-col  w-full mt-5">
-              <p>Tài khoản</p>
+              <p className="text-sm font-medium">Tài khoản</p>
               <input
                 type="text"
                 placeholder="Tài khoản"
@@ -237,11 +236,11 @@ const Login = () => {
                 onChange={(e) => {
                   setEmail(e.target.value);
                 }}
-                className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               <div className="flex items-center justify-between">
-                <p className="mt-5">Mật khẩu</p>
+                <p className="mt-5 text-sm font-medium">Mật khẩu</p>
 
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -274,7 +273,7 @@ const Login = () => {
                 onChange={(e) => {
                   setPassword(e.target.value);
                 }}
-                className="border border-gray-400 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded-lg px-3 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               <div className="flex justify-end">
@@ -289,7 +288,7 @@ const Login = () => {
 
               <div className="w-full">
                 <button
-                  className="uppercase mt-3 bg-[#DF1D01] rounded-4xl h-full flex items-center justify-center gap-1 cursor-pointer hover:bg-red-400"
+                  className="uppercase mt-8 bg-[#DF1D01] rounded-full h-full flex items-center justify-center gap-2 px-4 py-3 text-lg cursor-pointer hover:bg-red-500 disabled:opacity-70 shadow-md"
                   disabled={isLoading}
                   onClick={(e) => {
                     handleEmailSignin(e);

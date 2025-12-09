@@ -96,28 +96,24 @@ const BANK_CONFIG = {
   ACCOUNT_NAME: "NGUYEN TUONG HUY",
 };
 
-console.log(BANK_CONFIG);
+// console.log(BANK_CONFIG);
 
 // Tạo URL QR code từ VietQR
 const generateQRCodeUrl = (amount, invoiceNumber) => {
   const { BANK_ID, ACCOUNT_NO, ACCOUNT_NAME } = BANK_CONFIG;
-  // Format amount: chuyển sang số nguyên (loại bỏ phần thập phân nếu có)
+
   const amountValue = Math.round(Number(amount)).toString();
 
-  // Encode các tham số để đảm bảo URL hợp lệ
   const params = new URLSearchParams({
     amount: amountValue,
     addInfo: invoiceNumber || "",
     accountName: ACCOUNT_NAME,
   });
 
-  // Format URL: nếu không có template thì dùng format compact hoặc để trống
-  // Thử format: BANK_ID-ACCOUNT_NO-compact.png hoặc BANK_ID-ACCOUNT_NO.png
   const url = `https://img.vietqr.io/image/${BANK_ID}-${ACCOUNT_NO}-compact.png?${params.toString()}`;
 
-  // Log để debug (có thể xóa sau)
-  console.log("QR Code URL:", url);
-  console.log("Amount:", amountValue, "Invoice:", invoiceNumber);
+  // console.log("QR Code URL:", url);
+  // console.log("Amount:", amountValue, "Invoice:", invoiceNumber);
 
   return url;
 };

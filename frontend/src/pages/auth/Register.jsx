@@ -124,9 +124,15 @@ const Register = () => {
   };
 
   return (
-    <div className="flex items-center justify-center bg-black min-h-screen">
-      <div className="flex flex-col md:flex-row w-full relative">
-        <div className="relative w-full md:w-1/2 h-[300px] md:h-screen ">
+    <div
+      className="flex items-center justify-center min-h-screen bg-black"
+      style={{ backgroundImage: `url(${photo})`, backgroundSize: "cover", backgroundPosition: "center" }}
+    >
+      {/* Overlay chỉ hiện trên mobile để làm mờ ảnh nền */}
+      <div className="absolute inset-0 bg-black/60 lg:hidden" />
+
+      <div className="flex flex-col lg:flex-row w-full relative">
+        <div className="relative hidden lg:block lg:w-1/2 h-screen ">
           <img src={photo} className="h-full w-full object-cover" alt="" />
           <div className="absolute top-[80px] md:top-[125px] left-[30px] md:ml-[72px] w-[250px] md:w-[350px] h-auto [&_*]:text-white">
             <img
@@ -146,7 +152,7 @@ const Register = () => {
           </div>
         </div>
 
-        <div className="relative w-full md:w-1/2 bg-white border border-red-500 flex flex-col justify-center items-center py-8 md:py-0">
+        <div className="relative w-full lg:w-1/2 bg-white/95 lg:bg-white border border-red-500 flex flex-col justify-center items-center py-8 lg:py-0">
           <div className="absolute top-4 right-4 md:mt-[5px] md:ml-[40px] bg-white w-auto md:w-[260px] h-auto inline-flex text-sm md:text-base">
             <p className="font-normal leading-normal">Bạn đã có tài khoản?</p>
             <button

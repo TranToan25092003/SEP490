@@ -813,22 +813,22 @@ const LayoutProfile = () => {
             onValueChange={handleTabChange}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3 max-w-lg bg-gray-100 rounded-lg">
+            <TabsList className="flex flex-wrap gap-2 w-full bg-gray-100 rounded-lg p-1 md:grid md:grid-cols-3 md:max-w-xl md:gap-0">
               <TabsTrigger
                 value="personal"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <User className="h-4 w-4" /> Thông tin cá nhân
               </TabsTrigger>
               <TabsTrigger
                 value="vehicle"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <Car className="h-4 w-4" /> Thông Tin Xe
               </TabsTrigger>
               <TabsTrigger
                 value="history"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <History className="h-4 w-4" /> Lịch sử sửa xe
               </TabsTrigger>
