@@ -146,7 +146,7 @@ function ItemListPage() {
 
   return (
     <main className="w-full bg-white">
-      <section className="relative w-full mb-0 lg:mb-20 md:mb-16 overflow-hidden">
+      <section className="relative w-full mb-0 lg:mb-20 md:mb-16 overflow-visible">
         <div className="relative h-[500px] w-full md:h-[600px]">
           <img
             src={productHeroBg}
@@ -162,7 +162,7 @@ function ItemListPage() {
           </div>
         </div>
 
-        <div className="relative z-20 w-11/12 max-w-7xl mx-auto -mt-24 lg:absolute lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-1/2 lg:mt-0">
+        <div className="relative z-20 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 md:-mt-24 lg:absolute lg:bottom-8 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-1/2 lg:mt-0">
           <div className="rounded-md bg-zinc-800 shadow-2xl">
             <div className="flex items-center justify-between rounded-t-md px-6 py-3">
               <h2 className="text-base font-bold text-white">Bộ Lọc</h2>
