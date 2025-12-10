@@ -146,15 +146,15 @@ function ItemListPage() {
 
   return (
     <main className="w-full bg-white">
-      <section className="relative w-full mb-20 md:mb-16">
-        <div className="h-[500px] w-full md:h-[600px]">
+      <section className="relative w-full mb-0 lg:mb-20 md:mb-16 overflow-visible">
+        <div className="relative h-[500px] w-full md:h-[600px]">
           <img
             src={productHeroBg}
             alt="Motorcycle"
-            className="h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-black/60"></div>
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center text-white">
+          <div className="relative z-10 flex h-full flex-col items-center justify-center text-center text-white">
             <h1 className="text-5xl font-bold md:text-7xl">Phụ Tùng</h1>
             <p className="mt-4 text-lg md:text-xl">
               Danh sách phụ tùng của chúng tôi
@@ -162,7 +162,7 @@ function ItemListPage() {
           </div>
         </div>
 
-        <div className="absolute bottom-6 left-1/2 z-20 w-11/12 max-w-7xl -translate-x-1/2 translate-y-1/2">
+        <div className="relative z-20 mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 md:-mt-24 lg:absolute lg:bottom-8 lg:left-1/2 lg:-translate-x-1/2 lg:translate-y-1/2 lg:mt-0">
           <div className="rounded-md bg-zinc-800 shadow-2xl">
             <div className="flex items-center justify-between rounded-t-md px-6 py-3">
               <h2 className="text-base font-bold text-white">Bộ Lọc</h2>
@@ -176,7 +176,7 @@ function ItemListPage() {
                 Bỏ lọc
               </Button>
             </div>
-            <div className="rounded-b-md bg-zinc-800 p-6 pt-2">
+            <div className="rounded-b-md bg-zinc-800 p-6 pt-2 ">
               <div className="flex w-full flex-col gap-4 lg:flex-row">
                 <div className="flex-1 min-w-[180px]">
                   <Select
@@ -305,36 +305,34 @@ function ItemListPage() {
         </div>
       </section>
 
-      <section className="w-full mb-12">
-        <div className="relative left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] w-screen">
-          <div className="relative mx-auto max-w-[1920px]">
-            <img
-              src={statsBg}
-              alt="Abstract background"
-              className="absolute inset-0 h-full w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-zinc-800/80"></div>
-            <div className="relative z-10 grid grid-cols-1 gap-8 px-8 py-16 text-white sm:grid-cols-2 lg:grid-cols-4">
-              {stats.map((stat, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-center gap-4"
-                >
-                  <stat.icon
-                    className="h-14 w-14 flex-shrink-0 text-white"
-                    strokeWidth={1.5}
-                  />
-                  <div className="flex flex-col">
-                    <div className="text-5xl font-bold leading-10">
-                      <AnimatedCounter endValue={stat.value} />+
-                    </div>
-                    <div className="mt-2 text-sm font-normal uppercase leading-none">
-                      {stat.label}
-                    </div>
+      <section className="w-full mb-12 overflow-hidden bg-zinc-900">
+        <div className="relative mx-auto max-w-7xl">
+          <img
+            src={statsBg}
+            alt="Abstract background"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-zinc-800/80"></div>
+          <div className="relative z-10 grid grid-cols-1 gap-8 px-6 py-12 text-white sm:grid-cols-2 lg:grid-cols-4 lg:px-12 lg:py-16">
+            {stats.map((stat, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-center gap-4"
+              >
+                <stat.icon
+                  className="h-14 w-14 flex-shrink-0 text-white"
+                  strokeWidth={1.5}
+                />
+                <div className="flex flex-col">
+                  <div className="text-5xl font-bold leading-10">
+                    <AnimatedCounter endValue={stat.value} />+
+                  </div>
+                  <div className="mt-2 text-sm font-normal uppercase leading-none">
+                    {stat.label}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>

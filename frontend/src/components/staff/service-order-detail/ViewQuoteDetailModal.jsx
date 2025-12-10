@@ -129,10 +129,20 @@ const ViewQuoteDetailModal = NiceModal.create(({
       setIsLoading(true);
       setError(null);
       const data = await getQuoteById(quoteId);
+      
+      // Check if quote exists and is valid
+      if (!data) {
+        throw new Error("Báo giá không tồn tại hoặc đã bị xóa");
+      }
+      
       setQuote(data);
     } catch (err) {
-      setError(err.message || "Lỗi khi tải chi tiết báo giá");
+      const errorMessage = err.response?.data?.message || err.message || "Lỗi khi tải chi tiết báo giá";
+      setError(errorMessage);
       console.error("Error fetching quote detail:", err);
+      
+      // If quote not found or invalid, show error but don't auto-close
+      // Let user decide to close or retry
     } finally {
       setIsLoading(false);
     }

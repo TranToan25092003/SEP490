@@ -241,7 +241,11 @@ export default function StaffInvoiceDetail() {
                     <TableBody>
                       {(invoice.items ?? []).map((item, index) => (
                         <TableRow key={`${item.name}-${index}`}>
-                          <TableCell>{item.name}</TableCell>
+                          <TableCell className="max-w-xs">
+                            <span className="block truncate" title={item.name}>
+                              {item.name}
+                            </span>
+                          </TableCell>
                           <TableCell>
                             {item.type === "part" ? "Phụ tùng" : "Dịch vụ"}
                           </TableCell>
