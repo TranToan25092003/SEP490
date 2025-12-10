@@ -64,11 +64,7 @@ function Home() {
   return (
     <main className="w-full">
       {/* Hero Carousel - full-bleed */}
-      <section
-        className={`bg-black transition-all duration-1000 ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
-      >
+      <section>
         <div className="mx-auto max-w-[1920px]">
           <Carousel className="w-full" setApi={setApi}>
             <CarouselContent className="">
@@ -87,7 +83,7 @@ function Home() {
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
                       {/* 3. Content (top layer, with z-index) */}
-                      <div className="relative z-10 flex h-full w-full items-start md:items-center">
+                      <div className={`relative z-10 flex h-full w-full items-start md:items-center ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} transition-all duration-1000 delay-500`}>
                         <div className="mx-auto mt-14 sm:mt-20 md:mt-0 space-y-4 p-4 text-center md:ml-28 md:space-y-6 md:p-0 lg:ml-40 xl:ml-44 2xl:ml-48">
                           <div className="justify-start text-3xl sm:text-4xl md:text-5xl font-semibold text-white/95 md:text-white xl:text-6xl">
                             MotorMate
@@ -133,9 +129,7 @@ function Home() {
 
       {/* Phụ Tùng Nổi Bật */}
       <section
-        className={`transition-all duration-1000 delay-200 ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
+        className={`transition-all duration-1000 delay-200`}
       >
         <div className="relative w-full overflow-hidden bg-black">
           {/* Background Image and Overlay */}
@@ -212,9 +206,7 @@ function Home() {
 
       {/* SECTION: Services --- */}
       <section
-        className={`bg-white py-16 md:py-24 transition-all duration-1000 delay-300 ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
+        className={`bg-white py-16 md:py-24`}
       >
         <div className="mx-auto max-w-[1920px] px-4 sm:px-8 md:px-12 lg:px-16">
           {/* Section Header */}
@@ -265,19 +257,13 @@ function Home() {
       </section>
 
       {/* --- NEW CTA SECTION --- */}
-      <section
-        className={`transition-all duration-1000 delay-500 ${
-          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-        }`}
-      >
+      <section>
         <div className="relative mx-auto max-w-[1920px]">
           <div className={`flex items-center justify-center bg-black/30 md:justify-end py-20 md:py-40 bg-cover bg-center`} style={{
             backgroundImage: `url(${ctaBg})`
           }}>
             <div
-              className={`w-11/12 max-w-xl border-4 border-white p-6 sm:p-8 text-white text-center md:text-left md:mr-16 lg:mr-24 transition-all duration-700 delay-700 ${
-                isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
-              }`}
+              className={`w-11/12 max-w-xl border-4 border-white p-6 sm:p-8 text-white text-center md:text-left md:mr-16 lg:mr-24`}
             >
               <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider md:text-4xl">
                 Chào mừng bạn đến với{" "}
