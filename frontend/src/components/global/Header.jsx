@@ -23,10 +23,14 @@ import SignOutLink from "../navbar/SignOutLink";
 import SearchIcon from "../icons/SearchIcon";
 import NotificationBell from "./NotificationBell"; // Đổi tên import
 import { ArrowUpDown, ChevronsUpDown } from "lucide-react";
+import { getPrimaryRole } from "@/utils/roleRedirect";
 
 const Header = () => {
   const navigate = useNavigate();
   const { isSignedIn, user } = useUser();
+  const primaryRole = getPrimaryRole(user);
+  const hasManageAccess = ["staff", "manager", "admin"].includes(primaryRole);
+  const managePath = primaryRole === "staff" ? "/staff" : "/manager";
   const [groupedModels, setGroupedModels] = useState([]);
   const [isPartsMenuOpen, setIsPartsMenuOpen] = useState(false);
 
@@ -137,6 +141,14 @@ const Header = () => {
                         >
                           Khiếu Nại
                         </DropdownMenuItem>
+
+                        {hasManageAccess && (
+                          <DropdownMenuItem
+                            onSelect={() => navigate(managePath)}
+                          >
+                            Trang quản lý
+                          </DropdownMenuItem>
+                        )}
 
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-red-600 focus:bg-red-50 focus:text-red-700">

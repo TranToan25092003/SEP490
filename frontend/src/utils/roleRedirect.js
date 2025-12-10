@@ -102,3 +102,34 @@ export function getRoleRedirectPath(user) {
   const primaryRole = getPrimaryRole(user);
   return ROLE_ROUTE_MAP[primaryRole] || ROLE_ROUTE_MAP.default;
 }
+
+/**
+ * Kiểm tra xem đây có phải là lần đăng nhập đầu tiên không
+ * Chỉ dựa vào việc user đã có vehicle hay chưa
+ */
+export async function checkIsFirstLogin(user) {
+  if (!user) {
+    console.log("checkIsFirstLogin: No user provided");
+    return false;
+  }
+
+  // Kiểm tra vehicles (cần gọi API)
+  try {
+    // Dynamic import để tránh circular dependency
+    const { customFetch } = await import("@/utils/customAxios");
+    const response = await customFetch("/profile/vehicles/get");
+    const vehicles = response.data?.data || [];
+    const hasVehicles = vehicles.length > 0;
+
+    console.log("checkIsFirstLogin: Vehicles count:", vehicles.length, "Has vehicles:", hasVehicles);
+    
+    // Chưa có vehicle thì coi như lần đầu
+    const isFirst = !hasVehicles;
+    console.log("checkIsFirstLogin: Is first login:", isFirst);
+    return isFirst;
+  } catch (error) {
+    console.error("Error checking first login:", error);
+    // Nếu lỗi API, mặc định coi như lần đầu để hướng dẫn người dùng
+    return true;
+  }
+}

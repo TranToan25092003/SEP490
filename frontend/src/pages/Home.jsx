@@ -20,13 +20,12 @@ import service4 from "@/assets/service-ruaxe.png";
 import ctaBg from "@/assets/cta-bg.jpg";
 import MotorcycleIcon from "@/components/icons/MotorcycleIcon";
 import ItemList from "@/components/customer/ItemList";
-import { useUser } from "@clerk/clerk-react";
 
 const fallbackSlides = [
-  { _id: 'f1', title: 'Banner 1', image_url: hero1, link_url: '/booking' },
-  { _id: 'f2', title: 'Banner 2', image_url: g1, link_url: '/booking' },
-  { _id: 'f3', title: 'Banner 3', image_url: g2, link_url: '/booking' },
-  { _id: 'f4', title: 'Banner 4', image_url: g3, link_url: '/booking' },
+  { _id: "f1", title: "Banner 1", image_url: hero1, link_url: "/booking" },
+  { _id: "f2", title: "Banner 2", image_url: g1, link_url: "/booking" },
+  { _id: "f3", title: "Banner 3", image_url: g2, link_url: "/booking" },
+  { _id: "f4", title: "Banner 4", image_url: g3, link_url: "/booking" },
 ];
 
 const services = [
@@ -38,7 +37,7 @@ const services = [
 
 function Home() {
   const { parts, banners } = useLoaderData();
-  const slides = (banners && banners.length > 0) ? banners : fallbackSlides;
+  const slides = banners && banners.length > 0 ? banners : fallbackSlides;
   const [api, setApi] = React.useState(null);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [slideCount, setSlideCount] = React.useState(slides.length);
@@ -65,14 +64,18 @@ function Home() {
   return (
     <main className="w-full">
       {/* Hero Carousel - full-bleed */}
-      <section className={`bg-black transition-all duration-1000 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+      <section
+        className={`bg-black transition-all duration-1000 ${
+          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        }`}
+      >
         <div className="mx-auto max-w-[1920px]">
           <Carousel className="w-full" setApi={setApi}>
             <CarouselContent className="">
               {slides.map((slide, idx) => (
                 <CarouselItem key={slide._id || idx}>
                   <div className="w-full">
-                    <div className="relative aspect-[16/7] w-full max-h-[800px]">
+                    <div className="relative aspect-[4/3] sm:aspect-[16/7] w-full max-h-[800px]">
                       {/* 1. Image (bottom layer) */}
                       <img
                         src={slide.image_url}
@@ -85,11 +88,11 @@ function Home() {
 
                       {/* 3. Content (top layer, with z-index) */}
                       <div className="relative z-10 flex h-full w-full items-start md:items-center">
-                        <div className="mx-auto mt-24 space-y-4 p-4 text-center md:mt-0 md:ml-28 md:space-y-6 md:p-0 lg:ml-40 xl:ml-44 2xl:ml-48">
-                          <div className=" justify-start text-4xl font-semibold text-white/95 md:text-5xl md:text-white xl:text-6xl">
+                        <div className="mx-auto mt-14 sm:mt-20 md:mt-0 space-y-4 p-4 text-center md:ml-28 md:space-y-6 md:p-0 lg:ml-40 xl:ml-44 2xl:ml-48">
+                          <div className="justify-start text-3xl sm:text-4xl md:text-5xl font-semibold text-white/95 md:text-white xl:text-6xl">
                             MotorMate
                           </div>
-                          <div className=" text-center text-xl font-extrabold text-white/95 md:text-2xl md:text-white">
+                          <div className="text-center text-lg sm:text-xl font-extrabold text-white/95 md:text-2xl md:text-white">
                             Phụ tùng tốt nhất cho{" "}
                             <br className="hidden md:block" /> mọi nhà
                           </div>
@@ -117,8 +120,9 @@ function Home() {
                     key={`dot-${i}`}
                     aria-label={`Go to slide ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
-                    className={`h-2.5 w-2.5 rounded-full transition-colors ${selectedIndex === i ? "bg-white" : "bg-white/50"
-                      }`}
+                    className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                      selectedIndex === i ? "bg-white" : "bg-white/50"
+                    }`}
                   />
                 ))}
               </div>
@@ -128,7 +132,11 @@ function Home() {
       </section>
 
       {/* Phụ Tùng Nổi Bật */}
-      <section className={`transition-all duration-1000 delay-200 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <section
+        className={`transition-all duration-1000 delay-200 ${
+          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
         <div className="relative w-full overflow-hidden bg-black">
           {/* Background Image and Overlay */}
           <div className="absolute inset-0">
@@ -140,9 +148,15 @@ function Home() {
           </div>
 
           {/* Content */}
-          <div className="relative z-10 px-8 py-16 md:px-12 md:py-24 lg:px-16">
-            <div className={`mb-12 text-center transition-all duration-700 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <h2 className="text-4xl font-bold text-white md:text-5xl">
+          <div className="relative z-10 px-4 sm:px-8 py-12 sm:py-16 md:px-12 md:py-24 lg:px-16">
+            <div
+              className={`mb-12 text-center transition-all duration-700 delay-300 ${
+                isLoaded
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-4"
+              }`}
+            >
+              <h2 className="text-3xl sm:text-4xl font-bold text-white md:text-5xl">
                 Phụ Tùng Nổi Bật
               </h2>
               <p className="mt-4 text-lg text-gray-300">
@@ -153,24 +167,42 @@ function Home() {
             <ItemList products={parts} size={3} />
 
             {/* --- NEW MOTORMATE QUOTE SECTION --- */}
-            <div className={`mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2 transition-all duration-700 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+            <div
+              className={`mt-20 grid grid-cols-1 items-center gap-12 md:mt-32 md:grid-cols-2 transition-all duration-700 delay-500 ${
+                isLoaded
+                  ? "opacity-100 translate-y-0"
+                  : "opacity-0 translate-y-8"
+              }`}
+            >
               {/* Left side: Text content */}
-              <div className={`text-center md:text-left transition-all duration-700 delay-600 ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}>
+              <div
+                className={`text-center md:text-left transition-all duration-700 delay-600 ${
+                  isLoaded
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 -translate-x-4"
+                }`}
+              >
                 <h3 className=" text-lg font-bold uppercase tracking-[0.2em] text-red-600">
                   MotorMate
                 </h3>
-                <p className=" mt-6 text-3xl font-semibold leading-tight text-white md:text-4xl">
+                <p className=" mt-6 text-2xl sm:text-3xl font-semibold leading-tight text-white md:text-4xl">
                   “ Cung cấp dịch vụ trải dài khắp cả{" "}
                   <span className="text-red-500">Việt Nam</span>. Mang đến phụ
                   tùng xe tốt nhất cho mọi nhà. ”
                 </p>
               </div>
               {/* Right side: World Map Image */}
-              <div className={`flex justify-center md:justify-end transition-all duration-700 delay-700 ${isLoaded ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+              <div
+                className={`flex justify-center md:justify-end transition-all duration-700 delay-700 ${
+                  isLoaded
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 translate-x-4"
+                }`}
+              >
                 <img
                   src={worldMap}
                   alt="World Map"
-                  className="w-full max-w-lg opacity-70"
+                  className="w-full max-w-sm sm:max-w-md md:max-w-lg opacity-70"
                 />
               </div>
             </div>
@@ -179,11 +211,19 @@ function Home() {
       </section>
 
       {/* SECTION: Services --- */}
-      <section className={`bg-white py-16 md:py-24 transition-all duration-1000 delay-300 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-        <div className="mx-auto max-w-[1920px] px-8 md:px-12 lg:px-16">
+      <section
+        className={`bg-white py-16 md:py-24 transition-all duration-1000 delay-300 ${
+          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-8 md:px-12 lg:px-16">
           {/* Section Header */}
-          <div className={`mb-12 text-center transition-all duration-700 delay-400 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <h2 className="text-4xl font-bold text-red-600 md:text-5xl">
+          <div
+            className={`mb-12 text-center transition-all duration-700 delay-400 ${
+              isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold text-red-600 md:text-5xl">
               Dịch Vụ của MotorMate
             </h2>
           </div>
@@ -194,9 +234,9 @@ function Home() {
               <div
                 key={service.id}
                 className={`group relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-700 ${
-                  isLoaded 
-                    ? 'opacity-100 translate-y-0' 
-                    : 'opacity-0 translate-y-8'
+                  isLoaded
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-8"
                 }`}
                 style={{ transitionDelay: `${500 + index * 100}ms` }}
               >
@@ -225,7 +265,11 @@ function Home() {
       </section>
 
       {/* --- NEW CTA SECTION --- */}
-      <section className={`transition-all duration-1000 delay-500 ${isLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+      <section
+        className={`transition-all duration-1000 delay-500 ${
+          isLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+        }`}
+      >
         <div className="relative mx-auto max-w-[1920px]">
           <img
             src={ctaBg}
@@ -233,8 +277,12 @@ function Home() {
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
-            <div className={`w-11/12 max-w-xl border-4 border-white p-8 text-white md:mr-16 lg:mr-24 transition-all duration-700 delay-700 ${isLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}>
-              <h2 className="text-3xl font-bold uppercase tracking-wider md:text-4xl">
+            <div
+              className={`w-11/12 max-w-xl border-4 border-white p-6 sm:p-8 text-white text-center md:text-left md:mr-16 lg:mr-24 transition-all duration-700 delay-700 ${
+                isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
+            >
+              <h2 className="text-2xl sm:text-3xl font-bold uppercase tracking-wider md:text-4xl">
                 Chào mừng bạn đến với{" "}
                 <span className="text-red-500">MotorMate</span>
               </h2>
@@ -244,7 +292,7 @@ function Home() {
               </p>
               <a
                 href="/about"
-                className="mt-8 inline-flex items-center justify-center rounded-lg bg-red-600 px-8 py-3
+                className="mt-6 sm:mt-8 inline-flex items-center justify-center rounded-lg bg-red-600 px-6 sm:px-8 py-3
              text-base font-bold text-white
              transition-all duration-150 ease-in-out
              hover:bg-red-700 hover:-translate-y-0.5

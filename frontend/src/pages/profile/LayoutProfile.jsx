@@ -92,6 +92,10 @@ const LayoutProfile = () => {
     () => searchParams.get("tab") || "personal"
   );
   const [open, setOpen] = useState(false);
+  // Khởi tạo state từ query param ngay từ đầu
+  const [showFirstLoginGuide, setShowFirstLoginGuide] = useState(
+    () => searchParams.get("firstLogin") === "true"
+  );
   const [imagePreview, setImagePreview] = useState(null);
   const [_imageFile, setImageFile] = useState(null); // Used for file reference, prefixed to avoid lint warning
   const [isUploading, setIsUploading] = useState(false);
@@ -216,6 +220,32 @@ const LayoutProfile = () => {
       });
     }
   }, [user]);
+
+  // Kiểm tra query param firstLogin để hiển thị hướng dẫn
+  useEffect(() => {
+    const firstLogin = searchParams.get("firstLogin");
+    if (firstLogin === "true") {
+      console.log("First login detected, showing guide");
+      // Đảm bảo Dialog hiển thị ngay sau khi component đã render
+      // Sử dụng setTimeout nhỏ để đảm bảo DOM đã sẵn sàng
+      const timer = setTimeout(() => {
+        setShowFirstLoginGuide(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      // Nếu không có query param thì đóng Dialog
+      setShowFirstLoginGuide(false);
+    }
+  }, [searchParams]);
+
+  // Xóa query param khi Dialog đóng
+  const handleCloseGuide = () => {
+    setShowFirstLoginGuide(false);
+    // Xóa query param
+    const newSearchParams = new URLSearchParams(searchParams);
+    newSearchParams.delete("firstLogin");
+    setSearchParams(newSearchParams, { replace: true });
+  };
 
   // Tải lịch sử sửa xe khi tab history được mở
   useEffect(() => {
@@ -453,6 +483,88 @@ const LayoutProfile = () => {
         backgroundPosition: "65% 35%",
       }}
     >
+      {/* Dialog hướng dẫn cho lần đăng nhập đầu tiên */}
+      <Dialog
+        open={showFirstLoginGuide}
+        onOpenChange={(open) => {
+          console.log("Dialog open state changed:", open);
+          if (!open) {
+            handleCloseGuide();
+          } else {
+            setShowFirstLoginGuide(true);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl bg-white border-2 border-gray-800">
+          <DialogHeader className="border-b border-gray-300 pb-4">
+            <DialogTitle className="text-2xl font-bold text-[#DF1D01]">
+              Chào mừng bạn đến với MotorMate!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-base text-gray-800">
+              Chào mừng bạn đến với MotorMate! Để sử dụng đầy đủ các tính năng
+              của hệ thống, vui lòng thêm thông tin xe của bạn:
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-start gap-3 p-4 bg-gray-100 rounded-lg border-2 border-[#DF1D01]">
+                <div className="flex-shrink-0 w-10 h-10 bg-gray-500 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  🏍️
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900 mb-2 text-lg">
+                    Thêm thông tin của bạn
+                  </h3>
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    Hãy chỉnh sửa thông tin cá nhân và thêm ít nhất một xe vào
+                    hệ thống trong tab{" "}
+                    <strong className="text-gray-900">"Thông Tin Xe"</strong> để
+                    có thể:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm text-gray-700 list-disc list-inside">
+                    <li>Đặt lịch sửa chữa và bảo dưỡng</li>
+                    <li>Theo dõi lịch sử bảo dưỡng</li>
+                    <li>Nhận thông báo về dịch vụ phù hợp</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 p-3 bg-gray-200 rounded-lg border border-gray-400">
+              <p className="text-sm text-gray-800 flex items-start gap-2">
+                <span className="text-lg">💡</span>
+                <span>
+                  <strong className="text-gray-900">Lưu ý:</strong> Bạn có thể
+                  đóng hướng dẫn này và quay lại thêm xe sau. Tuy nhiên, một số
+                  tính năng như đặt lịch sẽ bị hạn chế cho đến khi bạn thêm xe
+                  vào hệ thống.
+                </span>
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="border-t border-gray-300 pt-4">
+            <Button
+              onClick={() => {
+                // Tự động chuyển sang tab thông tin xe để thêm xe
+                setActiveTab("vehicle");
+                handleCloseGuide();
+              }}
+              className="bg-[#DF1D01] hover:bg-red-800 text-white"
+            >
+              Bắt đầu ngay
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                handleCloseGuide();
+              }}
+              className="border-gray-400 text-gray-800 hover:bg-gray-100"
+            >
+              Đóng
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Card className="w-full max-w-6xl shadow-lg rounded-2xl overflow-hidden">
         <CardHeader className="p-6 border-b">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -813,22 +925,22 @@ const LayoutProfile = () => {
             onValueChange={handleTabChange}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3 max-w-lg bg-gray-100 rounded-lg">
+            <TabsList className="flex flex-wrap gap-2 w-full bg-gray-100 rounded-lg p-1 md:grid md:grid-cols-3 md:max-w-xl md:gap-0">
               <TabsTrigger
                 value="personal"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <User className="h-4 w-4" /> Thông tin cá nhân
               </TabsTrigger>
               <TabsTrigger
                 value="vehicle"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <Car className="h-4 w-4" /> Thông Tin Xe
               </TabsTrigger>
               <TabsTrigger
                 value="history"
-                className="gap-2 data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md"
+                className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
                 <History className="h-4 w-4" /> Lịch sử sửa xe
               </TabsTrigger>

@@ -19,15 +19,15 @@ const PartnerLogos = () => {
 
   return (
     <div className="w-full bg-zinc-900">
-      <div className="max-w-[1920px] mx-auto px-4 py-6">
-        <div className="flex flex-wrap items-center justify-center gap-6">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 py-4 sm:py-5">
+        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
           {logos.map((src, idx) => (
             <div
               key={`${idx}`}
-              className="w-32 h-20 flex items-center justify-center"
+              className="w-24 h-14 sm:w-28 sm:h-16 md:w-32 md:h-20 flex items-center justify-center"
             >
               <img
-                className="w-32 h-16 opacity-80 object-contain"
+                className="w-full h-full opacity-80 object-contain"
                 src={src}
                 alt={`partner-${idx + 1}`}
               />
@@ -53,12 +53,12 @@ const MainFooterContent = ({ footerInfo }) => {
   return (
     <div className="w-full bg-zinc-900 text-white">
       {/* Constrain inner content to match Figma container width */}
-      <div className="max-w-[1350px] mx-auto px-4 py-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="max-w-[1350px] mx-auto px-4 sm:px-6 lg:px-10 py-8 md:py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
           {/* About / Address */}
-          <div>
-            <div className="text-red-600 text-sm uppercase mb-3">MotorMATE</div>
-            <div className="text-neutral-400 text-xs leading-tight mb-3">
+          <div className="space-y-3">
+            <div className="text-red-600 text-sm uppercase">MotorMATE</div>
+            <div className="text-neutral-400 text-xs leading-tight">
               {address ||
                 "MotorMate cam kết đồng hành lâu dài, trở thành đối tác tin cậy trong việc bảo dưỡng và chăm sóc xe của bạn."}
             </div>
@@ -74,28 +74,28 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Photo Gallery */}
-          <div>
+          <div className="space-y-3">
             <div className="text-white text-sm uppercase mb-4">
               Photo Gallery
             </div>
             <div className="grid grid-cols-2 gap-2">
               <img
-                className="w-30 h-12 object-cover"
+                className="w-full h-16 object-cover"
                 src={g1}
                 alt="gallery-1"
               />
               <img
-                className="w-30 h-12 object-cover"
+                className="w-full h-16 object-cover"
                 src={g2}
                 alt="gallery-2"
               />
               <img
-                className="w-30 h-12 object-cover"
+                className="w-full h-16 object-cover"
                 src={g3}
                 alt="gallery-3"
               />
               <img
-                className="w-30 h-12 object-cover"
+                className="w-full h-16 object-cover"
                 src={g4}
                 alt="gallery-4"
               />
@@ -103,7 +103,7 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Quick Links */}
-          <div className="w-full md:pl-16">
+          <div className="w-full md:pl-8 lg:pl-12 hidden md:block">
             <div className="lg:max-w-[220px] xl:max-w-[240px]">
               <div className="mb-4 font-['Poppins'] text-sm uppercase text-white">
                 Quick Links
@@ -125,7 +125,7 @@ const MainFooterContent = ({ footerInfo }) => {
           </div>
 
           {/* Contact / Subscribe */}
-          <div className="lg:max-w-[240px] xl:max-w-[260px]">
+          <div className="lg:max-w-[240px] xl:max-w-[260px] space-y-3">
             <div className="text-white text-sm uppercase mb-4">
               Để lại lời nhắn
             </div>
@@ -201,7 +201,7 @@ const BottomBar = () => {
   const year = new Date().getFullYear();
   return (
     <div className="w-full bg-zinc-900 text-zinc-500">
-      <div className="max-w-[1350px] mx-auto px-4 py-4">
+      <div className="max-w-[1350px] mx-auto px-4 sm:px-6 lg:px-10 py-4">
         <div className="h-px bg-neutral-700 mb-3" />
         <div className="text-xs text-left">
           Copyright © {year}. MotorMate - Design By TuongHuy

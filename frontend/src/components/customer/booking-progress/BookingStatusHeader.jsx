@@ -5,6 +5,16 @@ import { useState } from "react";
 import { useRevalidator } from "react-router-dom";
 import { cancelBooking } from "@/api/bookings";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /** @typedef {import("./index").BookingStatusHeaderProps} BookingStatusHeaderProps */
 
@@ -25,6 +35,7 @@ const BookingStatusHeader = ({
   ...props
 }) => {
   const [loading, setLoading] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const revalidator = useRevalidator();
 
   // Kiểm tra xem có thể hủy đơn không
@@ -75,12 +86,15 @@ const BookingStatusHeader = ({
     return false;
   };
 
-  const handleCancel = async () => {
+  const handleCancelClick = () => {
     if (!canCancel()) {
       toast.error("Không thể hủy đơn ở giai đoạn này");
       return;
     }
+    setShowCancelDialog(true);
+  };
 
+  const confirmCancel = async () => {
     try {
       setLoading(true);
 
@@ -93,6 +107,7 @@ const BookingStatusHeader = ({
         })
         .unwrap();
 
+      setShowCancelDialog(false);
       revalidator.revalidate();
     } catch (error) {
       console.error("Error cancelling booking:", error);
@@ -108,7 +123,7 @@ const BookingStatusHeader = ({
 
         <Button
           variant="destructive"
-          onClick={handleCancel}
+          onClick={handleCancelClick}
           disabled={loading || !canCancel()}
           title={
             !canCancel()
@@ -119,6 +134,27 @@ const BookingStatusHeader = ({
           Hủy đơn
         </Button>
       </div>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy đơn</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy đơn đặt lịch này? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              disabled={loading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loading ? "Đang hủy..." : "Có, hủy đơn"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
