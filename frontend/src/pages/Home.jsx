@@ -223,34 +223,35 @@ function Home() {
           {/* Services Grid */}
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
             {services.map((service, index) => (
-              <div
-                key={service.id}
-                className={`group relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-700 ${
-                  isLoaded
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-8"
-                }`}
-                style={{ transitionDelay: `${500 + index * 100}ms` }}
-              >
-                {/* Background Image */}
-                <img
-                  src={service.image}
-                  alt={service.name}
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
-                />
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/40" />
-
-                {/* Content */}
-                <div className="relative flex h-full items-start p-6">
-                  <div className="rounded-md bg-red-600/90 px-5 py-3 text-white">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
-                      {service.tag}
-                    </p>
-                    <h3 className="mt-1 text-xl font-bold">{service.name}</h3>
+              <Link to={'/booking'}>
+                <div
+                  key={service.id}
+                  className={`group relative aspect-[16/9] w-full cursor-pointer overflow-hidden rounded-lg shadow-lg transition-all duration-700 ${
+                    isLoaded
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8"
+                  }`}
+                  style={{ transitionDelay: `${500 + index * 100}ms` }}
+                >
+                  {/* Background Image */}
+                  <img
+                    src={service.image}
+                    alt={service.name}
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
+                  />
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-black/30 transition-colors group-hover:bg-black/40" />
+                  {/* Content */}
+                  <div className="relative flex h-full items-start p-6">
+                    <div className="rounded-md bg-red-600/90 px-5 py-3 text-white">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
+                        {service.tag}
+                      </p>
+                      <h3 className="mt-1 text-xl font-bold">{service.name}</h3>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
