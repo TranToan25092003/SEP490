@@ -271,12 +271,9 @@ function Home() {
         }`}
       >
         <div className="relative mx-auto max-w-[1920px]">
-          <img
-            src={ctaBg}
-            alt="Motorcycle on the road"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/30 md:justify-end">
+          <div className={`flex items-center justify-center bg-black/30 md:justify-end py-20 md:py-40 bg-cover bg-center`} style={{
+            backgroundImage: `url(${ctaBg})`
+          }}>
             <div
               className={`w-11/12 max-w-xl border-4 border-white p-6 sm:p-8 text-white text-center md:text-left md:mr-16 lg:mr-24 transition-all duration-700 delay-700 ${
                 isLoaded ? "opacity-100 scale-100" : "opacity-0 scale-95"
