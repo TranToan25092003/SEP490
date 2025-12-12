@@ -889,22 +889,22 @@ export default function ManagerItems() {
                   required
                 />
               </div>
-              <div className="grid gap-2">
-                <label className="text-sm font-medium">Thương hiệu</label>
-                <Input
-                  placeholder="VD: Honda, Yamaha"
-                  value={editFormData.brand}
-                  onChange={(e) =>
-                    setEditFormData({
-                      ...editFormData,
-                      brand: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Thương hiệu</label>
+                  <Input
+                    placeholder="VD: Honda, Yamaha"
+                    value={editFormData.brand}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        brand: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="grid gap-2">
                 <label className="text-sm font-medium">Số lượng tồn kho</label>
-                <Input
+                  <Input
                   value={`${editingPart?.quantity || 0} cái`}
                   readOnly
                   disabled

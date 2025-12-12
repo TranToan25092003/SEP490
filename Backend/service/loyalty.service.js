@@ -94,6 +94,28 @@ class LoyaltyService {
     });
     const tierInfo = calculateTierInfo(wallet.total_points || 0);
     const rewards = await this.getVoucherCatalog();
+    const streakDays = await this.getStreakDays(clerkId);
+
+    // Kiểm tra đã check-in hôm nay chưa
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    const todayCheckIn = await LoyaltyTransaction.findOne({
+      clerkId,
+      type: "earn",
+      "sourceRef.kind": "checkin",
+      createdAt: {
+        $gte: todayStart,
+        $lt: todayEnd,
+      },
+    });
+
     const ownedVouchers = await LoyaltyVoucher.find({ clerkId })
       .sort({ createdAt: -1 })
       .limit(25)
@@ -107,6 +129,8 @@ class LoyaltyService {
       balance: wallet.total_points,
       updatedAt: wallet.updatedAt,
       vouchersOwned: activeVoucherCount,
+      streakDays,
+      hasCheckedInToday: !!todayCheckIn,
       vouchers: ownedVouchers.map((voucher) => ({
         id: voucher._id,
         code: voucher.voucherCode,
@@ -324,22 +348,16 @@ class LoyaltyService {
 
   async getVoucherCatalog() {
     const now = new Date();
+    // Lấy tất cả rules active, không filter theo date ở đây (để isRuleUsable xử lý)
     const rules = await LoyaltyRule.find({
       isDeleted: false,
       status: "active",
-      $and: [
-        {
-          $or: [{ validFrom: null }, { validFrom: { $lte: now } }],
-        },
-        {
-          $or: [{ validTo: null }, { validTo: { $gte: now } }],
-        },
-      ],
     })
       .sort({ priority: 1, createdAt: -1 })
       .lean();
 
-    return await this.transformRulesToRewards(rules);
+    const rewards = await this.transformRulesToRewards(rules);
+    return rewards;
   }
 
   async transformRulesToRewards(rules = []) {
@@ -362,30 +380,36 @@ class LoyaltyService {
       return acc;
     }, {});
 
-    return rules
-      .filter((rule) => this.isRuleUsable(rule))
+    const usableRules = rules.filter((rule) => this.isRuleUsable(rule));
+
+    const formattedRewards = usableRules
       .map((rule) => this.formatRuleReward(rule, issuedMap))
       .filter(Boolean);
+
+    return formattedRewards;
   }
 
   isRuleUsable(rule) {
-    if (!rule || rule.isDeleted) return false;
-    if (rule.status !== "active") return false;
-    const now = new Date();
-    if (rule.validFrom) {
-      const start = new Date(rule.validFrom);
-      if (Number.isNaN(start.getTime())) {
-        return false;
-      }
-      if (now < start) return false;
+    if (!rule || rule.isDeleted) {
+      return false;
     }
+    if (rule.status !== "active") {
+      return false;
+    }
+    const now = new Date();
+
+    // Kiểm tra validFrom: nếu có và trong tương lai thì vẫn cho phép (để user biết trước)
+    // Chỉ block nếu đã quá hạn (validTo)
     if (rule.validTo) {
       const end = new Date(rule.validTo);
       if (Number.isNaN(end.getTime())) {
         return false;
       }
-      if (now > end) return false;
+      if (now > end) {
+        return false;
+      }
     }
+
     return true;
   }
 
@@ -394,9 +418,12 @@ class LoyaltyService {
       typeof rule._id === "object" && typeof rule._id.toString === "function"
         ? rule._id.toString()
         : rule.id || null;
-    if (!ruleId) return null;
+    if (!ruleId) {
+      return null;
+    }
 
-    const cost =
+    // Tính cost: ưu tiên conversionPreviewPoints, sau đó conversionPointsAmount
+    let cost =
       Number(rule.conversionPreviewPoints) ||
       Number(rule.conversionPointsAmount) ||
       0;
@@ -407,12 +434,25 @@ class LoyaltyService {
 
     const discountType =
       rule.conversionType === "percent" ? "percentage" : "fixed";
-    const value =
-      discountType === "percentage"
-        ? Number(rule.conversionValue) || 0
-        : Number(
-            rule.conversionCurrencyAmount * rule.conversionPreviewPoints
-          ) || 0;
+
+    // Tính value:
+    // - Nếu là percentage: dùng conversionValue trực tiếp (%)
+    // - Nếu là fixed: dùng conversionCurrencyAmount (giá trị giảm cố định VND)
+    let value = 0;
+
+    if (discountType === "percentage") {
+      value = Number(rule.conversionValue) || 0;
+    } else {
+      // Fixed discount: dùng conversionCurrencyAmount
+      value = Number(rule.conversionCurrencyAmount) || 0;
+
+      // Nếu không có conversionCurrencyAmount, thử tính từ conversionValue và cost
+      if (!value && rule.conversionValue) {
+        // Giả sử conversionValue là số tiền giảm, không phải %
+        value = Number(rule.conversionValue) || 0;
+      }
+    }
+
     if (value <= 0) {
       return null;
     }
@@ -735,6 +775,124 @@ class LoyaltyService {
 
   getEarningRules() {
     return EARNING_RULES;
+  }
+
+  async dailyCheckIn(clerkId) {
+    if (!clerkId) throw new Error("clerkId is required");
+
+    const now = new Date();
+    const todayStart = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+
+    // Kiểm tra đã check-in hôm nay chưa
+    const todayCheckIn = await LoyaltyTransaction.findOne({
+      clerkId,
+      type: "earn",
+      "sourceRef.kind": "checkin",
+      createdAt: {
+        $gte: todayStart,
+        $lt: todayEnd,
+      },
+    });
+
+    if (todayCheckIn) {
+      throw new Error(
+        "Bạn đã check-in hôm nay rồi. Vui lòng quay lại vào ngày mai!"
+      );
+    }
+
+    // Tính streak: đếm số ngày liên tiếp check-in
+    let streakDays = 0;
+    let checkDate = new Date(todayStart);
+
+    // Kiểm tra từ hôm qua trở về trước
+    while (true) {
+      checkDate.setDate(checkDate.getDate() - 1);
+      const dayStart = new Date(checkDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const dayCheckIn = await LoyaltyTransaction.findOne({
+        clerkId,
+        type: "earn",
+        "sourceRef.kind": "checkin",
+        createdAt: {
+          $gte: dayStart,
+          $lt: dayEnd,
+        },
+      });
+
+      if (dayCheckIn) {
+        streakDays++;
+      } else {
+        break; // Ngắt chuỗi nếu có ngày không check-in
+      }
+    }
+
+    // Cộng điểm check-in: 5 điểm
+    const checkInPoints = 5;
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + 15); // Hết hạn sau 15 ngày
+
+    const result = await this.awardPoints({
+      clerkId,
+      points: checkInPoints,
+      reason: "Check-in hàng ngày",
+      sourceRef: { kind: "checkin" },
+      expiresAt,
+      performedBy: clerkId,
+      metadata: {
+        streakDays: streakDays + 1, // +1 vì hôm nay đã check-in
+        checkInDate: now,
+      },
+    });
+
+    return {
+      ...result,
+      streakDays: streakDays + 1,
+      pointsAwarded: checkInPoints,
+    };
+  }
+
+  async getStreakDays(clerkId) {
+    if (!clerkId) return 0;
+
+    const now = new Date();
+    let streakDays = 0;
+    let checkDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    // Kiểm tra từ hôm nay trở về trước
+    while (true) {
+      const dayStart = new Date(checkDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayEnd.getDate() + 1);
+
+      const dayCheckIn = await LoyaltyTransaction.findOne({
+        clerkId,
+        type: "earn",
+        "sourceRef.kind": "checkin",
+        createdAt: {
+          $gte: dayStart,
+          $lt: dayEnd,
+        },
+      });
+
+      if (dayCheckIn) {
+        streakDays++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break; // Ngắt chuỗi nếu có ngày không check-in
+      }
+    }
+
+    return streakDays;
   }
 }
 

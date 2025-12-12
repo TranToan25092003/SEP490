@@ -7,3 +7,4 @@ export const redeemPoints = (payload) =>
   customFetch.post("/loyalty/redeem", payload);
 export const redeemVoucher = (payload) =>
   customFetch.post("/loyalty/redeem/voucher", payload);
+export const dailyCheckIn = () => customFetch.post("/loyalty/checkin");

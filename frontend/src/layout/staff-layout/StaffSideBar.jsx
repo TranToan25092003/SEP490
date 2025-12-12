@@ -152,19 +152,19 @@ export default function StaffSideBar({
                             {it.label}
                           </Link>
                         ) : (
-                          <span
-                            className={cn(
-                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
-                              {
-                                "opacity-0": !expanded,
-                                "opacity-100": expanded,
-                                "font-semibold text-red-600": isActive, // Style text khi active
-                                "text-gray-700": !isActive,
-                              }
-                            )}
-                          >
-                            {it.label}
-                          </span>
+                        <span
+                          className={cn(
+                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
+                            {
+                              "opacity-0": !expanded,
+                              "opacity-100": expanded,
+                              "font-semibold text-red-600": isActive, // Style text khi active
+                              "text-gray-700": !isActive,
+                            }
+                          )}
+                        >
+                          {it.label}
+                        </span>
                         )}
                         <Button
                           variant="ghost"
