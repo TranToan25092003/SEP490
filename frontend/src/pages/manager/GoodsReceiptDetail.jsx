@@ -163,7 +163,7 @@ export default function GoodsReceiptDetail() {
     const remainder = amount % 1000;
 
     let result = numberToVietnameseWords(amountInThousands);
-    
+
     if (amountInThousands > 0) {
       result += " nghìn";
     }
@@ -369,9 +369,7 @@ export default function GoodsReceiptDetail() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Xác nhận hủy phiếu nhập?
-                  </AlertDialogTitle>
+                  <AlertDialogTitle>Xác nhận hủy phiếu nhập?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Hành động này sẽ trừ lại số lượng phụ tùng đã nhập trong
                     phiếu và chuyển trạng thái phiếu nhập sang{" "}
@@ -514,7 +512,11 @@ export default function GoodsReceiptDetail() {
               items.map((item, index) => (
                 <TableRow key={item._id || index}>
                   <TableCell>{item.sequenceNumber}</TableCell>
-                  <TableCell>{item.partName}</TableCell>
+                  <TableCell className="max-w-[200px]">
+                    <div className="truncate" title={item.partName}>
+                      {item.partName}
+                    </div>
+                  </TableCell>
                   <TableCell>{item.partCode}</TableCell>
                   <TableCell>{item.unit}</TableCell>
                   <TableCell>{item.quantityOnDocument}</TableCell>

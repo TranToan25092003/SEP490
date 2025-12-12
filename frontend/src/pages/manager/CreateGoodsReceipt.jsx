@@ -575,36 +575,48 @@ export default function CreateGoodsReceipt() {
       });
 
       if (response.data.success) {
-        // Update part quantities
+        // Update part quantities and cost prices
         try {
           for (const item of receiptData.items) {
             // Get current part data
             const currentPartResponse = await customFetch(
               `/manager/parts/${item.partId}`
             );
-            const currentQuantity =
-              currentPartResponse.data.data.quantityInStock || 0;
+            const currentPart = currentPartResponse.data.data;
+            const currentQuantity = currentPart.quantityInStock || 0;
             const newQuantity = currentQuantity + item.quantityActuallyReceived;
 
-            // Update with new quantity
+            // Update with new quantity and cost price (from unitPrice in receipt)
+            const updateData = {
+              quantityInStock: newQuantity,
+            };
+
+            // Update costPrice with the latest unitPrice from goods receipt
+            if (item.unitPrice && item.unitPrice > 0) {
+              updateData.costPrice = item.unitPrice;
+            }
+
             await customFetch(`/manager/parts/${item.partId}`, {
               method: "PUT",
-              data: {
-                quantityInStock: newQuantity,
-              },
+              data: updateData,
               headers: {
                 "Content-Type": "application/json",
               },
             });
             console.log(
-              `Updated quantity for part ${item.partName}: ${currentQuantity} + ${item.quantityActuallyReceived} = ${newQuantity}`
+              `Updated part ${item.partName}: quantity ${currentQuantity} + ${
+                item.quantityActuallyReceived
+              } = ${newQuantity}, costPrice = ${item.unitPrice || "unchanged"}`
             );
           }
         } catch (updateError) {
-          console.error("Failed to update part quantities:", updateError);
-          toast.error("Lỗi cập nhật số lượng", {
+          console.error(
+            "Failed to update part quantities and prices:",
+            updateError
+          );
+          toast.error("Lỗi cập nhật sản phẩm", {
             description:
-              "Phiếu nhập đã tạo nhưng không thể cập nhật số lượng sản phẩm",
+              "Phiếu nhập đã tạo nhưng không thể cập nhật số lượng và giá nhập sản phẩm",
           });
         }
 
@@ -612,7 +624,7 @@ export default function CreateGoodsReceipt() {
 
         toast.success("Thành công", {
           description:
-            "Phiếu nhập kho đã được tạo và cập nhật số lượng sản phẩm",
+            "Phiếu nhập kho đã được tạo và cập nhật số lượng, giá nhập sản phẩm",
         });
 
         navigate("/manager/goods-receipt-list");
@@ -852,7 +864,11 @@ export default function CreateGoodsReceipt() {
               items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.sequenceNumber}</TableCell>
-                  <TableCell className="font-medium">{item.partName}</TableCell>
+                  <TableCell className="font-medium max-w-[200px]">
+                    <div className="truncate" title={item.partName}>
+                      {item.partName}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-muted-foreground">
                     {item.partCode}
                   </TableCell>
