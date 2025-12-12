@@ -122,19 +122,37 @@ export default function AdminSidebar({
                   <Tooltip key={it.key} open={expanded ? false : undefined}>
                     <TooltipTrigger asChild disabled={expanded}>
                       <div className="relative group">
-                        <span
-                          className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
-                            {
-                              "opacity-0": !expanded,
-                              "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive,
-                              "text-gray-700": !isActive,
-                            }
-                          )}
-                        >
-                          {it.label}
-                        </span>
+                        {it.href ? (
+                          <Link
+                            to={it.href}
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition cursor-pointer hover:text-red-600",
+                              {
+                                "opacity-0 pointer-events-none": !expanded,
+                                "opacity-100 pointer-events-auto": expanded,
+                                "font-semibold text-red-600": isActive,
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            {it.label}
+                          </Link>
+                        ) : (
+                          <span
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
+                              {
+                                "opacity-0": !expanded,
+                                "opacity-100": expanded,
+                                "font-semibold text-red-600": isActive,
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                          >
+                            {it.label}
+                          </span>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
