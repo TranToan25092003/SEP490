@@ -189,7 +189,6 @@ export default function ManagerItems() {
     costPrice: "",
     description: "",
     brand: "",
-    quantity: "",
     status: "active",
     compatible_model_ids: [],
   });
@@ -360,13 +359,9 @@ export default function ManagerItems() {
   // Handle open edit dialog
   const handleOpenEditDialog = (part) => {
     setEditingPart(part);
-    const quantity = part.quantity || 0;
-    // If quantity is 0, show "active" in form (discontinued will be set automatically on submit)
     // If status is discontinued but quantity > 0, reset to active (discontinued can't be selected manually)
     let initialStatus;
-    if (quantity === 0) {
-      initialStatus = "active"; // Show "active" in form, will be set to "discontinued" on submit
-    } else if (part.status === "discontinued") {
+    if (part.status === "discontinued" && (part.quantity || 0) > 0) {
       initialStatus = "active"; // Reset to active if discontinued but has quantity
     } else {
       initialStatus = part.status || "active";
@@ -394,7 +389,6 @@ export default function ManagerItems() {
       costPrice: part.costPrice || "",
       description: part.description || "",
       brand: part.brand || "",
-      quantity: quantity,
       status: initialStatus,
       compatible_model_ids: compatibleModelIds,
     });
@@ -460,7 +454,8 @@ export default function ManagerItems() {
 
     setIsSubmitting(true);
     try {
-      const quantity = parseInt(editFormData.quantity) || 0;
+      // Keep existing quantity, don't allow editing
+      const quantity = editingPart.quantity || 0;
       // If quantity is 0, automatically set status to discontinued
       const finalStatus = quantity === 0 ? "discontinued" : editFormData.status;
 
@@ -894,45 +889,30 @@ export default function ManagerItems() {
                   required
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">Thương hiệu</label>
-                  <Input
-                    placeholder="VD: Honda, Yamaha"
-                    value={editFormData.brand}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        brand: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <label className="text-sm font-medium">
-                    Số lượng tồn kho *
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="VD: 100"
-                    value={editFormData.quantity}
-                    onChange={(e) => {
-                      const newQuantity = e.target.value;
-                      const quantityNum = parseInt(newQuantity) || 0;
-                      setEditFormData({
-                        ...editFormData,
-                        quantity: newQuantity,
-                        // Auto-update status to discontinued if quantity becomes 0
-                        status:
-                          quantityNum === 0
-                            ? "discontinued"
-                            : editFormData.status,
-                      });
-                    }}
-                    required
-                    min="0"
-                  />
-                </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Thương hiệu</label>
+                <Input
+                  placeholder="VD: Honda, Yamaha"
+                  value={editFormData.brand}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      brand: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div className="grid gap-2">
+                <label className="text-sm font-medium">Số lượng tồn kho</label>
+                <Input
+                  value={`${editingPart?.quantity || 0} cái`}
+                  readOnly
+                  disabled
+                  className="bg-gray-50"
+                />
+                <p className="text-xs text-gray-500">
+                  Số lượng tồn kho chỉ có thể thay đổi thông qua phiếu nhập kho
+                </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">

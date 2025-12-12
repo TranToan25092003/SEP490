@@ -410,7 +410,6 @@ class PartService {
           { name: { $regex: query, $options: "i" } },
           { code: { $regex: query, $options: "i" } },
         ],
-        status: "active",
       })
         .select("_id name code brand quantity sellingPrice costPrice")
         .limit(parseInt(limit))
