@@ -123,8 +123,19 @@ export default function GoodsReceiptDetail() {
       const billion = Math.floor(num / 1000000000);
       const remainder = num % 1000000000;
       let result = readGroup(billion) + " tỷ";
-      if (remainder > 0) {
+      if (remainder >= 1000000) {
+        // If remainder is >= 1 million, process it recursively
         result += " " + numberToVietnameseWords(remainder);
+      } else if (remainder >= 1000) {
+        // If remainder is >= 1 thousand, process thousands
+        const thousand = Math.floor(remainder / 1000);
+        const thousandRemainder = remainder % 1000;
+        result += " " + readGroup(thousand) + " nghìn";
+        if (thousandRemainder > 0) {
+          result += " " + readGroup(thousandRemainder);
+        }
+      } else if (remainder > 0) {
+        result += " " + readGroup(remainder);
       }
       return result;
     }
@@ -134,8 +145,16 @@ export default function GoodsReceiptDetail() {
       const million = Math.floor(num / 1000000);
       const remainder = num % 1000000;
       let result = readGroup(million) + " triệu";
-      if (remainder > 0) {
-        result += " " + numberToVietnameseWords(remainder);
+      if (remainder >= 1000) {
+        // If remainder is >= 1 thousand, process thousands
+        const thousand = Math.floor(remainder / 1000);
+        const thousandRemainder = remainder % 1000;
+        result += " " + readGroup(thousand) + " nghìn";
+        if (thousandRemainder > 0) {
+          result += " " + readGroup(thousandRemainder);
+        }
+      } else if (remainder > 0) {
+        result += " " + readGroup(remainder);
       }
       return result;
     }
@@ -159,23 +178,13 @@ export default function GoodsReceiptDetail() {
   const amountToVietnameseWords = (amount) => {
     if (!amount || amount === 0) return "không đồng";
 
-    const amountInThousands = Math.floor(amount / 1000);
-    const remainder = amount % 1000;
-
-    let result = numberToVietnameseWords(amountInThousands);
-    
-    if (amountInThousands > 0) {
-      result += " nghìn";
-    }
-
-    if (remainder > 0) {
-      result += " " + numberToVietnameseWords(remainder);
-    }
+    // Convert the full amount to words
+    let result = numberToVietnameseWords(amount);
 
     result += " đồng";
 
-    // Add "chẵn" if there's no remainder (exact amount)
-    if (remainder === 0 && amountInThousands > 0) {
+    // Add "chẵn" if the amount is a round number (ends with 000)
+    if (amount % 1000 === 0 && amount > 0) {
       result += " chẵn";
     }
 
@@ -369,9 +378,7 @@ export default function GoodsReceiptDetail() {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    Xác nhận hủy phiếu nhập?
-                  </AlertDialogTitle>
+                  <AlertDialogTitle>Xác nhận hủy phiếu nhập?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Hành động này sẽ trừ lại số lượng phụ tùng đã nhập trong
                     phiếu và chuyển trạng thái phiếu nhập sang{" "}
@@ -514,7 +521,11 @@ export default function GoodsReceiptDetail() {
               items.map((item, index) => (
                 <TableRow key={item._id || index}>
                   <TableCell>{item.sequenceNumber}</TableCell>
-                  <TableCell>{item.partName}</TableCell>
+                  <TableCell className="max-w-[200px]">
+                    <div className="truncate" title={item.partName}>
+                      {item.partName}
+                    </div>
+                  </TableCell>
                   <TableCell>{item.partCode}</TableCell>
                   <TableCell>{item.unit}</TableCell>
                   <TableCell>{item.quantityOnDocument}</TableCell>

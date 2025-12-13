@@ -214,4 +214,23 @@ router.post("/award", loyaltyController.awardPoints);
  */
 router.post("/adjust", loyaltyController.adjustPoints);
 
+/**
+ * @swagger
+ * /loyalty/checkin:
+ *   post:
+ *     summary: (Client) Check-in hàng ngày để nhận điểm
+ *     tags:
+ *       - Loyalty
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       201:
+ *         description: Check-in thành công, trả về điểm và streak
+ *       400:
+ *         description: Đã check-in hôm nay rồi
+ *       401:
+ *         description: Chưa đăng nhập hoặc token không hợp lệ
+ */
+router.post("/checkin", loyaltyController.dailyCheckIn);
+
 module.exports = router;

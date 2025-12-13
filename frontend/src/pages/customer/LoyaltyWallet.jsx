@@ -16,6 +16,7 @@ import {
   Gift,
   History,
   Link2,
+  Loader2,
   Repeat,
   ShieldCheck,
   Sparkles,
@@ -25,7 +26,12 @@ import {
 } from "lucide-react";
 import background from "@/assets/cool-motorcycle-indoors.png";
 import { toast } from "sonner";
-import { getPointBalance, getPointHistory, redeemVoucher } from "@/api/loyalty";
+import {
+  getPointBalance,
+  getPointHistory,
+  redeemVoucher,
+  dailyCheckIn,
+} from "@/api/loyalty";
 
 const formatPoints = (value) =>
   `${new Intl.NumberFormat("vi-VN").format(value)} điểm`;
@@ -174,6 +180,8 @@ const LoyaltyWallet = () => {
   const [redeemingRewardId, setRedeemingRewardId] = useState(null);
   const [rewardsCatalog, setRewardsCatalog] = useState([]);
   const [loadingRewards, setLoadingRewards] = useState(true);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -186,9 +194,11 @@ const LoyaltyWallet = () => {
 
         if (ignore) return;
         const payload = response?.data?.data || {};
+
         const normalizedRewards = Array.isArray(payload.catalog?.rewards)
           ? payload.catalog.rewards.map(normalizeReward).filter(Boolean)
           : [];
+
         const normalizedOwnedVouchers = Array.isArray(payload.vouchers)
           ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
           : null;
@@ -211,7 +221,9 @@ const LoyaltyWallet = () => {
             normalizedOwnedVouchers !== null
               ? normalizedOwnedVouchers
               : prev.vouchers,
+          streakDays: payload.streakDays ?? prev.streakDays ?? 0,
         }));
+        setHasCheckedInToday(payload.hasCheckedInToday ?? false);
       } catch (error) {
         if (!ignore) {
           console.error("Failed to fetch point balance", error);
@@ -250,6 +262,55 @@ const LoyaltyWallet = () => {
       ignore = true;
     };
   }, []);
+
+  const handleDailyCheckIn = async () => {
+    if (hasCheckedInToday) {
+      toast.info(
+        "Bạn đã check-in hôm nay rồi. Vui lòng quay lại vào ngày mai!"
+      );
+      return;
+    }
+
+    try {
+      setCheckingIn(true);
+      const response = await dailyCheckIn();
+      const payload = response?.data?.data || {};
+
+      // Cập nhật wallet
+      const updatedWallet = payload.wallet || {};
+      setWallet((prev) => ({
+        ...prev,
+        balance:
+          Number(
+            updatedWallet.balance ?? updatedWallet.total_points ?? prev.balance
+          ) || prev.balance,
+        streakDays: payload.streakDays ?? prev.streakDays ?? 0,
+      }));
+
+      setHasCheckedInToday(true);
+
+      // Thêm transaction vào lịch sử
+      if (payload.transaction) {
+        setTransactions((prev) =>
+          [payload.transaction, ...(prev || [])].slice(0, 10)
+        );
+      }
+
+      toast.success(
+        `Check-in thành công! +${payload.pointsAwarded || 5} điểm. Chuỗi: ${
+          payload.streakDays || 1
+        } ngày`
+      );
+    } catch (error) {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Check-in thất bại. Vui lòng thử lại.";
+      toast.error(message);
+    } finally {
+      setCheckingIn(false);
+    }
+  };
 
   const handleRedeemReward = async (reward) => {
     if (!reward) return;
@@ -547,33 +608,64 @@ const LoyaltyWallet = () => {
               <Sparkles className="size-5 text-yellow-500" /> Cách kiếm điểm
             </h2>
             <div className="grid grid-cols-2 gap-4">
-              {earningActions.map((action) => (
-                <div
-                  key={action.id}
-                  className="flex flex-col items-center text-center p-4 bg-white rounded-xl border shadow-sm hover:shadow-md transition-all"
-                >
-                  {/* Icon */}
-                  <div className="h-10 w-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
-                    <action.icon className="size-5" />
-                  </div>
+              {earningActions.map((action) => {
+                const isCheckIn = action.id === "checkin";
+                const canCheckIn =
+                  isCheckIn && !hasCheckedInToday && !checkingIn;
 
-                  {/* Title */}
-                  <p className="font-semibold text-sm">{action.title}</p>
-
-                  {/* Description */}
-                  <p className="text-xs text-gray-500 mt-1 px-1 leading-snug">
-                    {action.desc}
-                  </p>
-
-                  {/* Badge */}
-                  <Badge
-                    variant="secondary"
-                    className="mt-2 bg-green-100 text-green-700 hover:bg-green-100"
+                return (
+                  <div
+                    key={action.id}
+                    className={`flex flex-col items-center text-center p-4 bg-white rounded-xl border shadow-sm hover:shadow-md transition-all ${
+                      isCheckIn && hasCheckedInToday ? "opacity-60" : ""
+                    }`}
                   >
-                    {action.points}
-                  </Badge>
-                </div>
-              ))}
+                    {/* Icon */}
+                    <div className="h-10 w-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mb-3">
+                      <action.icon className="size-5" />
+                    </div>
+
+                    {/* Title */}
+                    <p className="font-semibold text-sm">{action.title}</p>
+
+                    {/* Description */}
+                    <p className="text-xs text-gray-500 mt-1 px-1 leading-snug">
+                      {action.desc}
+                    </p>
+
+                    {/* Badge */}
+                    <Badge
+                      variant="secondary"
+                      className="mt-2 bg-green-100 text-green-700 hover:bg-green-100"
+                    >
+                      {action.points}
+                    </Badge>
+
+                    {/* Check-in Button */}
+                    {isCheckIn && (
+                      <Button
+                        size="sm"
+                        variant={canCheckIn ? "default" : "outline"}
+                        className={`mt-3 w-full ${
+                          canCheckIn
+                            ? "bg-red-600 hover:bg-red-700 text-white"
+                            : ""
+                        }`}
+                        disabled={!canCheckIn}
+                        onClick={handleDailyCheckIn}
+                      >
+                        {checkingIn ? (
+                          <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                        ) : hasCheckedInToday ? (
+                          "Đã check-in hôm nay"
+                        ) : (
+                          "Check-in ngay"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 

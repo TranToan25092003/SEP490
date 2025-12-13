@@ -86,14 +86,43 @@ exports.redeemVoucher = asyncHandler(async (req, res) => {
   const { rewardId, metadata } = req.body;
   const performedBy = req.user?.clerkId || clerkId;
 
-  console.log(metadata);
-
-  const result = await LoyaltyService.redeemVoucher({
+  console.log("🔵 redeemVoucher - Request:", {
     clerkId,
     rewardId,
     metadata,
     performedBy,
   });
 
+  try {
+    const result = await LoyaltyService.redeemVoucher({
+      clerkId,
+      rewardId,
+      metadata,
+      performedBy,
+    });
+
+    console.log("✅ redeemVoucher - Success:", {
+      voucherCode: result?.voucher?.voucherCode,
+      pointsCost: result?.voucher?.pointsCost,
+    });
+
+    res.status(201).json({ success: true, data: result });
+  } catch (error) {
+    console.error("❌ redeemVoucher - Error:", error);
+    console.error("❌ redeemVoucher - Error message:", error?.message);
+    console.error("❌ redeemVoucher - Error stack:", error?.stack);
+    throw error; // Let asyncHandler handle it
+  }
+});
+
+exports.dailyCheckIn = asyncHandler(async (req, res) => {
+  const clerkId = req.userId;
+  if (!clerkId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "clerkId required" });
+  }
+
+  const result = await LoyaltyService.dailyCheckIn(clerkId);
   res.status(201).json({ success: true, data: result });
 });

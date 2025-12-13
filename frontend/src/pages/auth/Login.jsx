@@ -28,9 +28,9 @@ const Login = () => {
           navigate("/profile?firstLogin=true", { replace: true });
         } else {
           // Nếu không phải lần đầu, redirect theo role
-          const destination = getRoleRedirectPath(user);
+      const destination = getRoleRedirectPath(user);
           console.log("Login: Redirecting to:", destination);
-          navigate(destination, { replace: true });
+      navigate(destination, { replace: true });
         }
       });
     }

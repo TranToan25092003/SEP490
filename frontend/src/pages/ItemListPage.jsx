@@ -177,73 +177,73 @@ function ItemListPage() {
               </Button>
             </div>
             <div className="rounded-b-md bg-zinc-800 p-6 pt-2 ">
-              <div className="flex w-full flex-col gap-4 lg:flex-row">
-                <div className="flex-1 min-w-[180px]">
-                  <Select
-                    onValueChange={(value) => {
-                      setSelectedBrand(value);
-                      setSelectedModel("");
-                    }}
-                    value={selectedBrand}
-                  >
-                    <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
-                      <SelectValue placeholder="Hãng xe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {brands.map((brand) => (
-                        <SelectItem key={brand} value={brand}>
-                          {brand}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex-1 min-w-[180px]">
-                  <Select
-                    onValueChange={setSelectedModel}
-                    value={selectedModel}
-                  >
-                    <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
-                      <SelectValue placeholder="Dòng xe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {models.map((model) => (
-                        <SelectItem key={model._id} value={model._id}>
-                          {model.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex-1 min-w-[180px]">
+                <div className="flex w-full flex-col gap-4 lg:flex-row">
+                  <div className="flex-1 min-w-[180px]">
+                    <Select
+                      onValueChange={(value) => {
+                        setSelectedBrand(value);
+                        setSelectedModel("");
+                      }}
+                      value={selectedBrand}
+                    >
+                      <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
+                        <SelectValue placeholder="Hãng xe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand} value={brand}>
+                            {brand}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 min-w-[180px]">
+                    <Select
+                      onValueChange={setSelectedModel}
+                      value={selectedModel}
+                    >
+                      <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
+                        <SelectValue placeholder="Dòng xe" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {models.map((model) => (
+                          <SelectItem key={model._id} value={model._id}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1 min-w-[180px]">
                   <Select onValueChange={setSelectedSort} value={selectedSort}>
-                    <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
-                      <SelectValue placeholder="Sắp xếp theo..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-1 min-w-[250px] gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Nhập tên..."
-                    className="h-9 w-full rounded-sm border-0 bg-white px-4 text-sm text-zinc-900 placeholder-zinc-500 focus-visible:ring-2 focus-visible:ring-red-600"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <Button
-                    className="h-9 gap-2 rounded-sm bg-red-700 px-6 text-sm font-bold uppercase text-white transition-colors hover:bg-red-800"
-                    onClick={handleSearch}
-                  >
-                    <Search className="h-4 w-4" />
-                    <span>Tìm</span>
-                  </Button>
+                      <SelectTrigger className="h-11 w-full rounded-sm border-0 bg-white text-sm text-zinc-900 focus:ring-2 focus:ring-red-600">
+                        <SelectValue placeholder="Sắp xếp theo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {sortOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-1 min-w-[250px] gap-2">
+                    <Input
+                      type="text"
+                      placeholder="Nhập tên..."
+                      className="h-9 w-full rounded-sm border-0 bg-white px-4 text-sm text-zinc-900 placeholder-zinc-500 focus-visible:ring-2 focus-visible:ring-red-600"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <Button
+                      className="h-9 gap-2 rounded-sm bg-red-700 px-6 text-sm font-bold uppercase text-white transition-colors hover:bg-red-800"
+                      onClick={handleSearch}
+                    >
+                      <Search className="h-4 w-4" />
+                      <span>Tìm</span>
+                    </Button>
                 </div>
               </div>
             </div>
@@ -307,32 +307,32 @@ function ItemListPage() {
 
       <section className="w-full mb-12 overflow-hidden bg-zinc-900">
         <div className="relative mx-auto max-w-7xl">
-          <img
-            src={statsBg}
-            alt="Abstract background"
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-zinc-800/80"></div>
+            <img
+              src={statsBg}
+              alt="Abstract background"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div className="absolute inset-0 bg-zinc-800/80"></div>
           <div className="relative z-10 grid grid-cols-1 gap-8 px-6 py-12 text-white sm:grid-cols-2 lg:grid-cols-4 lg:px-12 lg:py-16">
-            {stats.map((stat, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-center gap-4"
-              >
-                <stat.icon
-                  className="h-14 w-14 flex-shrink-0 text-white"
-                  strokeWidth={1.5}
-                />
-                <div className="flex flex-col">
-                  <div className="text-5xl font-bold leading-10">
-                    <AnimatedCounter endValue={stat.value} />+
-                  </div>
-                  <div className="mt-2 text-sm font-normal uppercase leading-none">
-                    {stat.label}
+              {stats.map((stat, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-center gap-4"
+                >
+                  <stat.icon
+                    className="h-14 w-14 flex-shrink-0 text-white"
+                    strokeWidth={1.5}
+                  />
+                  <div className="flex flex-col">
+                    <div className="text-5xl font-bold leading-10">
+                      <AnimatedCounter endValue={stat.value} />+
+                    </div>
+                    <div className="mt-2 text-sm font-normal uppercase leading-none">
+                      {stat.label}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </section>

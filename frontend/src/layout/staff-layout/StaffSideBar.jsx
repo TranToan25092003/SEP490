@@ -135,6 +135,23 @@ export default function StaffSideBar({
                   <Tooltip key={it.key} open={expanded ? false : undefined}>
                     <TooltipTrigger asChild disabled={expanded}>
                       <div className="relative group">
+                        {it.href ? (
+                          <Link
+                            to={it.href}
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition cursor-pointer hover:text-red-600",
+                              {
+                                "opacity-0 pointer-events-none": !expanded,
+                                "opacity-100 pointer-events-auto": expanded,
+                                "font-semibold text-red-600": isActive, // Style text khi active
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                            aria-current={isActive ? "page" : undefined}
+                          >
+                            {it.label}
+                          </Link>
+                        ) : (
                         <span
                           className={cn(
                             "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
@@ -148,6 +165,7 @@ export default function StaffSideBar({
                         >
                           {it.label}
                         </span>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
