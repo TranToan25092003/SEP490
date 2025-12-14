@@ -124,59 +124,63 @@ const MainFooterContent = ({ footerInfo }) => {
             </div>
           </div>
 
-          {/* Contact / Subscribe */}
+          {/* Contact / Message */}
           <div className="lg:max-w-[240px] xl:max-w-[260px] space-y-3">
             <div className="text-white text-sm uppercase mb-4">
-              Để lại lời nhắn
+              Liên hệ với chúng tôi
             </div>
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Họ và Tên"
-                  className="bg-white/80 text-neutral-600 placeholder-neutral-600 text-xs px-3 py-2  w-full"
-                />
+            <div className="space-y-4">
+              <div className="bg-gradient-to-br from-red-600/20 to-red-800/20 border border-red-600/30 rounded-lg p-4 space-y-2">
+                <div className="flex items-start gap-2">
+                  <div className="text-red-500 text-xl">💬</div>
+                  <div className="flex-1">
+                    <p className="text-white text-sm font-medium mb-1">
+                      Chúng tôi luôn sẵn sàng hỗ trợ bạn
+                    </p>
+                    <p className="text-neutral-300 text-xs leading-relaxed">
+                      MotorMate cam kết mang đến dịch vụ tốt nhất và trải nghiệm
+                      tuyệt vời cho khách hàng
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Email..."
-                  className="bg-white/80 text-neutral-600 placeholder-neutral-600 text-xs px-3 py-2  w-full"
-                />
-              </div>
-              <div className="text-zinc-500 text-sm">
-                Nhận thông tin mới nhất
-              </div>
-              <button className="bg-red-600/75 text-white text-sm font-bold tracking-tight uppercase px-4 py-2 rounded shadow-[0px_2px_0px_0px_rgba(223,29,1,0.75)]">
-                Gửi
-              </button>
-              <div className="text-xs text-neutral-400 mt-2">
-                {email ? `Email: ${email}` : null}
-              </div>
-              <div className="text-xs text-neutral-400">
-                {facebook ? (
-                  <a
-                    href={facebook}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    Facebook
-                  </a>
-                ) : null}
-                {zalo ? (
-                  <>
-                    {facebook ? " • " : null}
+              <div className="space-y-2">
+                {email && (
+                  <div className="text-xs text-neutral-400">
+                    <span className="text-neutral-500">Email:</span>{" "}
                     <a
-                      href={zalo}
+                      href={`mailto:${email}`}
+                      className="text-white/80 hover:text-white underline transition-colors"
+                    >
+                      {email}
+                    </a>
+                  </div>
+                )}
+                <div className="flex items-center gap-3 text-xs">
+                  {facebook && (
+                    <a
+                      href={facebook}
                       target="_blank"
                       rel="noreferrer"
-                      className="underline"
+                      className="text-neutral-400 hover:text-white underline transition-colors"
                     >
-                      Zalo
+                      Facebook
                     </a>
-                  </>
-                ) : null}
+                  )}
+                  {zalo && (
+                    <>
+                      {facebook && <span className="text-neutral-600">•</span>}
+                      <a
+                        href={zalo}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-neutral-400 hover:text-white underline transition-colors"
+                      >
+                        Zalo
+                      </a>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>

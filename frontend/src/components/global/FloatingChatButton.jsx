@@ -75,6 +75,9 @@ const FloatingChatButton = () => {
   const fileInputRef = useRef(null);
   const [customerId, setCustomerId] = useState(null);
   const [customerName, setCustomerName] = useState("");
+  const [unreadCount, setUnreadCount] = useState(0);
+  const isOpenRef = useRef(false);
+  const isMinimizedRef = useRef(false);
 
   // Handle product click from mention
   const handleProductClick = (productId) => {
@@ -143,6 +146,19 @@ const FloatingChatButton = () => {
         }
         return next;
       });
+      
+      // Increase unread count if message is from staff and chat is closed/minimized
+      if (message.senderId !== "customer") {
+        // Use ref to check current state (not affected by closure)
+        if (isOpenRef.current && !isMinimizedRef.current) {
+          // Chat is open, user is viewing, don't count as unread
+          setUnreadCount(0);
+        } else {
+          // Chat is closed or minimized, count as unread
+          setUnreadCount((prev) => prev + 1);
+        }
+      }
+      
       scrollToBottom();
     });
 
@@ -181,9 +197,33 @@ const FloatingChatButton = () => {
     };
   }, [isSignedIn, user]);
 
+  // Update refs when state changes
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
+  useEffect(() => {
+    isMinimizedRef.current = isMinimized;
+  }, [isMinimized]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Reset unread count when chat is opened
+  useEffect(() => {
+    if (isOpen && !isMinimized) {
+      setUnreadCount(0);
+      // Clear from localStorage when chat is opened
+      if (customerId) {
+        try {
+          localStorage.removeItem(`chat_unread_${customerId}`);
+        } catch {
+          // Ignore localStorage errors
+        }
+      }
+    }
+  }, [isOpen, isMinimized, customerId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -259,8 +299,14 @@ const FloatingChatButton = () => {
   const toggleChat = () => {
     if (isMinimized) {
       setIsMinimized(false);
+      setIsOpen(true);
+      setUnreadCount(0); // Reset unread count when opening chat
     } else {
-      setIsOpen(!isOpen);
+      const newIsOpen = !isOpen;
+      setIsOpen(newIsOpen);
+      if (newIsOpen) {
+        setUnreadCount(0); // Reset unread count when opening chat
+      }
     }
   };
 
@@ -287,10 +333,34 @@ const FloatingChatButton = () => {
         const welcomeMessage = createWelcomeMessage();
         setMessages([welcomeMessage]);
       }
+      
+      // Restore unread count from localStorage
+      const savedUnreadCount = localStorage.getItem(`chat_unread_${customerId}`);
+      if (savedUnreadCount) {
+        const count = parseInt(savedUnreadCount, 10);
+        if (!isNaN(count) && count > 0) {
+          setUnreadCount(count);
+        }
+      }
     } catch {
       // Ignore localStorage errors
     }
   }, [customerId]);
+
+  // Save unread count to localStorage
+  useEffect(() => {
+    if (customerId) {
+      try {
+        if (unreadCount > 0) {
+          localStorage.setItem(`chat_unread_${customerId}`, unreadCount.toString());
+        } else {
+          localStorage.removeItem(`chat_unread_${customerId}`);
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
+    }
+  }, [unreadCount, customerId]);
 
   return (
     <>
@@ -306,6 +376,13 @@ const FloatingChatButton = () => {
                 size="icon"
               >
                 <ChatIcon className="w-7 h-7 text-primary-foreground" />
+                {unreadCount > 0 && (
+                  <Badge
+                    className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs font-bold border-2 border-background rounded-full min-w-[24px]"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                )}
               </Button>
             </div>
           </>
@@ -318,6 +395,13 @@ const FloatingChatButton = () => {
             size="icon"
           >
             <ChatIcon className="w-7 h-7 text-primary-foreground" />
+            {unreadCount > 0 && (
+              <Badge
+                className="absolute -top-1 -right-1 h-6 w-6 flex items-center justify-center p-0 bg-red-500 text-white text-xs font-bold border-2 border-background rounded-full min-w-[24px]"
+              >
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Badge>
+            )}
           </Button>
         )}
       </div>
@@ -519,7 +603,11 @@ const FloatingChatButton = () => {
         <div className="fixed bottom-24 right-6 z-50 animate-in slide-in-from-bottom-2 fade-in duration-300">
           <div
             className="w-72 bg-background rounded-2xl shadow-xl border border-border cursor-pointer hover:shadow-2xl transition-all duration-200"
-            onClick={() => setIsMinimized(false)}
+            onClick={() => {
+              setIsMinimized(false);
+              setIsOpen(true);
+              setUnreadCount(0); // Reset unread count when opening chat
+            }}
           >
             <div className="p-4">
               <div className="flex items-center gap-3">
@@ -543,8 +631,15 @@ const FloatingChatButton = () => {
                     Nhấn để mở chat
                   </p>
                 </div>
-                <div className="text-primary">
+                <div className="text-primary relative">
                   <MessageCircle className="h-5 w-5" />
+                  {unreadCount > 0 && (
+                    <Badge
+                      className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white text-xs font-bold border-2 border-background rounded-full min-w-[20px]"
+                    >
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </Badge>
+                  )}
                 </div>
               </div>
             </div>
