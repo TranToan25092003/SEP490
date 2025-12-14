@@ -6,6 +6,9 @@ class VehicleModelService {
         try {
             const groupedModels = await ModelVehicle.aggregate([
                 {
+                    $match: { status: "active" }
+                },
+                {
                     $sort: { name: 1 }
                 },
                 {

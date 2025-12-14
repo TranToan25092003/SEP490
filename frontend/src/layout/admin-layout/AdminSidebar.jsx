@@ -36,19 +36,19 @@ const items = [
   },
   {
     key: "services",
-    label: "Quản lý service",
+    label: "Quản lý dịch vụ",
     icon: Cog,
     href: "/admin/services",
   },
   {
     key: "models",
-    label: "Quản lý model",
+    label: "Quản lý mẫu xe",
     icon: Car,
     href: "/admin/models",
   },
   {
     key: "banners",
-    label: "Quản lý banner",
+    label: "Quản lý biểu ngữ",
     icon: Image,
     href: "/admin/banners",
   },
@@ -60,7 +60,7 @@ const items = [
   // },
   {
     key: "log",
-    label: "Log",
+    label: "Lịch sử hoạt động",
     icon: ScrollText,
     href: "/admin/activity-logs",
   },
@@ -139,19 +139,19 @@ export default function AdminSidebar({
                             {it.label}
                           </Link>
                         ) : (
-                        <span
-                          className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
-                            {
-                              "opacity-0": !expanded,
-                              "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive,
-                              "text-gray-700": !isActive,
-                            }
-                          )}
-                        >
-                          {it.label}
-                        </span>
+                          <span
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
+                              {
+                                "opacity-0": !expanded,
+                                "opacity-100": expanded,
+                                "font-semibold text-red-600": isActive,
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                          >
+                            {it.label}
+                          </span>
                         )}
                         <Button
                           variant="ghost"
