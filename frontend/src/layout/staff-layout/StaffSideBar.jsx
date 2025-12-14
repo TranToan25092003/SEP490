@@ -54,7 +54,7 @@ const items = [
   },
   {
     key: "parts",
-    label: "Quản lý phụ tùng",
+    label: "Xem phụ tùng",
     icon: Wrench,
     href: "/staff/items",
   },
@@ -152,19 +152,19 @@ export default function StaffSideBar({
                             {it.label}
                           </Link>
                         ) : (
-                        <span
-                          className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
-                            {
-                              "opacity-0": !expanded,
-                              "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive, // Style text khi active
-                              "text-gray-700": !isActive,
-                            }
-                          )}
-                        >
-                          {it.label}
-                        </span>
+                          <span
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
+                              {
+                                "opacity-0": !expanded,
+                                "opacity-100": expanded,
+                                "font-semibold text-red-600": isActive, // Style text khi active
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                          >
+                            {it.label}
+                          </span>
                         )}
                         <Button
                           variant="ghost"
@@ -199,10 +199,13 @@ export default function StaffSideBar({
             <div className="flex flex-col gap-2 w-full overflow-hidden">
               {/* User Info Section */}
               <div
-                className={cn("flex items-center gap-3 py-2 rounded-lg min-w-0 w-full overflow-hidden", {
-                  "justify-center": !expanded,
-                  "justify-start pl-0": expanded,
-                })}
+                className={cn(
+                  "flex items-center gap-3 py-2 rounded-lg min-w-0 w-full overflow-hidden",
+                  {
+                    "justify-center": !expanded,
+                    "justify-start pl-0": expanded,
+                  }
+                )}
               >
                 <Avatar className="size-10 flex-shrink-0">
                   <AvatarImage
@@ -217,14 +220,16 @@ export default function StaffSideBar({
                 </Avatar>
                 {expanded && (
                   <div className="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
-                    <span 
+                    <span
                       className="text-sm font-medium text-gray-900 truncate"
-                      title={resolveStaffFullName(user, { fallback: "Người dùng" })}
+                      title={resolveStaffFullName(user, {
+                        fallback: "Người dùng",
+                      })}
                     >
                       {resolveStaffFullName(user, { fallback: "Người dùng" })}
                     </span>
                     {user?.primaryEmailAddress && (
-                      <span 
+                      <span
                         className="text-xs text-gray-500 truncate"
                         title={user.primaryEmailAddress.emailAddress}
                       >

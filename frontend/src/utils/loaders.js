@@ -24,6 +24,8 @@ export const partsLoader = async ({ request }) => {
       queryParams.append("sortBy", searchParams.get("sortBy"));
     if (searchParams.get("sortOrder"))
       queryParams.append("sortOrder", searchParams.get("sortOrder"));
+    if (searchParams.get("statusFilter"))
+      queryParams.append("statusFilter", searchParams.get("statusFilter"));
 
     const response = await customFetch(
       `/manager/parts?${queryParams.toString()}`
@@ -157,6 +159,8 @@ export const partsStaffLoader = async ({ request }) => {
       queryParams.append("sortBy", searchParams.get("sortBy"));
     if (searchParams.get("sortOrder"))
       queryParams.append("sortOrder", searchParams.get("sortOrder"));
+    if (searchParams.get("statusFilter"))
+      queryParams.append("statusFilter", searchParams.get("statusFilter"));
 
     const response = await customFetch(
       `/staff/parts?${queryParams.toString()}`

@@ -11,6 +11,7 @@ class PartService {
       vehicleModel = "",
       sortBy = "createdAt",
       sortOrder = "desc",
+      statusFilter = "",
     } = query;
 
     const filter = {};
@@ -29,6 +30,27 @@ class PartService {
 
     if (vehicleModel) {
       filter.compatible_model_ids = { $in: [vehicleModel] };
+    }
+
+    // Filter by status and stock availability
+    if (statusFilter) {
+      switch (statusFilter) {
+        case "available":
+          // Có sẵn: active và quantity > 0
+          filter.status = "active";
+          filter.quantity = { $gt: 0 };
+          break;
+        case "out_of_stock":
+          // Hết hàng: active và quantity = 0
+          filter.status = "active";
+          filter.quantity = 0;
+          break;
+        case "inactive":
+          // Bị vô hiệu hóa: inactive
+          filter.status = "inactive";
+          break;
+        // "all" or empty: no additional filter
+      }
     }
 
     const sort = {};
