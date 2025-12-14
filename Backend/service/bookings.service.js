@@ -210,18 +210,45 @@ class BookingsService {
     
     const bookings = await query.exec();
 
+    // Check payment status for each booking with service order
+    const Invoice = require("../model").Invoice;
+    const serviceOrderIds = bookings
+      .filter((b) => b.service_order_id)
+      .map((b) => b.service_order_id);
+    
+    const paidInvoices = await Invoice.find({
+      service_order_id: { $in: serviceOrderIds },
+      status: "paid",
+    })
+      .select("service_order_id")
+      .lean()
+      .exec();
+    
+    const paidServiceOrderIds = new Set(
+      paidInvoices.map((inv) => inv.service_order_id.toString())
+    );
+
     // Map và sắp xếp: đang thực hiện lên đầu, sau đó sắp xếp theo thời gian giảm dần
-    const mappedBookings = bookings.map((booking) => ({
-      id: booking._id,
-      vehicle: mapToVehicleDTO(booking.vehicle_id),
-      services: booking.service_ids
-        ? booking.service_ids.map(mapServiceToDTO)
-        : [],
-      slotStartTime: booking.slot_start_time,
-      slotEndTime: booking.slot_end_time,
-      status: booking.status,
-      serviceOrderId: booking.service_order_id,
-    }));
+    const mappedBookings = bookings
+      .map((booking) => ({
+        id: booking._id,
+        vehicle: mapToVehicleDTO(booking.vehicle_id),
+        services: booking.service_ids
+          ? booking.service_ids.map(mapServiceToDTO)
+          : [],
+        slotStartTime: booking.slot_start_time,
+        slotEndTime: booking.slot_end_time,
+        status: booking.status,
+        serviceOrderId: booking.service_order_id,
+        isPaid: booking.service_order_id
+          ? paidServiceOrderIds.has(booking.service_order_id.toString())
+          : false,
+      }))
+      .filter((booking) => {
+        // Only include bookings with service orders that are paid
+        // Or bookings without service orders (for other purposes)
+        return !booking.serviceOrderId || booking.isPaid;
+      });
 
     // Sắp xếp: đang thực hiện (in_progress, checked_in) lên đầu, sau đó theo thời gian giảm dần
     const activeStatuses = ["in_progress", "checked_in"];
