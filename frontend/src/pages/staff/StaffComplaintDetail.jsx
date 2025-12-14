@@ -179,19 +179,33 @@ export default function StaffComplaintDetailPage() {
               ? `#${complaint.so_id.toString().slice(-6)}`
               : "N/A"}
           </DetailField>
-          <DetailField label="Tiêu đề khiếu nại">{complaint.title}</DetailField>
+          <DetailField label="Tiêu đề khiếu nại">
+            <div className="truncate max-w-full" title={complaint.title}>
+              {complaint.title}
+            </div>
+          </DetailField>
           <DetailField label="Danh mục khiếu nại">
-            {complaint.categoryName || complaint.category || "N/A"}
+            <div className="truncate max-w-full" title={complaint.categoryName || complaint.category || "N/A"}>
+              {complaint.categoryName || complaint.category || "N/A"}
+            </div>
           </DetailField>
           <DetailField label="Tên Khách Hàng">
-            {complaint.customerName}
+            <div className="truncate max-w-full" title={complaint.customerName}>
+              {complaint.customerName}
+            </div>
           </DetailField>
           <DetailField label="Số Điện Thoại">
             {complaint.customerPhone}
           </DetailField>
-          <DetailField label="Xe">{`${complaint.license_plate} - ${complaint.model}`}</DetailField>
+          <DetailField label="Xe">
+            <div className="truncate max-w-full" title={`${complaint.license_plate} - ${complaint.model}`}>
+              {`${complaint.license_plate} - ${complaint.model}`}
+            </div>
+          </DetailField>
           <DetailField label="Kỹ Thuật Viên (Dịch vụ)">
-            {complaint.staffNames?.join(", ") || "N/A"}
+            <div className="truncate max-w-full" title={complaint.staffNames?.join(", ") || "N/A"}>
+              {complaint.staffNames?.join(", ") || "N/A"}
+            </div>
           </DetailField>
           <DetailField label="Ngày Tạo Khiếu Nại">
             {formatDate(complaint.createdAt)}
@@ -211,9 +225,11 @@ export default function StaffComplaintDetailPage() {
       {/* Complaint Content */}
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <h2 className="text-2xl font-medium mb-4">Nội dung khiếu nại</h2>
-        <p className="text-base text-gray-800 whitespace-pre-wrap">
-          {complaint.content}
-        </p>
+        <div className="max-h-[400px] overflow-y-auto">
+          <p className="text-base text-gray-800 whitespace-pre-wrap break-words">
+            {complaint.content}
+          </p>
+        </div>
       </div>
 
       {/* Photos from Customer */}

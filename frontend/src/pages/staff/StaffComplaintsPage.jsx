@@ -233,16 +233,24 @@ export default function StaffComplaintsPage() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="font-medium">{complaint.title}</div>
+                    <div className="font-medium truncate max-w-[200px]" title={complaint.title}>
+                      {complaint.title}
+                    </div>
                     <div className="text-sm text-muted-foreground">
                       #{complaint._id.slice(-6)}
                     </div>
                   </TableCell>
-                  <TableCell>{complaint.customerName || "N/A"}</TableCell>
+                  <TableCell>
+                    <div className="truncate max-w-[150px]" title={complaint.customerName || "N/A"}>
+                      {complaint.customerName || "N/A"}
+                    </div>
+                  </TableCell>
                   <TableCell>{complaint.customerPhone || "N/A"}</TableCell>
                   <TableCell>{formatDate(complaint.createdAt)}</TableCell>
                   <TableCell>
-                    {complaint.categoryName || complaint.category || "N/A"}
+                    <div className="truncate max-w-[150px]" title={complaint.categoryName || complaint.category || "N/A"}>
+                      {complaint.categoryName || complaint.category || "N/A"}
+                    </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(complaint.status)}</TableCell>
                   <TableCell>
