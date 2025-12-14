@@ -3,7 +3,7 @@ import { Await, Link, useLoaderData } from "react-router-dom";
 import { SignedIn, SignedOut } from "@clerk/clerk-react";
 import {
   Calendar,
-  Car,
+  Motorbike,
   Clock,
   LogIn,
   Search,
@@ -282,7 +282,7 @@ const BookingList = ({ bookings, vehicles }) => {
                   </CardHeader>
                   <CardContent className="grid gap-4 md:grid-cols-3">
                     <div className="flex items-start gap-3">
-                      <Car className="size-5 text-primary flex-shrink-0" />
+                      <Motorbike className="size-5 text-primary flex-shrink-0" />
                       <div>
                         <p className="text-sm text-muted-foreground">Phương tiện</p>
                         <p className="font-semibold">

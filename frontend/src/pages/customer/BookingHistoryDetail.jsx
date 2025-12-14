@@ -2,7 +2,7 @@ import { Suspense, useState, useMemo, useEffect } from "react";
 import { Await, useLoaderData, useNavigate } from "react-router-dom";
 import {
   Calendar,
-  Car,
+  Motorbike,
   Clock,
   Package,
   Wrench,
@@ -206,7 +206,7 @@ const BookingHistoryDetailContent = ({ data }) => {
             {/* Thông tin đơn hàng */}
             <div className="grid gap-4 md:grid-cols-3 pb-6 border-b">
               <div className="flex items-start gap-3">
-                <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
+                <Motorbike className="size-5 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm text-muted-foreground">Phương tiện</p>
                   <p className="font-semibold">
