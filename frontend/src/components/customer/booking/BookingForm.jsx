@@ -108,7 +108,7 @@ const BookingForm = ({
     }
 
     mounted.current = true;
-  }, []);
+  }, [currentStep]);
 
   const methods = useForm({
     defaultValues: {
