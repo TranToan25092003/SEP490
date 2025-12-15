@@ -22,16 +22,22 @@ const Login = () => {
       // Kiểm tra xem đây có phải là lần đăng nhập đầu tiên không
       checkIsFirstLogin(user).then((isFirstLogin) => {
         console.log("Login: First login check result:", isFirstLogin);
+        const baseDestination = getRoleRedirectPath(user);
+
+        // Nếu là lần đầu, vẫn redirect theo role nhưng thêm query firstLogin
         if (isFirstLogin) {
-          // Nếu là lần đầu, redirect đến profile với query param firstLogin
-          console.log("Login: Redirecting to /profile?firstLogin=true");
-          navigate("/profile?firstLogin=true", { replace: true });
-        } else {
-          // Nếu không phải lần đầu, redirect theo role
-      const destination = getRoleRedirectPath(user);
-          console.log("Login: Redirecting to:", destination);
-      navigate(destination, { replace: true });
+          const destinationWithFlag = baseDestination.includes("?")
+            ? `${baseDestination}&firstLogin=true`
+            : `${baseDestination}?firstLogin=true`;
+
+          // console.log("Login: Redirecting to (first login):", destinationWithFlag);
+          navigate(destinationWithFlag, { replace: true });
+          return;
         }
+
+        // Nếu không phải lần đầu, redirect theo role bình thường
+        // console.log("Login: Redirecting to:", baseDestination);
+        navigate(baseDestination, { replace: true });
       });
     }
   }, [isSignedIn, user, isUserLoaded, navigate]);
@@ -169,8 +175,10 @@ const Login = () => {
             </button>
           </div>
 
-          <div className="text-black mt-8 md:mt-0 w-[90%] max-w-md flex flex-col bg-white/95 rounded-2xl shadow-lg border border-gray-200 px-6 py-8 sm:px-8 sm:py-10
-                         lg:w-3/4 lg:max-w-none lg:bg-transparent lg:rounded-none lg:shadow-none lg:border-none lg:px-0 lg:py-0">
+          <div
+            className="text-black mt-8 md:mt-0 w-[90%] max-w-md flex flex-col bg-white/95 rounded-2xl shadow-lg border border-gray-200 px-6 py-8 sm:px-8 sm:py-10
+                         lg:w-3/4 lg:max-w-none lg:bg-transparent lg:rounded-none lg:shadow-none lg:border-none lg:px-0 lg:py-0"
+          >
             <h1 className="uppercase text-[#D31705] text-2xl font-semibold text-center lg:text-left">
               ĐĂNG NHẬP
             </h1>
@@ -329,9 +337,7 @@ const Login = () => {
                       fill="white"
                     />
                   </svg>
-                  <p className="text-white text-base font-bold">
-                    Đăng Nhập
-                  </p>
+                  <p className="text-white text-base font-bold">Đăng Nhập</p>
                 </button>
               </div>
             </div>

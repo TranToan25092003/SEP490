@@ -13,7 +13,9 @@ const ROLE_ALIASES = {
   "org:admin": "admin",
   "org:admin_secondary": "admin",
   "org:manager": "manager",
-  "org:member": "staff",
+  // Thành viên bình thường trong organization => coi như khách (customer),
+  // không có quyền staff/manager/admin
+  "org:member": "customer",
   "org:staff": "staff",
 };
 
