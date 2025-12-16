@@ -55,7 +55,11 @@ customFetch.interceptors.response.use(
         // );
         // Có thể redirect đến trang đăng nhập
       } else {
-        toast.error(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+        // Kiểm tra xem có flag skipAutoToast không (để tránh hiển thị toast 2 lần khi đã có toast.promise)
+        const skipAutoToast = error.config?.skipAutoToast;
+        if (!skipAutoToast) {
+          toast.error(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+        }
       }
     } else if (error.request) {
       // Yêu cầu đã được gửi nhưng không nhận được phản hồi (lỗi mạng)

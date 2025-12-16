@@ -2,7 +2,12 @@ import { Plus, Package, Wrench, Hammer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { useServiceOrder } from "./ServiceOrderContext";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,6 +16,17 @@ import ChoosePartsModal from "./ChoosePartsModal";
 import NiceModal from "@ebay/nice-modal-react";
 import { Warehouse } from "lucide-react";
 import { NumericFormat } from "react-number-format";
+import { useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const PartItemRow = ({
   index,
@@ -66,7 +82,11 @@ const PartItemRow = ({
               thousandSeparator=","
               suffix=" ₫"
               disabled={true}
-              className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+              className={cn(
+                "mt-1",
+                index === 0 && "mt-1",
+                index !== 0 && "mt-0"
+              )}
             />
           );
         }}
@@ -173,7 +193,11 @@ const ServiceItemRow = ({
               thousandSeparator=","
               suffix=" ₫"
               disabled={disabled}
-              className={cn("mt-1", index === 0 && "mt-1", index !== 0 && "mt-0")}
+              className={cn(
+                "mt-1",
+                index === 0 && "mt-1",
+                index !== 0 && "mt-0"
+              )}
             />
           );
         }}
@@ -224,16 +248,30 @@ const ServiceItemRow = ({
   </div>
 );
 
-const EmptyState = ({ icon: Icon, title }) => (
-  <div className="flex flex-col items-center justify-center py-6 text-center">
-    <Icon className="w-8 h-8 text-muted-foreground/50 mb-2" />
-    <p className="text-sm text-muted-foreground">{title}</p>
-  </div>
-);
+const EmptyState = ({ icon: Icon, title }) => {
+  const IconComponent = Icon;
+  return (
+    <div className="flex flex-col items-center justify-center py-6 text-center">
+      <IconComponent className="w-8 h-8 text-muted-foreground/50 mb-2" />
+      <p className="text-sm text-muted-foreground">{title}</p>
+    </div>
+  );
+};
 
 const ServiceOrderServices = ({ className, ...props }) => {
   const { disabled } = useServiceOrder();
-  const { register, control, formState: { errors }, getValues, setValue } = useFormContext();
+  const {
+    register,
+    control,
+    formState: { errors },
+    getValues,
+    setValue,
+  } = useFormContext();
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    open: false,
+    type: null,
+    index: null,
+  });
 
   const partsMethods = useFieldArray({
     name: "parts",
@@ -250,20 +288,21 @@ const ServiceOrderServices = ({ className, ...props }) => {
 
       for (const part of parts) {
         const existingPartIndex = currentParts.findIndex(
-            (p) => p.partId === part._id
+          (p) => p.partId === part._id
         );
 
         if (existingPartIndex !== -1) {
-            const currentQuantity = Number(currentParts[existingPartIndex].quantity) || 0;
-            setValue(`parts.${existingPartIndex}.quantity`, currentQuantity + 1);
+          const currentQuantity =
+            Number(currentParts[existingPartIndex].quantity) || 0;
+          setValue(`parts.${existingPartIndex}.quantity`, currentQuantity + 1);
         } else {
-            partsMethods.append({
-                type: "part",
-                partId: part._id,
-                partName: part.name,
-                price: part.sellingPrice,
-                quantity: 1
-            });
+          partsMethods.append({
+            type: "part",
+            partId: part._id,
+            partName: part.name,
+            price: part.sellingPrice,
+            quantity: 1,
+          });
         }
       }
     } catch (error) {
@@ -280,7 +319,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
           serviceId: service.id,
           name: service.name,
           price: service.basePrice,
-          quantity: 1
+          quantity: 1,
         });
       }
     } catch (error) {
@@ -294,9 +333,9 @@ const ServiceOrderServices = ({ className, ...props }) => {
       serviceId: "",
       name: "",
       price: 0,
-      quantity: 1
+      quantity: 1,
     });
-  }
+  };
 
   return (
     <Card className={cn(className, "gap-0")} {...props}>
@@ -330,9 +369,7 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     errors={errors}
                     onRemove={{
                       onClick: () => {
-                        if (window.confirm("Bạn có chắc chắn muốn xóa phụ tùng này?")) {
-                          partsMethods.remove(index);
-                        }
+                        setDeleteConfirm({ open: true, type: "part", index });
                       },
                     }}
                   />
@@ -371,9 +408,11 @@ const ServiceOrderServices = ({ className, ...props }) => {
                     errors={errors}
                     onRemove={{
                       onClick: () => {
-                        if (window.confirm("Bạn có chắc chắn muốn xóa dịch vụ này?")) {
-                          serviceItemsMethods.remove(index);
-                        }
+                        setDeleteConfirm({
+                          open: true,
+                          type: "service",
+                          index,
+                        });
                       },
                     }}
                   />
@@ -407,6 +446,46 @@ const ServiceOrderServices = ({ className, ...props }) => {
           </CardFooter>
         </TabsContent>
       </Tabs>
+
+      <AlertDialog
+        open={deleteConfirm.open}
+        onOpenChange={(open) =>
+          setDeleteConfirm({ open, type: null, index: null })
+        }
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm.type === "part"
+                ? "Bạn có chắc chắn muốn xóa phụ tùng này?"
+                : "Bạn có chắc chắn muốn xóa dịch vụ này?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (
+                  deleteConfirm.type === "part" &&
+                  deleteConfirm.index !== null
+                ) {
+                  partsMethods.remove(deleteConfirm.index);
+                } else if (
+                  deleteConfirm.type === "service" &&
+                  deleteConfirm.index !== null
+                ) {
+                  serviceItemsMethods.remove(deleteConfirm.index);
+                }
+                setDeleteConfirm({ open: false, type: null, index: null });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Xóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

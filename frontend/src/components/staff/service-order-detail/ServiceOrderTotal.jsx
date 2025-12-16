@@ -7,6 +7,16 @@ import { useState } from "react";
 import { useServiceOrder } from "./ServiceOrderContext";
 import { useFormContext } from "react-hook-form";
 import { useDebouncedCallback } from "use-debounce";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ServiceOrderTotal = ({ className, ...props }) => {
   const {
@@ -15,8 +25,10 @@ const ServiceOrderTotal = ({ className, ...props }) => {
     getTotalPrice,
     handleUpdateServiceOrder,
     handleSendInvoice,
+    hasPendingQuote = false,
   } = useServiceOrder();
   const [loading, setLoading] = useState(false);
+  const [showSendQuoteDialog, setShowSendQuoteDialog] = useState(false);
   const [price, setPrice] = useState({
     price: 0,
     tax: 0,
@@ -101,8 +113,19 @@ const ServiceOrderTotal = ({ className, ...props }) => {
                   ...items.parts,
                 ]);
               }}
-              disabled={disabled || !hasServices}
+              disabled={
+                disabled ||
+                !hasServices ||
+                hasPendingQuote ||
+                serviceOrder.status === "waiting_customer_approval"
+              }
               aria-busy={disabled || !hasServices}
+              title={
+                hasPendingQuote ||
+                serviceOrder.status === "waiting_customer_approval"
+                  ? "Không thể cập nhật khi đã gửi báo giá. Vui lòng đợi khách hàng phê duyệt hoặc từ chối báo giá hiện tại."
+                  : undefined
+              }
             >
               Cập nhật thông tin
             </Button>
@@ -114,20 +137,22 @@ const ServiceOrderTotal = ({ className, ...props }) => {
               className="w-full"
               type="button"
               onClick={() => {
-                handleSendInvoice(serviceOrder, [
-                  ...items.services,
-                  ...items.parts,
-                ]);
+                setShowSendQuoteDialog(true);
               }}
               disabled={
-                !(
-                  serviceOrder.status === "inspection_completed" ||
-                  serviceOrder.status === "waiting_customer_approval"
-                ) ||
+                serviceOrder.status !== "inspection_completed" ||
                 !hasServices ||
-                disabled
+                disabled ||
+                hasPendingQuote ||
+                serviceOrder.status === "waiting_customer_approval"
               }
               aria-busy={disabled || !hasServices}
+              title={
+                hasPendingQuote ||
+                serviceOrder.status === "waiting_customer_approval"
+                  ? "Không thể gửi báo giá khi đã có báo giá đang chờ phê duyệt. Vui lòng đợi khách hàng phê duyệt hoặc từ chối báo giá hiện tại."
+                  : undefined
+              }
             >
               Gửi báo giá
             </Button>
@@ -142,6 +167,38 @@ const ServiceOrderTotal = ({ className, ...props }) => {
           </span>
         </div>
       )}
+
+      <AlertDialog
+        open={showSendQuoteDialog}
+        onOpenChange={setShowSendQuoteDialog}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận gửi báo giá</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn gửi báo giá này cho khách hàng? Sau khi gửi,
+              bạn sẽ không thể cập nhật thông tin cho đến khi khách hàng phê
+              duyệt hoặc từ chối báo giá.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={disabled}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                handleSendInvoice(serviceOrder, [
+                  ...items.services,
+                  ...items.parts,
+                ]);
+                setShowSendQuoteDialog(false);
+              }}
+              disabled={disabled}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {disabled ? "Đang gửi..." : "Xác nhận gửi"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

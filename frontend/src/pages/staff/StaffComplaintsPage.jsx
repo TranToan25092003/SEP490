@@ -21,6 +21,16 @@ import { AdminPagination } from "@/components/global/AdminPagination";
 import { Search, Pen, Trash2, Eye, Loader2 } from "lucide-react";
 import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function StaffComplaintsPage() {
   const { complaints = [], pagination = {} } = useLoaderData() || {};
@@ -31,6 +41,7 @@ export default function StaffComplaintsPage() {
   );
   const [selectedItems, setSelectedItems] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, type: null, complaintId: null });
   console.log(selectedItems);
 
   const handleSearchChange = (value) => {
@@ -78,19 +89,24 @@ export default function StaffComplaintsPage() {
     }
   };
 
-  const handleDeleteItem = async (complaintId) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa khiếu nại này?")) return;
+  const handleDeleteItem = (complaintId) => {
+    setDeleteConfirm({ open: true, type: "single", complaintId });
+  };
+
+  const confirmDeleteItem = async () => {
+    if (!deleteConfirm.complaintId) return;
 
     setIsDeleting(true);
     try {
       const response = await customFetch.delete(
-        `/staff/complaints/${complaintId}`
+        `/staff/complaints/${deleteConfirm.complaintId}`
       );
 
       if (response.data.success) {
         toast.success("Thành công", {
           description: "Khiếu nại đã được xóa.",
         });
+        setDeleteConfirm({ open: false, type: null, complaintId: null });
         navigate(0);
       } else {
         throw new Error(response.data.message);
@@ -104,19 +120,16 @@ export default function StaffComplaintsPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = () => {
     if (selectedItems.length === 0) {
       toast.error("Vui lòng chọn ít nhất một khiếu nại để xóa");
       return;
     }
 
-    if (
-      !window.confirm(
-        `Bạn có chắc chắn muốn xóa ${selectedItems.length} khiếu nại đã chọn?`
-      )
-    )
-      return;
+    setDeleteConfirm({ open: true, type: "bulk", complaintId: null });
+  };
 
+  const confirmBulkDelete = async () => {
     setIsDeleting(true);
     try {
       const response = await customFetch.delete(
@@ -131,6 +144,7 @@ export default function StaffComplaintsPage() {
           description: `${selectedItems.length} khiếu nại đã được xóa`,
         });
         setSelectedItems([]);
+        setDeleteConfirm({ open: false, type: null, complaintId: null });
         navigate(0);
       } else {
         throw new Error(response.data.message);
@@ -290,6 +304,29 @@ export default function StaffComplaintsPage() {
       </div>
 
       {pagination.totalPages > 1 && <AdminPagination pagination={pagination} />}
+
+      <AlertDialog open={deleteConfirm.open} onOpenChange={(open) => setDeleteConfirm({ open, type: null, complaintId: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận xóa</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteConfirm.type === "bulk"
+                ? `Bạn có chắc chắn muốn xóa ${selectedItems.length} khiếu nại đã chọn?`
+                : "Bạn có chắc chắn muốn xóa khiếu nại này?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteConfirm.type === "bulk" ? confirmBulkDelete : confirmDeleteItem}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Đang xóa..." : "Xóa"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
