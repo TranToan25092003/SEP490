@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, Car, Wrench } from "lucide-react";
+import { Calendar, Clock, Motorbike, Wrench } from "lucide-react";
 import { cn, formatTimeXGioYPhut } from "@/lib/utils";
 
 /** @typedef {import("./index").ConfirmationStepProps} ConfirmationStepProps */
@@ -55,7 +55,7 @@ const ConfirmationStep = ({ className, ...props }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Car className="w-5 h-5" />
+              <Motorbike className="w-5 h-5" />
               Thông tin xe
             </CardTitle>
           </CardHeader>

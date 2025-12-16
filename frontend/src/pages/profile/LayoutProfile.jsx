@@ -23,7 +23,7 @@ import {
   Upload,
   Image,
   User,
-  Car,
+  Motorbike,
   History,
   Loader2,
   Calendar,
@@ -936,7 +936,7 @@ const LayoutProfile = () => {
                 value="vehicle"
                 className="gap-2 text-xs sm:text-sm data-[state=active]:bg-white data-[state=active]:text-red-600 data-[state=active]:shadow-sm rounded-md w-full md:w-auto"
               >
-                <Car className="h-4 w-4" /> Thông Tin Xe
+                <Motorbike className="h-4 w-4" /> Thông Tin Xe
               </TabsTrigger>
               <TabsTrigger
                 value="history"
@@ -1160,7 +1160,7 @@ const LayoutProfile = () => {
                                   </CardHeader>
                                   <CardContent className="grid gap-4 md:grid-cols-3 pt-0">
                                     <div className="flex items-start gap-3">
-                                      <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
+                                      <Motorbike className="size-5 text-primary flex-shrink-0 mt-0.5" />
                                       <div>
                                         <p className="text-sm text-muted-foreground">
                                           Phương tiện

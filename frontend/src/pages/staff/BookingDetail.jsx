@@ -11,7 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatPrice } from "@/lib/utils";
 import { getBookingById, checkInBooking, cancelBooking } from "@/api/bookings";
 import { toast } from "sonner";
-import { Calendar, Clock, Car, User, Package, AlertCircle } from "lucide-react";
+import { Calendar, Clock, Motorbike, User, Package, AlertCircle } from "lucide-react";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
 
 /**
@@ -233,7 +233,7 @@ const BookingDetailContent = ({ booking, revalidator }) => {
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Car className="size-5" />
+                <Motorbike className="size-5" />
                 Thông Tin Xe
               </CardTitle>
             </CardHeader>

@@ -11,7 +11,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import placeholderVehicle from '@/assets/part-lopsau.png'; 
+import placeholderVehicle from '@/assets/part-lopsau.png';
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { customFetch } from "@/utils/customAxios";
@@ -144,7 +144,7 @@ const VehicleProfile = ({ vehicles = [] }) => {
           </div>
 
           {/* Hiển thị danh sách hình ảnh của xe */}
-          
+
           {vehicle.images && vehicle.images.length > 0 && (
             <div className="mt-6">
               <Label>Hình ảnh xe</Label>

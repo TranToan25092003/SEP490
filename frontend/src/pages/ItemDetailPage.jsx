@@ -21,7 +21,7 @@ function ItemDetailPage() {
 
   return (
     <main className="w-full">
-      <section className="relative w-full py-16 md:py-24 mt-10 mb-6">
+      <section className="relative w-full py-16 md:py-24 mb-6">
         <div className="absolute inset-0">
           <img src={detailBg} alt="Abstract red background" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-black/70"></div>
@@ -52,7 +52,7 @@ function ItemDetailPage() {
                 </Link>
               </Button>
             </div>
-            
+
             <ItemList
               products={relatedProducts}
               size={3}

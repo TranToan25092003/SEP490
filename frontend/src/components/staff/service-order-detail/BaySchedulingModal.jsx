@@ -195,9 +195,9 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
     <Dialog open={modal.visible} onOpenChange={(open) => !open && modal.hide()}>
       <DialogContent className="sm:max-w-[1200px]">
         <DialogHeader>
-          <DialogTitle>{ task ? "Chỉnh sửa lịch bay" : "Lên Lịch bay" }</DialogTitle>
+          <DialogTitle>{ task ? "Chỉnh sửa lịch bay (bàn nâng)" : "Lên Lịch bay (bàn nâng)" }</DialogTitle>
           <DialogDescription>
-            Chọn bay, thời gian và khung giờ phù hợp
+            Chọn bàn nâng, thời gian và khung giờ phù hợp
           </DialogDescription>
           {task && (task.expectedStartTime || task.expectedEndTime) && (
             <div className="mt-4 p-3 bg-secondary rounded-lg space-y-1 text-sm">
@@ -222,18 +222,18 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
             <FieldGroup>
               <Field>
                 <FieldLabel className="required-asterisk">
-                  Chọn bay
+                  Chọn bàn nâng
                 </FieldLabel>
                 {isLoadingBays ? (
                   <div className="flex flex-col items-center justify-center py-8 space-y-2">
                     <Spinner className="h-6 w-6" />
                     <p className="text-sm text-muted-foreground">
-                      Đang tải danh sách bay...
+                      Đang tải danh sách bàn nâng...
                     </p>
                   </div>
                 ) : bays.length === 0 ? (
                   <div className="text-center py-4 text-muted-foreground">
-                    <p className="text-sm">Không có bay nào</p>
+                    <p className="text-sm">Không có bàn nâng nào</p>
                   </div>
                 ) : (
                   <Controller
@@ -248,7 +248,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
                         }}
                       >
                         <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Chọn một bay">
+                          <SelectValue placeholder="Chọn một bàn nâng">
                             {selectedBay && (
                               <div className="flex items-center gap-2">
                                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -284,7 +284,7 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
                   <FieldError>{errors.bayId.message}</FieldError>
                 )}
                 <FieldDescription>
-                  Chọn bay sửa chữa phù hợp cho công việc
+                  Chọn bàn nâng sửa chữa phù hợp cho công việc
                 </FieldDescription>
               </Field>
 
@@ -382,12 +382,12 @@ const BaySchedulingModal = NiceModal.create(({ task }) => {
                     <CalendarIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">
                       {!selectedBayId || !duration
-                        ? "Vui lòng chọn bay và thời gian"
-                        : "Không có khung giờ trống cho bay này"}
+                        ? "Vui lòng chọn bàn nâng và thời gian"
+                        : "Không có khung giờ trống cho bàn nâng này"}
                     </p>
                     {selectedBayId && duration && (
                       <p className="text-xs mt-1">
-                        Vui lòng thử chọn bay khác hoặc thời gian khác
+                        Vui lòng thử chọn bàn nâng khác hoặc thời gian khác
                       </p>
                     )}
                   </div>
