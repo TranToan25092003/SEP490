@@ -1,7 +1,7 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Car } from "lucide-react";
+import { Motorbike } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -64,7 +64,7 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
             >
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Car className="w-5 h-5" />
+                  <Motorbike className="w-5 h-5" />
                   <span className="text-lg">{vehicle.licensePlate}</span>
                 </div>
               </CardTitle>

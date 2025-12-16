@@ -9,7 +9,7 @@ import Container from "@/components/global/Container";
 import { H3 } from "@/components/ui/headings";
 import BackButton from "@/components/global/BackButton";
 import { Spinner } from "@/components/ui/spinner";
-import { Car, Calendar, Clock, Shield, Package } from "lucide-react";
+import { Motorbike, Calendar, Clock, Shield, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import TimeSlotSelectionStep from "@/components/customer/booking/TimeSlotSelectionStep";
 import { useForm, FormProvider } from "react-hook-form";
@@ -113,7 +113,7 @@ const WarrantyBooking = () => {
           <CardContent className="space-y-4">
             {/* Thông tin xe */}
             <div className="flex items-start gap-3">
-              <Car className="size-5 text-primary flex-shrink-0 mt-0.5" />
+              <Motorbike className="size-5 text-primary flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm text-muted-foreground">Phương tiện</p>
                 <p className="font-semibold">
