@@ -46,9 +46,15 @@ function timeAgo(date) {
   return "Vài giây trước";
 }
 
+// Khởi tạo socket dùng chung cho toàn ứng dụng
+// Bổ sung withCredentials để khớp CORS backend và đảm bảo kết nối ổn định hơn
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   autoConnect: false,
   path: import.meta.env.VITE_SOCKET_PATH || "/socket.io",
+  withCredentials: true,
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  reconnectionAttempts: 5,
 });
 
 const NotificationIcon = ({ type }) => {
@@ -280,6 +286,38 @@ function NotificationBell() {
         socket.disconnect();
       };
     }
+  }, [userId]);
+
+  // Fallback polling: trong trường hợp socket bị lỗi / mất kết nối âm thầm,
+  // định kỳ refresh lại số lượng thông báo chưa đọc để tránh phải F5 thủ công.
+  useEffect(() => {
+    if (!userId) return;
+
+    let cancelled = false;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await customFetch.get("/notifications/unread-count");
+        if (res.data?.success && !cancelled) {
+          setUnreadCount(res.data.data.unreadCount || 0);
+        }
+      } catch (error) {
+        console.error(
+          "[NotificationBell] Fallback unread-count polling failed:",
+          error
+        );
+      }
+    };
+
+    // Gọi ngay lần đầu
+    fetchUnreadCount();
+    // Và lặp lại sau mỗi 5s để phản ứng nhanh hơn khi socket có vấn đề
+    const intervalId = setInterval(fetchUnreadCount, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
   }, [userId]);
 
   useEffect(() => {

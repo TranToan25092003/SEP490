@@ -14,7 +14,11 @@ const CLERK_ORGANIZATION_ID =
   null;
 const ORG_MEMBERSHIP_PAGE_SIZE =
   Number(process.env.CLERK_ORG_MEMBERSHIP_PAGE_SIZE) || 100;
-const STAFF_ORG_ROLES = ["staff", "manager", "admin", "technician"];
+// Các role được xem là "staff" cho mục đích nhận thông báo nội bộ
+// LƯU Ý: ĐÃ LOẠI BỎ "manager" khỏi nhóm này theo yêu cầu:
+//  - Manager sẽ không còn nhận những thông báo dành riêng cho staff
+//  - Chỉ "staff", "admin" và "technician" được xem là staff trong ngữ cảnh notification
+const STAFF_ORG_ROLES = ["staff", "admin", "technician"];
 
 const SERVICE_ORDER_STATUS_LABELS = {
   created: "được tạo",
@@ -115,7 +119,8 @@ function userHasStaffRole(user) {
   const normalized = normalizeRoles(user);
   if (normalized.length === 0) return false;
   return normalized.some((role) =>
-    ["staff", "manager", "admin", "technician"].includes(role)
+    // Đồng bộ với STAFF_ORG_ROLES nhưng cố tình bỏ qua "manager"
+    ["staff", "admin", "technician"].includes(role)
   );
 }
 
