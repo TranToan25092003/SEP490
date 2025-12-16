@@ -307,9 +307,11 @@ class ServiceOrderTaskService {
       );
     }
 
-    if (!["inspection_completed", "approved"].includes(serviceOrder.status)) {
+    // BẮT BUỘC: chỉ được lên lịch sửa chữa khi báo giá đã được khách DUYỆT
+    // => trạng thái service order PHẢI là "approved"
+    if (serviceOrder.status !== "approved") {
       throw new DomainError(
-        "Lệnh phải ở trạng thái đã hoàn thành kiểm tra hoặc được phê duyệt để lên lịch dịch vụ",
+        "Vui lòng gửi và được khách DUYỆT báo giá trước khi lên lịch sửa chữa.",
         ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
         409
       );
