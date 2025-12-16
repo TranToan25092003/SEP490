@@ -12,13 +12,14 @@ function mapServiceToDTO(service) {
 
 const ERROR_CODES = {
   SERVICE_NOT_FOUND: "SERVICE_NOT_FOUND",
-}
+};
 
 class ServicesService {
   async getAllServices() {
-    // Lọc bỏ dịch vụ bảo hành khỏi danh sách dịch vụ thông thường
+    // Lọc bỏ dịch vụ bảo hành và chỉ lấy dịch vụ active
     const services = await Service.find({
-      name: { $not: { $regex: /bảo hành/i } }
+      name: { $not: { $regex: /bảo hành/i } },
+      status: "active",
     }).exec();
     return services.map(mapServiceToDTO);
   }
@@ -32,5 +33,5 @@ class ServicesService {
 module.exports = {
   ServicesService: new ServicesService(),
   mapServiceToDTO,
-  ERROR_CODES
-}
+  ERROR_CODES,
+};

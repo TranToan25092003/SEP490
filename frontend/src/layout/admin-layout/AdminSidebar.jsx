@@ -36,19 +36,19 @@ const items = [
   },
   {
     key: "services",
-    label: "Quản lý service",
+    label: "Quản lý dịch vụ",
     icon: Cog,
     href: "/admin/services",
   },
   {
     key: "models",
-    label: "Quản lý model",
+    label: "Quản lý mẫu xe",
     icon: Car,
     href: "/admin/models",
   },
   {
     key: "banners",
-    label: "Quản lý banner",
+    label: "Quản lý biểu ngữ",
     icon: Image,
     href: "/admin/banners",
   },
@@ -60,7 +60,7 @@ const items = [
   // },
   {
     key: "log",
-    label: "Log",
+    label: "Lịch sử hoạt động",
     icon: ScrollText,
     href: "/admin/activity-logs",
   },
@@ -139,19 +139,19 @@ export default function AdminSidebar({
                             {it.label}
                           </Link>
                         ) : (
-                        <span
-                          className={cn(
-                            "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
-                            {
-                              "opacity-0": !expanded,
-                              "opacity-100": expanded,
-                              "font-semibold text-red-600": isActive,
-                              "text-gray-700": !isActive,
-                            }
-                          )}
-                        >
-                          {it.label}
-                        </span>
+                          <span
+                            className={cn(
+                              "absolute ml-4 left-full top-1/2 transform -translate-y-1/2 whitespace-nowrap text-sm font-medium transition group-hover:text-red-600",
+                              {
+                                "opacity-0": !expanded,
+                                "opacity-100": expanded,
+                                "font-semibold text-red-600": isActive,
+                                "text-gray-700": !isActive,
+                              }
+                            )}
+                          >
+                            {it.label}
+                          </span>
                         )}
                         <Button
                           variant="ghost"
@@ -183,15 +183,18 @@ export default function AdminSidebar({
                 );
               })}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-full overflow-hidden">
               {/* User Info Section */}
               <div
-                className={cn("flex items-center gap-3 py-2 rounded-lg", {
-                  "justify-center": !expanded,
-                  "justify-start pl-0": expanded,
-                })}
+                className={cn(
+                  "flex items-center gap-3 py-2 rounded-lg min-w-0 w-full overflow-hidden",
+                  {
+                    "justify-center": !expanded,
+                    "justify-start pl-0": expanded,
+                  }
+                )}
               >
-                <Avatar className="size-10">
+                <Avatar className="size-10 flex-shrink-0">
                   <AvatarImage
                     src={user?.imageUrl}
                     alt={user?.fullName || "User"}
@@ -203,12 +206,20 @@ export default function AdminSidebar({
                   </AvatarFallback>
                 </Avatar>
                 {expanded && (
-                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
+                    <span
+                      className="text-sm font-medium text-gray-900 truncate"
+                      title={resolveStaffFullName(user, {
+                        fallback: "Người dùng",
+                      })}
+                    >
                       {resolveStaffFullName(user, { fallback: "Người dùng" })}
                     </span>
                     {user?.primaryEmailAddress && (
-                      <span className="text-xs text-gray-500 truncate">
+                      <span
+                        className="text-xs text-gray-500 truncate"
+                        title={user.primaryEmailAddress.emailAddress}
+                      >
                         {user.primaryEmailAddress.emailAddress}
                       </span>
                     )}

@@ -61,6 +61,19 @@ class ComplaintService {
         );
       }
 
+      // Check if service order has been paid (invoice status = "paid")
+      const Invoice = require("../../model").Invoice;
+      const invoice = await Invoice.findOne({
+        service_order_id: so_id,
+        status: "paid",
+      }).exec();
+
+      if (!invoice) {
+        throw new Error(
+          "Chỉ có thể khiếu nại đơn hàng đã được thanh toán. Vui lòng thanh toán đơn hàng trước khi khiếu nại."
+        );
+      }
+
       const newComplaint = new Complain({
         so_id,
         clerkId,

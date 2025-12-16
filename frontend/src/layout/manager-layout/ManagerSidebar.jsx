@@ -185,15 +185,15 @@ export default function ManagerSidebar({
                 );
               })}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-full overflow-hidden">
               {/* User Info Section */}
               <div
-                className={cn("flex items-center gap-3 py-2 rounded-lg", {
+                className={cn("flex items-center gap-3 py-2 rounded-lg min-w-0 w-full overflow-hidden", {
                   "justify-center": !expanded,
                   "justify-start pl-0": expanded,
                 })}
               >
-                <Avatar className="size-10">
+                <Avatar className="size-10 flex-shrink-0">
                   <AvatarImage
                     src={user?.imageUrl}
                     alt={user?.fullName || "User"}
@@ -205,12 +205,18 @@ export default function ManagerSidebar({
                   </AvatarFallback>
                 </Avatar>
                 {expanded && (
-                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
-                    <span className="text-sm font-medium text-gray-900 truncate">
+                  <div className="flex flex-col min-w-0 flex-1 overflow-hidden pr-2">
+                    <span 
+                      className="text-sm font-medium text-gray-900 truncate"
+                      title={resolveStaffFullName(user, { fallback: "Người dùng" })}
+                    >
                       {resolveStaffFullName(user, { fallback: "Người dùng" })}
                     </span>
                     {user?.primaryEmailAddress && (
-                      <span className="text-xs text-gray-500 truncate">
+                      <span 
+                        className="text-xs text-gray-500 truncate"
+                        title={user.primaryEmailAddress.emailAddress}
+                      >
                         {user.primaryEmailAddress.emailAddress}
                       </span>
                     )}

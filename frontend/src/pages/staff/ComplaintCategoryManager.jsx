@@ -201,10 +201,14 @@ export default function ComplaintCategoryManager() {
                   categories.map((category) => (
                     <TableRow key={category._id}>
                       <TableCell className="font-medium">
-                        {category.name}
+                        <div className="truncate max-w-[200px]" title={category.name}>
+                          {category.name}
+                        </div>
                       </TableCell>
                       <TableCell className="max-w-[320px]">
-                        {category.description || "-"}
+                        <div className="truncate" title={category.description || "-"}>
+                          {category.description || "-"}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

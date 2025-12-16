@@ -19,16 +19,26 @@ const RoleRedirect = () => {
     // Kiểm tra xem đây có phải là lần đăng nhập đầu tiên không
     checkIsFirstLogin(user).then((isFirstLogin) => {
       console.log("RoleRedirect: First login check result:", isFirstLogin);
+
+      const baseDestination = getRoleRedirectPath(user);
+
+      // Nếu là lần đầu, vẫn redirect theo role nhưng thêm query firstLogin
       if (isFirstLogin) {
-        // Nếu là lần đầu, redirect đến profile với query param firstLogin
-        console.log("RoleRedirect: Redirecting to /profile?firstLogin=true");
-        navigate("/profile?firstLogin=true", { replace: true });
-      } else {
-        // Nếu không phải lần đầu, redirect theo role
-        const destination = getRoleRedirectPath(user);
-        console.log("RoleRedirect: Redirecting to:", destination);
-        navigate(destination, { replace: true });
+        const destinationWithFlag = baseDestination.includes("?")
+          ? `${baseDestination}&firstLogin=true`
+          : `${baseDestination}?firstLogin=true`;
+
+        console.log(
+          "RoleRedirect: Redirecting to (first login):",
+          destinationWithFlag
+        );
+        navigate(destinationWithFlag, { replace: true });
+        return;
       }
+
+      // Nếu không phải lần đầu, redirect theo role bình thường
+      console.log("RoleRedirect: Redirecting to:", baseDestination);
+      navigate(baseDestination, { replace: true });
     });
   }, [isLoaded, isSignedIn, user, navigate]);
 

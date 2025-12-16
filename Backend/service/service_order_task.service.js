@@ -224,7 +224,8 @@ class ServiceOrderTaskService {
 
     // Gửi notification cho customer khi bắt đầu kiểm tra
     if (serviceOrder.booking_id?.customer_clerk_id) {
-      const plate = serviceOrder.booking_id?.vehicle_id?.license_plate || "xe của bạn";
+      const plate =
+        serviceOrder.booking_id?.vehicle_id?.license_plate || "xe của bạn";
       await notificationService.createNotification({
         recipientClerkId: serviceOrder.booking_id.customer_clerk_id,
         recipientType: "customer",
@@ -308,7 +309,7 @@ class ServiceOrderTaskService {
 
     if (!["inspection_completed", "approved"].includes(serviceOrder.status)) {
       throw new DomainError(
-        "Lệnh phải ở trạng thái 'inspection_completed' hoặc 'approved' để lên lịch dịch vụ",
+        "Lệnh phải ở trạng thái đã hoàn thành kiểm tra hoặc được phê duyệt để lên lịch dịch vụ",
         ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
         409
       );

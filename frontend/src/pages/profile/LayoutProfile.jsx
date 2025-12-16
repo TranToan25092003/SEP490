@@ -1016,20 +1016,26 @@ const LayoutProfile = () => {
                                 setCurrentPage(1);
                               }}
                             >
-                              <SelectTrigger>
+                              <SelectTrigger className="w-full max-w-full truncate">
                                 <SelectValue placeholder="Tất cả xe" />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="all">Tất cả xe</SelectItem>
-                                {localVehicles.map((vehicle) => (
-                                  <SelectItem
-                                    key={vehicle._id}
-                                    value={vehicle._id}
-                                  >
-                                    {vehicle.license_plate} - {vehicle.brand}{" "}
-                                    {vehicle.name}
-                                  </SelectItem>
-                                ))}
+                                {localVehicles.map((vehicle) => {
+                                  const vehicleLabel = `${vehicle.license_plate} - ${vehicle.brand} ${vehicle.name}`;
+                                  return (
+                                    <SelectItem
+                                      key={vehicle._id}
+                                      value={vehicle._id}
+                                      title={vehicleLabel}
+                                      className="truncate"
+                                    >
+                                      <span className="truncate block">
+                                        {vehicleLabel}
+                                      </span>
+                                    </SelectItem>
+                                  );
+                                })}
                               </SelectContent>
                             </Select>
 

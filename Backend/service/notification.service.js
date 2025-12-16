@@ -14,7 +14,9 @@ const CLERK_ORGANIZATION_ID =
   null;
 const ORG_MEMBERSHIP_PAGE_SIZE =
   Number(process.env.CLERK_ORG_MEMBERSHIP_PAGE_SIZE) || 100;
-const STAFF_ORG_ROLES = ["staff", "manager", "admin", "technician"];
+// Các role được xem là "staff" cho mục đích nhận thông báo nội bộ
+
+const STAFF_ORG_ROLES = ["staff", "technician"];
 
 const SERVICE_ORDER_STATUS_LABELS = {
   created: "được tạo",
@@ -86,6 +88,22 @@ async function resolveCustomerName(clerkId) {
   }
 }
 
+function hasManagerRole(normalizedRoles = []) {
+  return normalizedRoles.some(
+    (role) =>
+      role === "manager" ||
+      role === "mana" ||
+      role.includes("manager") ||
+      role.includes("mana")
+  );
+}
+
+function hasAdminRole(normalizedRoles = []) {
+  return normalizedRoles.some(
+    (role) => role === "admin" || role.includes("admin")
+  );
+}
+
 function normalizeRoles(user) {
   const rawRoles = [];
   const publicMeta = user.publicMetadata || {};
@@ -114,9 +132,11 @@ function normalizeRoles(user) {
 function userHasStaffRole(user) {
   const normalized = normalizeRoles(user);
   if (normalized.length === 0) return false;
-  return normalized.some((role) =>
-    ["staff", "manager", "admin", "technician"].includes(role)
-  );
+
+  // Loại bỏ hoàn toàn manager/mana và admin khỏi nhóm staff
+  if (hasManagerRole(normalized) || hasAdminRole(normalized)) return false;
+
+  return normalized.some((role) => ["staff", "technician"].includes(role));
 }
 
 async function fetchStaffIdsFromOrganization() {
@@ -144,9 +164,13 @@ async function fetchStaffIdsFromOrganization() {
     memberships.forEach((membership) => {
       const role = membership.role?.toLowerCase() || "";
       const userId = membership.publicUserData?.userId;
+      // Loại bỏ manager/mana/admin khỏi danh sách staff
       if (
         !userId ||
         !role ||
+        role.includes("manager") ||
+        role.includes("mana") ||
+        role.includes("admin") ||
         !STAFF_ORG_ROLES.some((allowed) => role.includes(allowed))
       ) {
         return;

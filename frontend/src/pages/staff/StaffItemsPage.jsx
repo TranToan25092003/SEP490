@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
     Table,
     TableBody,
     TableCell,
@@ -22,6 +29,9 @@ export default function StaffItemsPage() {
     const [searchTerm, setSearchTerm] = useState(
         searchParams.get("search") || ""
     );
+    const [statusFilter, setStatusFilter] = useState(
+        searchParams.get("statusFilter") || "all"
+    );
 
     const { parts = [], pagination = {} } = loaderData || {};
 
@@ -33,6 +43,19 @@ export default function StaffItemsPage() {
             newSearchParams.set("search", value);
         } else {
             newSearchParams.delete("search");
+        }
+        newSearchParams.delete("page");
+        setSearchParams(newSearchParams);
+    };
+
+    // Handle status filter
+    const handleStatusFilter = (value) => {
+        setStatusFilter(value);
+        const newSearchParams = new URLSearchParams(searchParams);
+        if (value && value !== "all") {
+            newSearchParams.set("statusFilter", value);
+        } else {
+            newSearchParams.delete("statusFilter");
         }
         newSearchParams.delete("page");
         setSearchParams(newSearchParams);
@@ -54,14 +77,27 @@ export default function StaffItemsPage() {
     return (
         <div className="p-6 space-y-6">
             <div className="flex items-center justify-between gap-4">
-                <div className="relative w-full max-w-[520px]">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-gray-400" />
-                    <Input
-                        placeholder="Tìm kiếm..."
-                        className="pl-9 h-10 rounded-full text-[16px] placeholder:text-[#656575]"
-                        value={searchTerm}
-                        onChange={(e) => handleSearch(e.target.value)}
-                    />
+                <div className="flex items-center gap-3 flex-1">
+                    <div className="relative w-full max-w-[520px]">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px] text-gray-400" />
+                        <Input
+                            placeholder="Tìm kiếm..."
+                            className="pl-9 h-10 rounded-full text-[16px] placeholder:text-[#656575]"
+                            value={searchTerm}
+                            onChange={(e) => handleSearch(e.target.value)}
+                        />
+                    </div>
+                    <Select value={statusFilter} onValueChange={handleStatusFilter}>
+                        <SelectTrigger className="w-[200px] h-10">
+                            <SelectValue placeholder="Lọc theo trạng thái" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">Tất cả</SelectItem>
+                            <SelectItem value="available">Có sẵn</SelectItem>
+                            <SelectItem value="out_of_stock">Hết hàng</SelectItem>
+                            <SelectItem value="inactive">Bị vô hiệu hóa</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
                 {/* Action buttons are removed for staff view */}
             </div>
@@ -120,12 +156,21 @@ export default function StaffItemsPage() {
                                 <TableCell>{part.quantity} cái</TableCell>
                                 <TableCell>
                                     {part.status === 'active' ? (
-                                        <Badge variant="secondary"
-                                                className="bg-green-500 text-white dark:bg-blue-600">
-                                            {part.status}
-                                        </Badge>
+                                        part.quantity > 0 ? (
+                                            <Badge variant="secondary"
+                                                    className="bg-green-500 text-white dark:bg-blue-600">
+                                                Có sẵn
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary"
+                                                    className="bg-orange-500 text-white">
+                                                Hết hàng
+                                            </Badge>
+                                        )
                                     ) : (
-                                        <Badge variant="destructive">{part.status}</Badge>
+                                        <Badge variant="destructive">
+                                            Không có sẵn (inactive)
+                                        </Badge>
                                     )}
                                 </TableCell>
                                 <TableCell>{formatPrice(part.sellingPrice)}</TableCell>

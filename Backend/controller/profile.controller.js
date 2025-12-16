@@ -125,6 +125,7 @@ module.exports.getModels = async (req, res) => {
           "i"
         ),
       },
+      status: "active",
     })
       .distinct("name")
       .lean();
@@ -137,7 +138,7 @@ module.exports.getModels = async (req, res) => {
     });
   } else {
     // Lấy danh sách brands
-    const brands = await ModelVehicle.distinct("brand");
+    const brands = await ModelVehicle.distinct("brand", { status: "active" });
     res.status(200).json({
       message: "hello",
       data: {

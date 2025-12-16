@@ -177,6 +177,9 @@ export default function ManagerItems() {
   const [searchTerm, setSearchTerm] = useState(
     searchParams.get("search") || ""
   );
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("statusFilter") || "all"
+  );
   const [selectedItems, setSelectedItems] = useState([]);
   const [isTogglingStatus, setIsTogglingStatus] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -233,6 +236,19 @@ export default function ManagerItems() {
       newSearchParams.set("search", value);
     } else {
       newSearchParams.delete("search");
+    }
+    newSearchParams.delete("page"); // Reset to first page
+    setSearchParams(newSearchParams);
+  };
+
+  // Handle status filter
+  const handleStatusFilter = (value) => {
+    setStatusFilter(value);
+    const newSearchParams = new URLSearchParams(searchParams);
+    if (value && value !== "all") {
+      newSearchParams.set("statusFilter", value);
+    } else {
+      newSearchParams.delete("statusFilter");
     }
     newSearchParams.delete("page"); // Reset to first page
     setSearchParams(newSearchParams);
@@ -662,20 +678,33 @@ export default function ManagerItems() {
     <div className="p-6 space-y-6">
       <h1 className="text-2xl font-semibold">Quản Lý Phụ Tùng</h1>
       <div className="flex items-center justify-between gap-4">
-        <div className="relative w-full max-w-[520px]">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px]">
-            <img
-              src={searchSvg}
-              alt="search"
-              className="block w-[18px] h-[18px]"
+        <div className="flex items-center gap-3 flex-1">
+          <div className="relative w-full max-w-[520px]">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 size-[18px]">
+              <img
+                src={searchSvg}
+                alt="search"
+                className="block w-[18px] h-[18px]"
+              />
+            </span>
+            <Input
+              placeholder="Tìm kiếm..."
+              className="pl-9 h-10 rounded-full text-[16px] placeholder:text-[#656575]"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
             />
-          </span>
-          <Input
-            placeholder="Tìm kiếm..."
-            className="pl-9 h-10 rounded-full text-[16px] placeholder:text-[#656575]"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+          </div>
+          <Select value={statusFilter} onValueChange={handleStatusFilter}>
+            <SelectTrigger className="w-[200px] h-10">
+              <SelectValue placeholder="Lọc theo trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả</SelectItem>
+              <SelectItem value="available">Có sẵn</SelectItem>
+              <SelectItem value="out_of_stock">Hết hàng</SelectItem>
+              <SelectItem value="inactive">Bị vô hiệu hóa</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild>

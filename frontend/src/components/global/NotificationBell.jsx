@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { customFetch } from "@/utils/customAxios";
 import { useNavigate, Link } from "react-router-dom";
@@ -46,9 +46,15 @@ function timeAgo(date) {
   return "Vài giây trước";
 }
 
+// Khởi tạo socket dùng chung cho toàn ứng dụng
+// Bổ sung withCredentials để khớp CORS backend và đảm bảo kết nối ổn định hơn
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   autoConnect: false,
   path: import.meta.env.VITE_SOCKET_PATH || "/socket.io",
+  withCredentials: true,
+  transports: ["websocket", "polling"],
+  reconnection: true,
+  reconnectionAttempts: 5,
 });
 
 const NotificationIcon = ({ type }) => {
@@ -240,7 +246,6 @@ function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
 
   const initialFetchDone = useRef(false);
-  const markAllPendingRef = useRef(false);
 
   useEffect(() => {
     if (userId) {
@@ -282,6 +287,38 @@ function NotificationBell() {
     }
   }, [userId]);
 
+  // Fallback polling: trong trường hợp socket bị lỗi / mất kết nối âm thầm,
+  // định kỳ refresh lại số lượng thông báo chưa đọc để tránh phải F5 thủ công.
+  useEffect(() => {
+    if (!userId) return;
+
+    let cancelled = false;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await customFetch.get("/notifications/unread-count");
+        if (res.data?.success && !cancelled) {
+          setUnreadCount(res.data.data.unreadCount || 0);
+        }
+      } catch (error) {
+        console.error(
+          "[NotificationBell] Fallback unread-count polling failed:",
+          error
+        );
+      }
+    };
+
+    // Gọi ngay lần đầu
+    fetchUnreadCount();
+    // Và lặp lại sau mỗi 5s để phản ứng nhanh hơn khi socket có vấn đề
+    const intervalId = setInterval(fetchUnreadCount, 5000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [userId]);
+
   useEffect(() => {
     if (!userId || initialFetchDone.current) return;
     console.log("[NotificationBell] Initializing for user:", userId);
@@ -304,97 +341,111 @@ function NotificationBell() {
     initialFetchDone.current = true;
   }, [userId]);
 
-  const fetchNotifications = async (tab, pageNum = 1) => {
-    if (isLoading) return;
-    setIsLoading(true);
-    console.log("[NotificationBell] Fetching notifications", {
-      userId,
-      tab,
-      pageNum,
-    });
+  const fetchNotifications = useCallback(
+    async (tab, pageNum = 1) => {
+      // Không chặn khi đang loading để tránh bỏ lỡ refresh đồng bộ theo yêu cầu
+      setIsLoading(true);
+      console.log("[NotificationBell] Fetching notifications", {
+        userId,
+        tab,
+        pageNum,
+      });
 
-    let query = `/notifications?page=${pageNum}&limit=5`;
-    if (tab === "unread") {
-      query += "&isRead=false";
-    }
-
-    try {
-      const res = await customFetch.get(query);
-      if (res.data.success) {
-        const { data, pagination } = res.data;
-        const resolvedData = Array.isArray(data) ? data : [];
-        console.log(
-          "[NotificationBell] Fetch success",
-          tab,
-          "page",
-          pageNum,
-          "items",
-          resolvedData.length
-        );
-        const newState = {
-          list:
-            pageNum === 1
-              ? resolvedData
-              : [
-                  ...(tab === "all"
-                    ? allNotifications.list
-                    : unreadNotifications.list),
-                  ...resolvedData,
-                ],
-          page: pagination.currentPage,
-          totalPages: pagination.totalPages,
-        };
-
-        if (tab === "all") {
-          setAllNotifications(newState);
-        } else {
-          setUnreadNotifications(newState);
-        }
+      let query = `/notifications?page=${pageNum}&limit=5`;
+      if (tab === "unread") {
+        query += "&isRead=false";
       }
-    } catch {
-      console.error("[NotificationBell] Fetch notifications failed");
-      toast.error("Lỗi", { description: "Không thể tải thông báo." });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
-  const markAllNotificationsAsRead = async () => {
-    if (markAllPendingRef.current) return;
-    markAllPendingRef.current = true;
-    try {
-      await customFetch.patch("/notifications/mark-all-as-read");
-      setAllNotifications((prev = { list: [], page: 1, totalPages: 1 }) => ({
-        ...prev,
-        list: (prev.list || []).map((n) => ({ ...n, isRead: true })),
-      }));
-      setUnreadNotifications({ list: [], page: 1, totalPages: 1 });
-      setUnreadCount(0);
-    } catch (error) {
-      console.error("Failed to mark all notifications as read:", error);
-    } finally {
-      markAllPendingRef.current = false;
-    }
-  };
+      try {
+        const res = await customFetch.get(query);
+        if (res.data.success) {
+          const { data, pagination } = res.data;
+          const resolvedData = Array.isArray(data) ? data : [];
+          console.log(
+            "[NotificationBell] Fetch success",
+            tab,
+            "page",
+            pageNum,
+            "items",
+            resolvedData.length
+          );
 
-  const handleOpenChange = (open) => {
+          if (tab === "all") {
+            setAllNotifications(
+              (prev = { list: [], page: 1, totalPages: 1 }) => ({
+                list:
+                  pageNum === 1
+                    ? resolvedData
+                    : [...(prev.list || []), ...resolvedData],
+                page: pagination.currentPage,
+                totalPages: pagination.totalPages,
+              })
+            );
+          } else {
+            setUnreadNotifications(
+              (prev = { list: [], page: 1, totalPages: 1 }) => ({
+                list:
+                  pageNum === 1
+                    ? resolvedData
+                    : [...(prev.list || []), ...resolvedData],
+                page: pagination.currentPage,
+                totalPages: pagination.totalPages,
+              })
+            );
+          }
+        }
+      } catch {
+        console.error("[NotificationBell] Fetch notifications failed");
+        toast.error("Lỗi", { description: "Không thể tải thông báo." });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [userId]
+  );
+
+  // Khi đang mở dropdown và có biến động số unread, luôn refetch để đồng bộ list
+  useEffect(() => {
+    if (!isOpen) return;
+    fetchNotifications("all", 1);
+    if (activeTab === "unread" || unreadCount > 0) {
+      fetchNotifications("unread", 1);
+    }
+  }, [unreadCount, isOpen, activeTab, fetchNotifications]);
+
+  const handleOpenChange = async (open) => {
     setIsOpen(open);
     if (open) {
-      if (allNotifications.list.length === 0) {
-        console.log("[NotificationBell] Dropdown opened, trigger fetch");
-        fetchNotifications("all", 1);
+      console.log("[NotificationBell] Dropdown opened, refresh notifications");
+      try {
+        // Đánh dấu tất cả là đã đọc khi người dùng mở dropdown
+        await customFetch.patch("/notifications/mark-all-as-read");
+        // Đồng bộ state local: xoá badge và clear danh sách chưa đọc
+        setAllNotifications((prev = { list: [], page: 1, totalPages: 1 }) => ({
+          ...prev,
+          list: (prev.list || []).map((n) => ({ ...n, isRead: true })),
+        }));
+        setUnreadNotifications({ list: [], page: 1, totalPages: 1 });
+        setUnreadCount(0);
+      } catch (error) {
+        console.error(
+          "Failed to mark all notifications as read on open:",
+          error
+        );
       }
-      if (unreadCount > 0) {
-        markAllNotificationsAsRead();
-      }
+
+      // Sau khi mark-all, refetch để chắc chắn đồng bộ với backend
+      fetchNotifications("all", 1);
+      fetchNotifications("unread", 1);
     }
   };
 
   const handleTabChange = (newTab) => {
     setActiveTab(newTab);
-    if (newTab === "all" && allNotifications.list.length === 0) {
+    // Luôn refetch trang đầu khi đổi tab để tránh dữ liệu cũ
+    if (newTab === "all") {
       fetchNotifications("all", 1);
-    } else if (newTab === "unread" && unreadNotifications.list.length === 0) {
+    } else if (newTab === "unread") {
       fetchNotifications("unread", 1);
     }
   };
