@@ -45,7 +45,11 @@ const BookingProgressContent = ({ data }) => {
           serviceOrderStatus={booking.serviceOrderStatus}
           tasks={tasks || []}
           creationDate={
-            booking.createdAt ? new Date(booking.createdAt) : new Date()
+            booking.checkedInAt
+              ? new Date(booking.checkedInAt)
+              : booking.createdAt
+              ? new Date(booking.createdAt)
+              : new Date()
           }
         />
       </div>

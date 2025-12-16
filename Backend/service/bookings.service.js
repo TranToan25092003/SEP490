@@ -165,6 +165,12 @@ class BookingsService {
       booking.customer_clerk_id,
     ]);
 
+    // Lấy thời gian check-in: service order được tạo khi check-in xe
+    // Nếu có service order thì dùng service_order.createdAt làm thời gian check-in
+    // Nếu không có service order (chưa check-in) thì dùng booking.createdAt
+    const checkedInAt =
+      booking.service_order_id?.createdAt || booking.createdAt;
+
     return {
       id: booking._id,
       customer: {
@@ -178,6 +184,8 @@ class BookingsService {
       status: booking.status,
       serviceOrderStatus: booking.service_order_id?.status || null,
       serviceOrderId: booking.service_order_id?._id || null,
+      createdAt: booking.createdAt,
+      checkedInAt: checkedInAt, // Thời gian check-in xe (thời gian tạo đơn thực tế)
     };
   }
 
