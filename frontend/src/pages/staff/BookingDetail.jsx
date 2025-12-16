@@ -13,6 +13,16 @@ import { getBookingById, checkInBooking, cancelBooking } from "@/api/bookings";
 import { toast } from "sonner";
 import { Calendar, Clock, Car, User, Package, AlertCircle } from "lucide-react";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 /**
  * Format timeslot to readable string
@@ -59,6 +69,7 @@ function loader({ params }) {
 const BookingDetailContent = ({ booking, revalidator }) => {
   const [checkInLoading, setCheckInLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const handleCheckIn = async () => {
     try {
@@ -67,24 +78,41 @@ const BookingDetailContent = ({ booking, revalidator }) => {
       toast.success("Check-in thành công!");
       revalidator.revalidate();
     } catch (err) {
-      toast.error(err.message || "Không thể check-in");
+      const errorMessage =
+        err?.response?.data?.message || err?.message || "Không thể check-in";
+      toast.error(errorMessage);
     } finally {
       setCheckInLoading(false);
     }
   };
 
-  const handleCancel = async () => {
-    if (!confirm("Bạn có chắc chắn muốn hủy đặt lịch này?")) {
-      return;
-    }
+  const handleCancelClick = () => {
+    setShowCancelDialog(true);
+  };
 
+  const confirmCancel = async () => {
     try {
       setCancelLoading(true);
-      await cancelBooking(booking.id);
-      toast.success("Hủy đặt lịch thành công!");
+
+      const cancelPromise = cancelBooking(booking.id);
+      await toast
+        .promise(cancelPromise, {
+          loading: "Đang hủy đặt lịch...",
+          success: "Hủy đặt lịch thành công!",
+          error: (err) => {
+            const errorMessage =
+              err?.response?.data?.message ||
+              err?.message ||
+              "Hủy đặt lịch thất bại. Vui lòng thử lại.";
+            return errorMessage;
+          },
+        })
+        .unwrap();
+
+      setShowCancelDialog(false);
       revalidator.revalidate();
-    } catch (err) {
-      toast.error(err.message || "Không thể hủy đặt lịch");
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
     } finally {
       setCancelLoading(false);
     }
@@ -115,13 +143,11 @@ const BookingDetailContent = ({ booking, revalidator }) => {
                     type="button"
                     variant="outline"
                     className="text-destructive"
-                    onClick={handleCancel}
+                    onClick={handleCancelClick}
                     disabled={
                       cancelLoading || checkInLoading || booking.status !== "booked"
                     }
-                    aria-busy={cancelLoading}
                   >
-                    {cancelLoading && <Spinner className="size-4 mr-2" />}
                     Hủy đặt lịch
                   </Button>
                   <Button
@@ -280,6 +306,27 @@ const BookingDetailContent = ({ booking, revalidator }) => {
           </Card>
         )}
       </div>
+
+      <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận hủy đặt lịch</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn hủy đặt lịch này? Hành động này không thể hoàn tác.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelLoading}>Không</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmCancel}
+              disabled={cancelLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelLoading ? "Đang hủy..." : "Có, hủy đặt lịch"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Container>
   );
 };
