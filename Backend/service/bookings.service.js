@@ -183,7 +183,7 @@ class BookingsService {
 
   async getUserBookings(customerClerkId, options = {}) {
     const { limit = null, skip = 0 } = options;
-    
+
     // Tối ưu: chỉ select các fields cần thiết và populate hiệu quả
     let query = Booking.find({ customer_clerk_id: customerClerkId })
       .select(
@@ -203,62 +203,35 @@ class BookingsService {
       })
       .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
       .skip(skip);
-    
+
     if (limit) {
       query = query.limit(limit);
     }
-    
+
     const bookings = await query.exec();
 
-    // Check payment status for each booking with service order
-    const Invoice = require("../model").Invoice;
-    const serviceOrderIds = bookings
-      .filter((b) => b.service_order_id)
-      .map((b) => b.service_order_id);
-    
-    const paidInvoices = await Invoice.find({
-      service_order_id: { $in: serviceOrderIds },
-      status: "paid",
-    })
-      .select("service_order_id")
-      .lean()
-      .exec();
-    
-    const paidServiceOrderIds = new Set(
-      paidInvoices.map((inv) => inv.service_order_id.toString())
-    );
-
     // Map và sắp xếp: đang thực hiện lên đầu, sau đó sắp xếp theo thời gian giảm dần
-    const mappedBookings = bookings
-      .map((booking) => ({
-        id: booking._id,
-        vehicle: mapToVehicleDTO(booking.vehicle_id),
-        services: booking.service_ids
-          ? booking.service_ids.map(mapServiceToDTO)
-          : [],
-        slotStartTime: booking.slot_start_time,
-        slotEndTime: booking.slot_end_time,
-        status: booking.status,
-        serviceOrderId: booking.service_order_id,
-        isPaid: booking.service_order_id
-          ? paidServiceOrderIds.has(booking.service_order_id.toString())
-          : false,
-      }))
-      .filter((booking) => {
-        // Only include bookings with service orders that are paid
-        // Or bookings without service orders (for other purposes)
-        return !booking.serviceOrderId || booking.isPaid;
-      });
+    const mappedBookings = bookings.map((booking) => ({
+      id: booking._id,
+      vehicle: mapToVehicleDTO(booking.vehicle_id),
+      services: booking.service_ids
+        ? booking.service_ids.map(mapServiceToDTO)
+        : [],
+      slotStartTime: booking.slot_start_time,
+      slotEndTime: booking.slot_end_time,
+      status: booking.status,
+      serviceOrderId: booking.service_order_id,
+    }));
 
     // Sắp xếp: đang thực hiện (in_progress, checked_in) lên đầu, sau đó theo thời gian giảm dần
     const activeStatuses = ["in_progress", "checked_in"];
     mappedBookings.sort((a, b) => {
       const aIsActive = activeStatuses.includes(a.status);
       const bIsActive = activeStatuses.includes(b.status);
-      
+
       if (aIsActive && !bIsActive) return -1;
       if (!aIsActive && bIsActive) return 1;
-      
+
       // Cùng trạng thái, sắp xếp theo thời gian giảm dần
       const timeA = a.slotStartTime ? new Date(a.slotStartTime).getTime() : 0;
       const timeB = b.slotStartTime ? new Date(b.slotStartTime).getTime() : 0;
@@ -412,10 +385,11 @@ class BookingsService {
       );
     }
 
-    const serviceOrder = await ServiceOrderService.createServiceOrderFromBooking(
-      staffId,
-      bookingId
-    );
+    const serviceOrder =
+      await ServiceOrderService.createServiceOrderFromBooking(
+        staffId,
+        bookingId
+      );
 
     booking.service_order_id = serviceOrder._id;
     booking.status = "checked_in";

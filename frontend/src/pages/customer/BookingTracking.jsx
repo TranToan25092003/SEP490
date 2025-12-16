@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
+import { StatusBadge } from "@/components/global/StatusBadge";
 import { getUserBookings } from "@/api/bookings";
 import { getUserVehiclesWithAvailability } from "@/api/vehicles";
 import clerk from "@/utils/clerk";
@@ -276,9 +277,10 @@ const BookingList = ({ bookings, vehicles }) => {
                         {booking.vehicle?.licensePlate || "Biển số: N/A"}
                       </p>
                     </div>
-                    <Badge variant="outline">
-                      {translateBookingStatus(booking.status)}
-                    </Badge>
+                    <StatusBadge 
+                      status={translateBookingStatus(booking.status)} 
+                      colorKey={booking.status}
+                    />
                   </CardHeader>
                   <CardContent className="grid gap-4 md:grid-cols-3">
                     <div className="flex items-start gap-3">

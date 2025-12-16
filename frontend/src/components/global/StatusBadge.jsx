@@ -32,14 +32,93 @@ const stringToHue = (value) => {
  * // Returns: { background: "hsl(120, 80%, 92%)", foreground: "hsl(120, 45%, 32%)" }
  */
 const getStatusColors = (status) => {
-  // Màu đặc biệt cho trạng thái dời lịch (rescheduled)
+  // Màu cụ thể cho các trạng thái booking
+  const bookingColorMap = {
+    booked: {
+      background: "hsl(210, 80%, 92%)",
+      foreground: "hsl(210, 60%, 30%)",
+    }, // Xanh dương nhạt - Đã đặt
+    checked_in: {
+      background: "hsl(200, 75%, 90%)",
+      foreground: "hsl(200, 55%, 30%)",
+    }, // Xanh dương - Đã tiếp nhận
+    in_progress: {
+      background: "hsl(15, 85%, 88%)",
+      foreground: "hsl(15, 65%, 30%)",
+    }, // Đỏ cam - Đang thực hiện
+    completed: {
+      background: "hsl(140, 60%, 85%)",
+      foreground: "hsl(140, 40%, 25%)",
+    }, // Xanh lá đậm - Hoàn thành
+    cancelled: {
+      background: "hsl(0, 70%, 92%)",
+      foreground: "hsl(0, 55%, 35%)",
+    }, // Đỏ nhạt - Đã hủy
+  };
+
+  // Kiểm tra nếu là trạng thái booking
+  if (bookingColorMap[status]) {
+    return bookingColorMap[status];
+  }
+
+  // Màu cụ thể cho các trạng thái service order
+  const serviceOrderColorMap = {
+    created: {
+      background: "hsl(200, 80%, 92%)",
+      foreground: "hsl(200, 60%, 30%)",
+    }, // Xanh dương nhạt - Đã tạo
+    waiting_inspection: {
+      background: "hsl(45, 85%, 90%)",
+      foreground: "hsl(45, 70%, 35%)",
+    }, // Vàng cam - Chờ kiểm tra
+    inspection_completed: {
+      background: "hsl(180, 70%, 90%)",
+      foreground: "hsl(180, 50%, 30%)",
+    }, // Xanh lá nhạt - Đã kiểm tra
+    waiting_customer_approval: {
+      background: "hsl(30, 80%, 92%)",
+      foreground: "hsl(30, 60%, 35%)",
+    }, // Cam nhạt - Chờ khách duyệt
+    approved: {
+      background: "hsl(120, 70%, 88%)",
+      foreground: "hsl(120, 50%, 25%)",
+    }, // Xanh lá - Đã duyệt
+    scheduled: {
+      background: "hsl(210, 75%, 90%)",
+      foreground: "hsl(210, 55%, 30%)",
+    }, // Xanh dương - Đã lên lịch
+    rescheduled: {
+      background: "hsl(280, 90%, 95%)",
+      foreground: "hsl(280, 60%, 35%)",
+    }, // Tím nhạt - Dời lịch
+    servicing: {
+      background: "hsl(15, 85%, 88%)",
+      foreground: "hsl(15, 65%, 30%)",
+    }, // Đỏ cam - Đang sửa chữa
+    completed: {
+      background: "hsl(140, 60%, 85%)",
+      foreground: "hsl(140, 40%, 25%)",
+    }, // Xanh lá đậm - Hoàn thành
+    cancelled: {
+      background: "hsl(0, 70%, 92%)",
+      foreground: "hsl(0, 55%, 35%)",
+    }, // Đỏ nhạt - Đã hủy
+  };
+
+  // Kiểm tra nếu là trạng thái service order
+  if (serviceOrderColorMap[status]) {
+    return serviceOrderColorMap[status];
+  }
+
+  // Màu đặc biệt cho trạng thái dời lịch (rescheduled) - fallback
   if (status === "rescheduled") {
     return {
-      background: "hsl(280, 90%, 95%)", // tím nhạt, chưa dùng
+      background: "hsl(280, 90%, 95%)",
       foreground: "hsl(280, 60%, 35%)",
     };
   }
 
+  // Màu tự động cho các trạng thái khác
   const hue = stringToHue(status || "");
   return {
     background: `hsl(${hue}, 80%, 92%)`,
