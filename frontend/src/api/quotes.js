@@ -25,9 +25,10 @@ export const getQuotesForServiceOrder = async (serviceOrderId, page = 1, limit =
   return getAllQuotes(page, limit, serviceOrderId);
 };
 
-export const createQuote = async (serviceOrderId) => {
+export const createQuote = async (serviceOrderId, options = {}) => {
   const response = await customFetch(`/quotes/service-order/${serviceOrderId}`, {
     method: "POST",
+    skipAutoToast: options.skipAutoToast || false,
   });
 
   return response.data.data;

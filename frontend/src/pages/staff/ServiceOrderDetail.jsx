@@ -101,9 +101,9 @@ const ServiceOrderDetailContent = ({ serviceOrder, quotes, tasks, revalidator })
 
   const handleSendInvoice = async (serviceOrderData, items) => {
     try {
-      const task = updateServiceOrderItems(serviceOrderData.id, items).then(
+      const task = updateServiceOrderItems(serviceOrderData.id, items, { skipAutoToast: true }).then(
         () => {
-          return createQuote(serviceOrderData.id);
+          return createQuote(serviceOrderData.id, { skipAutoToast: true });
         }
       );
       await toast
@@ -175,6 +175,7 @@ const ServiceOrderDetailContent = ({ serviceOrder, quotes, tasks, revalidator })
       <ServiceOrderEditForm
         serviceOrder={serviceOrder}
         tasks={tasks || []}
+        quotes={quotes}
         getTotalPrice={async (items) => {
           //TODO: replace this with calls to the server
           const sum = items.reduce((acc, x) => acc + x.price * x.quantity, 0);

@@ -39,6 +39,16 @@ import { customFetch } from "@/utils/customAxios";
 import { toast } from "sonner";
 import { uploadPartImage, validateFile } from "@/utils/uploadCloudinary";
 import { X, ChevronsUpDown } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const ModelCompatibilityTree = ({
   groupedModels,
@@ -199,6 +209,8 @@ export default function ManagerItems() {
   const [newImagePreviews, setNewImagePreviews] = useState([]); // [{ file, url, id }]
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [groupedModels, setGroupedModels] = useState([]);
+  const [toggleConfirm, setToggleConfirm] = useState({ open: false, part: null, action: null });
+  const [bulkToggleConfirm, setBulkToggleConfirm] = useState({ open: false, action: null, count: 0 });
 
   const { parts = [], pagination = {} } = loaderData || {};
 
@@ -321,7 +333,7 @@ export default function ManagerItems() {
   };
 
   // Handle deactivate single item (toggle between active and inactive)
-  const handleDeactivateItem = async (part) => {
+  const handleDeactivateItem = (part) => {
     const currentStatus = part.status || "active";
     // Only toggle between active and inactive, not discontinued
     if (currentStatus === "discontinued") {
@@ -332,7 +344,13 @@ export default function ManagerItems() {
     }
 
     const action = currentStatus === "active" ? "vô hiệu hóa" : "kích hoạt";
-    if (!confirm(`Bạn có chắc chắn muốn ${action} sản phẩm này?`)) return;
+    setToggleConfirm({ open: true, part, action });
+  };
+
+  const confirmToggleItem = async () => {
+    if (!toggleConfirm.part) return;
+    const part = toggleConfirm.part;
+    const currentStatus = part.status || "active";
 
     try {
       const newStatus = currentStatus === "active" ? "inactive" : "active";
@@ -618,16 +636,27 @@ export default function ManagerItems() {
     const willActivate = activeCount < validParts.length / 2;
     const action = willActivate ? "kích hoạt" : "vô hiệu hóa";
 
-    if (
-      !confirm(
-        `Bạn có chắc chắn muốn ${action} ${validParts.length} sản phẩm đã chọn?`
-      )
-    )
-      return;
+    setBulkToggleConfirm({ open: true, action, count: validParts.length });
+  };
+
+  const confirmBulkToggle = async () => {
+    const selectedParts = parts.filter((part) =>
+      selectedItems.includes(part._id)
+    );
+
+    const validParts = selectedParts.filter(
+      (part) =>
+        (part.status || "active") !== "discontinued" && (part.quantity || 0) > 0
+    );
+
+    const activeCount = validParts.filter(
+      (part) => (part.status || "active") === "active"
+    ).length;
+    const willActivate = activeCount < validParts.length / 2;
+    const newStatus = willActivate ? "active" : "inactive";
 
     setIsTogglingStatus(true);
     try {
-      const newStatus = willActivate ? "active" : "inactive";
       const updatePromises = validParts.map((part) =>
         customFetch(`/manager/parts/${part._id}`, {
           method: "PUT",
@@ -647,9 +676,10 @@ export default function ManagerItems() {
       await Promise.all(updatePromises);
 
       toast.success("Thành công", {
-        description: `${validParts.length} sản phẩm đã được ${action}`,
+        description: `${validParts.length} sản phẩm đã được ${bulkToggleConfirm.action}`,
       });
       setSelectedItems([]);
+      setBulkToggleConfirm({ open: false, action: null, count: 0 });
       // Refresh the page
       window.location.reload();
     } catch (error) {
@@ -1368,6 +1398,47 @@ export default function ManagerItems() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={toggleConfirm.open} onOpenChange={(open) => setToggleConfirm({ open, part: null, action: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận thay đổi trạng thái</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn {toggleConfirm.action} sản phẩm này?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmToggleItem}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Xác nhận
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={bulkToggleConfirm.open} onOpenChange={(open) => setBulkToggleConfirm({ open, action: null, count: 0 })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận thay đổi trạng thái</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn {bulkToggleConfirm.action} {bulkToggleConfirm.count} sản phẩm đã chọn?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isTogglingStatus}>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmBulkToggle}
+              disabled={isTogglingStatus}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isTogglingStatus ? "Đang xử lý..." : "Xác nhận"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

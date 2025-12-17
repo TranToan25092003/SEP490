@@ -31,13 +31,14 @@ export const getServiceOrderById = async (serviceOrderId) => {
   return response.data.data;
 };
 
-export const updateServiceOrderItems = async (serviceOrderId, items) => {
+export const updateServiceOrderItems = async (serviceOrderId, items, options = {}) => {
   const response = await customFetch(`/service-orders/${serviceOrderId}/items`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
     data: { items },
+    skipAutoToast: options.skipAutoToast || false,
   });
 
   return response.data;
