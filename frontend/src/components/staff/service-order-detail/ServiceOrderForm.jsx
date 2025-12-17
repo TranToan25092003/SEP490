@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ServiceOrderHeader, ServiceOrderServices, ServiceOrderTotal } from ".";
 import { ServiceOrderProvider } from "./ServiceOrderContext";
 import { FormProvider } from "react-hook-form";
@@ -59,12 +59,14 @@ const formSchema = z.object({
 const ServiceOrderEditForm = ({
   serviceOrder,
   tasks = [],
+  quotes = null,
   onUpdateServiceOrder,
   onCancelServiceOrder,
   onSendInvoice,
   getTotalPrice
 }) => {
   const [disabled, setDisabled] = useState(false);
+  const [quoteJustSent, setQuoteJustSent] = useState(false);
   const initialItems = useMemo(() => {
     const parts = [];
     const services = [];
@@ -122,11 +124,25 @@ const ServiceOrderEditForm = ({
         methods.handleSubmit(() => {})();
         setDisabled(true);
         await onSendInvoice(serviceOrder, items);
+        // Đánh dấu đã gửi báo giá để disable các nút ngay lập tức
+        setQuoteJustSent(true);
       } finally {
         setDisabled(false);
       }
     })();
   };
+
+  // Kiểm tra xem có quote nào đang pending (chờ khách duyệt) không
+  const hasPendingQuote = quotes?.quotes?.some(
+    (quote) => quote.status === "pending" || quote.status === "waiting_customer_approval"
+  ) || false;
+
+  // Reset quoteJustSent khi quotes thay đổi (sau khi revalidate)
+  useEffect(() => {
+    if (hasPendingQuote) {
+      setQuoteJustSent(false); // Reset khi đã có pending quote từ backend
+    }
+  }, [hasPendingQuote]);
 
   const contextValue = {
     serviceOrder,
@@ -134,6 +150,7 @@ const ServiceOrderEditForm = ({
     handleCancelServiceOrder,
     handleSendInvoice,
     disabled: disabled || (serviceOrder.status === "completed" || serviceOrder.status === "cancelled"),
+    hasPendingQuote: hasPendingQuote || quoteJustSent, // Disable ngay khi vừa gửi hoặc có pending quote
     getTotalPrice,
   };
 

@@ -23,6 +23,8 @@ import {
   Star,
   TicketCheck,
   Wallet,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import background from "@/assets/cool-motorcycle-indoors.png";
 import { toast } from "sonner";
@@ -182,6 +184,13 @@ const LoyaltyWallet = () => {
   const [loadingRewards, setLoadingRewards] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [hasCheckedInToday, setHasCheckedInToday] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    limit: 10,
+    page: 1,
+    pages: 0,
+  });
 
   useEffect(() => {
     let ignore = false;
@@ -238,13 +247,21 @@ const LoyaltyWallet = () => {
       }
     };
 
-    const fetchHistory = async () => {
+    const fetchHistory = async (page = 1) => {
       try {
         setLoadingHistory(true);
-        const response = await getPointHistory({ limit: 10 });
+        const response = await getPointHistory({ limit: 10, page });
         if (ignore) return;
         const payload = response?.data?.data || {};
         setTransactions(payload.items || []);
+        if (payload.pagination) {
+          setPagination({
+            total: payload.pagination.total || 0,
+            limit: payload.pagination.limit || 10,
+            page: payload.pagination.page || 1,
+            pages: payload.pagination.pages || 0,
+          });
+        }
       } catch (error) {
         if (!ignore) {
           console.error("Failed to fetch point history", error);
@@ -256,12 +273,12 @@ const LoyaltyWallet = () => {
     };
 
     fetchBalance();
-    fetchHistory();
+    fetchHistory(currentPage);
 
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [currentPage]);
 
   const handleDailyCheckIn = async () => {
     if (hasCheckedInToday) {
@@ -289,11 +306,18 @@ const LoyaltyWallet = () => {
 
       setHasCheckedInToday(true);
 
-      // Thêm transaction vào lịch sử
-      if (payload.transaction) {
+      // Thêm transaction vào lịch sử (chỉ nếu đang ở trang đầu)
+      if (payload.transaction && currentPage === 1) {
         setTransactions((prev) =>
-          [payload.transaction, ...(prev || [])].slice(0, 10)
+          [payload.transaction, ...(prev || [])].slice(0, pagination.limit || 10)
         );
+        // Cập nhật tổng số items
+        if (pagination.total !== undefined) {
+          setPagination((prev) => ({
+            ...prev,
+            total: (prev.total || 0) + 1,
+          }));
+        }
       }
 
       toast.success(
@@ -359,10 +383,18 @@ const LoyaltyWallet = () => {
           : prev.vouchers,
       }));
 
-      if (newTransaction) {
+      // Thêm transaction vào lịch sử (chỉ nếu đang ở trang đầu)
+      if (newTransaction && currentPage === 1) {
         setTransactions((prev) =>
-          [newTransaction, ...(prev || [])].slice(0, 10)
+          [newTransaction, ...(prev || [])].slice(0, pagination.limit || 10)
         );
+        // Cập nhật tổng số items
+        if (pagination.total !== undefined) {
+          setPagination((prev) => ({
+            ...prev,
+            total: (prev.total || 0) + 1,
+          }));
+        }
       }
 
       if (normalizedReward) {
@@ -742,6 +774,64 @@ const LoyaltyWallet = () => {
                 </TableBody>
               </Table>
             </div>
+            {/* Phân trang */}
+            {pagination.pages > 1 && (
+              <div className="flex items-center justify-between px-4 py-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Hiển thị {((currentPage - 1) * pagination.limit) + 1} -{" "}
+                  {Math.min(currentPage * pagination.limit, pagination.total)} trong tổng số{" "}
+                  {pagination.total} giao dịch
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={loadingHistory || currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Trước
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(pagination.pages, 5) }, (_, i) => {
+                      let pageNum;
+                      if (pagination.pages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= pagination.pages - 2) {
+                        pageNum = pagination.pages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <Button
+                          key={pageNum}
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          disabled={loadingHistory}
+                          className="min-w-[2.5rem]"
+                        >
+                          {pageNum}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(pagination.pages, prev + 1))
+                    }
+                    disabled={loadingHistory || currentPage === pagination.pages}
+                  >
+                    Sau
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -213,9 +213,16 @@ const checkPaid = async (amount, invoiceNumber) => {
 const normalizeOwnedVoucher = (voucher) => {
   if (!voucher) return null;
 
+  // Đảm bảo có code (bắt buộc để hiển thị)
+  const code = voucher.code || voucher.voucherCode || "";
+  if (!code) {
+    console.warn("[normalizeOwnedVoucher] Voucher missing code:", voucher);
+    return null;
+  }
+
   return {
-    id: voucher.id || voucher._id || voucher.voucherCode,
-    code: voucher.code || voucher.voucherCode || "",
+    id: voucher.id || voucher._id || voucher.voucherCode || code,
+    code: code,
     rewardName:
       voucher.rewardName || voucher.reward?.title || voucher.title || "Voucher",
     status: voucher.status || "active",
@@ -227,10 +234,34 @@ const normalizeOwnedVoucher = (voucher) => {
 };
 
 const isVoucherUsable = (voucher) => {
-  if (!voucher) return false;
-  if (voucher.status !== "active") return false;
-  if (!voucher.expiresAt) return true;
-  return new Date(voucher.expiresAt) >= new Date();
+  if (!voucher) {
+    console.warn("[isVoucherUsable] Voucher is null/undefined");
+    return false;
+  }
+  
+  // Kiểm tra code (bắt buộc)
+  if (!voucher.code) {
+    console.warn("[isVoucherUsable] Voucher missing code:", voucher);
+    return false;
+  }
+  
+  // Kiểm tra status
+  if (voucher.status !== "active") {
+    console.log("[isVoucherUsable] Voucher not active:", voucher.code, "status:", voucher.status);
+    return false;
+  }
+  
+  // Kiểm tra hết hạn
+  if (voucher.expiresAt) {
+    const expiresDate = new Date(voucher.expiresAt);
+    const now = new Date();
+    if (expiresDate < now) {
+      console.log("[isVoucherUsable] Voucher expired:", voucher.code, "expiresAt:", voucher.expiresAt);
+      return false;
+    }
+  }
+  
+  return true;
 };
 
 const calculateVoucherDiscount = (voucher, baseAmount) => {
@@ -297,8 +328,10 @@ const CustomerInvoiceDetail = () => {
       setQrCodeError(false);
     }
   }, [paymentModalOpen]);
+  // Fetch vouchers ngay khi component mount hoặc khi invoice status là unpaid
+  // Không cần đợi mở payment modal vì UI hiển thị voucher ở ngoài modal
   useEffect(() => {
-    if (!paymentModalOpen || !invoice || invoice.status === "paid") {
+    if (!invoice || invoice.status === "paid") {
       return;
     }
 
@@ -310,10 +343,25 @@ const CustomerInvoiceDetail = () => {
         const response = await getPointBalance();
         if (ignore) return;
         const payload = response?.data?.data || {};
+        
+        // Debug log để kiểm tra
+        console.log("[CustomerInvoiceDetail] Vouchers payload:", {
+          hasVouchers: !!payload.vouchers,
+          vouchersType: Array.isArray(payload.vouchers) ? "array" : typeof payload.vouchers,
+          vouchersLength: Array.isArray(payload.vouchers) ? payload.vouchers.length : 0,
+          rawVouchers: payload.vouchers,
+        });
+        
         const normalized = Array.isArray(payload.vouchers)
           ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
           : [];
+        
+        console.log("[CustomerInvoiceDetail] Normalized vouchers:", normalized);
+        
         const usable = normalized.filter(isVoucherUsable);
+        
+        console.log("[CustomerInvoiceDetail] Usable vouchers:", usable);
+        
         setAvailableVouchers(usable);
         setSelectedVoucherCode((currentCode) => {
           if (!currentCode) return currentCode;
@@ -342,7 +390,7 @@ const CustomerInvoiceDetail = () => {
     return () => {
       ignore = true;
     };
-  }, [paymentModalOpen, invoice]);
+  }, [invoice]);
   useEffect(() => {
     if (invoice?.status === "paid" && selectedVoucherCode) {
       setSelectedVoucherCode("");
