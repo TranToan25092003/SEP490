@@ -343,21 +343,29 @@ const LayoutProfile = () => {
 
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
-      setImagePreview(URL.createObjectURL(file));
-      setIsUploading(true);
-      try {
-        const uploadedUrl = await uploadImage(file);
-        setImagePreview(uploadedUrl);
-        console.log("✅ Uploaded to Cloudinary:", uploadedUrl);
-      } catch (error) {
-        console.error("❌ Upload failed:", error);
-        alert("Upload ảnh thất bại! Sẽ dùng ảnh mặc định.");
-        setImagePreview(null);
-      } finally {
-        setIsUploading(false);
-      }
+    if (!file) return;
+
+    // Chỉ cho phép upload file ảnh
+    if (!file.type || !file.type.startsWith("image/")) {
+      toast.error("Vui lòng chọn đúng file ảnh (jpg, png, ...)");
+      e.target.value = "";
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+    setIsUploading(true);
+    try {
+      const uploadedUrl = await uploadImage(file);
+      setImagePreview(uploadedUrl);
+      console.log(" Uploaded to Cloudinary:", uploadedUrl);
+    } catch (error) {
+      console.error(" Upload failed:", error);
+      toast.error("Upload ảnh thất bại! Vui lòng thử lại.");
+      setImagePreview(null);
+      setImageFile(null);
+    } finally {
+      setIsUploading(false);
     }
   };
 
