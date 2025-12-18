@@ -78,9 +78,13 @@ const BookingDetailContent = ({ booking, revalidator }) => {
       toast.success("Check-in thành công!");
       revalidator.revalidate();
     } catch (err) {
-      const errorMessage =
-        err?.response?.data?.message || err?.message || "Không thể check-in";
-      toast.error(errorMessage);
+      // Nếu backend đã trả message và đã được global interceptor xử lý,
+      // tránh toast trùng lặp ở đây.
+      const serverMessage = err?.response?.data?.message;
+      if (!serverMessage) {
+        const fallbackMessage = err?.message || "Không thể check-in";
+        toast.error(fallbackMessage);
+      }
     } finally {
       setCheckInLoading(false);
     }

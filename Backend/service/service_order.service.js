@@ -197,6 +197,19 @@ class ServiceOrderService {
       );
     }
 
+    // Không cho phép chỉnh sửa hạng mục khi lệnh đã bị hủy hoặc đã hoàn thành
+    if (["cancelled", "completed"].includes(serviceOrder.status)) {
+      const message =
+        serviceOrder.status === "cancelled"
+          ? "Đơn đã được hủy. Vui lòng làm mới trang."
+          : "Không thể cập nhật hạng mục cho lệnh đã hoàn thành. Vui lòng tải lại trang.";
+      throw new DomainError(
+        message,
+        ERROR_CODES.SERVICE_ORDER_INVALID_STATE,
+        409
+      );
+    }
+
     let warranty = null;
     if (serviceOrder.booking_id?._id) {
       const Warranty = require("../model/warranty.model");
@@ -467,34 +480,6 @@ class ServiceOrderService {
   }
 
   async cancelServiceOrder(serviceOrderId, staffId, cancelReason) {
-    const serviceOrder = await ServiceOrder.findById(serviceOrderId)
-      .populate("booking_id")
-      .exec();
-
-    if (!serviceOrder) {
-      throw new DomainError(
-        "Lệnh sửa chữa không tồn tại",
-        ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
-        404
-      );
-    }
-
-    if (serviceOrder.status === "cancelled") {
-      throw new DomainError(
-        "Lệnh sửa chữa đã bị hủy",
-        "SERVICE_ORDER_ALREADY_CANCELLED",
-        400
-      );
-    }
-
-    if (serviceOrder.status === "completed") {
-      throw new DomainError(
-        "Không thể hủy lệnh sửa chữa đã hoàn thành",
-        "SERVICE_ORDER_ALREADY_COMPLETED",
-        400
-      );
-    }
-
     // Chỉ cho phép staff hủy ở 3 trạng thái: created, waiting_customer_approval, inspection_completed
     const allowedStatuses = [
       "created",
@@ -502,20 +487,44 @@ class ServiceOrderService {
       "inspection_completed",
     ];
 
-    if (!allowedStatuses.includes(serviceOrder.status)) {
+    // Dùng update có điều kiện để tránh race-condition:
+    // chỉ hủy được nếu hiện tại đang ở 1 trong các trạng thái cho phép.
+    const serviceOrder = await ServiceOrder.findOneAndUpdate(
+      {
+        _id: serviceOrderId,
+        status: { $in: allowedStatuses },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          cancelled_by: "staff",
+          cancel_reason: cancelReason || "Nhân viên hủy lệnh",
+          cancelled_at: new Date(),
+        },
+      },
+      { new: true }
+    )
+      .populate("booking_id")
+      .exec();
+
+    if (!serviceOrder) {
+      // Không tìm thấy lệnh ở trạng thái hợp lệ để hủy:
+      // hoặc không tồn tại, hoặc đã bị người khác chuyển sang cancelled/completed/trạng thái khác.
+      const exists = await ServiceOrder.exists({ _id: serviceOrderId }).exec();
+      if (!exists) {
+        throw new DomainError(
+          "Lệnh sửa chữa không tồn tại",
+          ERROR_CODES.SERVICE_ORDER_NOT_FOUND,
+          404
+        );
+      }
+
       throw new DomainError(
-        `Không thể hủy lệnh sửa chữa ở trạng thái '${serviceOrder.status}'. Chỉ có thể hủy khi ở trạng thái: Đã tạo, Chờ khách duyệt, hoặc Đã kiểm tra.`,
+        "Trạng thái lệnh sửa chữa đã được cập nhật bởi nhân viên khác. Vui lòng tải lại trang.",
         "SERVICE_ORDER_INVALID_STATUS_FOR_CANCELLATION",
-        400
+        409
       );
     }
-
-    // Cập nhật trạng thái
-    serviceOrder.status = "cancelled";
-    serviceOrder.cancelled_by = "staff";
-    serviceOrder.cancel_reason = cancelReason || "Nhân viên hủy lệnh";
-    serviceOrder.cancelled_at = new Date();
-    await serviceOrder.save();
 
     // Nếu có booking liên quan, cập nhật trạng thái booking
     if (serviceOrder.booking_id) {
