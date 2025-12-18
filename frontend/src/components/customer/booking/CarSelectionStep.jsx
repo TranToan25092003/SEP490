@@ -1,4 +1,5 @@
 import { useFormContext } from "react-hook-form";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Motorbike } from "lucide-react";
@@ -17,6 +18,26 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
   const { setValue, watch } = useFormContext();
   const navigate = useNavigate();
   const selectedVehicle = watch("vehicle");
+
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = useMemo(() => {
+    if (!vehicles || vehicles.length === 0) return 1;
+    return Math.max(1, Math.ceil(vehicles.length / PAGE_SIZE));
+  }, [vehicles]);
+
+  const paginatedVehicles = useMemo(() => {
+    if (!vehicles || vehicles.length === 0) return [];
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return vehicles.slice(start, start + PAGE_SIZE);
+  }, [vehicles, currentPage]);
+
+  const handleChangePage = (direction) => {
+    const next = currentPage + direction;
+    if (next < 1 || next > totalPages) return;
+    setCurrentPage(next);
+  };
 
   const handleVehicleSelect = (vehicle) => {
     if (!vehicle.activeBooking) {
@@ -50,7 +71,7 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
           </div>
         )}
 
-        {vehicles?.map((vehicle) => (
+        {paginatedVehicles.map((vehicle) => (
           <Card
             key={vehicle.id}
             className={cn(
@@ -127,6 +148,32 @@ const CarSelectionStep = ({ vehicles, className, ...props }) => {
           </Card>
         ))}
       </div>
+
+      {vehicles && vehicles.length > 6 && (
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-sm text-gray-500">
+            Trang {currentPage} / {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleChangePage(-1)}
+              disabled={currentPage === 1}
+            >
+              Trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleChangePage(1)}
+              disabled={currentPage === totalPages}
+            >
+              Sau
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

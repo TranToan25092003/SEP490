@@ -238,29 +238,39 @@ const isVoucherUsable = (voucher) => {
     console.warn("[isVoucherUsable] Voucher is null/undefined");
     return false;
   }
-  
+
   // Kiểm tra code (bắt buộc)
   if (!voucher.code) {
     console.warn("[isVoucherUsable] Voucher missing code:", voucher);
     return false;
   }
-  
+
   // Kiểm tra status
   if (voucher.status !== "active") {
-    console.log("[isVoucherUsable] Voucher not active:", voucher.code, "status:", voucher.status);
+    console.log(
+      "[isVoucherUsable] Voucher not active:",
+      voucher.code,
+      "status:",
+      voucher.status
+    );
     return false;
   }
-  
+
   // Kiểm tra hết hạn
   if (voucher.expiresAt) {
     const expiresDate = new Date(voucher.expiresAt);
     const now = new Date();
     if (expiresDate < now) {
-      console.log("[isVoucherUsable] Voucher expired:", voucher.code, "expiresAt:", voucher.expiresAt);
+      console.log(
+        "[isVoucherUsable] Voucher expired:",
+        voucher.code,
+        "expiresAt:",
+        voucher.expiresAt
+      );
       return false;
     }
   }
-  
+
   return true;
 };
 
@@ -307,16 +317,75 @@ const CustomerInvoiceDetail = () => {
     );
   }, [availableVouchers, selectedVoucherCode]);
 
+  // Số tiền giảm bởi voucher đang chọn (trước thuế)
   const voucherDiscount = useMemo(() => {
     if (!invoice || !selectedVoucher) return 0;
-    return calculateVoucherDiscount(selectedVoucher, invoice.totalAmount);
+    // Áp dụng voucher trên subtotal (tổng tiền hàng & dịch vụ chưa thuế)
+    const baseAmount = Number(invoice.subtotal) || 0;
+    return calculateVoucherDiscount(selectedVoucher, baseAmount);
   }, [invoice, selectedVoucher]);
 
-  const payableAmount = useMemo(() => {
+  // Discount đã áp dụng thực tế trên hóa đơn (nếu đã thanh toán)
+  const appliedInvoiceDiscount = Number(invoice?.discountAmount || 0);
+
+  // Tổng giảm giá được xem là đang áp dụng:
+  // - Nếu hóa đơn đã thanh toán: ưu tiên discount trên invoice (đã chốt)
+  // - Nếu chưa thanh toán: dùng voucher đang chọn trên UI
+  const effectiveDiscount = useMemo(() => {
     if (!invoice) return 0;
-    const total = Number(invoice.totalAmount) || 0;
-    return Math.max(total - voucherDiscount, 0);
-  }, [invoice, voucherDiscount]);
+    if (invoice.status === "paid") {
+      return appliedInvoiceDiscount;
+    }
+    return voucherDiscount;
+  }, [invoice, appliedInvoiceDiscount, voucherDiscount]);
+
+  // Giá trị gốc chưa thuế
+  const subtotal = Number(invoice?.subtotal || 0);
+
+  // Giá trị tính thuế = Subtotal - Voucher
+  const taxableAmount = useMemo(() => {
+    return Math.max(subtotal - (effectiveDiscount || 0), 0);
+  }, [subtotal, effectiveDiscount]);
+
+  // Thuế VAT 10% tính trên giá trị sau khi trừ voucher
+  const vatAmount = useMemo(() => {
+    // Nếu backend đã có tax, nhưng để minh bạch theo chuẩn: tính lại trên taxableAmount
+    const computedVat = Math.round(taxableAmount * 0.1);
+    return computedVat;
+  }, [taxableAmount]);
+
+  // Tổng thanh toán cuối cùng = Giá trị tính thuế + VAT
+  const finalPayableAmount = useMemo(() => {
+    return taxableAmount + vatAmount;
+  }, [taxableAmount, vatAmount]);
+
+  const handleOpenPaymentModal = async () => {
+    if (!invoice) return;
+    try {
+      const response = await fetchCustomerInvoiceDetail(invoice.id);
+      const latestInvoice = response?.data || null;
+
+      if (!latestInvoice) {
+        toast.error("Không thể tải lại thông tin hóa đơn. Vui lòng thử lại.");
+        return;
+      }
+
+      if (latestInvoice.status === "paid") {
+        toast.info("Hóa đơn đã được thanh toán. ");
+        revalidator.revalidate();
+        return;
+      }
+
+      setPaymentModalOpen(true);
+    } catch (err) {
+      console.error(
+        "Failed to refresh invoice before opening payment modal:",
+        err
+      );
+
+      setPaymentModalOpen(true);
+    }
+  };
 
   useEffect(() => {
     setAuthModalVisible(requiresAuth);
@@ -328,7 +397,7 @@ const CustomerInvoiceDetail = () => {
       setQrCodeError(false);
     }
   }, [paymentModalOpen]);
-  // Fetch vouchers ngay khi component mount hoặc khi invoice status là unpaid
+
   // Không cần đợi mở payment modal vì UI hiển thị voucher ở ngoài modal
   useEffect(() => {
     if (!invoice || invoice.status === "paid") {
@@ -343,25 +412,28 @@ const CustomerInvoiceDetail = () => {
         const response = await getPointBalance();
         if (ignore) return;
         const payload = response?.data?.data || {};
-        
-        // Debug log để kiểm tra
-        console.log("[CustomerInvoiceDetail] Vouchers payload:", {
-          hasVouchers: !!payload.vouchers,
-          vouchersType: Array.isArray(payload.vouchers) ? "array" : typeof payload.vouchers,
-          vouchersLength: Array.isArray(payload.vouchers) ? payload.vouchers.length : 0,
-          rawVouchers: payload.vouchers,
-        });
-        
+
+        // console.log("[CustomerInvoiceDetail] Vouchers payload:", {
+        //   hasVouchers: !!payload.vouchers,
+        //   vouchersType: Array.isArray(payload.vouchers)
+        //     ? "array"
+        //     : typeof payload.vouchers,
+        //   vouchersLength: Array.isArray(payload.vouchers)
+        //     ? payload.vouchers.length
+        //     : 0,
+        //   rawVouchers: payload.vouchers,
+        // });
+
         const normalized = Array.isArray(payload.vouchers)
           ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
           : [];
-        
-        console.log("[CustomerInvoiceDetail] Normalized vouchers:", normalized);
-        
+
+        // console.log("[CustomerInvoiceDetail] Normalized vouchers:", normalized);
+
         const usable = normalized.filter(isVoucherUsable);
-        
-        console.log("[CustomerInvoiceDetail] Usable vouchers:", usable);
-        
+
+        // console.log("[CustomerInvoiceDetail] Usable vouchers:", usable);
+
         setAvailableVouchers(usable);
         setSelectedVoucherCode((currentCode) => {
           if (!currentCode) return currentCode;
@@ -373,9 +445,7 @@ const CustomerInvoiceDetail = () => {
       } catch (fetchError) {
         if (ignore) return;
         console.error("Failed to load vouchers", fetchError);
-        setVoucherError(
-          "KhA'ng t���i �`�����c voucher. Vui lA�ng th��- l���i sau."
-        );
+        setVoucherError("Không tải được voucher. Vui lòng thử lại sau");
         setAvailableVouchers([]);
         setSelectedVoucherCode("");
       } finally {
@@ -409,8 +479,8 @@ const CustomerInvoiceDetail = () => {
       // Prepare invoice data with voucher info if available
       const invoiceDataForPDF = {
         ...invoice,
-        voucherDiscount: voucherDiscount > 0 ? voucherDiscount : 0,
-        payableAmount: payableAmount,
+        voucherDiscount: effectiveDiscount > 0 ? effectiveDiscount : 0,
+        payableAmount: finalPayableAmount,
         selectedVoucher: selectedVoucher || null,
       };
 
@@ -442,17 +512,14 @@ const CustomerInvoiceDetail = () => {
 
     try {
       const invoiceNumber = invoice.invoiceNumber || invoice.id;
-      const amountToVerify = Math.max(
-        payableAmount || invoice.totalAmount || 0,
-        0
-      );
+      const amountToVerify = Math.max(finalPayableAmount || 0, 0);
       const isPaid = await checkPaid(amountToVerify, invoiceNumber);
 
       if (isPaid) {
         // Gọi API để cập nhật trạng thái hóa đơn
         try {
           const verifyPayload = {
-            paidAmount: payableAmount || invoice.totalAmount,
+            paidAmount: finalPayableAmount,
           };
           if (selectedVoucher) {
             verifyPayload.voucherCode = selectedVoucher.code;
@@ -773,38 +840,50 @@ const CustomerInvoiceDetail = () => {
                     </p>
                   </div>
                   <div className="space-y-3 rounded-xl border bg-muted/40 p-4">
+                    {/* 1. Tổng tiền hàng & dịch vụ (chưa thuế) */}
                     <div className="flex justify-between text-sm">
-                      <span>Tạm tính</span>
+                      <span>Tổng tiền hàng &amp; dịch vụ (chưa thuế)</span>
                       <span className="font-medium">
-                        {formatPrice(invoice.subtotal)}
+                        {formatPrice(subtotal)}
                       </span>
                     </div>
+                    {/* 2. Voucher giảm giá */}
                     <div className="flex justify-between text-sm">
-                      <span>Thuế (10%)</span>
-                      <span className="font-medium">
-                        {formatPrice(invoice.tax)}
+                      <span>
+                        Voucher giảm giá
+                        {selectedVoucher?.code
+                          ? ` (${selectedVoucher.code})`
+                          : invoice?.discountCode
+                          ? ` (${invoice.discountCode})`
+                          : ""}
+                      </span>
+                      <span className="font-medium text-emerald-600">
+                        {effectiveDiscount > 0
+                          ? `-${formatPrice(effectiveDiscount)}`
+                          : "-"}
                       </span>
                     </div>
+                    {/* 3. Giá trị tính thuế */}
+                    <div className="flex justify-between text-sm border-t pt-3 mt-2">
+                      <span>Giá trị tính thuế</span>
+                      <span className="font-medium">
+                        {formatPrice(taxableAmount)}
+                      </span>
+                    </div>
+                    {/* 4. Thuế VAT (10%) */}
+                    <div className="flex justify-between text-sm">
+                      <span>Thuế VAT (10%)</span>
+                      <span className="font-medium">
+                        {formatPrice(vatAmount)}
+                      </span>
+                    </div>
+                    {/* 5. Tổng thanh toán cuối cùng */}
                     <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
-                      <span>Tổng cộng</span>
+                      <span>Tổng thanh toán</span>
                       <span className="text-lg">
-                        {formatPrice(invoice.totalAmount)}
+                        {formatPrice(finalPayableAmount)}
                       </span>
                     </div>
-                    {voucherDiscount > 0 && (
-                      <>
-                        <div className="flex justify-between text-sm text-emerald-600 border-t pt-2 mt-2">
-                          <span>Giảm giá bằng voucher</span>
-                          <span>-{formatPrice(voucherDiscount)}</span>
-                        </div>
-                        <div className="flex justify-between text-base font-semibold text-emerald-700 border-t pt-2 mt-2">
-                          <span>Số tiền còn lại cần thanh toán</span>
-                          <span className="text-lg">
-                            {formatPrice(payableAmount)}
-                          </span>
-                        </div>
-                      </>
-                    )}
                   </div>
                   {invoice.status === "unpaid" && (
                     <div className="rounded-lg border border-dashed bg-muted/30 p-4 space-y-3">
@@ -894,7 +973,7 @@ const CustomerInvoiceDetail = () => {
                   )}
                   {invoice.status === "unpaid" && (
                     <Button
-                      onClick={() => setPaymentModalOpen(true)}
+                      onClick={handleOpenPaymentModal}
                       className="w-full"
                       size="lg"
                     >
@@ -936,24 +1015,43 @@ const CustomerInvoiceDetail = () => {
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="rounded-lg border bg-muted/40 p-4">
-                <div className="flex justify-between items-center text-sm">
+                {/* 1. Tổng tiền hàng & dịch vụ (chưa thuế) */}
+                <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">
-                    Tổng tiền cần thanh toán:
+                    Tổng tiền hàng &amp; dịch vụ (chưa thuế)
                   </span>
                   <span className="text-lg font-semibold">
-                    {invoice ? formatPrice(invoice.totalAmount) : "—"}
+                    {invoice ? formatPrice(subtotal) : "—"}
                   </span>
                 </div>
-                {voucherDiscount > 0 && (
-                  <div className="flex justify-between text-xs text-emerald-600 mt-2">
-                    <span>Giảm voucher</span>
-                    <span>-{formatPrice(voucherDiscount)}</span>
-                  </div>
-                )}
+                {/* 2. Voucher giảm giá */}
+                <div className="flex justify-between text-xs mt-2">
+                  <span>Voucher giảm giá</span>
+                  <span className="font-medium text-emerald-600">
+                    {effectiveDiscount > 0
+                      ? `-${formatPrice(effectiveDiscount)}`
+                      : "-"}
+                  </span>
+                </div>
+                {/* 3. Giá trị tính thuế */}
+                <div className="flex justify-between text-sm border-t pt-2 mt-2">
+                  <span>Giá trị tính thuế</span>
+                  <span className="font-semibold">
+                    {invoice ? formatPrice(taxableAmount) : "—"}
+                  </span>
+                </div>
+                {/* 4. Thuế VAT (10%) */}
+                <div className="flex justify-between text-sm">
+                  <span>Thuế VAT (10%)</span>
+                  <span className="font-semibold">
+                    {invoice ? formatPrice(vatAmount) : "—"}
+                  </span>
+                </div>
+                {/* 5. Tổng thanh toán cuối cùng */}
                 <div className="flex justify-between text-base font-semibold border-t pt-2 mt-2">
                   <span>Số tiền cần thanh toán</span>
                   <span className="text-lg">
-                    {invoice ? formatPrice(payableAmount) : "—"}
+                    {invoice ? formatPrice(finalPayableAmount) : "—"}
                   </span>
                 </div>
               </div>
@@ -963,7 +1061,7 @@ const CustomerInvoiceDetail = () => {
                     {!qrCodeError ? (
                       <img
                         src={generateQRCodeUrl(
-                          payableAmount,
+                          finalPayableAmount,
                           invoice.invoiceNumber || invoice.id
                         )}
                         alt="QR Code thanh toán"
@@ -1035,34 +1133,7 @@ const CustomerInvoiceDetail = () => {
                         </>
                       )}
                     </Button>
-                    {/*
-                    {(import.meta.env.DEV ||
-                      import.meta.env.VITE_ENABLE_TEST_PAYMENT === "true") && (
-                      <Button
-                        onClick={handleFakePayment}
-                        className="w-full sm:flex-1 bg-yellow-600 hover:bg-yellow-700 text-white order-2 sm:order-3"
-                        disabled={isCheckingPayment}
-                        title="DEV MODE: Fake thanh toán để test tích điểm"
-                      >
-                        {isCheckingPayment ? (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            <span className="hidden sm:inline">
-                              Đang xử lý...
-                            </span>
-                            <span className="sm:hidden">Đang xử lý...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span className="hidden sm:inline">
-                              🧪 Fake Thanh Toán
-                            </span>
-                            <span className="sm:hidden">🧪 Fake</span>
-                          </>
-                        )}
-                      </Button>
-                    )}
-                    */}
+                    {/* Nút fake payment cho môi trường DEV đã được ẩn */}
                   </>
                 )}
                 {invoice && invoice.status === "paid" && (

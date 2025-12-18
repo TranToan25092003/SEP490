@@ -58,7 +58,7 @@ customFetch.interceptors.response.use(
         // Kiểm tra xem có flag skipAutoToast không (để tránh hiển thị toast 2 lần khi đã có toast.promise)
         const skipAutoToast = error.config?.skipAutoToast;
         if (!skipAutoToast) {
-          toast.error(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
+        toast.error(data.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
         }
       }
     } else if (error.request) {

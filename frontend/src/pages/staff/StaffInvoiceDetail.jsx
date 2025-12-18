@@ -25,6 +25,12 @@ export default function StaffInvoiceDetail() {
   const [loading, setLoading] = useState(true);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
+  const subtotal = Number(invoice?.subtotal || 0);
+  const discountAmount = Number(invoice?.discountAmount || 0);
+  const taxableAmount = Math.max(subtotal - discountAmount, 0);
+  const vatAmount = Math.round(taxableAmount * 0.1);
+  const finalTotal = taxableAmount + vatAmount;
+
   useEffect(() => {
     const loadInvoice = async () => {
       setLoading(true);
@@ -203,26 +209,6 @@ export default function StaffInvoiceDetail() {
                 )}
               </div>
 
-              <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  Tóm tắt thanh toán
-                </div>
-                <div className="rounded-lg border p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Tạm tính</span>
-                    <span>{formatPrice(invoice.subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Thuế</span>
-                    <span>{formatPrice(invoice.tax)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-semibold">
-                    <span>Tổng cộng</span>
-                    <span>{formatPrice(invoice.totalAmount)}</span>
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-3">
                 <div className="text-sm text-muted-foreground">
                   Chi tiết hạng mục
@@ -262,6 +248,48 @@ export default function StaffInvoiceDetail() {
                       ))}
                     </TableBody>
                   </Table>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  Tóm tắt thanh toán
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  {/* 1. Tổng tiền hàng & dịch vụ (chưa thuế) */}
+                  <div className="flex justify-between text-sm">
+                    <span>Tổng tiền hàng &amp; dịch vụ (chưa thuế)</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                  {/* 2. Voucher giảm giá */}
+                  <div className="flex justify-between text-sm">
+                    <span>
+                      Voucher giảm giá
+                      {invoice.discountCode
+                        ? ` (${invoice.discountCode})`
+                        : ""}
+                    </span>
+                    <span className="text-emerald-600">
+                      {discountAmount > 0
+                        ? `-${formatPrice(discountAmount)}`
+                        : "-"}
+                    </span>
+                  </div>
+                  {/* 3. Giá trị tính thuế */}
+                  <div className="flex justify-between text-sm border-t pt-3 mt-2">
+                    <span>Giá trị tính thuế</span>
+                    <span>{formatPrice(taxableAmount)}</span>
+                  </div>
+                  {/* 4. Thuế VAT (10%) */}
+                  <div className="flex justify-between text-sm">
+                    <span>Thuế VAT (10%)</span>
+                    <span>{formatPrice(vatAmount)}</span>
+                  </div>
+                  {/* 5. Tổng thanh toán */}
+                  <div className="flex justify-between text-base font-semibold border-t pt-3 mt-2">
+                    <span>Tổng thanh toán</span>
+                    <span>{formatPrice(finalTotal)}</span>
+                  </div>
                 </div>
               </div>
             </div>

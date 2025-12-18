@@ -99,7 +99,10 @@ function CreateComplaintPage() {
         const bookings = await getUserBookings();
         const options =
           bookings
-            ?.filter((booking) => booking.serviceOrderId)
+            ?.filter(
+              (booking) =>
+                booking.serviceOrderId && booking.status === "completed"
+            )
             .map((booking) => ({
               id: booking.serviceOrderId,
               label: formatServiceOrderLabel(booking),

@@ -345,38 +345,45 @@ export const generateInvoicePDF = async (invoiceData) => {
 
         <!-- Summary -->
         <div class="summary">
-          <div class="summary-row">
-            <span>Tạm tính:</span>
-            <span>${formatPrice(invoiceData.subtotal || 0)}</span>
-          </div>
-          <div class="summary-row">
-            <span>Thuế (10%):</span>
-            <span>${formatPrice(invoiceData.tax || 0)}</span>
-          </div>
-          <div class="summary-row">
-            <span>Tổng cộng:</span>
-            <span>${formatPrice(invoiceData.totalAmount || 0)}</span>
-          </div>
           ${
-            invoiceData.voucherDiscount > 0
-              ? `
-            <div class="summary-row" style="color: #155724;">
-              <span>Giảm giá bằng voucher:</span>
-              <span>-${formatPrice(invoiceData.voucherDiscount)}</span>
-            </div>
-            <div class="summary-row total" style="color: #155724;">
-              <span>SỐ TIỀN CẦN THANH TOÁN:</span>
-              <span>${formatPrice(
-                invoiceData.payableAmount || invoiceData.totalAmount || 0
-              )}</span>
-            </div>
-          `
-              : `
-            <div class="summary-row total">
-              <span>TỔNG CỘNG:</span>
-              <span>${formatPrice(invoiceData.totalAmount || 0)}</span>
-            </div>
-          `
+            // Tính toán lại theo chuẩn: Subtotal -> Voucher -> Giá trị tính thuế -> VAT -> Tổng thanh toán
+            (() => {
+              const rawSubtotal = Number(invoiceData.subtotal || 0);
+              const rawDiscount =
+                Number(invoiceData.voucherDiscount || 0) ||
+                Number(invoiceData.discountAmount || 0);
+              const taxable = Math.max(rawSubtotal - (rawDiscount || 0), 0);
+              const vat = Math.round(taxable * 0.1);
+              const grandTotal = taxable + vat;
+
+              return `
+                <div class="summary-row">
+                  <span>Cộng tiền hàng (chưa thuế)</span>
+                  <span>${formatPrice(rawSubtotal)}</span>
+                </div>
+                <div class="summary-row">
+                  <span>Chiết khấu/Voucher</span>
+                  <span>${
+                    rawDiscount > 0
+                      ? "-" + formatPrice(rawDiscount)
+                      : formatPrice(0)
+                  }</span>
+                </div>
+                <div class="summary-row">
+                  <span>Giá trị tính thuế</span>
+                  <span>${formatPrice(taxable)}</span>
+                </div>
+                <div class="summary-row">
+                  <span>Thuế suất (VAT %)</span>
+                  <span>10%</span>
+                </div>
+
+                <div class="summary-row total">
+                  <span>TỔNG THANH TOÁN</span>
+                  <span>${formatPrice(grandTotal)}</span>
+                </div>
+              `;
+            })()
           }
         </div>
 

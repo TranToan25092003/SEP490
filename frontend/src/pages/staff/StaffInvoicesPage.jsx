@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchStaffInvoices, confirmInvoicePayment } from "@/api/invoices";
+import {
+  fetchStaffInvoices,
+  confirmInvoicePayment,
+  fetchInvoiceDetail,
+} from "@/api/invoices";
 import {
   Table,
   TableBody,
@@ -76,6 +80,23 @@ export default function StaffInvoicesPage() {
   const handleConfirmPayment = async (invoiceId) => {
     setConfirmingId(invoiceId);
     try {
+      // Luôn refetch trạng thái mới nhất trước khi xác nhận,
+      // tránh trường hợp khách đã thanh toán nhưng UI staff chưa F5.
+      const latest = await fetchInvoiceDetail(invoiceId);
+      const latestInvoice = latest?.data || latest;
+
+      if (!latestInvoice) {
+        toast.error("Không tải được thông tin hóa đơn. Vui lòng thử lại.");
+        return;
+      }
+
+      if (latestInvoice.status === "paid") {
+        toast.info("Hóa đơn này đã được thanh toán.");
+        // Đồng bộ lại danh sách hiện tại
+        await loadInvoices(pagination.currentPage);
+        return;
+      }
+
       await confirmInvoicePayment(invoiceId);
       toast.success("Đã xác nhận thanh toán hóa đơn");
       await loadInvoices(pagination.currentPage);

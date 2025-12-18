@@ -1,7 +1,9 @@
 import { useFieldArray } from "react-hook-form";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check } from "lucide-react";
 import { cn, formatTimeXGioYPhut } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /** @typedef {import("./index").ServiceSelectionStepProps} ServiceSelectionStepProps */
 
@@ -18,6 +20,26 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
   } = useFieldArray({
     name: "services",
   });
+
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = useMemo(() => {
+    if (!services || services.length === 0) return 1;
+    return Math.max(1, Math.ceil(services.length / PAGE_SIZE));
+  }, [services]);
+
+  const paginatedServices = useMemo(() => {
+    if (!services || services.length === 0) return [];
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return services.slice(start, start + PAGE_SIZE);
+  }, [services, currentPage]);
+
+  const handleChangePage = (direction) => {
+    const next = currentPage + direction;
+    if (next < 1 || next > totalPages) return;
+    setCurrentPage(next);
+  };
 
   const handleServiceToggle = (service) => {
     const idx = selectedServices.findIndex((s) => s.sid === service.sid);
@@ -42,7 +64,7 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {services.map((service) => {
+        {paginatedServices.map((service) => {
           const isSelected = selectedServices.some(
             (s) => s.sid === service.sid
           );
@@ -80,6 +102,32 @@ const ServiceSelectionStep = ({ services, className, ...props }) => {
           );
         })}
       </div>
+
+      {services && services.length > 6 && (
+        <div className="flex items-center justify-between mt-4">
+          <span className="text-sm text-gray-500">
+            Trang {currentPage} / {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleChangePage(-1)}
+              disabled={currentPage === 1}
+            >
+              Trước
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleChangePage(1)}
+              disabled={currentPage === totalPages}
+            >
+              Sau
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

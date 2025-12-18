@@ -335,7 +335,7 @@ class InvoiceService {
     invoiceId,
     paymentMethod,
     confirmedBy,
-    { voucherCode, paidAmount } = {}
+    { voucherCode, paidAmount, voucherDiscount } = {}
   ) {
     const invoice = await Invoice.findById(invoiceId)
       .populate({
@@ -371,14 +371,32 @@ class InvoiceService {
       invoice.discount_code = voucherCode;
     }
 
+    // Cập nhật số tiền giảm giá thuần (trên giá trị trước VAT) nếu frontend gửi lên
+    if (voucherDiscount !== undefined && voucherDiscount !== null) {
+      const netDiscount = Math.max(Number(voucherDiscount) || 0, 0);
+      invoice.discount_amount = netDiscount;
+    }
+
+    // Tính lại số tiền phải thanh toán (amount) dựa trên subtotal và discount
+    const baseSubtotal = Number(invoice.subtotal) || 0;
+    const netDiscount = Number(invoice.discount_amount) || 0;
+    const taxableBase = Math.max(baseSubtotal - netDiscount, 0);
+    const vat = Math.round(taxableBase * 0.1);
+    const grandTotal = taxableBase + vat;
+
+    // Lưu tổng tiền (đã bao gồm VAT, sau khi trừ voucher)
+    invoice.amount = grandTotal;
+
     if (paidAmount !== undefined && paidAmount !== null) {
       const numericPaid = Number(paidAmount);
       if (!Number.isNaN(numericPaid) && numericPaid >= 0) {
-        const originalAmount = Number(invoice.amount) || 0;
-        const effectivePaid = Math.min(numericPaid, originalAmount);
+        // Số tiền khách thực trả, tối đa bằng tổng cần thanh toán sau khi trừ voucher + VAT
+        const effectivePaid = Math.min(numericPaid, grandTotal);
         invoice.paid_amount = effectivePaid;
-        invoice.discount_amount = Math.max(originalAmount - effectivePaid, 0);
       }
+    } else {
+      // Nếu không truyền paidAmount, mặc định khách đã trả đủ grandTotal
+      invoice.paid_amount = grandTotal;
     }
 
     invoice.status = "paid";

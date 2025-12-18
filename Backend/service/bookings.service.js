@@ -376,20 +376,29 @@ class BookingsService {
   }
 
   async checkInBooking(staffId, bookingId) {
-    const booking = await Booking.findById(bookingId).exec();
-    if (!booking) {
-      throw new DomainError(
-        "Booking không tồn tại",
-        ERROR_CODES.BOOKINGS_NOT_FOUND,
-        404
-      );
-    }
+    // Dùng update có điều kiện để tránh race-condition khi nhiều staff cùng thao tác
+    const booking = await Booking.findOneAndUpdate(
+      { _id: bookingId, status: "booked" },
+      { $set: { status: "checked_in" } },
+      { new: true }
+    ).exec();
 
-    if (booking.status !== "booked") {
+    if (!booking) {
+      // Hoặc booking không tồn tại, hoặc trạng thái không còn là "booked" nữa
+      const exists = await Booking.exists({ _id: bookingId }).exec();
+      if (!exists) {
+        throw new DomainError(
+          "Booking không tồn tại",
+          ERROR_CODES.BOOKINGS_NOT_FOUND,
+          404
+        );
+      }
+
+      // Trạng thái đã bị người khác thay đổi (vd: đã check-in / hủy)
       throw new DomainError(
-        "Chỉ có thể check-in các booking ở trạng thái 'booked'",
+        "Booking đã được cập nhật bởi nhân viên khác. Vui lòng làm mới trang.",
         ERROR_CODES.BOOKINGS_STATE_INVALID,
-        400
+        409
       );
     }
 
@@ -400,7 +409,6 @@ class BookingsService {
       );
 
     booking.service_order_id = serviceOrder._id;
-    booking.status = "checked_in";
     await booking.save();
 
     return booking;

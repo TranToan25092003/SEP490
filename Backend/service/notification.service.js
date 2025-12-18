@@ -560,10 +560,17 @@ async function notifyServiceOrderStatusChange({
     });
   }
 
+  const trimmedStatusLabel = (statusLabel || "").trim();
+  const lowerStatus = trimmedStatusLabel.toLowerCase();
+  const startsWithDa = lowerStatus.startsWith("đã ");
+  const staffTitleStatus = startsWithDa
+    ? trimmedStatusLabel
+    : `đã ${trimmedStatusLabel}`;
+
   await notifyStaffGroup({
     type: "SERVICE_ORDER_STATUS_UPDATED",
-    title: `Lệnh ${orderNumber} đã ${statusLabel}`,
-    message: `Trạng thái mới: ${statusLabel}.`,
+    title: `Lệnh ${orderNumber} ${staffTitleStatus}`,
+    message: `Trạng thái mới: ${trimmedStatusLabel}.`,
     linkTo: `/staff/service-order/${serviceOrderDoc._id}`,
     actorClerkId,
   });

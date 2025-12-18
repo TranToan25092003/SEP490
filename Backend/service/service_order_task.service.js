@@ -82,7 +82,7 @@ class ServiceOrderTaskService {
   async completeTask(task) {
     if (task.status !== "in_progress") {
       throw new DomainError(
-        "Tác vụ không ở trạng thái 'in_progress'",
+        "Tác vụ này đã được cập nhật bởi nhân viên khác. Vui lòng làm mới trang để xem thông tin mới nhất",
         ERROR_CODES.SERVICE_TASK_INVALID_STATE,
         409
       );
