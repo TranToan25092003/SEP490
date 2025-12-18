@@ -106,7 +106,7 @@ class InvoiceController {
   async verifyPayment(req, res, next) {
     try {
       const { id } = req.params;
-      const { voucherCode, paidAmount } = req.body || {};
+      const { voucherCode, paidAmount, voucherDiscount } = req.body || {};
       const customerClerkId = req.userId;
 
       // Kiểm tra hóa đơn có thuộc về customer không
@@ -134,7 +134,7 @@ class InvoiceController {
         id,
         "qr_code",
         "SYSTEM", // Hệ thống tự động xác nhận
-        { voucherCode, paidAmount }
+        { voucherCode, paidAmount, voucherDiscount }
       );
 
       await handleLoyaltyAfterPayment(updatedInvoice, {
