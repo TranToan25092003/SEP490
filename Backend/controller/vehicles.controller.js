@@ -5,7 +5,13 @@ class VehiclesController {
     try {
       const userId = req.userId;
 
-      const vehicles = await VehiclesService.getUserVehiclesWithAvailability(userId);
+      const hiddenVehicleIdsRaw =
+        req.user?.publicMetadata?.hiddenVehicleIds || [];
+      const hiddenVehicleIds = Array.isArray(hiddenVehicleIdsRaw)
+        ? hiddenVehicleIdsRaw.map((id) => id.toString())
+        : [];
+
+      const vehicles = await VehiclesService.getUserVehiclesWithAvailability(userId, hiddenVehicleIds);
 
       res.status(200).json({
         data: vehicles,

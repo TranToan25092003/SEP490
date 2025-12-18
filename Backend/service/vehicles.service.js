@@ -18,8 +18,8 @@ const ERROR_CODES = {
 }
 
 class VehiclesService {
-  async getUserVehiclesWithAvailability(userId) {
-    const vehicles = await Vehicle.find({ OwnerClerkId: userId })
+  async getUserVehiclesWithAvailability(userId, hiddenVehicleIds = []) {
+    const vehicles = await Vehicle.find({ OwnerClerkId: userId, _id: { $nin: hiddenVehicleIds } })
       .populate("model_id")
       .lean();
 

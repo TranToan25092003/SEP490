@@ -112,12 +112,13 @@ router.get(
         "waiting_customer_approval",
         "approved",
         "scheduled",
+        "rescheduled",
         "servicing",
         "completed",
         "cancelled"
       ])
       .withMessage(
-        "Status must be one of: created, waiting_inspection, inspection_completed, waiting_customer_approval, approved, scheduled, servicing, completed, cancelled"
+        "Status must be one of: created, waiting_inspection, inspection_completed, waiting_customer_approval, approved, scheduled, rescheduled, servicing, completed, cancelled"
       ),
     query("startTimestamp")
       .optional()
