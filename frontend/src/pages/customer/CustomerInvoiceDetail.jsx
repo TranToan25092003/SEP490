@@ -359,6 +359,34 @@ const CustomerInvoiceDetail = () => {
     return taxableAmount + vatAmount;
   }, [taxableAmount, vatAmount]);
 
+  const handleOpenPaymentModal = async () => {
+    if (!invoice) return;
+    try {
+      const response = await fetchCustomerInvoiceDetail(invoice.id);
+      const latestInvoice = response?.data || null;
+
+      if (!latestInvoice) {
+        toast.error("Không thể tải lại thông tin hóa đơn. Vui lòng thử lại.");
+        return;
+      }
+
+      if (latestInvoice.status === "paid") {
+        toast.info("Hóa đơn đã được thanh toán. ");
+        revalidator.revalidate();
+        return;
+      }
+
+      setPaymentModalOpen(true);
+    } catch (err) {
+      console.error(
+        "Failed to refresh invoice before opening payment modal:",
+        err
+      );
+
+      setPaymentModalOpen(true);
+    }
+  };
+
   useEffect(() => {
     setAuthModalVisible(requiresAuth);
   }, [requiresAuth]);
@@ -369,7 +397,7 @@ const CustomerInvoiceDetail = () => {
       setQrCodeError(false);
     }
   }, [paymentModalOpen]);
-  // Fetch vouchers ngay khi component mount hoặc khi invoice status là unpaid
+
   // Không cần đợi mở payment modal vì UI hiển thị voucher ở ngoài modal
   useEffect(() => {
     if (!invoice || invoice.status === "paid") {
@@ -385,27 +413,26 @@ const CustomerInvoiceDetail = () => {
         if (ignore) return;
         const payload = response?.data?.data || {};
 
-        // Debug log để kiểm tra
-        console.log("[CustomerInvoiceDetail] Vouchers payload:", {
-          hasVouchers: !!payload.vouchers,
-          vouchersType: Array.isArray(payload.vouchers)
-            ? "array"
-            : typeof payload.vouchers,
-          vouchersLength: Array.isArray(payload.vouchers)
-            ? payload.vouchers.length
-            : 0,
-          rawVouchers: payload.vouchers,
-        });
+        // console.log("[CustomerInvoiceDetail] Vouchers payload:", {
+        //   hasVouchers: !!payload.vouchers,
+        //   vouchersType: Array.isArray(payload.vouchers)
+        //     ? "array"
+        //     : typeof payload.vouchers,
+        //   vouchersLength: Array.isArray(payload.vouchers)
+        //     ? payload.vouchers.length
+        //     : 0,
+        //   rawVouchers: payload.vouchers,
+        // });
 
         const normalized = Array.isArray(payload.vouchers)
           ? payload.vouchers.map(normalizeOwnedVoucher).filter(Boolean)
           : [];
 
-        console.log("[CustomerInvoiceDetail] Normalized vouchers:", normalized);
+        // console.log("[CustomerInvoiceDetail] Normalized vouchers:", normalized);
 
         const usable = normalized.filter(isVoucherUsable);
 
-        console.log("[CustomerInvoiceDetail] Usable vouchers:", usable);
+        // console.log("[CustomerInvoiceDetail] Usable vouchers:", usable);
 
         setAvailableVouchers(usable);
         setSelectedVoucherCode((currentCode) => {
@@ -418,9 +445,7 @@ const CustomerInvoiceDetail = () => {
       } catch (fetchError) {
         if (ignore) return;
         console.error("Failed to load vouchers", fetchError);
-        setVoucherError(
-          "KhA'ng t���i �`�����c voucher. Vui lA�ng th��- l���i sau."
-        );
+        setVoucherError("Không tải được voucher. Vui lòng thử lại sau");
         setAvailableVouchers([]);
         setSelectedVoucherCode("");
       } finally {
@@ -948,7 +973,7 @@ const CustomerInvoiceDetail = () => {
                   )}
                   {invoice.status === "unpaid" && (
                     <Button
-                      onClick={() => setPaymentModalOpen(true)}
+                      onClick={handleOpenPaymentModal}
                       className="w-full"
                       size="lg"
                     >
