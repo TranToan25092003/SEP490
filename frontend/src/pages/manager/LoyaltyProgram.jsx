@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,6 +44,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import DatePicker from "@/components/ui/date-picker";
 import {
   createLoyaltyRule,
   deleteLoyaltyRule,
@@ -178,15 +180,31 @@ const buildRulePayload = (formValues) => {
   const nameSource = formValues.voucherDescription?.trim();
   const fallbackName = `Quy tắc ngày ${new Date().toLocaleDateString("vi-VN")}`;
   const isPercent = formValues.conversionType === "percent";
+
+  // Tính voucherValidityDays từ validFrom và validTo nếu có
+  let calculatedValidityDays = 60; // mặc định
+  if (formValues.validFrom && formValues.validTo) {
+    try {
+      const startDate = new Date(`${formValues.validFrom}T00:00:00Z`);
+      const endDate = new Date(`${formValues.validTo}T00:00:00Z`);
+      if (endDate > startDate) {
+        const diffTime = endDate - startDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0) {
+          calculatedValidityDays = diffDays;
+        }
+      }
+    } catch {
+      // Giữ giá trị mặc định nếu có lỗi
+    }
+  }
+
   return {
     name: nameSource || fallbackName,
     description: formValues.voucherDescription || "Rule đơn giản",
     voucherDescription: formValues.voucherDescription || "",
     voucherQuantity: Number(formValues.voucherQuantity) || 0,
-    voucherValidityDays:
-      Number(formValues.voucherValidityDays) > 0
-        ? Number(formValues.voucherValidityDays)
-        : 60,
+    voucherValidityDays: calculatedValidityDays,
     conversionType: formValues.conversionType,
     conversionValue: isPercent ? Number(formValues.conversionValue) || 0 : 0,
     conversionPointsAmount: !isPercent
@@ -310,6 +328,7 @@ const LoyaltyProgram = () => {
   const [ruleDeleteError, setRuleDeleteError] = useState("");
   const [updatingRuleId, setUpdatingRuleId] = useState(null);
   const [deletingRuleId, setDeletingRuleId] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const [showHistoryPanel, setShowHistoryPanel] = useState(false);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -516,9 +535,51 @@ const LoyaltyProgram = () => {
     setRuleDeleteError("");
   };
 
+  const validateNumber = (value, allowDecimal = false) => {
+    if (!value || value === "") return true;
+    if (allowDecimal) {
+      return /^\d*\.?\d*$/.test(value);
+    }
+    return /^\d+$/.test(value);
+  };
+
   const handleRuleFieldChange = (field) => (event) => {
     const { value } = event.target;
     clearRuleFeedback();
+
+    const numberFields = [
+      "voucherQuantity",
+      "conversionPointsAmount",
+      "conversionCurrencyAmount",
+      "conversionPreviewPoints",
+      "priority",
+    ];
+    const decimalFields = ["conversionValue"];
+
+    if (numberFields.includes(field)) {
+      if (!validateNumber(value, false)) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          [field]: "Vui lòng chỉ nhập số nguyên dương",
+        }));
+        return;
+      }
+    } else if (decimalFields.includes(field)) {
+      if (!validateNumber(value, true)) {
+        setValidationErrors((prev) => ({
+          ...prev,
+          [field]: "Vui lòng chỉ nhập số (có thể có phần thập phân)",
+        }));
+        return;
+      }
+    }
+
+    setValidationErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[field];
+      return newErrors;
+    });
+
     setRuleForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -553,6 +614,7 @@ const LoyaltyProgram = () => {
     clearRuleFeedback();
     setEditingRuleId(null);
     setRuleForm(createSimpleRuleForm());
+    setValidationErrors({});
   };
 
   const handleRuleDateChange = (field) => (event) => {
@@ -582,9 +644,50 @@ const LoyaltyProgram = () => {
     });
   };
 
+  const validateForm = () => {
+    const errors = {};
+
+    const numberFields = {
+      voucherQuantity: "Số lượng voucher",
+      conversionPointsAmount: "Điểm cơ sở",
+      conversionCurrencyAmount: "Số tiền tương ứng",
+      conversionPreviewPoints: "Số điểm preview",
+      priority: "Mức ưu tiên",
+    };
+
+    Object.keys(numberFields).forEach((field) => {
+      if (ruleForm[field] && !validateNumber(ruleForm[field], false)) {
+        errors[field] = `${numberFields[field]} chỉ được nhập số nguyên dương`;
+      }
+    });
+
+    if (ruleForm.conversionType === "percent" && ruleForm.conversionValue) {
+      if (!validateNumber(ruleForm.conversionValue, true)) {
+        errors.conversionValue = "Tỷ lệ phần trăm chỉ được nhập số";
+      }
+    }
+
+    if (ruleForm.validFrom && ruleForm.validTo) {
+      const startDate = new Date(`${ruleForm.validFrom}T00:00:00Z`);
+      const endDate = new Date(`${ruleForm.validTo}T00:00:00Z`);
+      if (endDate <= startDate) {
+        errors.validTo = "Ngày kết thúc phải sau ngày bắt đầu";
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleRuleFormSubmit = async (event) => {
     event.preventDefault();
     clearRuleFeedback();
+
+    if (!validateForm()) {
+      setRuleSubmitError("Vui lòng kiểm tra lại các trường đã nhập");
+      return;
+    }
+
     setSavingRule(true);
     try {
       const payload = buildRulePayload(ruleForm);
@@ -596,6 +699,7 @@ const LoyaltyProgram = () => {
         setRuleSubmitMessage("Đã lưu quy tắc mới.");
       }
       setRuleForm(createSimpleRuleForm());
+      setValidationErrors({});
       setEditingRuleId(null);
       await fetchRules();
     } catch (error) {
@@ -612,6 +716,7 @@ const LoyaltyProgram = () => {
   const handleResetRuleForm = () => {
     clearRuleFeedback();
     setRuleForm(createSimpleRuleForm());
+    setValidationErrors({});
     setEditingRuleId(null);
   };
 
@@ -621,6 +726,44 @@ const LoyaltyProgram = () => {
     base.setUTCDate(base.getUTCDate() + 1);
     return base.toISOString().split("T")[0];
   }, [ruleForm.validFrom]);
+
+  const validityDays = useMemo(() => {
+    if (!ruleForm.validFrom || !ruleForm.validTo) return null;
+    try {
+      const startDate = new Date(`${ruleForm.validFrom}T00:00:00Z`);
+      const endDate = new Date(`${ruleForm.validTo}T00:00:00Z`);
+      if (endDate <= startDate) return null;
+      const diffTime = endDate - startDate;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : null;
+    } catch {
+      return null;
+    }
+  }, [ruleForm.validFrom, ruleForm.validTo]);
+
+  const daysRemaining = useMemo(() => {
+    if (!ruleForm.validFrom || !ruleForm.validTo) return null;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date(`${ruleForm.validFrom}T00:00:00Z`);
+      const endDate = new Date(`${ruleForm.validTo}T00:00:00Z`);
+
+      if (endDate < today) return 0;
+
+      if (today < startDate) {
+        const diffTime = endDate - startDate;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays > 0 ? diffDays : null;
+      }
+
+      const diffTime = endDate - today;
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays >= 0 ? diffDays : null;
+    } catch {
+      return null;
+    }
+  }, [ruleForm.validFrom, ruleForm.validTo]);
 
   const conversionPreviewCurrency = useMemo(() => {
     if (ruleForm.conversionType !== "points") return null;
@@ -886,30 +1029,24 @@ const LoyaltyProgram = () => {
                     <Label htmlFor="voucherQuantity">Số lượng voucher</Label>
                     <Input
                       id="voucherQuantity"
-                      type="number"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="Ví dụ: 100"
                       value={ruleForm.voucherQuantity}
                       onChange={handleRuleFieldChange("voucherQuantity")}
+                      className={
+                        validationErrors.voucherQuantity
+                          ? "border-destructive"
+                          : ""
+                      }
                     />
+                    {validationErrors.voucherQuantity && (
+                      <p className="text-xs text-destructive">
+                        {validationErrors.voucherQuantity}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="voucherValidityDays">
-                        Voucher có hiệu lực (ngày)
-                      </Label>
-                      <Input
-                        id="voucherValidityDays"
-                        type="number"
-                        min="1"
-                        placeholder="Ví dụ: 60"
-                        value={ruleForm.voucherValidityDays}
-                        onChange={handleRuleFieldChange("voucherValidityDays")}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Nhập số ngày voucher có hiệu lực sau khi được tạo.
-                      </p>
-                    </div>
                     <Label htmlFor="voucherDescription">Mô tả voucher</Label>
                     <Textarea
                       id="voucherDescription"
@@ -950,10 +1087,13 @@ const LoyaltyProgram = () => {
                         <div className="relative">
                           <Input
                             id="conversionPercent"
-                            type="number"
-                            min="0"
-                            step="0.1"
-                            className="pr-14"
+                            type="text"
+                            inputMode="decimal"
+                            className={`pr-14 ${
+                              validationErrors.conversionValue
+                                ? "border-destructive"
+                                : ""
+                            }`}
                             placeholder="VD: 5"
                             value={ruleForm.conversionValue}
                             onChange={handleRuleFieldChange("conversionValue")}
@@ -962,9 +1102,15 @@ const LoyaltyProgram = () => {
                             %
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">
-                          Nhập phần trăm thưởng thêm so với giao dịch gốc.
-                        </p>
+                        {validationErrors.conversionValue ? (
+                          <p className="text-xs text-destructive">
+                            {validationErrors.conversionValue}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Nhập phần trăm thưởng thêm so với giao dịch gốc.
+                          </p>
+                        )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="conversionPercentCost">
@@ -972,18 +1118,29 @@ const LoyaltyProgram = () => {
                         </Label>
                         <Input
                           id="conversionPercentCost"
-                          type="number"
-                          min="0"
+                          type="text"
+                          inputMode="numeric"
                           placeholder="VD: 500"
                           value={ruleForm.conversionPreviewPoints}
                           onChange={handleRuleFieldChange(
                             "conversionPreviewPoints"
                           )}
+                          className={
+                            validationErrors.conversionPreviewPoints
+                              ? "border-destructive"
+                              : ""
+                          }
                         />
-                        <p className="text-xs text-muted-foreground">
-                          Thành viên phải có ít nhất chừng này điểm để đổi ưu
-                          đãi phần trăm.
-                        </p>
+                        {validationErrors.conversionPreviewPoints ? (
+                          <p className="text-xs text-destructive">
+                            {validationErrors.conversionPreviewPoints}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground">
+                            Thành viên phải có ít nhất chừng này điểm để đổi ưu
+                            đãi phần trăm.
+                          </p>
+                        )}
                       </div>
                     </>
                   ) : (
@@ -995,14 +1152,24 @@ const LoyaltyProgram = () => {
                           </Label>
                           <Input
                             id="conversionPointsAmount"
-                            type="number"
-                            min="1"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Ví dụ: 1"
                             value={ruleForm.conversionPointsAmount}
                             onChange={handleRuleFieldChange(
                               "conversionPointsAmount"
                             )}
+                            className={
+                              validationErrors.conversionPointsAmount
+                                ? "border-destructive"
+                                : ""
+                            }
                           />
+                          {validationErrors.conversionPointsAmount && (
+                            <p className="text-xs text-destructive">
+                              {validationErrors.conversionPointsAmount}
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="conversionCurrencyAmount">
@@ -1010,14 +1177,24 @@ const LoyaltyProgram = () => {
                           </Label>
                           <Input
                             id="conversionCurrencyAmount"
-                            type="number"
-                            min="0"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Ví dụ: 100"
                             value={ruleForm.conversionCurrencyAmount}
                             onChange={handleRuleFieldChange(
                               "conversionCurrencyAmount"
                             )}
+                            className={
+                              validationErrors.conversionCurrencyAmount
+                                ? "border-destructive"
+                                : ""
+                            }
                           />
+                          {validationErrors.conversionCurrencyAmount && (
+                            <p className="text-xs text-destructive">
+                              {validationErrors.conversionCurrencyAmount}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="space-y-2">
@@ -1027,13 +1204,18 @@ const LoyaltyProgram = () => {
                         <div className="grid gap-2 sm:grid-cols-2">
                           <Input
                             id="conversionPreviewPoints"
-                            type="number"
-                            min="0"
+                            type="text"
+                            inputMode="numeric"
                             placeholder="Ví dụ: 100"
                             value={ruleForm.conversionPreviewPoints}
                             onChange={handleRuleFieldChange(
                               "conversionPreviewPoints"
                             )}
+                            className={
+                              validationErrors.conversionPreviewPoints
+                                ? "border-destructive"
+                                : ""
+                            }
                           />
                           <div className="flex items-center rounded-md border bg-muted/50 px-3 text-sm font-medium">
                             {conversionPreviewCurrency !== null
@@ -1041,6 +1223,11 @@ const LoyaltyProgram = () => {
                               : "Nhập đủ để xem"}
                           </div>
                         </div>
+                        {validationErrors.conversionPreviewPoints && (
+                          <p className="text-xs text-destructive">
+                            {validationErrors.conversionPreviewPoints}
+                          </p>
+                        )}
                         <p className="text-xs text-muted-foreground">
                           {ruleForm.conversionPointsAmount || "?"} điểm tương
                           đương số tiền VNĐ ở trên.
@@ -1086,22 +1273,85 @@ const LoyaltyProgram = () => {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="validFrom">Áp dụng từ ngày</Label>
-                  <Input
-                    id="validFrom"
-                    type="date"
+                  <DatePicker
                     value={ruleForm.validFrom}
-                    onChange={handleRuleDateChange("validFrom")}
+                    onChange={(date) => {
+                      clearRuleFeedback();
+                      setRuleForm((prev) => {
+                        const nextState = { ...prev, validFrom: date };
+                        if (
+                          nextState.validTo &&
+                          date &&
+                          new Date(`${nextState.validTo}T00:00:00Z`) <=
+                            new Date(`${date}T00:00:00Z`)
+                        ) {
+                          nextState.validTo = "";
+                          setValidationErrors((prev) => ({
+                            ...prev,
+                            validTo: "Ngày kết thúc phải sau ngày bắt đầu",
+                          }));
+                        } else {
+                          setValidationErrors((prev) => {
+                            const newErrors = { ...prev };
+                            delete newErrors.validTo;
+                            delete newErrors.validFrom;
+                            return newErrors;
+                          });
+                        }
+                        return nextState;
+                      });
+                    }}
+                    placeholder="Chọn ngày bắt đầu"
                   />
+                  {validationErrors.validFrom && (
+                    <p className="text-xs text-destructive">
+                      {validationErrors.validFrom}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="validTo">Đến ngày</Label>
-                  <Input
-                    id="validTo"
-                    type="date"
-                    min={minValidTo}
+                  <DatePicker
                     value={ruleForm.validTo}
-                    onChange={handleRuleDateChange("validTo")}
+                    onChange={(date) => {
+                      clearRuleFeedback();
+                      setRuleForm((prev) => {
+                        if (date && prev.validFrom) {
+                          const startDate = new Date(
+                            `${prev.validFrom}T00:00:00Z`
+                          );
+                          const endDate = new Date(`${date}T00:00:00Z`);
+                          if (endDate <= startDate) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              validTo: "Ngày kết thúc phải sau ngày bắt đầu",
+                            }));
+                            return prev;
+                          }
+                        }
+                        setValidationErrors((prev) => {
+                          const newErrors = { ...prev };
+                          delete newErrors.validTo;
+                          return newErrors;
+                        });
+                        return { ...prev, validTo: date };
+                      });
+                    }}
+                    placeholder="Chọn ngày kết thúc"
+                    disabled={!ruleForm.validFrom}
                   />
+                  {validationErrors.validTo && (
+                    <p className="text-xs text-destructive">
+                      {validationErrors.validTo}
+                    </p>
+                  )}
+                  {!validationErrors.validTo &&
+                    ruleForm.validFrom &&
+                    !ruleForm.validTo && (
+                      <p className="text-xs text-muted-foreground">
+                        Vui lòng chọn ngày kết thúc
+                      </p>
+                    )}
                 </div>
               </div>
 
@@ -1112,20 +1362,50 @@ const LoyaltyProgram = () => {
                   </Label>
                   <Input
                     id="priority"
-                    type="number"
-                    min="1"
+                    type="text"
+                    inputMode="numeric"
                     value={ruleForm.priority}
                     onChange={handleRuleFieldChange("priority")}
+                    className={
+                      validationErrors.priority ? "border-destructive" : ""
+                    }
                   />
+                  {validationErrors.priority && (
+                    <p className="text-xs text-destructive">
+                      {validationErrors.priority}
+                    </p>
+                  )}
                 </div>
                 <div className="rounded-lg border bg-muted/10 p-3 text-sm text-muted-foreground">
                   <p>
                     Thời gian áp dụng: {ruleForm.validFrom || "..."} →{" "}
                     {ruleForm.validTo || "..."}
                   </p>
+                  {validityDays !== null && (
+                    <p className="font-medium text-gray-900">
+                      Voucher có hiệu lực: {validityDays} ngày
+                    </p>
+                  )}
+                  {daysRemaining !== null && ruleForm.validTo && (
+                    <p
+                      className={cn(
+                        "font-medium",
+                        daysRemaining === 0
+                          ? "text-destructive"
+                          : daysRemaining <= 7
+                          ? "text-amber-600"
+                          : "text-green-600"
+                      )}
+                    >
+                      {daysRemaining === 0
+                        ? "Voucher đã hết hạn"
+                        : daysRemaining === 1
+                        ? "Còn 1 ngày nữa"
+                        : `Còn ${daysRemaining} ngày nữa`}
+                    </p>
+                  )}
                   <p>
                     Tỉ lệ: {conversionSummaryText} • Số voucher:{" "}
-                    <p>Voucher có hiệu lực: {ruleForm.voucherValidityDays}</p>
                     {ruleForm.voucherQuantity || "Chưa nhập"}
                   </p>
                   <p>Mô tả: {ruleForm.voucherDescription || "Chưa cập nhật"}</p>

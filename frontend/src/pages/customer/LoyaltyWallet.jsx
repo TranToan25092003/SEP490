@@ -602,7 +602,7 @@ const LoyaltyWallet = () => {
                             {reward.desc}
                           </p>
                           <p className="text-sm font-semibold text-red-600 mt-1">
-                            {formatPoints(reward.cost)} điểm
+                            {formatPoints(reward.cost)}
                           </p>
                         </div>
                         <Button
