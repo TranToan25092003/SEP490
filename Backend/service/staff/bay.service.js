@@ -87,14 +87,15 @@ class BayService {
 
     const bayIds = bays.map((bay) => bay._id);
 
-    // Tách riêng: 
+    // Tách riêng:
     // 1. Lấy các task đang diễn ra tại thời điểm HIỆN TẠI (để xác định trạng thái bay)
     // 2. Lấy các task trong khoảng thời gian đang xem (để hiển thị lịch sắp tới)
-    
+
     // Query 1: Lấy tất cả task đang diễn ra tại thời điểm hiện tại (KHÔNG phụ thuộc vào khoảng thời gian xem)
+    // Bao gồm cả scheduled và rescheduled tasks đang diễn ra
     const currentTasks = await ServiceOrderTask.find({
       assigned_bay_id: { $in: bayIds },
-      status: { $ne: "completed" },
+      status: { $in: ["scheduled", "rescheduled", "in_progress"] },
       $or: [
         // Task đang in_progress
         {
@@ -120,9 +121,10 @@ class BayService {
       .lean();
 
     // Query 2: Lấy các task trong khoảng thời gian đang xem (để hiển thị lịch sắp tới)
+    // Bao gồm cả scheduled và rescheduled tasks
     const upcomingTasksQuery = await ServiceOrderTask.find({
       assigned_bay_id: { $in: bayIds },
-      status: { $ne: "completed" },
+      status: { $in: ["scheduled", "rescheduled", "in_progress"] },
       expected_end_time: { $gte: from },
       expected_start_time: { $lte: to },
     })
@@ -131,10 +133,12 @@ class BayService {
       .lean();
 
     // Gộp lại và loại bỏ trùng lặp (ưu tiên currentTasks)
-    const currentTaskIds = new Set(currentTasks.map(t => t._id.toString()));
+    const currentTaskIds = new Set(currentTasks.map((t) => t._id.toString()));
     const allTasks = [
       ...currentTasks,
-      ...upcomingTasksQuery.filter(t => !currentTaskIds.has(t._id.toString()))
+      ...upcomingTasksQuery.filter(
+        (t) => !currentTaskIds.has(t._id.toString())
+      ),
     ];
 
     const tasksByBay = allTasks.reduce((acc, task) => {
@@ -160,7 +164,7 @@ class BayService {
       const bayTasks = tasksByBay.get(bay._id.toString()) || [];
       // Chỉ xem xét các task đang diễn ra tại thời điểm hiện tại để xác định trạng thái bay
       const currentBayTasks = currentTasksByBay.get(bay._id.toString()) || [];
-      
+
       // Tìm task đang diễn ra tại thời điểm hiện tại
       // Ưu tiên task có status "in_progress"
       const currentTask = currentBayTasks.find((task) => {
@@ -180,10 +184,26 @@ class BayService {
 
       const upcomingTasks = bayTasks
         .filter((task) => {
+          // Loại bỏ task đang diễn ra (đã được hiển thị trong currentTask)
+          if (
+            currentTask &&
+            task._id.toString() === currentTask._id.toString()
+          ) {
+            return false;
+          }
+          // Hiển thị tất cả task chưa bắt đầu (scheduled hoặc rescheduled)
+          // Bao gồm cả task có expected_start_time trong tương lai
           const startTime = new Date(
             task.actual_start_time || task.expected_start_time
           );
-          return startTime > now;
+          const endTime = new Date(
+            task.actual_end_time || task.expected_end_time
+          );
+          // Hiển thị nếu task chưa bắt đầu (startTime > now) hoặc chưa kết thúc (endTime > now)
+          return (
+            startTime > now ||
+            (startTime <= now && endTime > now && task.status !== "in_progress")
+          );
         })
         .slice(0, limitUpcoming)
         .map((task) => ({

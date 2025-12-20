@@ -82,7 +82,7 @@ async function sendMaintenanceReminders() {
  */
 async function autoCancelUnapprovedServiceOrders() {
   try {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000); // 1 tiếng trước
+    const oneHourAgo = new Date(Date.now() - 30 * 60 * 1000); // 1 tiếng trước
 
     // Tìm các service order đang chờ khách hàng xác nhận quá 1 tiếng
     const unapprovedOrders = await ServiceOrder.find({

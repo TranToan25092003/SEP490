@@ -29,6 +29,11 @@ import Filters from "@/components/global/Filter";
  */
 const serviceOrderListColumnDefinitions = [
   {
+    accessorKey: "orderNumber",
+    header: "Mã lệnh",
+    cell: (info) => info.getValue() || "—",
+  },
+  {
     accessorKey: "licensePlate",
     header: "Biển số xe",
     cell: (info) => info.getValue(),
@@ -53,10 +58,7 @@ const serviceOrderListColumnDefinitions = [
 
       return (
         <div className="flex items-center gap-2">
-          <StatusBadge
-            status={statusLabel}
-            colorKey={row.status}
-          />
+          <StatusBadge status={statusLabel} colorKey={row.status} />
           {isUpcomingSoon && (
             <span className="inline-flex items-center rounded-full bg-orange-50 px-3 py-0.5 text-[11px] font-medium text-orange-700 border border-orange-200 whitespace-nowrap">
               Sắp tới giờ sửa
@@ -184,62 +186,64 @@ const ServiceOrderList = () => {
         >
           {(data) => {
             // Sort: completed xuống dưới, các trạng thái khác lên trên
-            const sortedServiceOrders = [...(data.serviceOrders || [])].sort((a, b) => {
-              const aIsCompleted = a.status === "completed";
-              const bIsCompleted = b.status === "completed";
-              
-              if (aIsCompleted && !bIsCompleted) return 1; // a xuống dưới
-              if (!aIsCompleted && bIsCompleted) return -1; // b xuống dưới
-              
-              // Nếu cùng trạng thái, sort theo createdAt (mới nhất lên trên)
-              const aDate = new Date(a.createdAt || 0);
-              const bDate = new Date(b.createdAt || 0);
-              return bDate - aDate;
-            });
+            const sortedServiceOrders = [...(data.serviceOrders || [])].sort(
+              (a, b) => {
+                const aIsCompleted = a.status === "completed";
+                const bIsCompleted = b.status === "completed";
+
+                if (aIsCompleted && !bIsCompleted) return 1; // a xuống dưới
+                if (!aIsCompleted && bIsCompleted) return -1; // b xuống dưới
+
+                // Nếu cùng trạng thái, sort theo createdAt (mới nhất lên trên)
+                const aDate = new Date(a.createdAt || 0);
+                const bDate = new Date(b.createdAt || 0);
+                return bDate - aDate;
+              }
+            );
 
             return (
-            <>
-              <Filters filters={filters} onFiltersChange={setFilters}>
-                <Filters.StringFilter
-                  filterKey="customerName"
-                  label={"Tên khách hàng"}
-                  placeholder={"Nhập tên khách hàng"}
-                />
-                <Filters.DropdownFilter
-                  filterKey="status"
-                  label={"Trạng thái"}
-                  placeholder={"Chọn trạng thái"}
-                  options={getServiceOrderStatusOptions()}
-                />
-                <Filters.DateRangeFilter
-                  filterKey="dateRange"
-                  label={"Khoảng ngày tạo"}
-                />
-              </Filters>
+              <>
+                <Filters filters={filters} onFiltersChange={setFilters}>
+                  <Filters.StringFilter
+                    filterKey="customerName"
+                    label={"Tên khách hàng"}
+                    placeholder={"Nhập tên khách hàng"}
+                  />
+                  <Filters.DropdownFilter
+                    filterKey="status"
+                    label={"Trạng thái"}
+                    placeholder={"Chọn trạng thái"}
+                    options={getServiceOrderStatusOptions()}
+                  />
+                  <Filters.DateRangeFilter
+                    filterKey="dateRange"
+                    label={"Khoảng ngày tạo"}
+                  />
+                </Filters>
 
-              <CRUDTable
+                <CRUDTable
                   data={sortedServiceOrders}
-                columns={serviceOrderListColumnDefinitions}
-                getRowId={(row) => row.id}
-              >
-                {(row) => (
-                  <div className="flex justify-center">
-                    <Link to={`/staff/service-order/${row.id}`}>
-                      <Button
-                        variant="outline"
-                        className="flex-1 cursor-pointer"
-                      >
-                        <EyeIcon />
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </CRUDTable>
+                  columns={serviceOrderListColumnDefinitions}
+                  getRowId={(row) => row.id}
+                >
+                  {(row) => (
+                    <div className="flex justify-center">
+                      <Link to={`/staff/service-order/${row.id}`}>
+                        <Button
+                          variant="outline"
+                          className="flex-1 cursor-pointer"
+                        >
+                          <EyeIcon />
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </CRUDTable>
 
-              {data.pagination.totalItems > 0 && (
-                <AdminPagination pagination={data.pagination} />
-              )}
-            </>
+                {data.pagination.totalItems > 0 && (
+                  <AdminPagination pagination={data.pagination} />
+                )}
+              </>
             );
           }}
         </Await>

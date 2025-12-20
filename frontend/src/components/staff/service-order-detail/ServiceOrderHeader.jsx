@@ -66,7 +66,12 @@ const ServiceOrderHeader = ({ className, ...props }) => {
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+        <div className="space-y-2">
+          <Label>Mã lệnh</Label>
+          <div className="font-semibold">{serviceOrder.orderNumber || "—"}</div>
+        </div>
+
         <div className="space-y-2">
           <Label>Tên khách hàng</Label>
           <div className="font-semibold">{serviceOrder.customerName}</div>
