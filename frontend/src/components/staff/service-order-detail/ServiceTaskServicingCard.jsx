@@ -180,14 +180,27 @@ const ServiceTaskServicingCard = ({ task }) => {
   const handleStartService = async () => {
     try {
       setLoading(true);
-      const technician = await NiceModal.show(ChooseStaffModal);
+      const technicians = await NiceModal.show(ChooseStaffModal, {
+        mode: "multiple",
+      });
 
-      const startPromise = startService(task.id, [
-        {
-          technicianClerkId: technician.technicianClerkId,
-          role: "lead",
-        },
-      ]);
+      if (!technicians || technicians.length === 0) {
+        return;
+      }
+
+      const techniciansArray = Array.isArray(technicians)
+        ? technicians.map((tech, index) => ({
+            technicianClerkId: tech.technicianClerkId,
+            role: index === 0 ? "lead" : "assistant",
+          }))
+        : [
+            {
+              technicianClerkId: technicians.technicianClerkId,
+              role: "lead",
+            },
+          ];
+
+      const startPromise = startService(task.id, techniciansArray);
 
       await toast
         .promise(startPromise, {
