@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRevalidator } from "react-router-dom";
 import { Card } from "antd";
 import { CardContent, CardHeader } from "@/components/ui/card";
@@ -19,14 +19,42 @@ import {
 import ServiceTaskAddModal from "./ServiceTaskAddModal";
 import ServiceTaskTimeline from "./ServiceTaskTimeline";
 import ChooseStaffModal from "./ChooseStaffModal";
-import { Clock, Image } from "lucide-react";
+import { Clock, Image, Users } from "lucide-react";
 import EmptyState from "@/components/global/EmptyState";
 import BaySchedulingModal from "./BaySchedulingModal";
 import CountdownTimer from "@/components/global/CountdownTimer";
+import { getTechniciansWithStatus } from "@/api/technicians";
+import { Badge } from "@/components/ui/badge";
 
 const ServiceTaskServicingCard = ({ task }) => {
   const [loading, setLoading] = useState(false);
+  const [techniciansMap, setTechniciansMap] = useState({});
+  const [loadingTechnicians, setLoadingTechnicians] = useState(false);
   const revalidator = useRevalidator();
+
+  useEffect(() => {
+    const fetchTechnicians = async () => {
+      if (!task.assignedTechnicians || task.assignedTechnicians.length === 0) {
+        return;
+      }
+
+      setLoadingTechnicians(true);
+      try {
+        const technicians = await getTechniciansWithStatus();
+        const map = {};
+        technicians.forEach((tech) => {
+          map[tech.technicianClerkId] = tech.technicianName;
+        });
+        setTechniciansMap(map);
+      } catch (error) {
+        console.error("Failed to fetch technicians:", error);
+      } finally {
+        setLoadingTechnicians(false);
+      }
+    };
+
+    fetchTechnicians();
+  }, [task.assignedTechnicians]);
 
   function getButton() {
     if (task.status === "scheduled" || task.status === "rescheduled") {
@@ -239,6 +267,34 @@ const ServiceTaskServicingCard = ({ task }) => {
             />
           )}
         </div>
+        {task.assignedTechnicians && task.assignedTechnicians.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <span className="font-medium">Người thực hiện:</span>
+            </div>
+            {loadingTechnicians ? (
+              <div className="text-sm text-muted-foreground">Đang tải...</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {task.assignedTechnicians
+                  .filter((tech) => techniciansMap[tech.technicianClerkId])
+                  .map((tech) => (
+                    <Badge
+                      key={tech.technicianClerkId}
+                      variant={tech.role === "lead" ? "default" : "secondary"}
+                      className="text-sm"
+                    >
+                      {techniciansMap[tech.technicianClerkId]}
+                      {tech.role === "lead" && " "}
+                      {tech.role === "assistant" && ""}
+                    </Badge>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="mb-4 space-y-2 text-sm text-muted-foreground">
           {task.expectedStartTime && (
             <div className="flex items-center gap-2">
