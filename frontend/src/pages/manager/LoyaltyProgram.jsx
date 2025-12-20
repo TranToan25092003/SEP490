@@ -90,26 +90,26 @@ const normalizeReward = (reward) => {
   if (!reward) return null;
   const delivery =
     reward.discountType === "percentage"
-      ? "Gi???m theo %"
-      : "Sinh mA? gi???m giA?";
+      ? "Giảm theo %"
+      : "Sinh mã giảm giá";
   const note =
     reward.discountType === "percentage"
-      ? `A?p d???ng ${reward.value ?? 0}%`
-      : `Gi???m ${formatCurrency(reward.value ?? 0)}`;
+      ? `Áp dụng ${reward.value ?? 0}%`
+      : `Giảm ${formatCurrency(reward.value ?? 0)}`;
   const costPoints = Number(reward.cost);
   const shouldShowCost =
     reward.discountType === "percentage" &&
     Number.isFinite(costPoints) &&
     costPoints > 0;
   const normalizedNote = shouldShowCost
-    ? `${note} (chi phi ${formatPoints(costPoints)})`
+    ? `${note} (chi phí ${formatPoints(costPoints)})`
     : note;
   let stockLabel = "không giới hạn";
   if (typeof reward.remainingStock === "number") {
     stockLabel =
       reward.remainingStock > 0
-        ? `C??n ${formatNumber(reward.remainingStock)} mA?`
-        : "??A? h???t mA??";
+        ? `Còn ${formatNumber(reward.remainingStock)} mã`
+        : "Đã hết mã";
   } else if (typeof reward.stock === "number") {
     stockLabel = `Giới hạn ${formatNumber(reward.stock)} mã`;
   } else if (typeof reward.stock === "string") {
@@ -181,8 +181,8 @@ const buildRulePayload = (formValues) => {
   const fallbackName = `Quy tắc ngày ${new Date().toLocaleDateString("vi-VN")}`;
   const isPercent = formValues.conversionType === "percent";
 
-  // Tính voucherValidityDays từ validFrom và validTo nếu có
-  let calculatedValidityDays = 60; // mặc định
+  
+  let calculatedValidityDays = 60; 
   if (formValues.validFrom && formValues.validTo) {
     try {
       const startDate = new Date(`${formValues.validFrom}T00:00:00Z`);
@@ -195,7 +195,7 @@ const buildRulePayload = (formValues) => {
         }
       }
     } catch {
-      // Giữ giá trị mặc định nếu có lỗi
+      console.error("Lỗi khi tính voucherValidityDays");
     }
   }
 
