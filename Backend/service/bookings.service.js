@@ -184,6 +184,7 @@ class BookingsService {
       status: booking.status,
       serviceOrderStatus: booking.service_order_id?.status || null,
       serviceOrderId: booking.service_order_id?._id || null,
+      serviceOrderNumber: booking.service_order_id?.orderNumber || null,
       createdAt: booking.createdAt,
       checkedInAt: checkedInAt, // Thời gian check-in xe (thời gian tạo đơn thực tế)
     };
@@ -209,6 +210,10 @@ class BookingsService {
           select: "_id name brand", // Chỉ lấy các field cần thiết của model
         },
       })
+      .populate({
+        path: "service_order_id",
+        select: "_id orderNumber", // Lấy orderNumber từ service order
+      })
       .lean() // Sử dụng lean() để tăng performance, trả về plain JavaScript objects
       .skip(skip);
 
@@ -228,7 +233,8 @@ class BookingsService {
       slotStartTime: booking.slot_start_time,
       slotEndTime: booking.slot_end_time,
       status: booking.status,
-      serviceOrderId: booking.service_order_id,
+      serviceOrderId: booking.service_order_id?._id || booking.service_order_id || null,
+      serviceOrderNumber: booking.service_order_id?.orderNumber || null,
     }));
 
     // Sắp xếp: đang thực hiện (in_progress, checked_in) lên đầu, sau đó theo thời gian giảm dần
@@ -342,9 +348,18 @@ class BookingsService {
           },
         },
         {
+          $lookup: {
+            from: "service_orders",
+            localField: "service_order_id",
+            foreignField: "_id",
+            as: "service_order_id",
+          },
+        },
+        {
           $addFields: {
             vehicle_id: { $arrayElemAt: ["$vehicle_id", 0] },
             service_ids: "$service_ids",
+            service_order_id: { $arrayElemAt: ["$service_order_id", 0] },
           },
         },
       ]).exec(),
@@ -363,7 +378,8 @@ class BookingsService {
         slotStartTime: booking.slot_start_time,
         slotEndTime: booking.slot_end_time,
         status: booking.status,
-        serviceOrderId: booking.service_order_id,
+        serviceOrderId: booking.service_order_id?._id || booking.service_order_id || null,
+        serviceOrderNumber: booking.service_order_id?.orderNumber || null,
         createdAt: booking.createdAt,
       })),
       pagination: {

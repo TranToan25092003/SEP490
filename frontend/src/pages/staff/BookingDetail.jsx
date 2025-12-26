@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/global/StatusBadge";
 import { Spinner } from "@/components/ui/spinner";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getBookingCode } from "@/lib/utils";
 import { getBookingById, checkInBooking, cancelBooking } from "@/api/bookings";
 import { toast } from "sonner";
 import { Calendar, Clock, Motorbike, User, Package, AlertCircle } from "lucide-react";
@@ -201,12 +201,14 @@ const BookingDetailContent = ({ booking, revalidator }) => {
               <StatusBadge status={translateBookingStatus(booking.status)} />
             </div>
 
-            {booking.serviceOrderId && (
-              <div className="space-y-2">
-                <Label>Mã Lệnh Sửa Chữa</Label>
-                <div className="font-semibold">{booking.serviceOrderId}</div>
+            <div className="space-y-2">
+              <Label>{booking.serviceOrderId ? "Mã Lệnh Sửa Chữa" : "Mã Booking"}</Label>
+              <div className="font-semibold">
+                {booking.serviceOrderId 
+                  ? (booking.serviceOrderNumber || booking.serviceOrderId)
+                  : getBookingCode(booking.id)}
               </div>
-            )}
+            </div>
           </CardContent>
         </Card>
 

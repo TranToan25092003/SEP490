@@ -31,6 +31,7 @@ import { getUserBookings } from "@/api/bookings";
 import { getUserVehiclesWithAvailability } from "@/api/vehicles";
 import clerk from "@/utils/clerk";
 import background from "@/assets/cool-motorcycle-indoors.png";
+import { getBookingCode } from "@/lib/utils";
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -271,7 +272,9 @@ const BookingList = ({ bookings, vehicles }) => {
                   <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                       <CardTitle className="text-lg">
-                        Mã đơn: {booking.id?.slice(-8) || "N/A"}
+                        {booking.serviceOrderId 
+                          ? `Mã lệnh: ${booking.serviceOrderNumber || booking.serviceOrderId}` 
+                          : `Mã booking: ${getBookingCode(booking.id)}`}
                       </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         {booking.vehicle?.licensePlate || "Biển số: N/A"}

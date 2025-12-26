@@ -218,29 +218,29 @@ const DatePicker = ({
             {days.map((day, index) => {
               const isPast = isPastDate(day);
               return (
-                <button
-                  key={index}
+              <button
+                key={index}
                   onClick={() => !isPast && handleDateSelect(day)}
                   disabled={!day || isPast}
-                  className={cn(
-                    "h-8 w-8 text-sm rounded-md transition-colors",
+                className={cn(
+                  "h-8 w-8 text-sm rounded-md transition-colors",
                     "focus:outline-none focus:ring-2 focus:ring-red-200",
-                    !day && "cursor-default",
+                  !day && "cursor-default",
                     !day || isPast
                       ? "cursor-not-allowed opacity-40"
                       : "cursor-pointer hover:bg-red-50",
                     isToday(day) && !isPast && "bg-red-100 text-red-700 font-medium",
                     isSelected(day) && !isPast && "bg-red-500 text-white hover:bg-red-600",
-                    day &&
-                      !isToday(day) &&
-                      !isSelected(day) &&
+                  day &&
+                    !isToday(day) &&
+                    !isSelected(day) &&
                       !isPast &&
                       "text-gray-700 hover:bg-red-50",
                     isPast && "text-gray-400"
-                  )}
-                >
-                  {day}
-                </button>
+                )}
+              >
+                {day}
+              </button>
               );
             })}
           </div>
