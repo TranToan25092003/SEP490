@@ -70,7 +70,7 @@ const ServiceTaskInspectionCard = ({ task }) => {
               ? "Bắt đầu kiểm tra"
               : "Tiếp tục kiểm tra"}
           </Button>
-        </div>
+      </div>
       );
     } else if (task.status === "in_progress") {
       return (
@@ -163,10 +163,10 @@ const ServiceTaskInspectionCard = ({ task }) => {
             role: index === 0 ? "lead" : "assistant",
           }))
         : [
-            {
+        {
               technicianClerkId: technicians.technicianClerkId,
-              role: "lead",
-            },
+          role: "lead",
+        },
           ];
 
       const startPromise = beginInspectionTask(task.id, techniciansArray);

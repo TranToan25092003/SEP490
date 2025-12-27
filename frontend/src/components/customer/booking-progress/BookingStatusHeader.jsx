@@ -1,4 +1,4 @@
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, getBookingCode } from "@/lib/utils";
 import { translateBookingStatus } from "@/utils/enumsTranslator";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -30,6 +30,8 @@ const BookingStatusHeader = ({
   licensePlate,
   creationDate,
   serviceOrderStatus,
+  serviceOrderId,
+  serviceOrderNumber,
   tasks = [],
   className,
   ...props
@@ -158,8 +160,14 @@ const BookingStatusHeader = ({
       <div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
-            <div className="text-sm text-muted-foreground">Mã Đặt</div>
-            <div className="font-semibold text-foreground">{bookingId}</div>
+            <div className="text-sm text-muted-foreground">
+              {serviceOrderId ? "Mã Lệnh" : "Mã Booking"}
+            </div>
+            <div className="font-semibold text-foreground">
+              {serviceOrderId 
+                ? (serviceOrderNumber || serviceOrderId) 
+                : getBookingCode(bookingId)}
+            </div>
           </div>
 
           <div className="space-y-1">

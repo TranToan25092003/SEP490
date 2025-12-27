@@ -54,7 +54,7 @@ function loader({ params, request }) {
   };
 }
 
-const QUOTE_PENDING_MINUTES = 30;
+const QUOTE_PENDING_MINUTES = 120; // 2 tiếng
 
 const quotesTableDefinition = [
   {

@@ -82,12 +82,12 @@ async function sendMaintenanceReminders() {
  */
 async function autoCancelUnapprovedServiceOrders() {
   try {
-    const oneHourAgo = new Date(Date.now() - 30 * 60 * 1000); // 1 tiếng trước
+    const twoHoursAgo = new Date(Date.now() - 120 * 60 * 1000); // 2 tiếng trước
 
-    // Tìm các service order đang chờ khách hàng xác nhận quá 1 tiếng
+    // Tìm các service order đang chờ khách hàng xác nhận quá 2 tiếng
     const unapprovedOrders = await ServiceOrder.find({
       status: "waiting_customer_approval",
-      waiting_approval_at: { $exists: true, $lte: oneHourAgo },
+      waiting_approval_at: { $exists: true, $lte: twoHoursAgo },
     })
       .populate("booking_id")
       .exec();
@@ -103,7 +103,7 @@ async function autoCancelUnapprovedServiceOrders() {
           await serviceOrderService.cancelServiceOrder(
             order._id.toString(),
             order.staff_clerk_id || "system",
-            "Tự động hủy do khách hàng không xác nhận báo giá trong vòng 1 tiếng"
+            "Tự động hủy do khách hàng không xác nhận báo giá trong vòng 2 tiếng"
           );
           console.log(`[Auto Cancel] Cancelled service order ${order._id}`);
         } catch (error) {

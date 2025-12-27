@@ -13,7 +13,7 @@ import { useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import Filters from "@/components/global/Filter";
 import { useEffect } from "react";
-import { formatDateTime } from "@/lib/utils";
+import { formatDateTime, getBookingCode } from "@/lib/utils";
 
 const formatTimeSlot = (startTime, endTime) => {
   try {
@@ -57,6 +57,16 @@ const renderServiceBadges = (services) => {
 };
 
 const bookingListColumnDefinitions = [
+  {
+    accessorKey: "bookingCode",
+    header: "Mã Booking",
+    cell: (info) => {
+      const row = info.row.original;
+      return row.serviceOrderId 
+        ? (row.serviceOrderNumber || row.serviceOrderId)
+        : getBookingCode(row.id);
+    },
+  },
   {
     accessorKey: "customerName",
     header: "Tên khách hàng",

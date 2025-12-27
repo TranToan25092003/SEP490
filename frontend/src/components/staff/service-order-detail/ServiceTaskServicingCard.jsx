@@ -222,10 +222,10 @@ const ServiceTaskServicingCard = ({ task }) => {
             role: index === 0 ? "lead" : "assistant",
           }))
         : [
-            {
+        {
               technicianClerkId: technicians.technicianClerkId,
-              role: "lead",
-            },
+          role: "lead",
+        },
           ];
 
       const startPromise = startService(task.id, techniciansArray);

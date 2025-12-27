@@ -43,6 +43,8 @@ const BookingProgressContent = ({ data }) => {
           licensePlate={booking.vehicle.licensePlate || "N/A"}
           status={booking.status || "N/A"}
           serviceOrderStatus={booking.serviceOrderStatus}
+          serviceOrderId={booking.serviceOrderId}
+          serviceOrderNumber={booking.serviceOrderNumber}
           tasks={tasks || []}
           creationDate={
             booking.checkedInAt

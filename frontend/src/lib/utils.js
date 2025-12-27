@@ -50,3 +50,14 @@ export function formatDateTime(date) {
 
   return `${day}/${month}/${year} - ${hours}:${minutes}`;
 }
+
+/**
+ * Get booking code from booking ID (last 8 characters, uppercase)
+ * @param {string} bookingId - Booking ID
+ * @returns {string} Booking code (8 characters, uppercase)
+ */
+export function getBookingCode(bookingId) {
+  if (!bookingId) return "N/A";
+  const idString = String(bookingId);
+  return idString.slice(-8).toUpperCase();
+}
